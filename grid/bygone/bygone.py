@@ -1,6 +1,6 @@
 import requests
 
-host = "http://ec2-54-84-21-224.compute-1.amazonaws.com:3000"
+host = "127.0.0.1:3000"
 
 
 def add_experiment(experimentAddress, jobAddresses):
@@ -18,7 +18,7 @@ def get_available_job_id():
 
     print("/availableJobId", r)
 
-    if not 'jobId' in r.json():
+    if 'jobId' not in r.json():
         return None
 
     job_id = r.json()['jobId']
