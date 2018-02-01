@@ -52,10 +52,15 @@ def get_job():
 
 def add_result(jobAddress, resultAddress, priv_key=None,
                account_address=None, returnAbi=False):
-    payload = {'jobAddress': jobAddress, 'resultAddress': resultAddress}
+    payload = {'jobAddress': jobAddress, 'resultAddress': resultAddress,
+               'returnAbi': returnAbi, 'accountAddress': account_address}
 
     r = requests.post(host + "/result", json=payload)
-    print("/result", r)
+
+    print(r.text)
+    if returnAbi:
+        json = r.json()
+        return send_raw_transaction(json, priv_key)
 
     return r.status_code
 
