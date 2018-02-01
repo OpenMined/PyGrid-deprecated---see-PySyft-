@@ -56,8 +56,8 @@ def add_result(jobAddress, resultAddress, priv_key=None,
                'returnAbi': returnAbi, 'accountAddress': account_address}
 
     r = requests.post(host + "/result", json=payload)
+    print("/result", r)
 
-    print(r.text)
     if returnAbi:
         json = r.json()
         return send_raw_transaction(json, priv_key)
