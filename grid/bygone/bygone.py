@@ -3,13 +3,12 @@ from ethereum import transactions
 import os
 import rlp
 import requests
-import binascii
 
 host = "http://127.0.0.1:3000"
 
 
 def add_experiment(experimentAddress, jobAddresses, priv_key=None,
-                   account_address=None, returnAbi=None):
+                   account_address=None, returnAbi=False):
     payload = {'experimentAddress': experimentAddress,
                'jobAddresses': jobAddresses, 'returnAbi': returnAbi,
                'accountAddress': account_address}
@@ -19,23 +18,7 @@ def add_experiment(experimentAddress, jobAddresses, priv_key=None,
 
     if returnAbi:
         json = r.json()
-        abi = utils.decode_hex(json['abi'][2:])
-        nonce = json['nonce']
-        gas = json['estimatedGas']
-        contractAddress = json['contractAddress']
-
-        transaction = sign_transaction(nonce, abi, priv_key, gas,
-                                       contractAddress)
-
-        return send_raw_transaction('0x' + transaction)
-
-    return r.status_code
-
-
-def send_raw_transaction(transaction):
-    payload = {'rawTransaction': transaction}
-    r = requests.post(host + "/raw", json=payload)
-    print("/raw", r)
+        return send_raw_transaction(json, priv_key)
 
     return r.status_code
 
@@ -67,7 +50,8 @@ def get_job():
     return r.json()['jobAddress']
 
 
-def add_result(jobAddress, resultAddress):
+def add_result(jobAddress, resultAddress, priv_key=None,
+               account_address=None, returnAbi=False):
     payload = {'jobAddress': jobAddress, 'resultAddress': resultAddress}
 
     r = requests.post(host + "/result", json=payload)
@@ -87,6 +71,21 @@ def get_result(jobAddress):
     return addr
 
 
+def send_raw_transaction(json, priv_key):
+    abi = utils.decode_hex(json['abi'][2:])
+    nonce = json['nonce']
+    gas = json['estimatedGas']
+    contractAddress = json['contractAddress']
+
+    transaction = sign_transaction(nonce, abi, priv_key, gas, contractAddress)
+    transaction = '0x' + transaction
+    payload = {'rawTransaction': transaction}
+    r = requests.post(host + "/raw", json=payload)
+    print("/raw", r)
+
+    return r.status_code
+
+
 def create_wallet():
     # TODO is urandom secure??? maybe need to use something else
     private_key = utils.sha3(os.urandom(4096))
@@ -102,6 +101,7 @@ def create_wallet():
 
 
 def sign_transaction(nonce, abi, priv_key, gas, to):
+    # TODO send gas price from bygone?!
     gasprice = 18000000000
 
     # [nonce, gasprice, startgas, to, value, data, v, r, s]
