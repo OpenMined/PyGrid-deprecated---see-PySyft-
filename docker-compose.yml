@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  ipfs:
+    image: go-ifps
+    command: 
+    ports:
+      - "8000:8000"
+      - "5001:5001"
+  worker:
+    build:
+      context: ./
+
+    depends_on: ifps
