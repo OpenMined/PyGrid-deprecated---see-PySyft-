@@ -71,13 +71,11 @@ class Grid(object):
         model.save('temp_model.h5')
         with open('temp_model.h5','rb') as f:
             model_bin = f.read()
-            f.close()
         return model_bin
 
     def deserialize_keras_model(self,model_bin):
         with open('temp_model2.h5','wb') as g:
             g.write(model_bin)
-            g.close()
         model = keras.models.load_model('temp_model2.h5')
         return model
 
@@ -89,7 +87,6 @@ class Grid(object):
         torch.save(state, 'temp_model.pth.tar')
         with open('temp_model.pth.tar', 'rb') as f:
             model_bin = f.read()
-            f.close()
         return model_bin
 
     def deserialize_torch_model(self, model_bin, model_class, **kwargs):
@@ -100,7 +97,6 @@ class Grid(object):
         """
         with open('temp_model2.pth.tar', 'wb') as g:
             g.write(model_bin)
-            g.close()
         state = torch.load()
         model = model_class(**state['kwargs'])
         model.load_state_dict(state['state_dict'])
