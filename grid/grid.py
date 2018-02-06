@@ -1,5 +1,6 @@
 from . import ipfsapi
 from grid.lib import OutputPipe, utils
+from grid.dataset import get_dataset
 
 import base64
 import random
@@ -101,7 +102,7 @@ class Grid(object):
 
 
     # TODO: framework = 'torch'
-    def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
+    def generate_fit_spec(self, model,request,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
 
         model_bin = utils.serialize_keras_model(model)
         model_addr = self.api.add_bytes(model_bin)
@@ -109,26 +110,9 @@ class Grid(object):
         if model_class is not None:
             self.api.add_bytes(model_class)
 
-        train_input = self.serialize_numpy(input)
-        train_target = self.serialize_numpy(target)
-
-        if(valid_input is None):
-            valid_input = self.serialize_numpy(input)
-        else:
-            valid_input = self.serialize_numpy(valid_input)
-
-        if(valid_target is None):
-            valid_target = self.serialize_numpy(target)
-        else:
-            valid_target = self.serialize_numpy(valid_target)
-
-        datasets = [train_input,train_target,valid_input,valid_target]
-        data_json = json.dumps(datasets)
-        data_addr = self.api.add_str(data_json)
-
         spec = {}
         spec['model_addr'] = model_addr
-        spec['data_addr'] = data_addr
+        spec['data_addr'] = request
         spec['batch_size'] = batch_size
         spec['epochs'] = epochs
         spec['log_interval'] = log_interval
@@ -170,12 +154,12 @@ class Grid(object):
 
             model = utils.ipfs2keras(decoded['model_addr'])
 
-            try:
-                np_strings = json.loads(self.api.cat(decoded['data_addr']))
-            except:
-                raise NotImplementedError("The IPFS API only supports Python 3.6. Please modify your environment.")
+            dataset = get_dataset(decoded['data_addr'])
+            if dataset is None:
+                raise Exception("Dataset could not be found. This should fail gracefully.")
 
-            input,target,valid_input,valid_target = list(map(lambda x:self.deserialize_numpy(x),np_strings))
+            input, target = dataset.train_data, dataset.train_labels
+            valid_input, valid_target = dataset.test_data, dataset.test_labels
 
             pipe = OutputPipe(
                 id=self.id,
@@ -200,11 +184,11 @@ class Grid(object):
             raise NotImplementedError("Only compatible with Keras at the moment")
 
 
-    def fit(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
+    def fit(self, model,request,batch_size=1,epochs=1,log_interval=1,message_handler=None):
 
         if(message_handler is None):
             message_handler = self.receive_model
-        spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
+        spec = self.generate_fit_spec(model,request,batch_size,epochs,log_interval)
         self.publish('openmined',spec)
 
         trained = self.listen_to_channel(message_handler,spec['train_channel'])
