@@ -227,7 +227,7 @@ class Grid(object):
             print(output)
 
         else:
-            raise NotImplemented("Only compatible with Keras at the moment")
+            raise NotImplementedError("Only compatible with Keras at the moment")
 
 
     def fit(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
