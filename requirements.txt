@@ -2,3 +2,7 @@ numpy
 jupyter
 requests
 ethereum
+tensorflow
+colorama
+keras
+h5py
