@@ -17,15 +17,15 @@ def ipfs2keras(model_addr):
     return deserialize_keras_model(model_bin)
 
 def serialize_keras_model(model):
-    model.save('temp_model.h5')
-    with open('temp_model.h5','rb') as f:
+    model.save('mnist.h5')
+    with open('mnist.h5','rb') as f:
         model_bin = f.read()
         f.close()
     return model_bin
 
 def deserialize_keras_model(model_bin):
-    with open('temp_model2.h5','wb') as g:
+    with open('mnist.h5','wb') as g:
         g.write(model_bin)
         g.close()
-    model = keras.models.load_model('temp_model2.h5')
+    model = keras.models.load_model('mnist.h5')
     return model
