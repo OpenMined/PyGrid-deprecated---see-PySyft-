@@ -105,6 +105,18 @@ def get_int(b):
     return int(codecs.encode(b, 'hex'), 16)
 
 
-def get_dataset(target):
+def get_training_data(target):
 	if target == "mnist":
-		return MNIST()
+		return MNIST().train_data
+
+def get_training_target(target):
+	if target == "mnist":
+		return MNIST().train_labels
+
+def get_validation_data(target):
+	if target == "mnist":
+		return MNIST().test_data
+
+def get_validation_target(target):
+	if target == "mnist":
+		return MNIST().test_labels

@@ -1,6 +1,7 @@
 from . import ipfsapi
 from grid.lib import OutputPipe, utils
-from grid.dataset import get_dataset
+
+from grid.dataset import get_training_data, get_training_target, get_validation_data, get_validation_target
 
 import base64
 import random
@@ -154,12 +155,13 @@ class Grid(object):
 
             model = utils.ipfs2keras(decoded['model_addr'])
 
-            dataset = get_dataset(decoded['data_addr'])
-            if dataset is None:
-                raise Exception("Dataset could not be found. This should fail gracefully.")
+            request = decoded['data_addr']
 
-            input, target = dataset.train_data, dataset.train_labels
-            valid_input, valid_target = dataset.test_data, dataset.test_labels
+            #TODO: request should fail gracefully? if requested dataset does not exist
+            input  = get_training_data(request["input"]) if "input" in request else None
+            target = get_training_target(request["target"]) if "target" in request else None
+            valid_input = get_validation_data(request["validation_input"]) if "validation_input" in request else None
+            valid_target = get_validation_target(request["validation_target"]) if "validation_target" in request else None
 
             pipe = OutputPipe(
                 id=self.id,
