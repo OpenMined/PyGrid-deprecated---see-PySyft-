@@ -64,7 +64,6 @@ class Grid(object):
             return None
 
 
-
     def serialize_torch_model(self, model, **kwargs):
         """
         kwargs are the arguments needed to instantiate the model
@@ -98,7 +97,6 @@ class Grid(object):
 
     def publish(self,channel,dict_message):
         self.api.pubsub_pub(topic=channel,payload=json.dumps(dict_message))
-
 
     # TODO: framework = 'torch'
     def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
@@ -136,16 +134,29 @@ class Grid(object):
         spec['train_channel'] = 'openmined_train_'+str(model_addr)
         return spec
 
-    def listen_to_channel(self,handle_message,channel):
+    def listen_to_channel(self,handle_message,channel,init_function=None,ignore_from_self=True):
         new_models = self.api.pubsub_sub(topic=channel,stream=True)
 
-
+        first_proc = True
         for m in new_models:
+
+            if(first_proc and init_function is not None):
+                init_function()
+                first_proc = False
+
+
+            # decode base64
             message = self.decode_message(m)
+
             if(message is not None):
-                out = handle_message(message)
-                if(out is not None):
-                    return out
+
+                # if this node didn't send the message
+                if(str(message['from']) != self.encoded_id or ignore_from_self == False):
+                    out = handle_message(message)
+                    if(out is not None):
+                        return out
+                else:
+                    print("ignored message from self")
 
     # TODO: torch
     def receive_model(self,message, verbose=True):
