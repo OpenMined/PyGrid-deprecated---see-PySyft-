@@ -8,24 +8,37 @@ class Client(PubSub):
     def fit(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
         if(message_handler is None):
             message_handler = self.receive_model
-        spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
-        self.publish('openmined',spec)
+        self.spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
+        self.publish('openmined', self.spec)
 
-        trained = self.listen_to_channel(message_handler, spec['train_channel'])
+        trained = self.listen_to_channel(message_handler, self.spec['train_channel'])
         return trained
 
     # TODO: torch
     def receive_model(self,message, verbose=True):
         msg = json.loads(message['data'])
+
         if(msg is not None):
             if(msg['type'] == 'transact'):
                 return utils.ipfs2keras(msg['model_addr']),msg
             elif(msg['type'] == 'log'):
+
+                """
+                TODO -- figure out if a client is lagging behind.
+                        If they are, you should tell them to quit
+
+                        quit = {}
+                        quit['op_code'] = 'quit'
+                        self.publish(self.spec['train_channel'] + '_meta', quit)
+                """
+
                 if(verbose):
                     output =  "Worker:" + msg['worker_id'][-5:]
                     output += " - Epoch " + str(msg['epoch_id']) + " of " + str(msg['num_epochs'])
                     output += " - Valid Loss: " + str(msg['eval_loss'])[0:8]
                     print(output)
+
+
 
     # TODO: framework = 'torch'
     def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
