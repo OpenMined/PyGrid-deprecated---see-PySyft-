@@ -94,6 +94,7 @@ def send_raw_transaction(json, priv_key):
 
 def create_wallet(mnemonic='', passphrase=''):
     # TODO is this secure, maybe not trust this yet on a real network
+    # SHOULD DEFINITELY NOT BE USED IN PRODUCTION YET
     m = Mnemonic('english')
 
     if mnemonic is '':
