@@ -23,17 +23,22 @@ class PubSub(object):
         self.api.pubsub_pub(topic=channel, payload=json.dumps(dict_message))
 
     def listen_to_channel(self, channel, handle_message, init_function=None, ignore_from_self=False):
-        if init_function is not None:
-            init_function()
+        first_proc = True
         new_models = self.api.pubsub_sub(topic=channel, stream=True)
 
         for m in new_models:
+            if init_function is not None and first_proc:
+                init_function()
+                first_proc = False
             message = self.decode_message(m)
+
             if !ignore_from_self or message['from'] != self.encoded_id:
                 if(message is not None):
                     out = handle_message(message)
                     if(out is not None):
                         return out
+            else:
+                print("ignored message from self")
 
     def get_encoded_id(self):
         """Currently a workaround because we can't figure out how to decode the 'from'
