@@ -5,6 +5,11 @@ from grid.pubsub.base import PubSub
 import json
 
 class Client(PubSub):
+
+    def __init__(self):
+        super().__init__()
+        self.progress = {}
+
     def fit(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
         if(message_handler is None):
             message_handler = self.receive_model
@@ -14,6 +19,30 @@ class Client(PubSub):
         trained = self.listen_to_channel(message_handler, self.spec['train_channel'])
         return trained
 
+    def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
+        if parent_model not in self.progress:
+            self.progress[parent_model] = {}
+
+        if worker_id not in self.progress[parent_model]:
+            self.progress[parent_model][worker_id] = 0
+
+        p = epoch_id / num_epochs
+        self.progress[parent_model][worker_id] = p
+
+        return p
+
+
+    def max_progress(self, parent_model):
+        if parent_model not in self.progress:
+            return 0
+
+        max_progress = 0
+        for worker_id, progress in self.progress[parent_model].items():
+            if progress > max_progress:
+                max_progress = progress
+
+        return max_progress
+
     # TODO: torch
     def receive_model(self,message, verbose=True):
         msg = json.loads(message['data'])
@@ -22,16 +51,6 @@ class Client(PubSub):
             if(msg['type'] == 'transact'):
                 return utils.ipfs2keras(msg['model_addr']),msg
             elif(msg['type'] == 'log'):
-
-                """
-                TODO -- figure out if a client is lagging behind.
-                        If they are, you should tell them to quit
-
-                        quit = {}
-                        quit['op_code'] = 'quit'
-                        self.publish(self.spec['train_channel'] + '_meta', quit)
-                """
-
                 if(verbose):
                     output =  "Worker:" + msg['worker_id'][-5:]
                     output += " - Epoch " + str(msg['epoch_id']) + " of " + str(msg['num_epochs'])
@@ -39,6 +58,19 @@ class Client(PubSub):
                     print(output)
 
 
+                # Figure out of we should tell this worker to quit.
+                parent_model = msg['parent_model']
+                worker_id = msg['worker_id']
+                num_epochs = msg['num_epochs']
+                epoch_id = msg['epoch_id']
+
+                progress = self.update_progress(parent_model, worker_id, num_epochs, epoch_id)
+                max_progress = self.max_progress(parent_model)
+
+                if progress < max_progress * 0.75:
+                    quit = {}
+                    quit['op_code'] = 'quit'
+                    self.publish(self.spec['train_channel'] + ':' + worker_id, quit)
 
     # TODO: framework = 'torch'
     def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):

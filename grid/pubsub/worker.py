@@ -34,8 +34,6 @@ class Worker(base.PubSub):
 
         decoded = json.loads(message['data'])
 
-        print('got some work')
-
         if(decoded['framework'] == 'keras'):
 
             model = utils.ipfs2keras(decoded['model_addr'])
@@ -46,7 +44,7 @@ class Worker(base.PubSub):
                 raise NotImplementedError("The IPFS API only supports Python 3.6. Please modify your environment.")
 
             input,target,valid_input,valid_target = list(map(lambda x:self.deserialize_numpy(x),np_strings))
-            train_channel = decoded['train_channel'] + '_meta'
+            train_channel = decoded['train_channel']
 
             self.learner_callback = OutputPipe(
                 id=self.id,
@@ -57,8 +55,10 @@ class Worker(base.PubSub):
                 model=model
             )
 
-            monitor_thread = threading.Thread(target = self.listen_to_channel, args = (self.train_meta, train_channel))
+            monitor_thread = threading.Thread(target = self.listen_to_channel, args = (self.train_meta, train_channel + ':' + self.id))
             monitor_thread.start()
+
+            print('training model')
 
             model.fit(
                 input,
@@ -69,8 +69,6 @@ class Worker(base.PubSub):
                 epochs=decoded['epochs'],
                 callbacks=[self.learner_callback]
             )
-
-            print('finished training')
 
         else:
             raise NotImplementedError("Only compatible with Keras at the moment")

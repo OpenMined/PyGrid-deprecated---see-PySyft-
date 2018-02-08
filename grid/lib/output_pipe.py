@@ -1,5 +1,7 @@
 import keras
 from . import utils
+from time import sleep
+
 
 class OutputPipe(keras.callbacks.Callback):
 
@@ -28,8 +30,10 @@ class OutputPipe(keras.callbacks.Callback):
         spec['parent_model'] = self.model_addr
         spec['worker_id'] = self.id
 
-        self.model.stop_training = self.stop_training
+        sleep(0.01)
 
+
+        self.model.stop_training = self.stop_training
         self.publisher(channel=self.channel, dict_message=spec)
 
     def on_train_end(self, logs={}):
