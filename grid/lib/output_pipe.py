@@ -30,9 +30,6 @@ class OutputPipe(keras.callbacks.Callback):
         spec['parent_model'] = self.model_addr
         spec['worker_id'] = self.id
 
-        sleep(0.01)
-
-
         self.model.stop_training = self.stop_training
         self.publisher(channel=self.channel, dict_message=spec)
 
