@@ -32,7 +32,7 @@ class PubSub(object):
                 first_proc = False
             message = self.decode_message(m)
 
-            if !ignore_from_self or message['from'] != self.encoded_id:
+            if not ignore_from_self or message['from'] != self.encoded_id:
                 if(message is not None):
                     out = handle_message(message)
                     if(out is not None):
