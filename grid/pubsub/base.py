@@ -4,6 +4,7 @@ import base64
 import json
 import numpy as np
 import sys
+import asyncio
 
 
 class PubSub(object):
@@ -21,6 +22,7 @@ class PubSub(object):
 
     def publish(self, channel, dict_message):
         self.api.pubsub_pub(topic=channel, payload=json.dumps(dict_message))
+
 
     def listen_to_channel(self, channel, handle_message, init_function=None, ignore_from_self=False):
         first_proc = True
