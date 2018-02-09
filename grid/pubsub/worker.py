@@ -44,6 +44,7 @@ class Worker(base.PubSub):
                 model=model
             )
 
+            print("FITTING!!!!!!!!!!!!")
             model.fit(
                 input,
                 target,

@@ -1,9 +1,10 @@
 from ethereum import utils
+from ethereum import tools
 from ethereum import transactions
-import os
 import rlp
 import requests
 from mnemonic import Mnemonic
+
 
 host = "http://127.0.0.1:3000"
 
@@ -98,7 +99,7 @@ def create_wallet(mnemonic='', passphrase=''):
     m = Mnemonic('english')
 
     if mnemonic is '':
-        # strenght of 256 is recommended
+        # strength of 256 is recommended
         mnemonic = m.generate(strength=256)
     print("mnemonic:", mnemonic)
 
@@ -125,3 +126,22 @@ def sign_transaction(nonce, abi, priv_key, gas, to):
 
     ret = rlp.encode(signed_tx).hex()
     return ret
+
+
+def store_json_wallet(private_key, account, password, keystore_file):
+    keystore = tools.keys.make_keystore_json(bytes.fromhex(private_key),
+                                             password)
+
+    account = account.replace('0x', '')
+    keystore['account'] = account
+    keystore['id'] = keystore['id'].decode('utf-8')
+    with open(keystore_file, 'w') as outfile:
+        json.dump(keystore, outfile)
+
+
+def get_private_json_wallet(keystore_file, password):
+    with open(keystore_file, 'r', ) as outfile:
+        keystore = json.load(outfile)
+        priv_key = tools.keys.decode_keystore_json(keystore, password)
+
+    return priv_key
