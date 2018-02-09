@@ -4,7 +4,8 @@ from ethereum import transactions
 import rlp
 import requests
 from mnemonic import Mnemonic
-
+import json
+import getpass
 
 host = "http://127.0.0.1:3000"
 
@@ -78,7 +79,17 @@ def get_result(jobAddress):
     return addr
 
 
-def send_raw_transaction(json, priv_key):
+def send_raw_transaction(json):
+    print("ENTER KEYSTORE JSON FILE (default wallet.json):")
+    keystore_file = input()
+    if keystore_file == '':
+        keystore_file = 'wallet.json'
+
+    print("NEED PASSWORD TO UNLOCK WALLET:")
+    password = getpass.getpass()
+    priv_key = get_private_json_wallet(password, keystore_file=keystore_file)
+    print(priv_key)
+
     abi = utils.decode_hex(json['abi'][2:])
     nonce = json['nonce']
     gas = json['estimatedGas']
@@ -93,25 +104,36 @@ def send_raw_transaction(json, priv_key):
     return r.status_code
 
 
-def create_wallet(mnemonic='', passphrase=''):
+def create_wallet(keystore_pass, mnemonic_pass, mnemonic='',
+                  keystore_file='wallet.json'):
     # TODO is this secure, maybe not trust this yet on a real network
     # SHOULD DEFINITELY NOT BE USED IN PRODUCTION YET
     m = Mnemonic('english')
 
+    print(keystore_pass, mnemonic_pass)
+
     if mnemonic is '':
         # strength of 256 is recommended
         mnemonic = m.generate(strength=256)
-    print("mnemonic:", mnemonic)
 
-    seed = m.to_seed(mnemonic, passphrase)
+    seed = m.to_seed(mnemonic, mnemonic_pass)
 
     private_key = utils.sha3(seed)
 
-    # TODO encrypt and store these keys somewhere for user?!?!
     raw_address = utils.privtoaddr(private_key)
     account_address = utils.checksum_encode(raw_address)
 
+    print("WARNING: BELOW SHOULDN'T BE USED IN PRODUCTION, NOT AUDITED FOR SAFETY")
+    print("SAVE MNEMONIC & PASSPHRASE OFFLINE TO RECOVER ACCOUNT")
+    print("MNEMONIC:", mnemonic)
+    print("PASSPHRASE:", mnemonic_pass)
+
     print("PRIVATE KEY", private_key.hex(), "PUBLIC KEY", account_address)
+
+    print("PRIVATE KEY STORED IN", keystore_file, "WITH PASSWORD:", keystore_pass)
+    print("CAN BE RECOVERED WITH ABOVE MNEMONIC AND PASSPHRASE")
+    store_json_wallet(private_key, account_address, keystore_pass,
+                      keystore_file)
 
     return private_key.hex(), account_address
 
@@ -129,8 +151,7 @@ def sign_transaction(nonce, abi, priv_key, gas, to):
 
 
 def store_json_wallet(private_key, account, password, keystore_file):
-    keystore = tools.keys.make_keystore_json(bytes.fromhex(private_key),
-                                             password)
+    keystore = tools.keys.make_keystore_json(private_key, password)
 
     account = account.replace('0x', '')
     keystore['account'] = account
@@ -139,7 +160,7 @@ def store_json_wallet(private_key, account, password, keystore_file):
         json.dump(keystore, outfile)
 
 
-def get_private_json_wallet(keystore_file, password):
+def get_private_json_wallet(password, keystore_file='wallet.json'):
     with open(keystore_file, 'r', ) as outfile:
         keystore = json.load(outfile)
         priv_key = tools.keys.decode_keystore_json(keystore, password)
