@@ -186,7 +186,14 @@ class Grid(object):
             raise NotImplementedError("Only compatible with Keras at the moment")
 
 
-    def fit(self, model,request,batch_size=1,epochs=1,log_interval=1,message_handler=None):
+    def fit(self, model, input, target, valid_input=None, valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
+
+        # TODO: we should support composite/custom (valid_)input/target requests
+        request = dict()
+        request["input"] = input
+        request["target"] = target
+        request["validation_input"] = valid_input
+        request["validation_target"] = valid_target
 
         if(message_handler is None):
             message_handler = self.receive_model
