@@ -15,6 +15,7 @@ class Client(PubSub):
         self.spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
         self.publish('openmined', self.spec)
 
+
         trained = self.listen_to_channel(message_handler,
                                          self.spec['train_channel'])
         return trained
