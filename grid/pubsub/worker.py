@@ -1,24 +1,18 @@
-from grid import ipfsapi
 from grid.lib import OutputPipe, utils
 from . import base
 from grid.pubsub import commands
 from grid.pubsub import channels
 
-from torch.autograd import Variable
-from colorama import Fore, Back, Style
-
-import keras
 import json
-import numpy as np
-import torch
 import threading
-import sys
-import asyncio
+from bitcoin import base58
 
 """
 TODO: modify Client to store the source code for the model in IPFS.
-            (think through logistics; introduces hurdles for packaging model source code)
-TODO: figure out a convenient way to make robust training procedure for torch -- will probably want to use ignite for this
+      (think through logistics; introduces
+      hurdles for packaging model source code)
+TODO: figure out a convenient way to make robust training procedure for torch
+      -- will probably want to use ignite for this
 """
 
 
@@ -26,13 +20,13 @@ class Worker(base.PubSub):
 
     def train_meta(self, message):
         decoded = json.loads(message['data'])
-        if not 'op_code' in decoded:
+        if 'op_code' not in decoded:
             return
 
         self.learner_callback.stop_training = decoded['op_code'] == 'quit'
 
     # TODO: torch
-    def fit_worker(self,message):
+    def fit_worker(self, message):
 
         decoded = json.loads(message['data'])
 
@@ -42,10 +36,10 @@ class Worker(base.PubSub):
 
             try:
                 np_strings = json.loads(self.api.cat(decoded['data_addr']))
-            except:
+            except NotImplementedError:
                 raise NotImplementedError("The IPFS API only supports Python 3.6. Please modify your environment.")
 
-            input,target,valid_input,valid_target = list(map(lambda x:self.deserialize_numpy(x),np_strings))
+            input, target, valid_input, valid_target = list(map(lambda x: self.deserialize_numpy(x),np_strings))
             train_channel = decoded['train_channel']
 
             self.learner_callback = OutputPipe(
@@ -57,7 +51,9 @@ class Worker(base.PubSub):
                 model=model
             )
 
-            monitor_thread = threading.Thread(target = self.listen_to_channel, args = (self.train_meta, train_channel + ':' + self.id))
+            args = (self.train_meta, train_channel + ':' + self.id)
+            monitor_thread = threading.Thread(target=self.listen_to_channel,
+                                              args=args)
             monitor_thread.start()
 
             print('training model')
@@ -77,14 +73,27 @@ class Worker(base.PubSub):
         else:
             raise NotImplementedError("Only compatible with Keras at the moment")
 
+    def list_tasks(self, message):
+        fr = base58.encode(message['from'])
+
+        print("listing tasks to " + fr)
+
+        with open(".openmined/tasks.json", "r") as task_list:
+            string_list = task_list.read()
+
+        callback_channel = "openmined:list_tasks:" + fr
+
+        self.publish(callback_channel, string_list)
 
     def work(self):
         self.listen_to_channel('openmined', self.fit_worker)
+        self.listen_to_channel('openmined:list_tasks', self.list_tasks)
 
     def discovered_tasks(self, task):
         print(f'found a task {task}')
 
     def find_tasks(self):
         self.listen_to_channel(channels.add_task, self.discovered_tasks)
-        self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+        self.listen_to_channel(channels.list_tasks_callback(self.id),
+                               self.discovered_tasks)
         self.publish(channels.list_tasks, commands.list_all)

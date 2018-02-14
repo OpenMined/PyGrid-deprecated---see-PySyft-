@@ -4,8 +4,8 @@ import base64
 import json
 import numpy as np
 import sys
-import asyncio
 from threading import Thread
+
 
 class PubSub(object):
     def __init__(self, ipfs_addr='127.0.0.1', port=5001):

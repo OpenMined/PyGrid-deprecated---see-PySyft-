@@ -2,6 +2,7 @@ from grid.lib import utils
 from grid.pubsub.base import PubSub
 
 import json
+import os
 
 
 class Client(PubSub):
@@ -110,10 +111,25 @@ class Client(PubSub):
         return spec
 
     def add_task(self, name):
-        json = {"name": name}
+        task_data = {"name": name}
 
-        addr = self.api.add_json(json)
-        print(addr)
+        addr = self.api.add_json(task_data)
         data = "add_task:" + str(addr)
 
-        self.publish('openmined', data)
+        # config file with openmined data dir
+        if not os.path.exists(".openmined"):
+            os.makedirs(".openmined")
+
+        if not os.path.exists(".openmined/tasks.json"):
+            with open(".openmined/tasks.json", "w") as task_file:
+                json.dump([], task_file)
+
+        with open(".openmined/tasks.json", "r") as task_file:
+            tasks = json.loads(task_file.read())
+
+        tasks.append(str(addr))
+
+        with open(".openmined/tasks.json", "w") as task_file:
+            json.dump(tasks, task_file)
+
+        self.publish('openmined:add_task', data)
