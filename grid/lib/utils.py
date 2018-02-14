@@ -30,6 +30,9 @@ def deserialize_keras_model(model_bin):
     model = keras.models.load_model('temp_model2.h5')
     return model
 
+# def load_tasks():
+
+
 def load_task(name):
     if not os.path.exists('.openmined/tasks.json'):
         return None

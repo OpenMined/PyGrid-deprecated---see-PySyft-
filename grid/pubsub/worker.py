@@ -73,21 +73,6 @@ class Worker(base.PubSub):
         else:
             raise NotImplementedError("Only compatible with Keras at the moment")
 
-    def list_tasks(self, message):
-        fr = base58.encode(message['from'])
-
-        print("listing tasks to " + fr)
-
-        with open(".openmined/tasks.json", "r") as task_list:
-            string_list = task_list.read()
-
-        callback_channel = "openmined:list_tasks:" + fr
-
-        self.publish(callback_channel, string_list)
-
-    def work(self):
-        self.listen_to_channel('openmined', self.fit_worker)
-        self.listen_to_channel('openmined:list_tasks', self.list_tasks)
 
     """
     Grid Tree Implementation
@@ -98,6 +83,22 @@ class Worker(base.PubSub):
     def discovered_tasks(self, task):
         print(f'found a task {task}')
 
+    def list_tasks(self, message):
+        fr = base58.encode(message['from'])
+
+        if not os.path.exists('.openmined/tasks.json'):
+            return None
+
+        tasks = {}
+        with open('.openmined/tasks.json', 'r') as task_file:
+            tasks = json.loads(task_file.read())
+
+        callback_channel = "openmined:list_tasks:" + fr
+        self.publish(callback_channel, tasks)
+
+    def work(self):
+        self.listen_to_channel('openmined', self.fit_worker)
+        self.listen_to_channel('openmined:list_tasks', self.list_tasks)
 
     def find_tasks(self):
         self.listen_to_channel(channels.add_task, self.discovered_tasks)

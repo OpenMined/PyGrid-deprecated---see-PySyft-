@@ -1,5 +1,5 @@
 from grid.lib import utils
-from grid.pubsub import channels
+from grid.pubsub import channels, commands
 import random
 import base64
 import json
@@ -58,13 +58,25 @@ class PubSub(object):
             if init_function is not None and first_proc:
                 init_function()
                 first_proc = False
+            #
             message = self.decode_message(m)
+            print(f'omg {message} && {m}')
+            # f = message['from']
+            # print(f'info {ignore_from_self} && {f}')
 
             if not ignore_from_self or message['from'] != self.encoded_id:
+                print('go here???')
                 if(message is not None):
-                    out = handle_message(message)
-                    if(out is not None):
-                        return out
+                    print(f'a message??? {message}')
+                    if handle_message is not None:
+                        out = handle_message(message)
+                        if (out is not None):
+                            return out
+                        else:
+                            return message
+                    else:
+                        return message
+
             else:
                 print("ignored message from self")
 
@@ -138,7 +150,7 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
-    def add_model(self, name, parent, model):
+    def add_model(self, name, model, parent=None):
         """
         Propose a model as a solution to a task.
 

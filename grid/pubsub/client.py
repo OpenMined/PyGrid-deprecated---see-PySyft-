@@ -1,6 +1,6 @@
 from grid.lib import utils
 from grid.pubsub.base import PubSub
-
+from grid.pubsub import channels, commands
 import json
 import os
 
@@ -116,6 +116,11 @@ class Client(PubSub):
     Methods for Grid tree down here
     """
 
+
+    def find_tasks(self):
+        self.publish(channels.list_tasks, commands.list_all)
+        return self.listen_to_channel_sync(channels.list_tasks_callback(self.id), None)
+
     def add_task(self, name):
         task_data = {'name': name}
 
@@ -123,5 +128,5 @@ class Client(PubSub):
         data = f'add_task:{addr}'
 
         utils.store_task(name, addr)
-        
+
         self.publish('openmined:add_task', data)
