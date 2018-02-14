@@ -122,4 +122,6 @@ class Client(PubSub):
 
         utils.store_task(name, addr)
 
-        self.publish('openmined:add_task', addr)
+        data = json.dumps([{'name': name, 'address': addr}])
+
+        self.publish('openmined:add_task', data)

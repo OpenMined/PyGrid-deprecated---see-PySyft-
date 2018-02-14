@@ -23,7 +23,7 @@ class PubSub(object):
         return np.array(json.loads(json_array)).astype('float')
 
     def publish(self, channel, message):
-        if isinstance(message, dict):
+        if isinstance(message, dict) or isinstance(message, list):
             self.api.pubsub_pub(topic=channel, payload=json.dumps(message))
         else:
             self.api.pubsub_pub(topic=channel, payload=message)
