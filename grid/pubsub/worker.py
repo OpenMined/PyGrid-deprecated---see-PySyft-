@@ -1,6 +1,8 @@
 from grid import ipfsapi
 from grid.lib import OutputPipe, utils
 from . import base
+from grid.pubsub import commands
+from grid.pubsub import channels
 
 from torch.autograd import Variable
 from colorama import Fore, Back, Style
@@ -78,3 +80,11 @@ class Worker(base.PubSub):
 
     def work(self):
         self.listen_to_channel('openmined', self.fit_worker)
+
+    def discovered_tasks(self, task):
+        print(f'found a task {task}')
+
+    def find_tasks(self):
+        self.listen_to_channel(channels.add_task, self.discovered_tasks)
+        self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+        self.publish(channels.list_tasks, commands.list_all)

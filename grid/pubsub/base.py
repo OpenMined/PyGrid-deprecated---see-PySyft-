@@ -20,8 +20,12 @@ class PubSub(object):
     def deserialize_numpy(self, json_array):
         return np.array(json.loads(json_array)).astype('float')
 
-    def publish(self, channel, dict_message):
-        self.api.pubsub_pub(topic=channel, payload=json.dumps(dict_message))
+    def publish(self, channel, message):
+        if isinstance(message, dict):
+            self.api.pubsub_pub(topic=channel, payload=json.dumps(message))
+        else:
+            self.api.pubsub_pub(topic=channel, payload=message)
+
 
     def listen_to_channel_sync(self, *args):
         """
@@ -37,7 +41,7 @@ class PubSub(object):
         This function will create the listener and call back your handler function
         on a new thread.
         """
-        
+
         t1 = Thread(target = self.listen_to_channel_impl, args = args)
         t1.start()
 
