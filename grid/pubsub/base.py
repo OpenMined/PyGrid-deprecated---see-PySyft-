@@ -129,3 +129,29 @@ class PubSub(object):
         model = model_class(**state['kwargs'])
         model.load_state_dict(state['state_dict'])
         return model
+
+
+    """
+    Grid Tree Implementation
+
+    Methods for Grid tree down here
+    """
+
+    def add_model(self, task, model):
+        """
+        Propose a model as a solution to a task.
+
+        Task  - The name of the task.  e.g. MNIST
+        model - A keras model.  Down the road we should support more frameworks.
+        """
+
+        model_bin = utils.serialize_keras_model(model)
+        model_addr = self.api.add_bytes(model_bin)
+
+        json = {
+            
+        }
+
+        self.publish
+
+        print('add a model ok??')

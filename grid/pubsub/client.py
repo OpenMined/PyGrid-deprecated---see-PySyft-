@@ -109,6 +109,12 @@ class Client(PubSub):
         spec['train_channel'] = 'openmined_train_' + str(model_addr)
         return spec
 
+    """
+    Grid Tree Implementation
+
+    Methods for Grid tree down here
+    """
+
     def add_task(self, name):
         json = {"name": name}
 
