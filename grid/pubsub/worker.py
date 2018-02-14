@@ -84,6 +84,9 @@ class Worker(base.PubSub):
     def discovered_tasks(self, task):
         print(f'found a task {task}')
 
+    def add_model(self, task, model):
+        print('add a model')
+
     def find_tasks(self):
         self.listen_to_channel(channels.add_task, self.discovered_tasks)
         self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
