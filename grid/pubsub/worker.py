@@ -6,6 +6,7 @@ from grid.pubsub import channels
 import json
 import threading
 from bitcoin import base58
+import os
 
 """
 TODO: modify Client to store the source code for the model in IPFS.
@@ -97,7 +98,22 @@ class Worker(base.PubSub):
 
     def discovered_tasks(self, task):
         print(f'found a task {task}')
-        
+
+        addr = task['data']
+        task_info = json.loads(self.api.cat(addr))
+
+        utils.store_task(task_info['name'], addr)
+
+    def found_best_model(self, model):
+        addr = json.loads(model['data'])
+        task_info = json.loads(self.api.cat(addr))
+        data_dir = task_info['data_dir']
+
+        if os.path.exists(f'data/{data_dir}'):
+            # download model
+            # train model
+            # upload model
+            print("WUTUUTUT")
 
     def find_tasks(self):
         self.listen_to_channel(channels.add_task, self.discovered_tasks)
