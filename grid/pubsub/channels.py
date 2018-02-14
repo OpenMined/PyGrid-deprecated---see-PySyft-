@@ -7,3 +7,6 @@ add_task = 'openmined:add_task'
 
 def list_tasks_callback(id):
     return f'openmined:list_tasks:{id}'
+
+def add_model(name):
+    return f'openmined:task:add:{name}'

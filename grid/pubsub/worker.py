@@ -89,8 +89,15 @@ class Worker(base.PubSub):
         self.listen_to_channel('openmined', self.fit_worker)
         self.listen_to_channel('openmined:list_tasks', self.list_tasks)
 
+    """
+    Grid Tree Implementation
+
+    Methods for Grid tree down here
+    """
+
     def discovered_tasks(self, task):
         print(f'found a task {task}')
+
 
     def find_tasks(self):
         self.listen_to_channel(channels.add_task, self.discovered_tasks)

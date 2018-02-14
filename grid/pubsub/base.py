@@ -1,4 +1,5 @@
 from grid.lib import utils
+from grid.pubsub import channels
 import random
 import base64
 import json
@@ -41,11 +42,6 @@ class PubSub(object):
         This function will create the listener and call back your handler function
         on a new thread.
         """
-<<<<<<< HEAD
-
-=======
-
->>>>>>> a7238de48925472d56585da809c79762f185039c
         t1 = Thread(target = self.listen_to_channel_impl, args = args)
         t1.start()
 
@@ -133,3 +129,34 @@ class PubSub(object):
         model = model_class(**state['kwargs'])
         model.load_state_dict(state['state_dict'])
         return model
+
+
+    """
+    Grid Tree Implementation
+
+    Methods for Grid tree down here
+    """
+
+    def add_model(self, name, parent, model):
+        """
+        Propose a model as a solution to a task.
+
+        Task  - The name of the task.  e.g. MNIST
+        model - A keras model.  Down the road we should support more frameworks.
+        """
+
+        p = None
+        if parent is None:
+            task = load_task(name)
+            p = task['address']
+        else:
+            p = parent
+
+        model_bin = utils.serialize_keras_model(model)
+        update = {
+            model: model_bin,
+            parent: p
+        }
+
+        update_addr = self.api.add_bytes(update)
+        self.publish(channels.add_model(name), update_addr)

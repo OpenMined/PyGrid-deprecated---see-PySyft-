@@ -110,26 +110,18 @@ class Client(PubSub):
         spec['train_channel'] = 'openmined_train_' + str(model_addr)
         return spec
 
+    """
+    Grid Tree Implementation
+
+    Methods for Grid tree down here
+    """
+
     def add_task(self, name):
-        task_data = {"name": name}
+        task_data = {'name': name}
 
         addr = self.api.add_json(task_data)
-        data = "add_task:" + str(addr)
+        data = f'add_task:{addr}'
 
-        # config file with openmined data dir
-        if not os.path.exists(".openmined"):
-            os.makedirs(".openmined")
-
-        if not os.path.exists(".openmined/tasks.json"):
-            with open(".openmined/tasks.json", "w") as task_file:
-                json.dump([], task_file)
-
-        with open(".openmined/tasks.json", "r") as task_file:
-            tasks = json.loads(task_file.read())
-
-        tasks.append(str(addr))
-
-        with open(".openmined/tasks.json", "w") as task_file:
-            json.dump(tasks, task_file)
-
+        utils.store_task(name, addr)
+        
         self.publish('openmined:add_task', data)
