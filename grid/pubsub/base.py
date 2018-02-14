@@ -42,7 +42,6 @@ class PubSub(object):
         This function will create the listener and call back your handler function
         on a new thread.
         """
-
         t1 = Thread(target = self.listen_to_channel_impl, args = args)
         t1.start()
 
