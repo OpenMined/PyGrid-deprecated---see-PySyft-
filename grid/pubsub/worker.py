@@ -89,6 +89,10 @@ class Worker(base.PubSub):
     def work(self):
         self.listen_to_channel(channels.openmined, self.fit_worker)
         self.listen_to_channel(channels.list_tasks, self.list_tasks)
+        self.listen_to_channel(channels.add_task, self.discovered_tasks)
+        self.listen_to_channel(channels.list_tasks_callback(self.id),
+                               self.discovered_tasks)
+        self.publish(channels.list_tasks, commands.list_all)
 
     """
     Grid Tree Implementation
@@ -99,10 +103,10 @@ class Worker(base.PubSub):
     def discovered_tasks(self, task):
         print(f'found a task {task}')
 
-        addr = task['data']
-        task_info = json.loads(self.api.cat(addr))
+        data = json.loads(task['data'])
 
-        utils.store_task(task_info['name'], addr)
+        for task in data:
+            utils.store_task(task['name'], task['address'])
 
     def found_best_model(self, model):
         addr = json.loads(model['data'])
@@ -114,9 +118,3 @@ class Worker(base.PubSub):
             # train model
             # upload model
             print("WUTUUTUT")
-
-    def find_tasks(self):
-        self.listen_to_channel(channels.add_task, self.discovered_tasks)
-        self.listen_to_channel(channels.list_tasks_callback(self.id),
-                               self.discovered_tasks)
-        self.publish(channels.list_tasks, commands.list_all)

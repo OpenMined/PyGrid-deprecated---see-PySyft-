@@ -115,25 +115,12 @@ class Client(PubSub):
     Methods for Grid tree down here
     """
 
-<<<<<<< HEAD
-
-    def find_tasks(self):
-        self.publish(channels.list_tasks, commands.list_all)
-        return self.listen_to_channel_sync(channels.list_tasks_callback(self.id), None)
-
-    def add_task(self, name):
-        task_data = {'name': name}
-=======
     def add_task(self, name, data_dir):
         task_data = {'name': name, 'data_dir': data_dir}
->>>>>>> c8e91d2600cced70256216674a94333b7b0ffe77
 
         addr = self.api.add_json(task_data)
 
         utils.store_task(name, addr)
-<<<<<<< HEAD
-        self.publish('openmined:add_task', data)
-=======
 
-        self.publish('openmined:add_task', addr)
->>>>>>> c8e91d2600cced70256216674a94333b7b0ffe77
+        data = json.dumps([{'name': name, 'address': addr}])
+        self.publish('openmined:add_task', data)

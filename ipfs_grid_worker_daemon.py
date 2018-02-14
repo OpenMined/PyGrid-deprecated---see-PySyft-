@@ -11,4 +11,4 @@ from grid.pubsub.worker import Worker
 
 gridWorker = Worker()
 print("grid id: {}".format(gridWorker.id))
-gridWorker.find_tasks()
+gridWorker.work()

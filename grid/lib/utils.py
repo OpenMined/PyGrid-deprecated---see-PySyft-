@@ -68,7 +68,7 @@ def store_task(name, address):
         'address': address
     }
 
-    tasks.append(json.dumps(task))
+    tasks.append(task)
 
     with open(".openmined/tasks.json", "w") as task_file:
         json.dump(tasks, task_file)
