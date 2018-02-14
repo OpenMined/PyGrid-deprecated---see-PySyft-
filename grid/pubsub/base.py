@@ -6,6 +6,7 @@ import json
 import numpy as np
 import sys
 from threading import Thread
+import torch
 
 
 class PubSub(object):
@@ -27,7 +28,6 @@ class PubSub(object):
         else:
             self.api.pubsub_pub(topic=channel, payload=message)
 
-
     def listen_to_channel_sync(self, *args):
         """
         Synchronous version of listen_to_channel
@@ -39,13 +39,14 @@ class PubSub(object):
         """
         Listens for IPFS pubsub sub messages asynchronously.
 
-        This function will create the listener and call back your handler function
-        on a new thread.
+        This function will create the listener and call back your handler
+        function on a new thread.
         """
-        t1 = Thread(target = self.listen_to_channel_impl, args = args)
+        t1 = Thread(target=self.listen_to_channel_impl, args=args)
         t1.start()
 
-    def listen_to_channel_impl(self, channel, handle_message, init_function=None, ignore_from_self=False):
+    def listen_to_channel_impl(self, channel, handle_message,
+                               init_function=None, ignore_from_self=False):
         """
         Do not call directly.  Use listen_to_channel or listen_to_channel_sync instead.
         """
@@ -142,7 +143,6 @@ class PubSub(object):
         model.load_state_dict(state['state_dict'])
         return model
 
-
     """
     Grid Tree Implementation
 
@@ -154,12 +154,12 @@ class PubSub(object):
         Propose a model as a solution to a task.
 
         Task  - The name of the task.  e.g. MNIST
-        model - A keras model.  Down the road we should support more frameworks.
+        model - A keras model. Down the road we should support more frameworks.
         """
 
         p = None
         if parent is None:
-            task = load_task(name)
+            task = utils.load_task(name)
             p = task['address']
         else:
             p = parent

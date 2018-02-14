@@ -16,9 +16,8 @@ class Client(PubSub):
         self.spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
         self.publish('openmined', self.spec)
 
-
         trained = self.listen_to_channel_sync(message_handler,
-                                         self.spec['train_channel'])
+                                              self.spec['train_channel'])
         return trained
 
     def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
@@ -116,6 +115,7 @@ class Client(PubSub):
     Methods for Grid tree down here
     """
 
+<<<<<<< HEAD
 
     def find_tasks(self):
         self.publish(channels.list_tasks, commands.list_all)
@@ -123,9 +123,17 @@ class Client(PubSub):
 
     def add_task(self, name):
         task_data = {'name': name}
+=======
+    def add_task(self, name, data_dir):
+        task_data = {'name': name, 'data_dir': data_dir}
+>>>>>>> c8e91d2600cced70256216674a94333b7b0ffe77
 
         addr = self.api.add_json(task_data)
-        data = f'add_task:{addr}'
 
         utils.store_task(name, addr)
+<<<<<<< HEAD
         self.publish('openmined:add_task', data)
+=======
+
+        self.publish('openmined:add_task', addr)
+>>>>>>> c8e91d2600cced70256216674a94333b7b0ffe77
