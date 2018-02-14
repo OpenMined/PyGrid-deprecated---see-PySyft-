@@ -128,5 +128,4 @@ class Client(PubSub):
         data = f'add_task:{addr}'
 
         utils.store_task(name, addr)
-
         self.publish('openmined:add_task', data)
