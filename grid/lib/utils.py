@@ -29,3 +29,36 @@ def deserialize_keras_model(model_bin):
         g.close()
     model = keras.models.load_model('temp_model2.h5')
     return model
+
+def load_task(name):
+    if not os.path.exists('.openmined/tasks.json'):
+        return None
+
+    with open('.openmined/tasks.json', 'r') as task_file:
+        tasks = json.loads(task_file.read())
+
+    for task in tasks:
+        if task['name'] == name:
+            return task
+
+def store_task(name, address):
+    # config file with openmined data dir
+    if not os.path.exists(".openmined"):
+        os.makedirs(".openmined")
+
+    if not os.path.exists(".openmined/tasks.json"):
+        with open(".openmined/tasks.json", "w") as task_file:
+            json.dump([], task_file)
+
+    with open(".openmined/tasks.json", "r") as task_file:
+        tasks = json.loads(task_file.read())
+
+    task = {
+        'name': name,
+        'address': address
+    }
+
+    tasks.append(json.dumps(task))
+
+    with open(".openmined/tasks.json", "w") as task_file:
+        json.dump(tasks, task_file)

@@ -1,4 +1,5 @@
 from grid.lib import utils
+from grid.pubsub import channels
 import random
 import base64
 import json
@@ -137,7 +138,7 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
-    def add_model(self, task, model):
+    def add_model(self, name, parent, model):
         """
         Propose a model as a solution to a task.
 
@@ -145,13 +146,18 @@ class PubSub(object):
         model - A keras model.  Down the road we should support more frameworks.
         """
 
-        model_bin = utils.serialize_keras_model(model)
-        model_addr = self.api.add_bytes(model_bin)
+        p = None
+        if parent is None:
+            task = load_task(name)
+            p = task['address']
+        else:
+            p = parent
 
-        json = {
-            
+        model_bin = utils.serialize_keras_model(model)
+        update = {
+            model: model_bin,
+            parent: p
         }
 
-        self.publish
-
-        print('add a model ok??')
+        update_addr = self.api.add_bytes(update)
+        self.publish(channels.add_model(name), update_addr)
