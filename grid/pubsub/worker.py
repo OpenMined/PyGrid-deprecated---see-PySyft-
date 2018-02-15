@@ -108,7 +108,7 @@ class Worker(base.PubSub):
         self.publish(callback_channel, string_list)
 
     def added_model(self, info):
-        print('FOUND NEW MODEL: {info}')
+        print(f'FOUND NEW MODEL: {info}')
 
     def discovered_tasks(self, task):
         print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
@@ -127,13 +127,27 @@ class Worker(base.PubSub):
 
             print(f'\t{name}\t{addr}')
 
-    def found_best_model(self, model):
-        addr = json.loads(model['data'])
-        task_info = json.loads(self.api.cat(addr))
+    def found_new_model(self, task_address, model):
+        task_info = self.api.get_json(task_address)
         data_dir = task_info['data_dir']
 
         if os.path.exists(f'data/{data_dir}'):
-            # download model
-            # train model
-            # upload model
-            print("WUTUUTUT")
+            model_info = self.api.get_json(model['address'])
+
+            model = utils.ipfs2keras(model_info['model'])
+
+            input = []
+            target = []
+
+            model.fit(
+                input,
+                target,
+                batch_size=100, # TODO config?!?!?!?!
+                verbose=False,
+                epochs=100, # TODO config?!??!??!?
+                validation_split=0.1 # TODO config??!?!?!?!?!?
+            )
+
+            new_model_addr = utils.keras2ipfs(model)
+
+            # what now
