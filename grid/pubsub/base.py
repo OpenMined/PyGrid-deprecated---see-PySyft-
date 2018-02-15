@@ -122,31 +122,27 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
-    def add_model(self, name, addr, model, parent=None):
+    def add_model(self, name, model, parent=None):
         """
         Propose a model as a solution to a task.
 
         Task  - The name of the task.  e.g. MNIST
         model - A keras model. Down the road we should support more frameworks.
         """
-
-        # TODO -- We should be able to call add_model and use the common name
-        #         for tasks.  E.g. add_model('MNIST', my_model)
-        #         right now, you have to pass the address
-        # p = None
-        # if parent is None:
-        #     task = utils.load_task(name)
-        #     p = task['address']
-        # else:
-        #     p = parent
+        task = utils.load_task(name)
+        p = None
+        if parent is None:
+            p = task['address']
+        else:
+            p = parent
 
         model_bin = utils.serialize_keras_model(model)
         model_addr = self.api.add_bytes(model_bin)
 
         update = {
             'model': model_addr,
-            'task': addr,
-            'parent': addr
+            'task': task['address'],
+            'parent': p
         }
 
         update_addr = self.api.add_json(update)

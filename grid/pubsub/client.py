@@ -125,6 +125,7 @@ class Client(PubSub):
 
         tasks = json.loads(message['data'])
         for task in tasks:
+            utils.store_task(task['name'], task['address'])
             name = task['name']
             addr = task['address']
             print(f'{fr}\t{name}\t{addr}')

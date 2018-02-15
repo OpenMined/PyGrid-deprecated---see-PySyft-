@@ -50,7 +50,6 @@ def load_task(name):
         if task['name'] == name:
             return task
 
-
 def store_task(name, address):
     # config file with openmined data dir
     if not os.path.exists(".openmined"):
