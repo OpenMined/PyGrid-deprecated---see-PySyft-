@@ -108,33 +108,20 @@ class Worker(base.PubSub):
         self.publish(callback_channel, string_list)
 
     def added_model(self, info):
-        print(f'FOUND NEW MODEL: {info}')
+        info = self.api.get_json(info['data'])
 
-    def discovered_tasks(self, task):
-        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
-        print(f'From\t\t\t\tName\t\t\t\tAddress')
-        print('==================================================================')
+        task_addr = info['task']
+        model_addr = info['model']
 
-        data = json.loads(task['data'])
-
-        for task in data:
-            name = task['name']
-            addr = task['address']
-
-            # TODO should only listen on task channels that which i have data for
-            self.listen_for_models(name)
-            utils.store_task(name, addr)
-
-            print(f'\t{name}\t{addr}')
-
-    def found_new_model(self, task_address, model):
-        task_info = self.api.get_json(task_address)
+        task_info = self.api.get_json(task_addr)
         data_dir = task_info['data_dir']
+        name = task_info['name']
 
+        print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
+
+        """
         if os.path.exists(f'data/{data_dir}'):
-            model_info = self.api.get_json(model['address'])
-
-            model = utils.ipfs2keras(model_info['model'])
+            model = utils.ipfs2keras(model_addr)
 
             input = []
             target = []
@@ -148,6 +135,23 @@ class Worker(base.PubSub):
                 validation_split=0.1 # TODO config??!?!?!?!?!?
             )
 
-            new_model_addr = utils.keras2ipfs(model)
+            self.add_model(name, model, parent=info)
+            """
 
-            # what now
+    def discovered_tasks(self, tasks):
+        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
+        print(f'From\t\t\t\tName\t\t\t\tAddress')
+        print('==================================================================')
+
+        data = json.loads(tasks['data'])
+        fr = base58.encode(tasks['from'])
+
+        for task in data:
+            name = task['name']
+            addr = task['address']
+
+            # TODO should only listen on task channels that which i have data for
+            self.listen_for_models(name)
+            utils.store_task(name, addr)
+
+            print(f'{fr}\t{name}\t{addr}')

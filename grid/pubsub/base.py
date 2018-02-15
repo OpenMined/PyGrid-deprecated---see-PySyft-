@@ -12,6 +12,7 @@ class PubSub(object):
     def __init__(self, ipfs_addr='127.0.0.1', port=5001):
         self.api = utils.get_ipfs_api()
         self.id = self.api.config_show()['Identity']['PeerID']
+        self.subscribed_list = []
 
     def serialize_numpy(self, tensor):
         # nested lists with same data, indices
@@ -50,9 +51,16 @@ class PubSub(object):
         """
 
         first_proc = True
-        new_models = self.api.pubsub_sub(topic=channel, stream=True)
 
-        for m in new_models:
+        if channel not in self.subscribed_list:
+            print(f"SUBSCRIBING TO {channel}")
+            new_messages = self.api.pubsub_sub(topic=channel, stream=True)
+            self.subscribed_list.append(channel)
+        else:
+            print(f"ALREADY SUBSCRIBED TO {channel}")
+            return
+
+        for m in new_messages:
             if init_function is not None and first_proc:
                 init_function()
                 first_proc = False
@@ -136,8 +144,7 @@ class PubSub(object):
         else:
             p = parent
 
-        model_bin = utils.serialize_keras_model(model)
-        model_addr = self.api.add_bytes(model_bin)
+        model_addr = utils.keras2ipfs(model)
 
         update = {
             'model': model_addr,
