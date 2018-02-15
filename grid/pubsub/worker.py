@@ -74,17 +74,11 @@ class Worker(base.PubSub):
         else:
             raise NotImplementedError("Only compatible with Keras at the moment")
 
-    def list_tasks(self, message):
-        fr = base58.encode(message['from'])
+    """
+    Grid Tree Implementation
 
-        print("listing tasks to " + fr)
-
-        with open(".openmined/tasks.json", "r") as task_list:
-            string_list = task_list.read()
-
-        callback_channel = channels.list_tasks_callback(fr)
-
-        self.publish(callback_channel, string_list)
+    Methods for Grid tree down here
+    """
 
     def work(self):
         self.listen_to_channel(channels.openmined, self.fit_worker)
@@ -94,18 +88,33 @@ class Worker(base.PubSub):
                                self.discovered_tasks)
         self.publish(channels.list_tasks, commands.list_all)
 
-    """
-    Grid Tree Implementation
+    def listen_for_models(self, model_name):
+        self.listen_to_channel(channels.add_model(model_name), self.added_model)
 
-    Methods for Grid tree down here
-    """
+    def list_tasks(self, message):
+        fr = base58.encode(message['from'])
+
+        print("listing tasks to " + fr)
+
+        with open(".openmined/tasks.json", "r") as task_list:
+            string_list = task_list.read()
+            tasks = json.loads(string_list)
+            for t in tasks:
+                self.listen_for_models(t['name'])
+
+        callback_channel = channels.list_tasks_callback(fr)
+
+        self.publish(callback_channel, string_list)
+
+    def added_model(self, info):
+        print('FOUND NEW MODEL: {info}')
 
     def discovered_tasks(self, task):
         print(f'found a task {task}')
-
         data = json.loads(task['data'])
 
         for task in data:
+            self.listen_for_models(task['name'])
             utils.store_task(task['name'], task['address'])
 
     def found_best_model(self, model):
