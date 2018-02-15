@@ -1,3 +1,4 @@
+from filelock import Timeout, FileLock
 from grid import ipfsapi
 import keras
 import os
@@ -22,19 +23,23 @@ def ipfs2keras(model_addr):
 
 
 def serialize_keras_model(model):
-    model.save('temp_model.h5')
-    with open('temp_model.h5', 'rb') as f:
-        model_bin = f.read()
-        f.close()
-    return model_bin
+    lock = FileLock('temp_model.h5.lock')
+    with lock:
+        model.save('temp_model.h5')
+        with open('temp_model.h5', 'rb') as f:
+            model_bin = f.read()
+            f.close()
+        return model_bin
 
 
 def deserialize_keras_model(model_bin):
-    with open('temp_model2.h5', 'wb') as g:
-        g.write(model_bin)
-        g.close()
-    model = keras.models.load_model('temp_model2.h5')
-    return model
+    lock = FileLock('temp_model2.h5.lock')
+    with lock:
+        with open('temp_model2.h5', 'wb') as g:
+            g.write(model_bin)
+            g.close()
+        model = keras.models.load_model('temp_model2.h5')
+        return model
 
 # def load_tasks():
 
