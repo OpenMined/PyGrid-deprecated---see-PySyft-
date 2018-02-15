@@ -172,6 +172,7 @@ class Worker(base.PubSub):
                 print(f'{Fore.YELLOW}Best Evaluated at: {best_loss}{Style.RESET_ALL}')
                 if best_loss < loss:
                     print(f'{Fore.RED}Trained model worse than best trained.  Ignoring.{Style.RESET_ALL}')
+                    return
 
             if loss < best_loss:
                 print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
