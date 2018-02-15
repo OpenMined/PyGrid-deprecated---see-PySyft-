@@ -172,7 +172,7 @@ class Worker(base.PubSub):
             if not my_best_model == None:
                 x = my_best_model.evaluate(input, target, batch_size=100)
                 ## TODO -- return if best is better than `model`
-                print(f'{Fore.YELLOW}Best Evaluated at: {x}{Style.RESET_ALL}')
+                print(f'{Fore.YELLOW}Best Evaluated at: {x}{Style.RESET_ALL} ... {my_best_model.metrics_names}')
 
             if loss < best_loss:
                 print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
