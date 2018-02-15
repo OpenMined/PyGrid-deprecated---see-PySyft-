@@ -113,8 +113,6 @@ class Worker(base.PubSub):
     def added_model(self, info):
         info = self.api.get_json(info['data'])
 
-        print(f'my infoooo {info}')
-
         task_addr = info['task']
         task_name = info['name']
         model_addr = info['model']
@@ -170,9 +168,11 @@ class Worker(base.PubSub):
             my_best_model = utils.best_model_for_task(task_name)
             best_loss = 100000000
             if not my_best_model == None:
-                x = my_best_model.evaluate(input, target, batch_size=100)
-                ## TODO -- return if best is better than `model`
-                print(f'{Fore.YELLOW}Best Evaluated at: {x}{Style.RESET_ALL}')
+                best_loss = my_best_model.evaluate(input, target, batch_size=100)[0]
+                print(f'{Fore.YELLOW}Best Evaluated at: {best_loss}{Style.RESET_ALL}')
+                if best_loss < loss:
+                    print(f'{Fore.RED}Trained model worse than best trained.  Ignoring.{Style.RESET_ALL}')
+                    return
 
             if loss < best_loss:
                 print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
