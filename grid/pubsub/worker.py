@@ -122,10 +122,11 @@ class Worker(base.PubSub):
         task_info = self.api.get_json(task_addr)
         data_dir = task_info['data_dir']
         name = task_info['name']
+        creator = task_info['creator']
 
         print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
 
-        if os.path.exists(f'data/{data_dir}'):
+        if os.path.exists(f'data/{data_dir}') and creator is not self.id:
             model = utils.ipfs2keras(model_addr)
 
             input = None
