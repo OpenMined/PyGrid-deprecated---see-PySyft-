@@ -21,7 +21,6 @@ def ipfs2keras(model_addr):
     model_bin = get_ipfs_api().cat(model_addr)
     return deserialize_keras_model(model_bin)
 
-
 def serialize_keras_model(model):
     lock = FileLock('temp_model.h5.lock')
     with lock:

@@ -115,8 +115,8 @@ class Worker(base.PubSub):
         with open(".openmined/tasks.json", "r") as task_list:
             string_list = task_list.read()
             tasks = json.loads(string_list)
-            for t in tasks:
-                self.listen_for_models(t['name'])
+            # for t in tasks:
+                # self.listen_for_models(t['name'])
 
         callback_channel = channels.list_tasks_callback(fr)
 
@@ -134,7 +134,7 @@ class Worker(base.PubSub):
         name = task_info['name']
         creator = info['creator']
 
-        print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
+        print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}, {creator}')
 
         if os.path.exists(f'data/{data_dir}') and creator != self.id:
             model = utils.ipfs2keras(model_addr)
