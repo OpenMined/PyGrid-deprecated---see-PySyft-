@@ -93,10 +93,15 @@ class Worker(base.PubSub):
 
     def listen_for_models(self, model_name):
         self.listen_to_channel(channels.add_model(model_name), self.added_model)
-        # self.publish(channels.list_models, model_name)
+        self.publish(channels.list_models, model_name)
 
     def list_models(self, message):
         task = message['data']
+        fr = base58.encode(message['from'])
+
+        if fr == self.id:
+            return
+
         my_best = utils.best_model_for_task(task)
         if my_best is not None:
             self.add_model(task, my_best)
