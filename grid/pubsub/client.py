@@ -139,7 +139,7 @@ class Client(PubSub):
         return self.all_tasks
 
     def add_task(self, name, data_dir):
-        task_data = {'name': name, 'data_dir': data_dir}
+        task_data = {'name': name, 'creator': self.id, data_dir': data_dir}
 
         addr = self.api.add_json(task_data)
 
