@@ -110,12 +110,21 @@ class Worker(base.PubSub):
         print('FOUND NEW MODEL: {info}')
 
     def discovered_tasks(self, task):
-        print(f'found a task {task}')
+        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
+        print(f'From\t\t\t\tName\t\t\t\tAddress')
+        print('==================================================================')
+
         data = json.loads(task['data'])
 
         for task in data:
-            self.listen_for_models(task['name'])
-            utils.store_task(task['name'], task['address'])
+            name = task['name']
+            addr = task['address']
+
+            # TODO should only listen on task channels that which i have data for
+            self.listen_for_models(name)
+            utils.store_task(name, addr)
+
+            print(f'\t{name}\t{addr}')
 
     def found_best_model(self, model):
         addr = json.loads(model['data'])
