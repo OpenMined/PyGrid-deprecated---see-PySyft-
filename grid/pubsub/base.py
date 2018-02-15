@@ -149,7 +149,7 @@ class PubSub(object):
         update = {
             'model': model_addr,
             'task': task['address'],
-            'creator': self.id
+            'creator': self.id,
             'parent': p
         }
 
