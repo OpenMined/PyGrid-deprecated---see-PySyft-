@@ -38,6 +38,34 @@ def deserialize_keras_model(model_bin):
 
 # def load_tasks():
 
+def save_best_model_for_task(task, model):
+    if not os.path.exists(".openmined"):
+        os.makedirs(".openmined")
+
+    if not os.path.exists(".openmined/models.json"):
+        with open(".openmined/models.json", "w") as model_file:
+            json.dump({}, model_file)
+
+    models = {}
+    with open(".openmined/models.json", "r") as model_file:
+        models = json.loads(model_file.read())
+
+    models[task] = keras2ipfs(model)
+
+    with open(".openmined/models.json", "w") as model_file:
+        json.dump(models, model_file)
+
+
+def best_model_for_task(task):
+    if not os.path.exists('.openmined/models.json'):
+        return None
+
+    with open('.openmined/models.json', 'r') as model_file:
+        models = json.loads(model_file.read())
+        if task in models.keys():
+            return ipfs2keras(models[task])
+
+    return None
 
 def load_task(name):
     if not os.path.exists('.openmined/tasks.json'):

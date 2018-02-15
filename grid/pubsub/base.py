@@ -147,6 +147,7 @@ class PubSub(object):
         model_addr = utils.keras2ipfs(model)
 
         update = {
+            'name': name,
             'model': model_addr,
             'task': task['address'],
             'creator': self.id,

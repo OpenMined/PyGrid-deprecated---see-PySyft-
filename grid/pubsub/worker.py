@@ -97,7 +97,8 @@ class Worker(base.PubSub):
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
 
-        print("listing tasks to " + fr)
+        if not os.path.exists(".openmined/tasks.json"):
+            return
 
         with open(".openmined/tasks.json", "r") as task_list:
             string_list = task_list.read()
@@ -112,7 +113,10 @@ class Worker(base.PubSub):
     def added_model(self, info):
         info = self.api.get_json(info['data'])
 
+        print(f'my infoooo {info}')
+
         task_addr = info['task']
+        task_name = info['name']
         model_addr = info['model']
 
         task_info = self.api.get_json(task_addr)
@@ -150,18 +154,29 @@ class Worker(base.PubSub):
 
             target = keras.utils.to_categorical(target, 10)
 
-            print("FITTING")
-
-            model.fit(
+            hist = model.fit(
                 input,
                 target,
                 batch_size=100, # TODO config?!?!?!?!
-                verbose=False,
-                epochs=1, # TODO config?!??!??!?
+                verbose=True,
+                epochs=10, # TODO config?!??!??!?
                 validation_split=0.1 # TODO config??!?!?!?!?!?
             )
 
-            print("DONE TRAINING ADDING MODEL")
+            loss = hist.history.get('loss')[-1]
+            print(f'{Fore.GREEN}Finished training {Fore.YELLOW} -- {loss}{Style.RESET_ALL}')
+
+            my_best_model = utils.best_model_for_task(task_name)
+            best_loss = 100000000
+            if not my_best_model == None:
+                x = my_best_model.evaluate(input, target, batch_size=100)
+                ## TODO -- return if best is better than `model`
+                print(f'{Fore.YELLOW}Best Evaluated at: {x}{Style.RESET_ALL}')
+
+            if loss < best_loss:
+                print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
+                utils.save_best_model_for_task(task_name, model)
+
             self.add_model(name, model, parent=info)
         else:
             print("doesn't exist")
