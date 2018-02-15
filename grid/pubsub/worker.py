@@ -8,6 +8,8 @@ import json
 import threading
 from bitcoin import base58
 import os
+import numpy as np
+import keras
 
 """
 TODO: modify Client to store the source code for the model in IPFS.
@@ -119,24 +121,51 @@ class Worker(base.PubSub):
 
         print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
 
-        """
         if os.path.exists(f'data/{data_dir}'):
             model = utils.ipfs2keras(model_addr)
 
-            input = []
-            target = []
+            input = None
+            target = None
+            for filename in os.listdir(f'data/{data_dir}'):
+                temp_data = np.load(f'data/{data_dir}/{filename}')
+
+                temp_input = temp_data['x_train']
+                temp_target = temp_data['y_train']
+
+                if input is None:
+                    input = temp_input
+                else:
+                    input = np.append(input, temp_input)
+                    input = np.reshape(input, (-1, 28, 28))
+
+                if target is None:
+                    target = temp_target
+                else:
+                    target = np.append(target, temp_target)
+
+            # TODO specifically mnist?!?!?!?!?!?
+            input = input.reshape(input.shape[0], 784)
+            input = input.astype('float32')
+            input /= 255
+
+            target = keras.utils.to_categorical(target, 10)
+
+            print("FITTING")
 
             model.fit(
                 input,
                 target,
                 batch_size=100, # TODO config?!?!?!?!
                 verbose=False,
-                epochs=100, # TODO config?!??!??!?
+                epochs=1, # TODO config?!??!??!?
                 validation_split=0.1 # TODO config??!?!?!?!?!?
             )
 
+            print("DONE TRAINING ADDING MODEL")
             self.add_model(name, model, parent=info)
-            """
+        else:
+            print("doesn't exist")
+
 
     def discovered_tasks(self, tasks):
         print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
