@@ -1,7 +1,7 @@
 from . import ipfsapi
 from grid.lib import OutputPipe, utils
 
-from grid.dataset import get_training_data, get_training_target, get_validation_data, get_validation_target
+from grid.adapter import get_training_data, get_training_target, get_validation_data, get_validation_target
 
 import base64
 import random
@@ -186,7 +186,7 @@ class Grid(object):
             raise NotImplementedError("Only compatible with Keras at the moment")
 
 
-    def fit(self, model, input, target, valid_input=None, valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
+    def fit_with_adapters(self, model, input, target, valid_input=None, valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
 
         # TODO: we should support composite/custom (valid_)input/target requests
         request = dict()
