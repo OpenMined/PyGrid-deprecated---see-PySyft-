@@ -62,14 +62,18 @@ class PubSub(object):
             message = self.decode_message(m)
             if not ignore_from_self or message['from'] != self.encoded_id:
                 if(message is not None):
-                    if handle_message is not None:
-                        out = handle_message(message)
-                        if (out is not None):
-                            return out
-                        else:
-                            return message
-                    else:
-                        return message
+                    out = handle_message(message)
+                    if(out is not None):
+                        return out
+                #if(message is not None):
+                #    if handle_message is not None:
+                #        out = handle_message(message)
+                #        if (out is not None):
+                #            return out
+                #        else:
+                #            return message
+                #    else:
+                #        return message
 
             else:
                 print("ignored message from self")
