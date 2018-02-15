@@ -1,6 +1,8 @@
 from grid.lib import utils
 from grid.pubsub.base import PubSub
 from grid.pubsub import channels, commands
+from bitcoin import base58
+from colorama import Fore, Back, Style
 import json
 import os
 
@@ -114,6 +116,23 @@ class Client(PubSub):
 
     Methods for Grid tree down here
     """
+
+    def found_task(self, message):
+        fr = base58.encode(message['from'])
+        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
+        print(f'From\t\t\t\tName\t\t\t\tAddress')
+        print('==================================================================')
+
+        tasks = json.loads(message['data'])
+        for task in tasks:
+            name = task['name']
+            addr = task['address']
+            print(f'{fr}\t{name}\t{addr}')
+
+
+    def find_tasks(self):
+        self.publish(channels.list_tasks, "None")
+        self.listen_to_channel_sync(channels.list_tasks_callback(self.id), self.found_task)
 
     def add_task(self, name, data_dir):
         task_data = {'name': name, 'data_dir': data_dir}

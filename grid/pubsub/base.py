@@ -58,16 +58,10 @@ class PubSub(object):
             if init_function is not None and first_proc:
                 init_function()
                 first_proc = False
-            #
-            message = self.decode_message(m)
-            print(f'omg {message} && {m}')
-            # f = message['from']
-            # print(f'info {ignore_from_self} && {f}')
 
+            message = self.decode_message(m)
             if not ignore_from_self or message['from'] != self.encoded_id:
-                print('go here???')
                 if(message is not None):
-                    print(f'a message??? {message}')
                     if handle_message is not None:
                         out = handle_message(message)
                         if (out is not None):
@@ -165,8 +159,10 @@ class PubSub(object):
             p = parent
 
         model_bin = utils.serialize_keras_model(model)
+        model_addr = self.api.add_bytes(model_bin)
+
         update = {
-            model: model_bin,
+            model: model_addr,
             parent: p
         }
 
