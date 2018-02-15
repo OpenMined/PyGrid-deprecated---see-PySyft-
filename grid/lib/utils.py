@@ -68,7 +68,9 @@ def store_task(name, address):
         'address': address
     }
 
-    tasks.append(task)
+    if task not in tasks:
+        print("storing task", task['name'])
+        tasks.append(task)
 
-    with open(".openmined/tasks.json", "w") as task_file:
-        json.dump(tasks, task_file)
+        with open(".openmined/tasks.json", "w") as task_file:
+            json.dump(tasks, task_file)
