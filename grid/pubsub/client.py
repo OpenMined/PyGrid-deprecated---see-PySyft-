@@ -3,6 +3,7 @@ from grid.pubsub.base import PubSub
 from grid.pubsub import channels, commands
 from bitcoin import base58
 from colorama import Fore, Back, Style
+import ipywidgets as widgets
 import json
 import os
 
@@ -119,21 +120,23 @@ class Client(PubSub):
 
     def found_task(self, message):
         fr = base58.encode(message['from'])
-        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
-        print(f'From\t\t\t\tName\t\t\t\tAddress')
-        print('==================================================================')
 
         tasks = json.loads(message['data'])
         for task in tasks:
-            utils.store_task(task['name'], task['address'])
+            # utils.store_task(task['name'], task['address'])
             name = task['name']
             addr = task['address']
-            print(f'{fr}\t{name}\t{addr}')
+
+            hbox = widgets.HBox([widgets.Label(name), widgets.Label(addr)])
+            self.all_tasks.children += (hbox, )
 
 
     def find_tasks(self):
         self.publish(channels.list_tasks, "None")
-        self.listen_to_channel_sync(channels.list_tasks_callback(self.id), self.found_task)
+        self.all_tasks = widgets.VBox([widgets.HBox([widgets.Label('TASK NAME'), widgets.Label('ADDRESS')])])
+        self.listen_to_channel(channels.list_tasks_callback(self.id), self.found_task)
+
+        return self.all_tasks
 
     def add_task(self, name, data_dir):
         task_data = {'name': name, 'data_dir': data_dir}
