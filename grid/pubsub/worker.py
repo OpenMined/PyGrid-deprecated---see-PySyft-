@@ -126,7 +126,7 @@ class Worker(base.PubSub):
 
         print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
 
-        if os.path.exists(f'data/{data_dir}') and creator is not self.id:
+        if os.path.exists(f'data/{data_dir}') and creator != self.id:
             model = utils.ipfs2keras(model_addr)
 
             input = None
@@ -178,9 +178,9 @@ class Worker(base.PubSub):
                 print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
                 utils.save_best_model_for_task(task_name, model)
 
-            self.add_model(name, model, parent=info)
+            self.add_model(name, model, parent=task_addr)
         else:
-            print("doesn't exist")
+            print("Can't train your own model so soon!!!!!")
 
 
     def discovered_tasks(self, tasks):
