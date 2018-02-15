@@ -87,12 +87,19 @@ class Worker(base.PubSub):
         self.listen_to_channel(channels.openmined, self.fit_worker)
         self.listen_to_channel(channels.list_tasks, self.list_tasks)
         self.listen_to_channel(channels.add_task, self.discovered_tasks)
-        self.listen_to_channel(channels.list_tasks_callback(self.id),
-                               self.discovered_tasks)
+        self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+        self.listen_to_channel(channels.list_models, self.list_models)
         self.publish(channels.list_tasks, commands.list_all)
 
     def listen_for_models(self, model_name):
         self.listen_to_channel(channels.add_model(model_name), self.added_model)
+        # self.publish(channels.list_models, model_name)
+
+    def list_models(self, message):
+        task = message['data']
+        my_best = utils.best_model_for_task(task)
+        if my_best is not None:
+            self.add_model(task, my_best)
 
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
@@ -126,7 +133,6 @@ class Worker(base.PubSub):
 
         if os.path.exists(f'data/{data_dir}') and creator is not self.id:
             model = utils.ipfs2keras(model_addr)
-
             input = None
             target = None
             for filename in os.listdir(f'data/{data_dir}'):
