@@ -122,7 +122,7 @@ class Worker(base.PubSub):
         task_info = self.api.get_json(task_addr)
         data_dir = task_info['data_dir']
         name = task_info['name']
-        creator = task_info['creator']
+        creator = info['creator']
 
         print(f'FOUND NEW MODEL: {task_addr}, {model_addr}, {data_dir}, {name}')
 
@@ -195,8 +195,14 @@ class Worker(base.PubSub):
             name = task['name']
             addr = task['address']
 
-            # TODO should only listen on task channels that which i have data for
-            self.listen_for_models(name)
-            utils.store_task(name, addr)
-
             print(f'{fr}\t{name}\t{addr}')
+
+            data_dir = self.api.get_json(addr)['data_dir']
+
+            # TODO should only listen on task channels that which i have data for
+
+            if os.path.exists(f'data/{data_dir}'):
+                self.listen_for_models(name)
+                utils.store_task(name, addr)
+            else:
+                print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
