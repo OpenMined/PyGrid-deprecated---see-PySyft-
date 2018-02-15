@@ -2,6 +2,7 @@ from grid.lib import OutputPipe, utils
 from . import base
 from grid.pubsub import commands
 from grid.pubsub import channels
+from colorama import Fore, Back, Style
 
 import json
 import threading
@@ -107,23 +108,46 @@ class Worker(base.PubSub):
         self.publish(callback_channel, string_list)
 
     def added_model(self, info):
-        print('FOUND NEW MODEL: {info}')
+        print(f'FOUND NEW MODEL: {info}')
 
     def discovered_tasks(self, task):
-        print(f'found a task {task}')
+        print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
+        print(f'From\t\t\t\tName\t\t\t\tAddress')
+        print('==================================================================')
+
         data = json.loads(task['data'])
 
         for task in data:
-            self.listen_for_models(task['name'])
-            utils.store_task(task['name'], task['address'])
+            name = task['name']
+            addr = task['address']
 
-    def found_best_model(self, model):
-        addr = json.loads(model['data'])
-        task_info = json.loads(self.api.cat(addr))
+            # TODO should only listen on task channels that which i have data for
+            self.listen_for_models(name)
+            utils.store_task(name, addr)
+
+            print(f'\t{name}\t{addr}')
+
+    def found_new_model(self, task_address, model):
+        task_info = self.api.get_json(task_address)
         data_dir = task_info['data_dir']
 
         if os.path.exists(f'data/{data_dir}'):
-            # download model
-            # train model
-            # upload model
-            print("WUTUUTUT")
+            model_info = self.api.get_json(model['address'])
+
+            model = utils.ipfs2keras(model_info['model'])
+
+            input = []
+            target = []
+
+            model.fit(
+                input,
+                target,
+                batch_size=100, # TODO config?!?!?!?!
+                verbose=False,
+                epochs=100, # TODO config?!??!??!?
+                validation_split=0.1 # TODO config??!?!?!?!?!?
+            )
+
+            new_model_addr = utils.keras2ipfs(model)
+
+            # what now
