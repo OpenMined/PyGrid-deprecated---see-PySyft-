@@ -143,7 +143,7 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
-    def add_model(self, addr, model, parent=None):
+    def add_model(self, name, addr, model, parent=None):
         """
         Propose a model as a solution to a task.
 
@@ -165,9 +165,10 @@ class PubSub(object):
         model_addr = self.api.add_bytes(model_bin)
 
         update = {
-            model: model_addr,
-            parent: addr
+            'model': model_addr,
+            'task': addr,
+            'parent': addr
         }
 
-        update_addr = self.api.add_bytes(update)
+        update_addr = self.api.add_json(update)
         self.publish(channels.add_model(name), update_addr)
