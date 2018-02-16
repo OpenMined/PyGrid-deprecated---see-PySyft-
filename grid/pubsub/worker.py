@@ -207,7 +207,7 @@ class Worker(base.PubSub):
             loss = hist.history.get('loss')[-1]
             print(f'{Fore.GREEN}Finished training {Fore.YELLOW} -- {loss}{Style.RESET_ALL}')
 
-            my_best_model = utils.best_model_for_task(task_name)
+            my_best_model = utils.best_model_for_task(task_name, return_model=True)
             best_loss = 100000000
             if not my_best_model == None:
                 best_loss = my_best_model.evaluate(input, target, batch_size=100)[0]

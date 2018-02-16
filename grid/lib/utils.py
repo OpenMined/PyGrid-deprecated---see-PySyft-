@@ -60,14 +60,17 @@ def save_best_model_for_task(task, model):
         json.dump(models, model_file)
 
 
-def best_model_for_task(task):
+def best_model_for_task(task, return_model=False):
     if not os.path.exists('.openmined/models.json'):
         return None
 
     with open('.openmined/models.json', 'r') as model_file:
         models = json.loads(model_file.read())
         if task in models.keys():
-            return models[task]
+            if return_model:
+                return ipfs2keras(models[task])
+            else:
+                return models[task]
 
     return None
 
