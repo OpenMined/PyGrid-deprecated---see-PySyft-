@@ -19,9 +19,8 @@ class Client(PubSub):
         self.spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
         self.publish('openmined', self.spec)
 
-        trained = self.listen_to_channel_sync(message_handler,
-                                              self.spec['train_channel'])
-        return trained
+        self.listen_to_channel_sync(self.spec['train_channel'], message_handler)
+        return self.spec
 
     def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
         if parent_model not in self.progress:
