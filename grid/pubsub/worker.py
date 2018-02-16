@@ -1,4 +1,4 @@
-from grid.lib import OutputPipe, utils
+from grid.lib import OutputPipe, utils, strings
 from . import base
 from grid.pubsub import commands
 from grid.pubsub import channels
@@ -10,6 +10,32 @@ from bitcoin import base58
 import os
 import numpy as np
 import keras
+import argparse
+
+title = f"""{Fore.GREEN}   ____                             _                __   ______     _     __
+  / __ \____  ___  ____  ____ ___  (_____  ___  ____/ /  / _________(_____/ /
+ / / / / __ \/ _ \/ __ \/ __ `__ \/ / __ \/ _ \/ __  /  / / __/ ___/ / __  /
+/ /_/ / /_/ /  __/ / / / / / / / / / / / /  __/ /_/ /  / /_/ / /  / / /_/ /
+\____/ .___/\___/_/ /_/_/ /_/ /_/_/_/ /_/\___/\__,_/   \____/_/  /_/\__,_/
+    /_/          {Style.RESET_ALL}{Fore.YELLOW}A distributed compute grid{Style.RESET_ALL}
+"""
+
+print(title)
+
+program_desc = f"""
+"""
+
+# print(title)
+
+parser = argparse.ArgumentParser(description=program_desc)
+parser.add_argument('--compute', dest='compute', action='store_const',
+                   const=True, default=False,
+                   help='Run grid in compute mode')
+parser.add_argument('--tree', dest='tree', action='store_const',
+                   const=True, default=False,
+                   help='Run grid in tree mode')
+
+args = parser.parse_args()
 
 """
 TODO: modify Client to store the source code for the model in IPFS.
@@ -84,12 +110,17 @@ class Worker(base.PubSub):
     """
 
     def work(self):
-        self.listen_to_channel(channels.openmined, self.fit_worker)
-        self.listen_to_channel(channels.list_tasks, self.list_tasks)
-        self.listen_to_channel(channels.add_task, self.discovered_tasks)
-        self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
-        self.listen_to_channel(channels.list_models, self.list_models)
-        self.publish(channels.list_tasks, commands.list_all)
+        print('\n\n')
+        if args.tree:
+            print(strings.tree)
+            self.listen_to_channel(channels.list_tasks, self.list_tasks)
+            self.listen_to_channel(channels.add_task, self.discovered_tasks)
+            self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+            self.listen_to_channel(channels.list_models, self.list_models)
+            self.publish(channels.list_tasks, commands.list_all)
+        else:
+            print(f'{Fore.YELLOW}Running grid in compute mode{Style.RESET_ALL}')
+            self.listen_to_channel(channels.openmined, self.fit_worker)
 
     def listen_for_models(self, model_name):
         self.listen_to_channel(channels.add_model(model_name), self.added_model)
