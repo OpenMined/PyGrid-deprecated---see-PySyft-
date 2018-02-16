@@ -130,6 +130,22 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
+    def send_best_model(self, name, model_addr):
+        task = utils.load_task(name)
+
+        update = {
+            'name': name,
+            'model': model_addr,
+            'task': task['address'],
+            'creator': self.id,
+            'parent': task['address']
+        }
+
+        update_addr = self.api.add_json(update)
+        self.publish(channels.add_model(name), update_addr)
+
+        print("SENDING BEST MODEL!!!!")
+
     def add_model(self, name, model, parent=None):
         """
         Propose a model as a solution to a task.

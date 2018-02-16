@@ -67,7 +67,7 @@ def best_model_for_task(task):
     with open('.openmined/models.json', 'r') as model_file:
         models = json.loads(model_file.read())
         if task in models.keys():
-            return ipfs2keras(models[task])
+            return models[task]
 
     return None
 
