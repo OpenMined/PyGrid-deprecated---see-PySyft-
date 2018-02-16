@@ -135,7 +135,7 @@ class Worker(base.PubSub):
 
         my_best = utils.best_model_for_task(task)
         if my_best is not None:
-            self.add_model(task, my_best)
+            self.send_best_model(task, my_best)
 
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
@@ -207,7 +207,7 @@ class Worker(base.PubSub):
             loss = hist.history.get('loss')[-1]
             print(f'{Fore.GREEN}Finished training {Fore.YELLOW} -- {loss}{Style.RESET_ALL}')
 
-            my_best_model = utils.best_model_for_task(task_name)
+            my_best_model = utils.best_model_for_task(task_name, return_model=True)
             best_loss = 100000000
             if not my_best_model == None:
                 best_loss = my_best_model.evaluate(input, target, batch_size=100)[0]
