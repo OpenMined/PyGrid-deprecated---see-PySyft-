@@ -119,7 +119,7 @@ class Worker(base.PubSub):
             self.listen_to_channel(channels.list_models, self.list_models)
             self.publish(channels.list_tasks, commands.list_all)
         else:
-            print(f'{Fore.YELLOW}Running grid in compute mode{Style.RESET_ALL}')
+            print(strings.compute)
             self.listen_to_channel(channels.openmined, self.fit_worker)
 
     def listen_for_models(self, model_name):
