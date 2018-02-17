@@ -254,3 +254,14 @@ class Worker(base.PubSub):
                 utils.store_task(name, addr)
             else:
                 print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
+
+class FederatedWorker(base.PubSub):
+    """
+    Data parallel federated learning worker.
+    """
+    def __init__(self, sync = True):
+        if not sync:
+            raise NotImplementedError, 'Only synchronous SGD right now.'
+
+    def work(self):
+        raise NotImplementedError
