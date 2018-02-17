@@ -107,7 +107,6 @@ class PubSub(object):
         torch.save(state, 'temp_model.pth.tar')
         with open('temp_model.pth.tar', 'rb') as f:
             model_bin = f.read()
-            f.close()
         return model_bin
 
     def deserialize_torch_model(self, model_bin, model_class, **kwargs):
@@ -118,7 +117,6 @@ class PubSub(object):
         """
         with open('temp_model2.pth.tar', 'wb') as g:
             g.write(model_bin)
-            g.close()
         state = torch.load()
         model = model_class(**state['kwargs'])
         model.load_state_dict(state['state_dict'])
@@ -130,7 +128,7 @@ class PubSub(object):
     Methods for Grid tree down here
     """
 
-    def send_best_model(self, name, model_addr):
+    def send_model(self, name, model_addr):
         task = utils.load_task(name)
 
         update = {
@@ -144,7 +142,7 @@ class PubSub(object):
         update_addr = self.api.add_json(update)
         self.publish(channels.add_model(name), update_addr)
 
-        print("SENDING BEST MODEL!!!!")
+        print("SENDING MODEL!!!!")
 
     def add_model(self, name, model, parent=None):
         """
