@@ -48,6 +48,13 @@ TODO: figure out a convenient way to make robust training procedure for torch
 
 class Worker(base.PubSub):
 
+    def anchor(self):
+        """
+        Use as anchor node for faster initial IPFS connections.
+        """
+        self.listen_to_channel(channels.openmined)
+
+
     def train_meta(self, message):
         decoded = json.loads(message['data'])
         if 'op_code' not in decoded:
@@ -135,7 +142,7 @@ class Worker(base.PubSub):
 
         my_best = utils.best_model_for_task(task)
         if my_best is not None:
-            self.send_best_model(task, my_best)
+            self.send_model(task, my_best)
 
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
@@ -224,7 +231,6 @@ class Worker(base.PubSub):
         else:
             print("Can't train your own model so soon!!!!!")
 
-
     def discovered_tasks(self, tasks):
         print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
         print(f'From\t\t\t\tName\t\t\t\tAddress')
@@ -248,3 +254,14 @@ class Worker(base.PubSub):
                 utils.store_task(name, addr)
             else:
                 print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
+
+class FederatedWorker(base.PubSub):
+    """
+    Data parallel federated learning worker.
+    """
+    def __init__(self, sync = True):
+        if not sync:
+            raise NotImplementedError, 'Only synchronous SGD right now.'
+
+    def work(self):
+        raise NotImplementedError
