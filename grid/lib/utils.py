@@ -14,10 +14,39 @@ def get_ipfs_api(ipfs_addr='127.0.0.1', port=5001):
         print(f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}')
         sys.exit()
 
+def serialize_torch_model(self, model, **kwargs):
+    """
+    kwargs are the arguments needed to instantiate the model
+    """
+    state = {'state_dict': model.state_dict(), 'kwargs': kwargs}
+    torch.save(state, 'temp_model.pth.tar')
+    with open('temp_model.pth.tar', 'rb') as f:
+        model_bin = f.read()
+    return model_bin
+
+def deserialize_torch_model(self, model_bin, model_class, **kwargs):
+    """
+    model_class is needed since PyTorch uses pickle for serialization
+        see https://discuss.pytorch.org/t/loading-pytorch-model-without-a-code/12469/2 for details
+    kwargs are the arguments needed to instantiate the model from model_class
+    """
+    with open('temp_model2.pth.tar', 'wb') as g:
+        g.write(model_bin)
+    state = torch.load()
+    model = model_class(**state['kwargs'])
+    model.load_state_dict(state['state_dict'])
+    return model
+
 
 def keras2ipfs(model):
     return get_ipfs_api().add_bytes(serialize_keras_model(model))
 
+def torch2ipfs(model):
+    return get_ipfs_api().add_bytes(serialize_torch_model(model))
+
+def ipfs2torch(model):
+    model_bin = get_ipfs_api().cat(model_addr)
+    return deserialize_torch_model(model_bin)
 
 def ipfs2keras(model_addr):
     model_bin = get_ipfs_api().cat(model_addr)
