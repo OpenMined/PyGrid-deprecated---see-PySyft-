@@ -14,10 +14,14 @@ def get_ipfs_api(ipfs_addr='127.0.0.1', port=5001):
         print(f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}')
         sys.exit()
 
+def save_adapter(addr):
+    adapter_bin = get_ipfs_api().cat(addr)
+    with open('grid/adapters/adapter.py', 'wb') as adapter_file:
+        adapter_file.write(adapter_bin)
+        adapter_file.close()
 
 def keras2ipfs(model):
     return get_ipfs_api().add_bytes(serialize_keras_model(model))
-
 
 def ipfs2keras(model_addr):
     model_bin = get_ipfs_api().cat(model_addr)

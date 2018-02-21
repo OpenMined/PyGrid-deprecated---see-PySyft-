@@ -9,10 +9,12 @@ from bitcoin import base58
 
 
 class PubSub(object):
-    def __init__(self, ipfs_addr='127.0.0.1', port=5001):
+    def __init__(self, mode, ipfs_addr='127.0.0.1', port=5001):
         self.api = utils.get_ipfs_api()
-        self.id = self.api.config_show()['Identity']['PeerID']
         self.subscribed_list = []
+
+        peer_id = self.api.config_show()['Identity']['PeerID']
+        self.id = f'model:{peer_id}'
 
     def serialize_numpy(self, tensor):
         # nested lists with same data, indices
@@ -171,5 +173,3 @@ class PubSub(object):
         update_addr = self.api.add_json(update)
         self.publish(channels.add_model(name), update_addr)
         print(f"ADDED NEW MODELS WEIGHT TO {update_addr}")
-
-        

@@ -25,11 +25,10 @@ if not 'accessTokenSecret' in config.keys():
     print(f'{Fore.RED}no {Fore.YELLOW}accessTokenSecret{Fore.RED} specified in config.json.  Check {Fore.YELLOW}config.example.json{Fore.RED} for an example{Style.RESET_ALL}')
     sys.exit()
 
-def next_input():
-    api = twitter.Api(consumer_key=config['consumerKey'],
-        consumer_secret=config['consumerSecret'],
-        access_token_key=config['accessTokenKey'],
-        access_token_secret=config['accessTokenSecret'])
+api = twitter.Api(consumer_key=config['consumerKey'],
+    consumer_secret=config['consumerSecret'],
+    access_token_key=config['accessTokenKey'],
+    access_token_secret=config['accessTokenSecret'])
 
-    statuses = api.GetUserTimeline(screen_name='gavinuhma')
-    return statuses[0]
+statuses = api.GetUserTimeline(screen_name='gavinuhma')
+print(statuses)

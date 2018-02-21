@@ -48,6 +48,9 @@ TODO: figure out a convenient way to make robust training procedure for torch
 
 class Worker(base.PubSub):
 
+    def __init__(self):
+        super().__init__('worker')
+
     def anchor(self):
         """
         Use as anchor node for faster initial IPFS connections.
@@ -120,11 +123,32 @@ class Worker(base.PubSub):
         print('\n\n')
         if args.tree:
             print(strings.tree)
-            self.listen_to_channel(channels.list_tasks, self.list_tasks)
-            self.listen_to_channel(channels.add_task, self.discovered_tasks)
-            self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
-            self.listen_to_channel(channels.list_models, self.list_models)
-            self.publish(channels.list_tasks, commands.list_all)
+            print('discovered tasks????')
+            # self.discovered_tasks({
+            #     'data': '[{"name": "tweets3", "address": "QmPWSksj65wwXunnbwtx8cg2Zmna2LQNHYrAjLWPYxF8eN"}]',
+            #     'from': 'benny'
+            # })
+
+            self.added_model({
+                'data': 'QmY8PmgZLFPh4u9wHCwMPq8P21LM9TrwomX69RfPLQVG5W',
+                'from': 'benny'
+            })
+
+            # self.added_model({
+            #     'data': {
+            #         'task': 'QmPWSksj65wwXunnbwtx8cg2Zmna2LQNHYrAjLWPYxF8eN',
+            #         'name': 'tweets3',
+            #         'model': 'QmSiYaF6ww7XBd3W3JBrCzmTw97K7C82MyPijRTJUZsXfC',
+            #         'creator': 'benny'
+            #     }
+            # })
+            # self.listen_to_channel(channels.list_tasks, self.list_tasks)
+            # self.listen_to_channel(channels.add_task, self.discovered_tasks)
+            # self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+            # self.listen_to_channel(channels.list_models, self.list_models)
+            # self.publish(channels.list_tasks, commands.list_all)
+
+
         else:
             print(strings.compute)
             self.listen_to_channel(channels.openmined, self.fit_worker)
@@ -160,14 +184,13 @@ class Worker(base.PubSub):
 
         self.publish(callback_channel, string_list)
 
-    def added_model(self, info):
-        info = self.api.get_json(info['data'])
-
+    def added_local_data_model(self, info):
         task_addr = info['task']
+        task_info = self.api.get_json(task_addr)
+
         task_name = info['name']
         model_addr = info['model']
 
-        task_info = self.api.get_json(task_addr)
         data_dir = task_info['data_dir']
         name = task_info['name']
         creator = info['creator']
@@ -231,13 +254,53 @@ class Worker(base.PubSub):
         else:
             print("Can't train your own model so soon!!!!!")
 
+    def added_adapter_model(self, info):
+        task_addr = info['task']
+        task_info = self.api.get_json(task_addr)
+
+        task_name = info['name']
+        model_addr = info['model']
+
+        adapter = task_info['adapter']
+        name = task_info['name']
+        creator = info['creator']
+
+        model = utils.ipfs2keras(model_addr)
+
+        utils.save_adapter(adapter)
+        import grid.adapters.adapter as grid_adapter
+        n = grid_adapter.next_input()
+
+        print(f'next input!!! {n}')
+
+    def added_model(self, info):
+        info = self.api.get_json(info['data'])
+
+        task_addr = info['task']
+        task_info = self.api.get_json(task_addr)
+
+        if 'data_dir' in task_info.keys():
+            self.added_local_data_model(info)
+        elif 'adapter' in task_info.keys():
+            self.added_adapter_model(info)
+
+    def load_adapter(self, addr):
+        b = self.api.cat(addr)
+        with open('grid/adapters/t.py', 'wb') as a:
+            a.write(b)
+            a.close()
+
+        print(f'working in ... {os.getcwd()}')
+        exec(open('grid/adapters/t.py').read())
+
+
     def discovered_tasks(self, tasks):
         print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
         print(f'From\t\t\t\tName\t\t\t\tAddress')
         print('==================================================================')
 
         data = json.loads(tasks['data'])
-        fr = base58.encode(tasks['from'])
+        fr = tasks['from'] # base58.encode(tasks['from'])
 
         for task in data:
             name = task['name']
@@ -245,12 +308,14 @@ class Worker(base.PubSub):
 
             print(f'{fr}\t{name}\t{addr}')
 
-            data_dir = self.api.get_json(addr)['data_dir']
-
-            # TODO should only listen on task channels that which i have data for
-
-            if os.path.exists(f'data/{data_dir}'):
-                self.listen_for_models(name)
-                utils.store_task(name, addr)
-            else:
-                print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
+            t = self.api.get_json(addr)
+            if 'data_dir' in t.keys():
+                data_dir = t['data_dir']
+                if os.path.exists(f'data/{data_dir}'):
+                    self.listen_for_models(name)
+                    utils.store_task(name, addr)
+                else:
+                    print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
+            elif 'adapter' in t.keys():
+                print('got an adapter task!!!!!')
+                self.load_adapter(t['adapter'])
