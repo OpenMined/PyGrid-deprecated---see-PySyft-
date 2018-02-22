@@ -300,5 +300,6 @@ class Worker(base.PubSub):
                     print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
             elif 'adapter' in t.keys():
                 self.listen_for_models(name)
-                print('got an adapter task!!!!!')
+                utils.store_task(name, addr)
+
                 self.load_adapter(t['adapter'])
