@@ -161,3 +161,20 @@ class Client(PubSub):
 
         data = json.dumps([{'name': name, 'address': addr}])
         self.publish('openmined:add_task', data)
+
+    def best_models(self, task):
+        self.show_models = widgets.VBox([widgets.HBox([widgets.Label('Model Address')])])
+        self.listen_to_channel(channels.add_model(task), self.__added_model)
+        self.publish(channels.list_models, task)
+
+        return self.show_models
+
+    def __added_model(self, message):
+        info = self.api.get_json(message['data'])
+        model_addr = info['model']
+
+        hbox = widgets.HBox([widgets.Label(model_addr)])
+        self.show_models.children += (hbox,)
+
+    def load_model(self, addr):
+        return utils.ipfs2keras(addr)

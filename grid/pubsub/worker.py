@@ -134,13 +134,15 @@ class Worker(base.PubSub):
             print(strings.compute)
             self.listen_to_channel(channels.openmined, self.fit_worker)
 
-    def listen_for_models(self, model_name):
-        self.listen_to_channel(channels.add_model(model_name), self.added_model)
-        self.publish(channels.list_models, model_name)
+    def listen_for_models(self, task_name):
+        self.listen_to_channel(channels.add_model(task_name), self.added_model)
+        self.publish(channels.list_models, task_name)
 
     def list_models(self, message):
         task = message['data']
         fr = base58.encode(message['from'])
+
+        print(f'listing models {fr} {self.id}')
 
         if fr == self.id:
             return
