@@ -2,14 +2,15 @@ import json
 import twitter
 import os
 import sys
+from pathlib import Path
 
 from colorama import Fore, Style
 
-if not os.path.exists('~/.openmined/adapters/config.json'):
+if not os.path.exists(f'{Path.home()}/.openmined/adapters/config.json'):
     print(f'{Fore.RED}no {Fore.YELLOW}config.json{Fore.RED} file present in adapters directory.  Make sure the file exists{Style.RESET_ALL}')
     sys.exit()
 
-config = json.load(open('~/.openmined/adapters/config.json'))
+config = json.load(open(f'{Path.home()}/.openmined/adapters/config.json'))
 
 if not 'consumerKey' in config.keys():
     print(f'{Fore.RED}no {Fore.YELLOW}consumerKey{Fore.RED} specified in config.json.  Check {Fore.YELLOW}config.example.json{Fore.RED} for an example{Style.RESET_ALL}')

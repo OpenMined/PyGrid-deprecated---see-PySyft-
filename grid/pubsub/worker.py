@@ -3,6 +3,7 @@ from . import base
 from grid.pubsub import commands
 from grid.pubsub import channels
 from colorama import Fore, Back, Style
+from pathlib import Path
 
 import json
 import threading
@@ -171,10 +172,10 @@ class Worker(base.PubSub):
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
 
-        if not os.path.exists("~/.openmined/tasks.json"):
+        if not os.path.exists(f"{Path.home()}/.openmined/tasks.json"):
             return
 
-        with open("~/.openmined/tasks.json", "r") as task_list:
+        with open(f"{Path.home()}/.openmined/tasks.json", "r") as task_list:
             string_list = task_list.read()
             tasks = json.loads(string_list)
             # for t in tasks:
@@ -286,12 +287,8 @@ class Worker(base.PubSub):
 
     def load_adapter(self, addr):
         b = self.api.cat(addr)
-        with open('grid/adapters/t.py', 'wb') as a:
-            a.write(b)
-            a.close()
-
-        print(f'working in ... {os.getcwd()}')
-        exec(open('grid/adapters/t.py').read())
+        utils.__ensure_exists(f'{Path.home()}/.openmined/grid/adapters/t.py', b)
+        exec(open(f'{Path.home()}/.openmined/grid/adapters/t.py').read())
 
 
     def discovered_tasks(self, tasks):

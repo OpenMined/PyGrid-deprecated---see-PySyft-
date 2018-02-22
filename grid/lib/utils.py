@@ -140,6 +140,6 @@ def __ensure_exists(path, default_contents=None):
                 json.dump(default_contents, f)
             else:
                 # Not sure what this is, try to tostring it.
-                f.write(str(default_contents))
+                f.write(default_contents)
 
             f.close()
