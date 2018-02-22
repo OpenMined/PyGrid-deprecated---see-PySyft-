@@ -17,9 +17,6 @@ class PubSub(object):
         # self.id = f'{mode}:{peer_id}'
         self.subscribed_list = []
 
-        peer_id = self.api.config_show()['Identity']['PeerID']
-        self.id = f'model:{peer_id}'
-
     def serialize_numpy(self, tensor):
         # nested lists with same data, indices
         return json.dumps(tensor.tolist())
@@ -59,7 +56,7 @@ class PubSub(object):
         first_proc = True
 
         if channel not in self.subscribed_list:
-            # print(f"SUBSCRIBING TO {channel}")
+            print(f"SUBSCRIBING TO {channel}")
             new_messages = self.api.pubsub_sub(topic=channel, stream=True)
             self.subscribed_list.append(channel)
         else:

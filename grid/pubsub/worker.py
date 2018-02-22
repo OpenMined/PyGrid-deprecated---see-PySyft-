@@ -164,7 +164,7 @@ class Worker(base.PubSub):
                 # self.listen_for_models(t['name'])
 
         callback_channel = channels.list_tasks_callback(fr)
-
+        print(f'?!?!?!?!?! {callback_channel} {string_list}')
         self.publish(callback_channel, string_list)
 
     def train_model(self, model, input, target, name, task_name, task_addr):
