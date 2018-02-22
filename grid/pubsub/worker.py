@@ -171,10 +171,10 @@ class Worker(base.PubSub):
     def list_tasks(self, message):
         fr = base58.encode(message['from'])
 
-        if not os.path.exists(".openmined/tasks.json"):
+        if not os.path.exists("~/.openmined/tasks.json"):
             return
 
-        with open(".openmined/tasks.json", "r") as task_list:
+        with open("~/.openmined/tasks.json", "r") as task_list:
             string_list = task_list.read()
             tasks = json.loads(string_list)
             # for t in tasks:

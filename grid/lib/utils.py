@@ -1,5 +1,6 @@
 from filelock import Timeout, FileLock
 from grid import ipfsapi
+from pathlib import Path
 import keras
 import os
 import json
@@ -49,28 +50,21 @@ def deserialize_keras_model(model_bin):
 # def load_tasks():
 
 def save_best_model_for_task(task, model):
-    if not os.path.exists(".openmined"):
-        os.makedirs(".openmined")
-
-    if not os.path.exists(".openmined/models.json"):
-        with open(".openmined/models.json", "w") as model_file:
-            json.dump({}, model_file)
-
-    models = {}
-    with open(".openmined/models.json", "r") as model_file:
+    __ensure_exists('~/.openmined/models.json', {})
+    with open("~/.openmined/models.json", "r") as model_file:
         models = json.loads(model_file.read())
 
     models[task] = keras2ipfs(model)
 
-    with open(".openmined/models.json", "w") as model_file:
+    with open("~/.openmined/models.json", "w") as model_file:
         json.dump(models, model_file)
 
 
 def best_model_for_task(task, return_model=False):
-    if not os.path.exists('.openmined/models.json'):
+    if not os.path.exists('~/.openmined/models.json'):
         return None
 
-    with open('.openmined/models.json', 'r') as model_file:
+    with open('~/.openmined/models.json', 'r') as model_file:
         models = json.loads(model_file.read())
         if task in models.keys():
             if return_model:
@@ -81,10 +75,10 @@ def best_model_for_task(task, return_model=False):
     return None
 
 def load_task(name):
-    if not os.path.exists('.openmined/tasks.json'):
+    if not os.path.exists('~/.openmined/tasks.json'):
         return None
 
-    with open('.openmined/tasks.json', 'r') as task_file:
+    with open('~/.openmined/tasks.json', 'r') as task_file:
         tasks = json.loads(task_file.read())
 
     for task in tasks:
@@ -92,15 +86,8 @@ def load_task(name):
             return task
 
 def store_task(name, address):
-    # config file with openmined data dir
-    if not os.path.exists(".openmined"):
-        os.makedirs(".openmined")
-
-    if not os.path.exists(".openmined/tasks.json"):
-        with open(".openmined/tasks.json", "w") as task_file:
-            json.dump([], task_file)
-
-    with open(".openmined/tasks.json", "r") as task_file:
+    __ensure_exists('~/.openmined/tasks.json', [])
+    with open("~/.openmined/tasks.json", "r") as task_file:
         tasks = json.loads(task_file.read())
 
     task = {
@@ -112,5 +99,47 @@ def store_task(name, address):
         print("storing task", task['name'])
         tasks.append(task)
 
-        with open(".openmined/tasks.json", "w") as task_file:
+        with open("~/.openmined/tasks.json", "w") as task_file:
             json.dump(tasks, task_file)
+
+
+def __ensure_exists(path, default_contents=None):
+    """
+    Ensure that a path exists.  You can pass as many subdirectories as you
+    want without verifying that the parent exists.
+
+    E.g.
+
+    __ensure_exists('~/.openmined/adapters/config.json', {}) will ensure that
+    the file `~/.openmined/adapters/config.json` gets created and that the file
+    contents will become an empty object
+    """
+    parts = path.split('/')
+    f = parts.pop()
+    full_path = ""
+
+    print(f'all parts .... {parts}')
+
+    for p in parts:
+        # convert ~ to the users home directory
+        if p == '~':
+            p = str(Path.home())
+
+        full_path = f'{full_path}{p}/'
+        print(f'full path {full_path}')
+        if not os.path.exists(full_path):
+            print('making dir.... {full_path}')
+            os.makedirs(full_path)
+
+    full_path = f'{full_path}{f}'
+    if not os.path.exists(full_path):
+        with open(full_path, 'w') as f:
+            if isinstance(default_contents, str):
+                f.write(default_contents)
+            elif isinstance(default_contents, list) or isinstance(default_contents, dict):
+                json.dump(default_contents, f)
+            else:
+                # Not sure what this is, try to tostring it.
+                f.write(str(default_contents))
+
+            f.close()

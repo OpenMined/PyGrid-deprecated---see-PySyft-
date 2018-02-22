@@ -5,12 +5,11 @@ import sys
 
 from colorama import Fore, Style
 
-print(f'working in {os.getcwd()}')
-if not os.path.exists('grid/adapters/config.json'):
+if not os.path.exists('~/.openmined/adapters/config.json'):
     print(f'{Fore.RED}no {Fore.YELLOW}config.json{Fore.RED} file present in adapters directory.  Make sure the file exists{Style.RESET_ALL}')
     sys.exit()
 
-config = json.load(open('grid/adapters/config.json'))
+config = json.load(open('~/.openmined/adapters/config.json'))
 
 if not 'consumerKey' in config.keys():
     print(f'{Fore.RED}no {Fore.YELLOW}consumerKey{Fore.RED} specified in config.json.  Check {Fore.YELLOW}config.example.json{Fore.RED} for an example{Style.RESET_ALL}')
@@ -25,11 +24,10 @@ if not 'accessTokenSecret' in config.keys():
     print(f'{Fore.RED}no {Fore.YELLOW}accessTokenSecret{Fore.RED} specified in config.json.  Check {Fore.YELLOW}config.example.json{Fore.RED} for an example{Style.RESET_ALL}')
     sys.exit()
 
-def next_input():
-    api = twitter.Api(consumer_key=config['consumerKey'],
-        consumer_secret=config['consumerSecret'],
-        access_token_key=config['accessTokenKey'],
-        access_token_secret=config['accessTokenSecret'])
+api = twitter.Api(consumer_key=config['consumerKey'],
+    consumer_secret=config['consumerSecret'],
+    access_token_key=config['accessTokenKey'],
+    access_token_secret=config['accessTokenSecret'])
 
-    statuses = api.GetUserTimeline(screen_name='gavinuhma')
-    return statuses[0]
+statuses = api.GetUserTimeline(screen_name='gavinuhma')
+print(statuses)
