@@ -17,9 +17,7 @@ def get_ipfs_api(ipfs_addr='127.0.0.1', port=5001):
 
 def save_adapter(addr):
     adapter_bin = get_ipfs_api().cat(addr)
-    with open('grid/adapters/adapter.py', 'wb') as adapter_file:
-        adapter_file.write(adapter_bin)
-        adapter_file.close()
+    __ensure_exists(f'{Path.home()}/grid/adapters/adapter.py', adapter_bin)
 
 def keras2ipfs(model):
     return get_ipfs_api().add_bytes(serialize_keras_model(model))
@@ -50,21 +48,21 @@ def deserialize_keras_model(model_bin):
 # def load_tasks():
 
 def save_best_model_for_task(task, model):
-    __ensure_exists('~/.openmined/models.json', {})
-    with open("~/.openmined/models.json", "r") as model_file:
+    __ensure_exists(f'{Path.home()}/.openmined/models.json', {})
+    with open(f"{Path.home()}/.openmined/models.json", "r") as model_file:
         models = json.loads(model_file.read())
 
     models[task] = keras2ipfs(model)
 
-    with open("~/.openmined/models.json", "w") as model_file:
+    with open(f"{Path.home()}/.openmined/models.json", "w") as model_file:
         json.dump(models, model_file)
 
 
 def best_model_for_task(task, return_model=False):
-    if not os.path.exists('~/.openmined/models.json'):
+    if not os.path.exists(f'{Path.home()}/.openmined/models.json'):
         return None
 
-    with open('~/.openmined/models.json', 'r') as model_file:
+    with open(f'{Path.home()}/.openmined/models.json', 'r') as model_file:
         models = json.loads(model_file.read())
         if task in models.keys():
             if return_model:
@@ -75,10 +73,10 @@ def best_model_for_task(task, return_model=False):
     return None
 
 def load_task(name):
-    if not os.path.exists('~/.openmined/tasks.json'):
+    if not os.path.exists(f'{Path.home()}/.openmined/tasks.json'):
         return None
 
-    with open('~/.openmined/tasks.json', 'r') as task_file:
+    with open(f'{Path.home()}/.openmined/tasks.json', 'r') as task_file:
         tasks = json.loads(task_file.read())
 
     for task in tasks:
@@ -86,8 +84,8 @@ def load_task(name):
             return task
 
 def store_task(name, address):
-    __ensure_exists('~/.openmined/tasks.json', [])
-    with open("~/.openmined/tasks.json", "r") as task_file:
+    __ensure_exists(f'{Path.home()}/.openmined/tasks.json', [])
+    with open(f"{Path.home()}/.openmined/tasks.json", "r") as task_file:
         tasks = json.loads(task_file.read())
 
     task = {
@@ -99,7 +97,7 @@ def store_task(name, address):
         print("storing task", task['name'])
         tasks.append(task)
 
-        with open("~/.openmined/tasks.json", "w") as task_file:
+        with open(f"{Path.home()}/.openmined/tasks.json", "w") as task_file:
             json.dump(tasks, task_file)
 
 
@@ -133,13 +131,18 @@ def __ensure_exists(path, default_contents=None):
 
     full_path = f'{full_path}{f}'
     if not os.path.exists(full_path):
-        with open(full_path, 'w') as f:
-            if isinstance(default_contents, str):
+        if isinstance(default_contents, bytes):
+            with open(full_path, 'wb') as f:
                 f.write(default_contents)
-            elif isinstance(default_contents, list) or isinstance(default_contents, dict):
-                json.dump(default_contents, f)
-            else:
-                # Not sure what this is, try to tostring it.
-                f.write(default_contents)
+                f.close()
+        else:
+            with open(full_path, 'w') as f:
+                if isinstance(default_contents, str):
+                    f.write(default_contents)
+                elif isinstance(default_contents, list) or isinstance(default_contents, dict):
+                    json.dump(default_contents, f)
+                else:
+                    # Not sure what this is, try to tostring it.
+                    f.write(str(default_contents))
 
-            f.close()
+                f.close()

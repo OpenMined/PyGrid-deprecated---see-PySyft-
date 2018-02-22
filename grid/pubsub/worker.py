@@ -124,31 +124,11 @@ class Worker(base.PubSub):
         print('\n\n')
         if args.tree:
             print(strings.tree)
-            print('discovered tasks????')
-            # self.discovered_tasks({
-            #     'data': '[{"name": "tweets3", "address": "QmPWSksj65wwXunnbwtx8cg2Zmna2LQNHYrAjLWPYxF8eN"}]',
-            #     'from': 'benny'
-            # })
-
-            self.added_model({
-                'data': 'QmY8PmgZLFPh4u9wHCwMPq8P21LM9TrwomX69RfPLQVG5W',
-                'from': 'benny'
-            })
-
-            # self.added_model({
-            #     'data': {
-            #         'task': 'QmPWSksj65wwXunnbwtx8cg2Zmna2LQNHYrAjLWPYxF8eN',
-            #         'name': 'tweets3',
-            #         'model': 'QmSiYaF6ww7XBd3W3JBrCzmTw97K7C82MyPijRTJUZsXfC',
-            #         'creator': 'benny'
-            #     }
-            # })
-            # self.listen_to_channel(channels.list_tasks, self.list_tasks)
-            # self.listen_to_channel(channels.add_task, self.discovered_tasks)
-            # self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
-            # self.listen_to_channel(channels.list_models, self.list_models)
-            # self.publish(channels.list_tasks, commands.list_all)
-
+            self.listen_to_channel(channels.list_tasks, self.list_tasks)
+            self.listen_to_channel(channels.add_task, self.discovered_tasks)
+            self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+            self.listen_to_channel(channels.list_models, self.list_models)
+            self.publish(channels.list_tasks, commands.list_all)
 
         else:
             print(strings.compute)
@@ -184,6 +164,34 @@ class Worker(base.PubSub):
         callback_channel = channels.list_tasks_callback(fr)
 
         self.publish(callback_channel, string_list)
+
+    def train_model(self, model, input, target, name, task_name, task_addr):
+        hist = model.fit(
+            input,
+            target,
+            batch_size=100, # TODO config?!?!?!?!
+            verbose=True,
+            epochs=10, # TODO config?!??!??!?
+            validation_split=0.1 # TODO config??!?!?!?!?!?
+        )
+
+        loss = hist.history.get('loss')[-1]
+        print(f'{Fore.GREEN}Finished training {Fore.YELLOW} -- {loss}{Style.RESET_ALL}')
+
+        my_best_model = utils.best_model_for_task(task_name, return_model=True)
+        best_loss = 100000000
+        if not my_best_model == None:
+            best_loss = my_best_model.evaluate(input, target, batch_size=100)[0]
+            print(f'{Fore.YELLOW}Best Evaluated at: {best_loss}{Style.RESET_ALL}')
+            if best_loss < loss:
+                print(f'{Fore.RED}Trained model worse than best trained.  Ignoring.{Style.RESET_ALL}')
+                return
+
+        if loss < best_loss:
+            print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
+            utils.save_best_model_for_task(task_name, model)
+
+        self.add_model(name, model, parent=task_addr)
 
     def added_local_data_model(self, info):
         task_addr = info['task']
@@ -225,33 +233,8 @@ class Worker(base.PubSub):
             input /= 255
 
             target = keras.utils.to_categorical(target, 10)
+            self.train_model(model, input, name, taraget, task_name, task_addr)
 
-            hist = model.fit(
-                input,
-                target,
-                batch_size=100, # TODO config?!?!?!?!
-                verbose=True,
-                epochs=10, # TODO config?!??!??!?
-                validation_split=0.1 # TODO config??!?!?!?!?!?
-            )
-
-            loss = hist.history.get('loss')[-1]
-            print(f'{Fore.GREEN}Finished training {Fore.YELLOW} -- {loss}{Style.RESET_ALL}')
-
-            my_best_model = utils.best_model_for_task(task_name, return_model=True)
-            best_loss = 100000000
-            if not my_best_model == None:
-                best_loss = my_best_model.evaluate(input, target, batch_size=100)[0]
-                print(f'{Fore.YELLOW}Best Evaluated at: {best_loss}{Style.RESET_ALL}')
-                if best_loss < loss:
-                    print(f'{Fore.RED}Trained model worse than best trained.  Ignoring.{Style.RESET_ALL}')
-                    return
-
-            if loss < best_loss:
-                print(f'New best loss of {Fore.GREEN}{loss}{Style.RESET_ALL} for task {Fore.GREEN}{task_name}{Style.RESET_ALL}')
-                utils.save_best_model_for_task(task_name, model)
-
-            self.add_model(name, model, parent=task_addr)
         else:
             print("Can't train your own model so soon!!!!!")
 
@@ -270,9 +253,8 @@ class Worker(base.PubSub):
 
         utils.save_adapter(adapter)
         import grid.adapters.adapter as grid_adapter
-        n = grid_adapter.next_input()
-
-        print(f'next input!!! {n}')
+        n_test, n_target = grid_adapter.next_input()
+        self.train_model(model, n_test, n_target, name, task_name, task_addr)
 
     def added_model(self, info):
         info = self.api.get_json(info['data'])
