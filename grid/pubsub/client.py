@@ -76,10 +76,13 @@ class Client(PubSub):
                                  quit)
 
     # TODO: framework = 'torch'
-    def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
-
-        model_bin = utils.serialize_keras_model(model)
-        model_addr = self.api.add_bytes(model_bin)
+    def generate_fit_spec(self,model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework, model_class = None):
+        if framework == 'torch':
+            model_bin = self.serialize_torch_model()
+            model_addr = self.api.add_bytes(model_bin)
+        else:
+            model_bin = utils.serialize_keras_model(model)
+            model_addr = self.api.add_bytes(model_bin)
 
         if model_class is not None:
             self.api.add_bytes(model_class)
