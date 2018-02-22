@@ -253,6 +253,7 @@ class Worker(base.PubSub):
 
         utils.save_adapter(adapter)
         import grid.adapters.adapter as grid_adapter
+        print('load next input')
         n_test, n_target = grid_adapter.next_input()
         self.train_model(model, n_test, n_target, name, task_name, task_addr)
 
@@ -261,6 +262,8 @@ class Worker(base.PubSub):
 
         task_addr = info['task']
         task_info = self.api.get_json(task_addr)
+
+        print(f'added model {task_info}')
 
         if 'data_dir' in task_info.keys():
             self.added_local_data_model(info)
@@ -296,5 +299,6 @@ class Worker(base.PubSub):
                 else:
                     print(f"DON'T HAVE DATA FOR {name} DATA DIRECTORY: {data_dir}")
             elif 'adapter' in t.keys():
+                self.listen_for_models(name)
                 print('got an adapter task!!!!!')
                 self.load_adapter(t['adapter'])
