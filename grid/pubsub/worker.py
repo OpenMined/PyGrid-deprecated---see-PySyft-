@@ -269,7 +269,7 @@ class Worker(base.PubSub):
 
     def load_adapter(self, addr):
         b = self.api.cat(addr)
-        utils.__ensure_exists(f'{Path.home()}/.openmined/grid/adapters/t.py', b)
+        utils.ensure_exists(f'{Path.home()}/.openmined/grid/adapters/t.py', b)
         exec(open(f'{Path.home()}/.openmined/grid/adapters/t.py').read())
 
 

@@ -17,7 +17,7 @@ def get_ipfs_api(ipfs_addr='127.0.0.1', port=5001):
 
 def save_adapter(addr):
     adapter_bin = get_ipfs_api().cat(addr)
-    __ensure_exists(f'{Path.home()}/grid/adapters/adapter.py', adapter_bin)
+    ensure_exists(f'{Path.home()}/grid/adapters/adapter.py', adapter_bin)
 
 def keras2ipfs(model):
     return get_ipfs_api().add_bytes(serialize_keras_model(model))
@@ -48,7 +48,7 @@ def deserialize_keras_model(model_bin):
 # def load_tasks():
 
 def save_best_model_for_task(task, model):
-    __ensure_exists(f'{Path.home()}/.openmined/models.json', {})
+    ensure_exists(f'{Path.home()}/.openmined/models.json', {})
     with open(f"{Path.home()}/.openmined/models.json", "r") as model_file:
         models = json.loads(model_file.read())
 
@@ -84,7 +84,7 @@ def load_task(name):
             return task
 
 def store_task(name, address):
-    __ensure_exists(f'{Path.home()}/.openmined/tasks.json', [])
+    ensure_exists(f'{Path.home()}/.openmined/tasks.json', [])
     with open(f"{Path.home()}/.openmined/tasks.json", "r") as task_file:
         tasks = json.loads(task_file.read())
 
@@ -101,14 +101,14 @@ def store_task(name, address):
             json.dump(tasks, task_file)
 
 
-def __ensure_exists(path, default_contents=None):
+def ensure_exists(path, default_contents=None):
     """
     Ensure that a path exists.  You can pass as many subdirectories as you
     want without verifying that the parent exists.
 
     E.g.
 
-    __ensure_exists('~/.openmined/adapters/config.json', {}) will ensure that
+    ensure_exists('~/.openmined/adapters/config.json', {}) will ensure that
     the file `~/.openmined/adapters/config.json` gets created and that the file
     contents will become an empty object
     """
