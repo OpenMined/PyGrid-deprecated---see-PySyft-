@@ -17,6 +17,7 @@ platform = platform.system()
 if platform == 'Windows':
     requirements.remove('ethereum')
 
+print("HEY")
 setup(
     name="grid",
     version="0.1.0",
@@ -36,7 +37,8 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-flake8']
 )
-
+print("HEY1")
+# TODO windows
 if platform == 'Darwin':
     subprocess.call('install_scripts/osx_installation.sh', shell=True)
 elif platform == 'Linux':
