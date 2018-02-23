@@ -24,7 +24,12 @@ export GOPATH=$HOME
 
 go get -u github.com/ipfs/ipfs-update
 ipfs-update install latest
-ipfs init
-ipfs daemon --enable-pubsub-experiment  > ipfs.log &
 
-sudo python3 setup.py install
+if [ ! -d "~/.ipfs" ]; then
+  ipfs init
+fi
+
+#curl https://raw.githubusercontent.com/OpenMined/IPFS-BootStrap/master/bootstrap_nodes --output bootstrap_nodes
+cat bootstrap_nodes | xargs ipfs bootstrap add
+
+ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.err &

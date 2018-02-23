@@ -27,7 +27,12 @@ cd ../
 rm -rf ipfs-update*
 
 ipfs-update install latest
-ipfs init
-ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &
 
-python3 setup.py install
+if [ ! -d "$HOME/.ipfs" ]; then
+  ipfs init
+fi
+
+#curl https://raw.githubusercontent.com/OpenMined/IPFS-BootStrap/master/bootstrap_nodes --output bootstrap_nodes
+cat bootstrap_nodes | xargs ipfs bootstrap add
+
+ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &

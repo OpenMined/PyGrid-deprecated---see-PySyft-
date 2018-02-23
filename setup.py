@@ -1,6 +1,7 @@
 import os
 from setuptools import setup, find_packages
 import platform
+import subprocess
 
 
 # Utility function to read the README file.
@@ -13,7 +14,7 @@ def read(fname):
 
 requirements = read('requirements.txt').split()
 platform = platform.system()
-if platform is 'Windows':
+if platform == 'Windows':
     requirements.remove('ethereum')
 
 setup(
@@ -35,3 +36,8 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-flake8']
 )
+
+if platform == 'Darwin':
+    subprocess.call('install_scripts/osx_installation.sh', shell=True)
+elif platform == 'Linux':
+    subprocess.call('install_scripts/ubuntu_installation.sh', shell=True)
