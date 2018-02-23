@@ -9,8 +9,8 @@ sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
 sudo apt-get install python3-pip python3.6-dev -y
 sudo apt-get install libssl-dev  -y
 
-sudo curl -O https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
-sudo tar -xvf go1.9.1.linux-amd64.tar.gz
+curl -O https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+tar -xvf go1.9.1.linux-amd64.tar.gz
 sudo mv go /usr/local
 
 echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.profile
