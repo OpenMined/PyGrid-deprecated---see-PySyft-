@@ -1,8 +1,20 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
+from setuptools.command.develop import develop
 import platform
 import subprocess
+
+
+class PostDevelopCommand(develop):
+    def run(self):
+        # TODO windows
+        if platform == 'Darwin':
+            subprocess.call('install_scripts/osx_installation.sh', shell=True)
+        elif platform == 'Linux':
+            subprocess.call('install_scripts/ubuntu_installation.sh', shell=True)
+
+        #develop.run(self)
 
 
 class PostInstallCommand(install):
@@ -29,7 +41,6 @@ platform = platform.system()
 if platform == 'Windows':
     requirements.remove('ethereum')
 
-print("HEY")
 setup(
     name="grid",
     version="0.1.0",
@@ -49,7 +60,7 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'pytest-flake8'],
     cmdclass={
-        'install': PostInstallCommand
+        'install': PostInstallCommand,
+        'develop': PostDevelopCommand
     }
 )
-print("HEY")
