@@ -13,6 +13,8 @@ class PostInstallCommand(install):
         elif platform == 'Linux':
             subprocess.call('install_scripts/ubuntu_installation.sh', shell=True)
 
+        install.run(self)
+
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
@@ -27,6 +29,7 @@ platform = platform.system()
 if platform == 'Windows':
     requirements.remove('ethereum')
 
+print("HEY")
 setup(
     name="grid",
     version="0.1.0",
@@ -49,3 +52,4 @@ setup(
         'install': PostInstallCommand
     }
 )
+print("HEY")
