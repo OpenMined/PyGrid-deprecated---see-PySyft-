@@ -26,7 +26,7 @@ if [ ! -d "~/.ipfs" ]; then
   ipfs init
 fi
 
-#curl https://raw.githubusercontent.com/OpenMined/IPFS-BootStrap/master/bootstrap_nodes --output bootstrap_nodes
+curl https://raw.githubusercontent.com/OpenMined/BootstrapNodes/master/bootstrap_nodes --output bootstrap_nodes
 cat bootstrap_nodes | xargs ipfs bootstrap add
 
 ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.err &
