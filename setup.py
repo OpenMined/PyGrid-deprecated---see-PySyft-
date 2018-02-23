@@ -1,7 +1,17 @@
 import os
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 import platform
 import subprocess
+
+
+class PostInstallCommand(install):
+    def run(self):
+        # TODO windows
+        if platform == 'Darwin':
+            subprocess.call('install_scripts/osx_installation.sh', shell=True)
+        elif platform == 'Linux':
+            subprocess.call('install_scripts/ubuntu_installation.sh', shell=True)
 
 
 # Utility function to read the README file.
@@ -17,7 +27,6 @@ platform = platform.system()
 if platform == 'Windows':
     requirements.remove('ethereum')
 
-print("HEY")
 setup(
     name="grid",
     version="0.1.0",
@@ -35,11 +44,8 @@ setup(
     ],
     install_requires=requirements,
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'pytest-flake8']
+    tests_require=['pytest', 'pytest-flake8'],
+    cmdclass={
+        'install': PostInstallCommand
+    }
 )
-print("HEY1")
-# TODO windows
-if platform == 'Darwin':
-    subprocess.call('install_scripts/osx_installation.sh', shell=True)
-elif platform == 'Linux':
-    subprocess.call('install_scripts/ubuntu_installation.sh', shell=True)
