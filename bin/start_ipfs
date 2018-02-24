@@ -1,1 +1,2 @@
+cat bootstrap_nodes | xargs ipfs bootstrap add
 ipfs daemon --enable-pubsub-experiment
