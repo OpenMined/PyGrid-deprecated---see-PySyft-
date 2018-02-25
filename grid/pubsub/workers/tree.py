@@ -23,16 +23,6 @@ class GridTree(base_worker.GridWorker):
 
         # LAUNCH PROCESSES - these are non-blocking and run on their own threads
 
-        # Blocking until this node has found at least one other OpenMined node
-        # This functionality queries https://github.com/OpenMined/BootstrapNodes for Anchor nodes
-        # then asks those nodes for which other OpenMined nodes they know about on the network.
-        self.listen_for_openmined_nodes(1)
-
-        # this process serves the purpose of helping other nodes find out about nodes on the network.
-        # if someone queries the "list_worker" channel - it'll send a message directly to the querying node
-        # with a list of the OpenMined nodes of which it is aware.
-        self.listen_to_channel(channels.list_workers,self.list_workers)
-
         # listens to the network and tells other nodes what tasks you'e working on if they ask
         self.listen_to_channel(channels.list_tasks, self.list_tasks)
 
@@ -69,6 +59,12 @@ class GridTree(base_worker.GridWorker):
     ############################### BEGIN PROCESS FUNCTIONS ########################
 
     def discovered_tasks(self, tasks):
+        """
+        people publish new tasks to the network which get processed by this method
+        a task is a json object which has a data directory  - and that data gets processed by an 
+        adapter which is also sent over the wire.
+        """
+
         print(f'{Fore.WHITE}{Back.BLACK} TASKS {Style.RESET_ALL}')
         print(f'From\t\t\t\tName\t\t\t\tAddress')
         print('==================================================================')
@@ -98,6 +94,10 @@ class GridTree(base_worker.GridWorker):
 
 
     def list_models(self, message):
+        """
+        for a given task - return what models you have trained for that task
+        """
+
         task = message['data']
         fr = base58.encode(message['from'])
 
@@ -110,12 +110,12 @@ class GridTree(base_worker.GridWorker):
         if my_best is not None:
             self.send_model(task, my_best)
 
+    ############################### BEGIN SUBPROCESSES FUNCTIONS ########################
 
     def listen_for_models(self, task_name):
         self.listen_to_channel(channels.add_model(task_name), self.added_model)
         self.publish(channels.list_models, task_name)
-
-    ############################### BEGIN SUBPROCESSES FUNCTIONS ########################
+    
 
     def train_model(self, model, input, target, name, task_name, task_addr):
         hist = model.fit(
