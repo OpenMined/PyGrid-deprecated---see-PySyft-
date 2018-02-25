@@ -1,176 +1,29 @@
-from grid.lib import OutputPipe, utils, strings
-from . import base
-from grid.pubsub import commands
-from grid.pubsub import channels
-from colorama import Fore, Back, Style
-from pathlib import Path
-
-import json
-import threading
+from . import base_worker
+from ...lib import strings
+from .. import channels
+from .. import commands
 from bitcoin import base58
 import os
-import numpy as np
-import keras
-import argparse
+from pathlib import Path
 
-title = f"""{Fore.GREEN}   ____                             _                __   ______     _     __
-  / __ \____  ___  ____  ____ ___  (_____  ___  ____/ /  / _________(_____/ /
- / / / / __ \/ _ \/ __ \/ __ `__ \/ / __ \/ _ \/ __  /  / / __/ ___/ / __  /
-/ /_/ / /_/ /  __/ / / / / / / / / / / / /  __/ /_/ /  / /_/ / /  / / /_/ /
-\____/ .___/\___/_/ /_/_/ /_/ /_/_/_/ /_/\___/\__,_/   \____/_/  /_/\__,_/
-    /_/          {Style.RESET_ALL}{Fore.YELLOW}A distributed compute grid{Style.RESET_ALL}
-"""
-
-print(title)
-
-program_desc = f"""
-"""
-
-# print(title)
-
-parser = argparse.ArgumentParser(description=program_desc)
-parser.add_argument('--compute', dest='compute', action='store_const',
-                   const=True, default=False,
-                   help='Run grid in compute mode')
-parser.add_argument('--tree', dest='tree', action='store_const',
-                   const=True, default=False,
-                   help='Run grid in tree mode')
-
-parser.add_argument('--anchor', dest='anchor', action='store_const',
-                   const=True, default=False,
-                   help='Run grid in anchor mode')
-
-args = parser.parse_args()
-
-"""
-TODO: modify Client to store the source code for the model in IPFS.
-      (think through logistics; introduces
-      hurdles for packaging model source code)
-TODO: figure out a convenient way to make robust training procedure for torch
-      -- will probably want to use ignite for this
-"""
-
-
-class Worker(base.PubSub):
+class GridTree(base_worker.GridWorker):
 
     def __init__(self):
-        super().__init__('worker')
+        super().__init__()
 
-    def anchor(self):
-        """
-        Use as anchor node for faster initial IPFS connections.
-        """
-        self.listen_to_channel(channels.openmined,self.just_listen)
-        self.listen_to_channel(channels.list_workers,self.list_workers)
-
+        print(strings.tree)
         self.listen_for_openmined_nodes(1)
-
-    def just_listen(self,message):
-        ""
-
-    def list_workers(self, message):
-        print("listing workers...")
-        fr = base58.encode(message['from'])
-
-        addr = '/p2p-circuit/ipfs/'+fr
-        try:
-            self.api.swarm_connect(addr)
-        except:
-            print("Failed to reconnect in the opposite direciton to:" + addr)
-
-        workers = self.get_openmined_nodes()        
-        workers_json = json.dumps(workers)
-
-        callback_channel = channels.list_workers_callback(fr)
-        print(f'?!?!?!?!?! {callback_channel} {workers_json}')
-        self.publish(callback_channel, workers_json)
-
-    def train_meta(self, message):
-        decoded = json.loads(message['data'])
-        if 'op_code' not in decoded:
-            return
-
-        self.learner_callback.stop_training = decoded['op_code'] == 'quit'
-
-    # TODO: torch
-    def fit_worker(self, message):
-
-        decoded = json.loads(message['data'])
-
-        if(decoded['framework'] == 'keras'):
-            if((decoded['preferred_node'] == 'first_available') or (decoded['preferred_node'] == self.id)):
-                
-                model = utils.ipfs2keras(decoded['model_addr'])
-
-                try:
-                    np_strings = json.loads(self.api.cat(decoded['data_addr']))
-                except NotImplementedError:
-                    raise NotImplementedError("The IPFS API only supports Python 3.6. Please modify your environment.")
-
-                input, target, valid_input, valid_target = list(map(lambda x: self.deserialize_numpy(x),np_strings))
-                train_channel = decoded['train_channel']
-
-                self.learner_callback = OutputPipe(
-                    id=self.id,
-                    publisher=self.publish,
-                    channel=train_channel,
-                    epochs=decoded['epochs'],
-                    model_addr=decoded['model_addr'],
-                    model=model
-                )
-
-                args = (self.train_meta, train_channel + ':' + self.id)
-                monitor_thread = threading.Thread(target=self.listen_to_channel,
-                                                  args=args)
-                monitor_thread.start()
-
-                print('training model')
-
-                model.fit(
-                    input,
-                    target,
-                    batch_size=decoded['batch_size'],
-                    validation_data=(valid_input, valid_target),
-                    verbose=False,
-                    epochs=decoded['epochs'],
-                    callbacks=[self.learner_callback]
-                )
-
-                print('done')
-
-        else:
-            raise NotImplementedError("Only compatible with Keras at the moment")
-
-    """
-    Grid Tree Implementation
-
-    Methods for Grid tree down here
-    """
-
-    def work(self):
-        print('\n\n')
-        if args.tree:
-            print(strings.tree)
-            self.listen_for_openmined_nodes(1)
-            self.listen_to_channel(channels.list_workers,self.list_workers)
-            self.listen_to_channel(channels.list_tasks, self.list_tasks)
-            self.listen_to_channel(channels.add_task, self.discovered_tasks)
-            self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
-            self.listen_to_channel(channels.list_models, self.list_models)
-            self.publish(channels.list_tasks, commands.list_all)
-
-        elif args.anchor:
-            print(strings.anchor)
-            self.anchor()
-        else:
-            print(strings.compute)
-            self.listen_for_openmined_nodes(1)
-            self.listen_to_channel(channels.list_workers,self.list_workers)
-            self.listen_to_channel(channels.openmined, self.fit_worker)
+        self.listen_to_channel(channels.list_workers,self.list_workers)
+        self.listen_to_channel(channels.list_tasks, self.list_tasks)
+        self.listen_to_channel(channels.add_task, self.discovered_tasks)
+        self.listen_to_channel(channels.list_tasks_callback(self.id), self.discovered_tasks)
+        self.listen_to_channel(channels.list_models, self.list_models)
+        self.publish(channels.list_tasks, commands.list_all)
 
     def listen_for_models(self, task_name):
         self.listen_to_channel(channels.add_model(task_name), self.added_model)
         self.publish(channels.list_models, task_name)
+
 
     def list_models(self, message):
         task = message['data']
