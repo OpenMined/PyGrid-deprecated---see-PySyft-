@@ -15,6 +15,12 @@ Compute mode lets users offer compute to train models.  Data scientists can easi
 a jupyter notebook and train them remotely.  Grid also offers easy utilities to try n number of
 configurations concurrently.
 
+`--anchor`
+
+TODO
+
+# Installing a Worker
+
 # Launching a Worker
 
 ### Start the IPFS Peer-to-Peer Filesystem
