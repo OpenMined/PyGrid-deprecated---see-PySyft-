@@ -5,22 +5,39 @@ from bitcoin import base58
 from colorama import Fore, Back, Style
 import ipywidgets as widgets
 import json
+import sys
 import os
-
+import random
 
 class Client(PubSub):
-    def __init__(self):
-        super().__init__()
+
+    def __init__(self,min_om_nodes=1,known_workers=list(),include_github_known_workers=True):
+        super().__init__('client')
         self.progress = {}
 
-    def fit(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1,message_handler=None):
+        
+
+        self.listen_for_openmined_nodes(min_om_nodes,include_github_known_workers)
+
+    def fit(self, model, input, target, valid_input=None, valid_target=None, batch_size=1, epochs=1, log_interval=1, message_handler=None, preferred_node='random'):
+
+        if('p2p-circuit' in preferred_node or '/' in preferred_node):
+            preferred_node = preferred_node.split("/")[-1]
+
+        if(preferred_node == 'random'):
+            nodes = self.get_openmined_nodes()
+            preferred_node = nodes[random.randint(0,len(nodes)-1)]
+
+        print("PREFERRED NODE:" + str(preferred_node))
+
         if(message_handler is None):
             message_handler = self.receive_model
-        self.spec = self.generate_fit_spec(model,input,target,valid_input,valid_target,batch_size,epochs,log_interval)
+        self.spec = self.generate_fit_spec(model=model,input=input,target=target,valid_input=valid_input,valid_target=valid_target,batch_size=batch_size,epochs=epochs,log_interval=log_interval,preferred_node=preferred_node)
         self.publish('openmined', self.spec)
 
         self.listen_to_channel_sync(self.spec['train_channel'], message_handler)
-        return self.spec
+
+        return self.load_model(self.spec['model_addr']),self.spec
 
     def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
         if parent_model not in self.progress:
@@ -76,7 +93,7 @@ class Client(PubSub):
                                  quit)
 
     # TODO: framework = 'torch'
-    def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None):
+    def generate_fit_spec(self, model,input,target,valid_input=None,valid_target=None,batch_size=1,epochs=1,log_interval=1, framework = 'keras', model_class = None,preferred_node='first_available'):
 
         model_bin = utils.serialize_keras_model(model)
         model_addr = self.api.add_bytes(model_bin)
@@ -102,6 +119,7 @@ class Client(PubSub):
         data_addr = self.api.add_str(data_json)
 
         spec = {}
+        spec['type'] = "fit"
         spec['model_addr'] = model_addr
         spec['data_addr'] = data_addr
         spec['batch_size'] = batch_size
@@ -109,6 +127,8 @@ class Client(PubSub):
         spec['log_interval'] = log_interval
         spec['framework'] = framework
         spec['train_channel'] = 'openmined_train_' + str(model_addr)
+        spec['preferred_node'] = preferred_node
+        
         return spec
 
     """
@@ -137,12 +157,44 @@ class Client(PubSub):
 
         return self.all_tasks
 
-    def add_task(self, name, data_dir):
-        task_data = {'name': name, 'creator': self.id, 'data_dir': data_dir}
+    def add_task(self, name, data_dir=None, adapter=None):
+        if data_dir == None and adapter == None:
+            print(f'{Fore.RED}data_dir and adapter can not both be None{Style.RESET_ALL}')
+            return
+
+        task_data = {
+            'name': name,
+            'creator': self.id
+        }
+
+        if data_dir != None:
+            task_data['data_dir'] = data_dir
+        if adapter != None:
+            with open(adapter, 'rb') as f:
+                adapter_bin = f.read()
+                f.close()
+            adapter_addr = self.api.add_bytes(adapter_bin)
+            task_data['adapter'] = adapter_addr
 
         addr = self.api.add_json(task_data)
-
         utils.store_task(name, addr)
 
         data = json.dumps([{'name': name, 'address': addr}])
         self.publish('openmined:add_task', data)
+
+    def best_models(self, task):
+        self.show_models = widgets.VBox([widgets.HBox([widgets.Label('Model Address')])])
+        self.listen_to_channel(channels.add_model(task), self.__added_model)
+        self.publish(channels.list_models, task)
+
+        return self.show_models
+
+    def __added_model(self, message):
+        info = self.api.get_json(message['data'])
+        model_addr = info['model']
+
+        hbox = widgets.HBox([widgets.Label(model_addr)])
+        self.show_models.children += (hbox,)
+
+    def load_model(self, addr):
+        return utils.ipfs2keras(addr)

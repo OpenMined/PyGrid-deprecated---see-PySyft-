@@ -15,22 +15,64 @@ Compute mode lets users offer compute to train models.  Data scientists can easi
 a jupyter notebook and train them remotely.  Grid also offers easy utilities to try n number of
 configurations concurrently.
 
-## Running
+`--anchor`
 
-```sh
-python3.6 setup.py install
+Helps clients find workers in tree or compute mode.
+
+# Anaconda/Python3
+
+It is recommended you install Anaconda prior to starting the installation. The installation page for your operating system can be found [here](https://www.anaconda.com/download/).
+
+If you just want to install python3 and pip3 this can be done through brew on MacOS or apt on Ubuntu LTS 16.04.
+
+MacOS:
+
+```
+brew install python3
 ```
 
-# Running with PUBSUB
-### Running `ipfs_grid_worker_daemon.py`
+Ubuntu LTS 16.04:
 
-Grid worker daemon requires an IPFS daemon to be running with pubsub support
-turned on.
-
-```sh
-ipfs daemon --enable-pubsub-experiment
+```
+apt install python3
+apt install python3-pip3
 ```
 
+# Installing a Worker
+
+Installing a worker can be done easily with:
+
+```
+pip install git+https://github.com/OpenMined/Grid
+```
+
+Pass the `--upgrade` option to update the worker.
+
+# Launching a Worker
+
+### Start the IPFS Peer-to-Peer Filesystem
+
+Grid worker can now start the ipfs daemon for you, but if you want to start it manually it can be with:
+
+```
+start_ipfs
+```
+
+You can then run the worker daemon. If you want to run in `compute` mode run:
+
+```
+start_worker --compute
+```
+
+and if you want to run in `tree` mode, run:
+
+```
+start_worker --tree
+```
+
+# Troubleshooting
+
+<<<<<<< HEAD
 Make sure you have installed all dependencies
 
 ```sh
@@ -42,13 +84,38 @@ You also must have keras installed.
 You can then run the worker daemon
 ```sh
 python3.6 ipfs_grid_worker_daemon.py
+=======
+### Unable To Find Scripts
+
+If running those commands doesn't work make sure the location of the installed script is in your PATH. This can be done by adding a the following similar line to your '~/.bash_profile' file:
+
+```
+export PATH=$PATH:/anaconda3/bin
 ```
 
-Start Jupyter
-```sh
-jupyter notebook
+`/anaconda3/` might need to be replace by the actual install location if not being used with anaconda or you installed anaconda locally for the current user.
+
+And then running:
+
+```
+source ~/.bash_profile
 ```
 
+### Trouble Running Job
+
+If you have any troubles running an experiment such as the other peers not learning about your jobs make sure you're connected to the peer. You can check if you're connected to the peer by running:
+
+```
+ipfs pubsub peers | grep <ipfs address>
+```
+
+And then to connect to the peer if you're not connected:
+
+```
+ipfs swarm connect <ipfs_address>
+```
+
+<<<<<<< HEAD
 navigate to `notebooks/pubsub/` and open `Keras Grid Client and Worker.ipynb` and
 follow along in that notebook.
 
