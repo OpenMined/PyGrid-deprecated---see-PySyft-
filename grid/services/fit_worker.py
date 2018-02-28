@@ -1,12 +1,12 @@
-from ...lib import strings, utils, output_pipe
+from ..lib import strings, utils, output_pipe
 from .. import channels
 import json
 import threading
-from .base import BaseProcess
+from .base import BaseService
 
-class FitWorkerProcess(BaseProcess):
+class FitWorkerService(BaseService):
 
-	# The purpose of this process is to train a model that was called using the "fit" method - which is a more rigid training spec
+	# The purpose of this service is to train a model that was called using the "fit" method - which is a more rigid training spec
 	# inspired by sci-kit learn and keras.
 
 	def __init__(self,worker):
@@ -62,7 +62,7 @@ class FitWorkerProcess(BaseProcess):
 		# See `OutputPipe` for more info.
 		self.worker.learner_callback = output_pipe.OutputPipe(
 			id=self.worker.id,
-			publisher=self.worker.publish,
+			publisher=self.publish,
 			channel=train_channel,
 			epochs=decoded['epochs'],
 			model_addr=decoded['model_addr'],
@@ -71,8 +71,8 @@ class FitWorkerProcess(BaseProcess):
 
 		# When you train a model, you talk about it on a subchannel.
 		# Start listening on this channel for updates about training.
-		_args = (self.worker.train_meta, train_channel + ':' + self.worker.id)
-		monitor_thread = threading.Thread(target=self.worker.listen_to_channel,
+		_args = (self.train_meta, train_channel + ':' + self.worker.id)
+		monitor_thread = threading.Thread(target=self.listen_to_channel,
 										  args=_args)
 		monitor_thread.start()
 

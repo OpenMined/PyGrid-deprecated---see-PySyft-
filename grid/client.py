@@ -1,6 +1,6 @@
 from grid.lib import utils
-from grid.pubsub.base import PubSub
-from grid.pubsub import channels, commands
+from grid.base import PubSub
+from grid import channels, commands
 from bitcoin import base58
 from colorama import Fore, Back, Style
 import ipywidgets as widgets
@@ -8,6 +8,7 @@ import json
 import sys
 import os
 import random
+from .services.listen_for_openmined_nodes import ListenForOpenMinedNodesService
 
 class Client(PubSub):
 
@@ -15,9 +16,10 @@ class Client(PubSub):
         super().__init__('client')
         self.progress = {}
 
-        
+        self.processes = {}
 
-        self.listen_for_openmined_nodes(min_om_nodes,include_github_known_workers)
+        self.processes['listen_for_openmined_nodes'] = ListenForOpenMinedNodesService(self,min_om_nodes,include_github_known_workers)
+        # self.listen_for_openmined_nodes(min_om_nodes,include_github_known_workers)
 
     def fit(self, model, input, target, valid_input=None, valid_target=None, batch_size=1, epochs=1, log_interval=1, message_handler=None, preferred_node='random'):
 

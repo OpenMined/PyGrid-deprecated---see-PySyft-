@@ -1,14 +1,14 @@
-from grid.lib import utils
-from grid.pubsub import channels
+from ..lib import utils
+from .. import channels
 import json
 import numpy as np
 import torch
 import time
 import sys
 from colorama import Fore, Back, Style
-from .base import BaseProcess
+from .base import BaseService
 
-class ListenForOpenMinedNodesProcess(BaseProcess):
+class ListenForOpenMinedNodesService(BaseService):
 
 	# Blocking until this node has found at least one other OpenMined node
 	# This functionality queries https://github.com/OpenMined/BootstrapNodes for Anchor nodes
