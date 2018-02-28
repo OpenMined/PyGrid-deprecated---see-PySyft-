@@ -39,7 +39,7 @@ class Client(PubSub):
 
         self.listen_to_channel_sync(self.spec['train_channel'], message_handler)
 
-        return self.load_model(self.spec['model_addr']),self.spec
+        return self.load_model(self.spec['model_addr']), self.spec, self.time_taken, self.email
 
     def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
         if parent_model not in self.progress:
@@ -70,13 +70,18 @@ class Client(PubSub):
 
         if(msg is not None):
             if(msg['type'] == 'transact'):
+                self.email = msg['worker_email']
+                self.time_taken = msg['time_taken']
+
+                print("MADE IT HERE HEHE")
+
                 return utils.ipfs2keras(msg['model_addr']), msg
             elif(msg['type'] == 'log'):
                 if(verbose):
                     output = "Worker:" + msg['worker_id'][-5:]
                     output += " - Epoch " + str(msg['epoch_id']) + " of " + str(msg['num_epochs'])
                     output += " - Valid Loss: " + str(msg['eval_loss'])[0:8]
-                    print(output)
+                    print(output, "HEY HEHEHEH")
 
                 # Figure out of we should tell this worker to quit.
                 parent_model = msg['parent_model']
@@ -130,7 +135,7 @@ class Client(PubSub):
         spec['framework'] = framework
         spec['train_channel'] = 'openmined_train_' + str(model_addr)
         spec['preferred_node'] = preferred_node
-        
+
         return spec
 
     """
