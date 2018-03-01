@@ -67,8 +67,8 @@ class TorchService(BaseService):
     
     def receive_obj_request(self,msg):
         print(msg)
-        obj_ids = message['data']
-        fr = base58.encode(message['from'])
+        obj_ids = msg['data']
+        fr = base58.encode(msg['from'])
 
         response = list()
         for obj_id in obj_ids:
