@@ -12,7 +12,10 @@ class ListenForTorchObjectsService(BaseService):
         self.worker = worker
 
         def print_messages(message):
-            print(message)
+            fr = base58.encode(message['from'])
+            print(fr)
+            print(message['data'])
+            return message
 
 
         listen_for_callback_channel = channels.torch_listen_for_obj_callback(self.worker.id)
