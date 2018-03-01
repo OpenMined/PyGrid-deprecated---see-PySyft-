@@ -1,6 +1,7 @@
 from grid import workers
 import argparse
 import time
+from colorama import Fore, Style
 
 title = f"""{Fore.GREEN}   ____                             _                __   ______     _     __
   / __ \____  ___  ____  ____ ___  (_____  ___  ____/ /  / _________(_____/ /
