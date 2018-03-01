@@ -72,7 +72,10 @@ class TorchService(BaseService):
 
         response = list()
         for obj_id in obj_ids:
-            response.append(self.objects[obj_id].ser())
+            if(obj_id in self.objects.keys):
+                response.append(self.objects[obj_id].ser())
+            else:
+                response.append('n/a - tensor not found')
         response_str = json.dumps(response)
 
         response_channel = channels.torch_listen_for_obj_response_callback(fr)
