@@ -90,8 +90,8 @@ class TorchService(BaseService):
         random_channel = self.id + "_" + str(random.randint(0, 1e10))
         self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id,random_channel])
 
-        self.listen_to_channel_sync(random_channel, message_handler)
-        return self.objects[obj.id]
+        response = self.listen_to_channel_sync(random_channel, message_handler)
+        return response
     
     def receive_obj_request(self,msg):
         print("receive_obj_request:" + str(msg))
