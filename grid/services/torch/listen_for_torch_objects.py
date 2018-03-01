@@ -14,4 +14,4 @@ class ListenForTorchObjectsService(BaseService):
         def print_messages(message):
             print(message)
 
-        self.listen_to_channel(channels.torch_listen_for_obj_callback(self.id),print_messages)
+        self.torch_worker.listen_to_channel(channels.torch_listen_for_obj_callback(self.torch_worker.id),print_messages)

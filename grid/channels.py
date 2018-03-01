@@ -20,10 +20,10 @@ def add_model(name):
 
 # Torch Channels
 
-torch_listen_for_objects = 'openmined:torch_listen_for_objects'
+torch_listen_for_obj = 'openmined:torch_listen_for_obj'
 
-def torch_receive_obj_callback(id):
-    return f'openmined:torch_listen_for_objects:{id}'
+def torch_listen_for_obj_callback(id):
+    return f'openmined:torch_listen_for_obj:{id}'
 
 
 

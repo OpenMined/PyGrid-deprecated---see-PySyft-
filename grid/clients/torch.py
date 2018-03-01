@@ -6,6 +6,7 @@ import copy
 from ..workers import client
 from ..lib import utils
 from ..lib import serde
+from ..services.torch.listen_for_torch_objects import ListenForTorchObjectsService
 import json
 
 class TorchClient(client.BaseClient):
@@ -26,7 +27,7 @@ class TorchClient(client.BaseClient):
 
         self.processes = {}
 
-        self.processed['listen_for_torch_objects'] = 
+        self.processes['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
 
 
     def register_object(self,obj,is_pointer_to_remote):
