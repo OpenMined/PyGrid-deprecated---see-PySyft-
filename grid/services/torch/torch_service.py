@@ -32,17 +32,29 @@ class TorchService(BaseService):
         self.hook_float_tensor_get()
 
         def print_messages(message):
-            
+            fr = base58.encode(msg['from'])
             print(fr)
             print(message['data'])
             return message
 
         listen_for_obj_callback_channel = channels.torch_listen_for_obj_callback(self.worker.id)
+        self.worker.listen_to_channel(listen_for_obj_callback_channel,self.receive_obj)
+
+        listen_for_obj_callback_channel = channels.torch_listen_for_obj_req_callback(self.worker.id)
         self.worker.listen_to_channel(listen_for_obj_callback_channel,self.receive_obj_request)
 
         # listen_for_obj_response_callback_channel = channels.torch_listen_for_obj_response_callback(self.worker.id)
         # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
 
+    def receive_obj(self,msg):
+        dic = json.loads(msg)
+
+        if(dic['type'] == 'torch.FloatTensor'):
+            obj = torch.FloatTensor.de(dic)
+            obj.is_pointer_to_remote = False
+            obj.owner = self
+            self.objects[obj.id] = obj
+            return obj
 
 
     def register_object(self,obj,is_pointer_to_remote):
@@ -66,7 +78,7 @@ class TorchService(BaseService):
         return self.receive_obj(response)
     
     def receive_obj_request(self,msg):
-        print(msg)
+        
         obj_ids = json.loads(msg['data'])
         fr = base58.encode(msg['from'])
 
@@ -81,15 +93,7 @@ class TorchService(BaseService):
         response_channel = channels.torch_listen_for_obj_response_callback(fr)
         self.worker.publish(channel=response_channel,message=response_str)
     
-    def receive_obj(self,msg):
-        dic = json.loads(msg)
-        if(dic['type'] == 'torch.FloatTensor'):
-            obj = torch.FloatTensor.de(dic)
-            obj.is_pointer_to_remote = False
-            obj.owner = self
-            self.objects[obj.id] = obj
-            return obj
-
+    
     def receive_command(self,command):
         if(command['base_type'] == 'torch.FloatTensor'):
             raw_response = torch.FloatTensor.process_command(self,command)
