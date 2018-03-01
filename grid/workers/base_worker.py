@@ -34,6 +34,12 @@ class GridWorker():
 
 
     def get_openmined_nodes(self):
+        """
+        This method returns the list of known openmined workers on the newtork.
+        Note - not all workers are necessarily "compute" workers. Some may only be anchors
+        and will ignore any jobs you send them.
+        """
+
         nodes = self.api.pubsub_peers('openmined')['Strings']
         if(nodes is not None):
             return nodes
@@ -48,6 +54,11 @@ class GridWorker():
             return []
 
     def publish(self, channel, message):
+        """
+        This method sends a message over an IPFS channel. The number of people who receive it is
+        purely based on the number of people who happen to be listening.
+        """
+
         if isinstance(message, dict) or isinstance(message, list):
             self.api.pubsub_pub(topic=channel, payload=json.dumps(message))
         else:
@@ -57,7 +68,7 @@ class GridWorker():
         """
         This method makes a request over a channel to a specific node and
         will hang until it receives a response from that node. Note that
-        the channel used for the response is random.
+        the channel used for the response is random.am 
         """
 
 
