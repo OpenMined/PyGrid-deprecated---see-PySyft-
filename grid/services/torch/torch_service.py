@@ -205,7 +205,8 @@ class TorchService(BaseService):
             else:
                 v = torch.zeros(0)
             
-            del self.objects[v.id]
+            if(msg['id'] != v.id):
+                del self.objects[v.id]
             v_orig = self.objects[msg['id']].set_(v)
             v_orig.owner = msg['owner']
 
