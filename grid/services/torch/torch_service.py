@@ -55,7 +55,7 @@ class TorchService(BaseService):
             obj.is_pointer_to_remote = False
             obj.owner = self.worker
             self.objects[obj.id] = obj
-            return obj
+            
 
 
     def register_object(self,obj,is_pointer_to_remote):
@@ -66,7 +66,7 @@ class TorchService(BaseService):
         return obj
     
     def send_obj(self,obj,to):
-        self.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
+        self.worker.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
         obj.is_pointer_to_remote = True
         obj.owner = to
         return obj
