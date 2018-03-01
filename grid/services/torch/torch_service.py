@@ -54,6 +54,10 @@ class TorchService(BaseService):
         # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
 
     def receive_obj(self,msg):
+        self.receive_obj_break(msg)
+
+    def receive_obj_break(self,msg):
+
         print("MSG:")
         print(msg)        
         dic = json.loads(msg['data'])
@@ -66,6 +70,8 @@ class TorchService(BaseService):
             obj.owner = self.worker
             self.objects[obj.id] = obj
             print("Received Object:" + str(obj.id) + " : " + str(obj))
+            return obj
+        return ""
                 
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
@@ -86,9 +92,11 @@ class TorchService(BaseService):
     
     def request_obj(self,obj):
         random_channel = self.worker.id + "_" + str(random.randint(0, 1e10))
-        self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id,random_channel])
 
-        response = self.worker.listen_to_channel_sync(random_channel, self.receive_obj)
+        def send():
+            self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id,random_channel])
+
+        response = self.worker.listen_to_channel_sync(random_channel, self.receive_obj_break, send)
         return response
     
     def receive_obj_request(self,msg):
@@ -201,17 +209,22 @@ class TorchService(BaseService):
         def de(msg):
             if(type(msg) == str):
                 msg = json.loads(msg)
+
             if('data' in msg.keys()):
                 v = torch.FloatTensor(msg['data'])
             else:
                 v = torch.zeros(0)
             
             del self.objects[v.id]
+
+            print("Is " + str(msg['id']) + " inside of " + str(self.objects.keys()) + " ? -> " + str(msg['id'] in self.objects.keys()))
+
             if(msg['id'] in self.objects.keys()):
                 v_orig = self.objects[msg['id']].set_(v)
                 return v_orig
             else:
                 self.objects[msg['id']] = v
+                v.id = msg['id']
                 v.owner = msg['owner']
                 return v
 
