@@ -79,7 +79,7 @@ class TorchService(BaseService):
         response_str = json.dumps(response)
 
         response_channel = channels.torch_listen_for_obj_response_callback(fr)
-        self.publish(channel=response_channel,message=response_str)
+        self.worker.publish(channel=response_channel,message=response_str)
     
     def receive_obj(self,msg):
         dic = json.loads(msg)
