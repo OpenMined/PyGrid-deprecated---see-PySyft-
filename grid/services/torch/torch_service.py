@@ -54,22 +54,18 @@ class TorchService(BaseService):
         # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
 
     def receive_obj(self,msg):
-        
-        dics = json.loads(msg['data'])
+        print("MSG:")
+        print(msg)        
+        dic = json.loads(msg['data'])
 
-        for dic_str in dics: 
-            print("DIC:")
-            print(dic_str)
-            dic = json.loads(dic_str)
-            
-            # print(type(dic))
-            # print(dic)
-            if(dic['type'] == 'torch.FloatTensor'):
-                obj = torch.FloatTensor.de(dic)
-                obj.is_pointer_to_remote = False
-                obj.owner = self.worker
-                self.objects[obj.id] = obj
-                print("Received Object:" + str(obj.id) + " : " + str(obj))
+        # print(type(dic))
+        # print(dic)
+        if(dic['type'] == 'torch.FloatTensor'):
+            obj = torch.FloatTensor.de(dic)
+            obj.is_pointer_to_remote = False
+            obj.owner = self.worker
+            self.objects[obj.id] = obj
+            print("Received Object:" + str(obj.id) + " : " + str(obj))
                 
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
