@@ -58,8 +58,6 @@ class TorchService(BaseService):
 
     def receive_obj_break(self,msg):
 
-        print("MSG:")
-        print(msg)        
         dic = json.loads(msg['data'])
 
         # print(type(dic))
@@ -69,7 +67,6 @@ class TorchService(BaseService):
             obj.is_pointer_to_remote = False
             obj.owner = self.worker
             self.objects[obj.id] = obj
-            print("Received Object:" + str(obj.id) + " : " + str(obj))
             return obj
         return ""
                 
@@ -100,15 +97,14 @@ class TorchService(BaseService):
         return response
     
     def receive_obj_request(self,msg):
-        print("receive_obj_request:" + str(msg))
+        
         obj_id, response_channel = json.loads(msg['data'])
-        print("Obj Id:" + str(obj_id))
-        print("Response Channel:" + str(response_channel))
+        
         if(obj_id in self.objects.keys()):
             response_str = self.objects[obj_id].ser()
         else:
             response_str = 'n/a - tensor not found'
-        print("responding on channel:" + str(response_channel))
+        
         self.worker.publish(channel=response_channel,message=response_str)
     
     
@@ -216,8 +212,6 @@ class TorchService(BaseService):
                 v = torch.zeros(0)
             
             del self.objects[v.id]
-
-            print("Is " + str(msg['id']) + " inside of " + str(self.objects.keys()) + " ? -> " + str(msg['id'] in self.objects.keys()))
 
             if(msg['id'] in self.objects.keys()):
                 v_orig = self.objects[msg['id']].set_(v)
