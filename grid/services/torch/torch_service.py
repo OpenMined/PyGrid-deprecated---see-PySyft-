@@ -58,8 +58,10 @@ class TorchService(BaseService):
         dics = json.loads(msg['data'])
 
         for dic_str in dics: 
+            print("DIC:")
+            print(dic_str)
             dic = json.loads(dic_str)
-            # print("DIC:")
+            
             # print(type(dic))
             # print(dic)
             if(dic['type'] == 'torch.FloatTensor'):
