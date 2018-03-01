@@ -66,7 +66,7 @@ class TorchService(BaseService):
         return obj
     
     def send_obj(self,obj,to):
-        g.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
+        self.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
         obj.is_pointer_to_remote = True
         obj.owner = to
         return obj
@@ -207,7 +207,7 @@ class TorchService(BaseService):
         
     def hook_float_tensor_send(self):
         def send(self,new_owner):
-            self.send_obj(self,new_owner)
+            self.owner.services['torch_service'].send_obj(self,new_owner)
             return self
 
         torch.FloatTensor.send = send
