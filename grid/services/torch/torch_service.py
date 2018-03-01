@@ -40,8 +40,8 @@ class TorchService(BaseService):
         listen_for_obj_callback_channel = channels.torch_listen_for_obj_callback(self.worker.id)
         self.worker.listen_to_channel(listen_for_obj_callback_channel,self.receive_obj_request)
 
-        listen_for_obj_response_callback_channel = channels.torch_listen_for_obj_response_callback(self.worker.id)
-        self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
+        # listen_for_obj_response_callback_channel = channels.torch_listen_for_obj_response_callback(self.worker.id)
+        # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
 
 
 
@@ -66,6 +66,7 @@ class TorchService(BaseService):
         return self.receive_obj(response)
     
     def receive_obj_request(self,msg):
+        print(msg)
         obj_ids = message['data']
         fr = base58.encode(message['from'])
 
@@ -74,7 +75,7 @@ class TorchService(BaseService):
             response.append(self.objects[obj_id].ser())
         response_str = json.dumps(response)
 
-        response_channel = channels.torch_listen_for_obj_callback(fr)
+        response_channel = channels.torch_listen_for_obj_response_callback(fr)
         self.publish(channel=response_channel,message=response_str)
     
     def receive_obj(self,msg):
