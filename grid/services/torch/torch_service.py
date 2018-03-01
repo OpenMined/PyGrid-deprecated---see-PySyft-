@@ -48,6 +48,7 @@ class TorchService(BaseService):
         self.worker.listen_to_channel(listen_for_obj_callback_channel,self.receive_obj_request)
 
 
+
     def receive_obj(self,msg):
         self.receive_obj_break(msg)
 
@@ -233,6 +234,7 @@ class TorchService(BaseService):
         except:
             torch.FloatTensor.old__repr__ = torch.FloatTensor.__repr__
             
+
         torch.FloatTensor.__repr__ = __repr__
 
 
@@ -247,8 +249,10 @@ class TorchService(BaseService):
         
     def hook_float_tensor_get(self):
         def get(self):
+
             if(self.worker.id != self.owner):
                 self.worker.services['torch_service'].request_obj(self)
+
             return self
         torch.FloatTensor.get = get
         
