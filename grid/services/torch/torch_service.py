@@ -53,7 +53,7 @@ class TorchService(BaseService):
         if(dic['type'] == 'torch.FloatTensor'):
             obj = torch.FloatTensor.de(dic)
             obj.is_pointer_to_remote = False
-            obj.owner = self
+            obj.owner = self.worker
             self.objects[obj.id] = obj
             return obj
 
