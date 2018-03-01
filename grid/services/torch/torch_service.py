@@ -91,7 +91,7 @@ class TorchService(BaseService):
                 response.append('n/a - tensor not found')
         response_str = json.dumps(response)
 
-        response_channel = channels.torch_listen_for_obj_response_callback(fr)
+        response_channel = channels.torch_listen_for_obj_req_response_callback(fr)
         self.worker.publish(channel=response_channel,message=response_str)
     
     
