@@ -66,7 +66,7 @@ class TorchService(BaseService):
         return obj
     
     def send_obj(self,obj,to):
-        to.receive_obj(obj.ser())
+        g.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
         obj.is_pointer_to_remote = True
         obj.owner = to
         return obj
