@@ -69,8 +69,6 @@ class TorchService(BaseService):
                 self.objects[obj.id] = obj
                 print("Received Object:" + str(obj.id) + " : " + str(obj))
                 
-
-
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
         obj.owner = self.worker
@@ -89,23 +87,21 @@ class TorchService(BaseService):
         return to.receive_command(command)
     
     def request_obj(self,obj):
-        self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id])
+        random_channel = self.id + "_" + str(random.randint(0, 1e10))
+        self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id,random_channel])
+
+        self.listen_to_channel_sync(random_channel, message_handler)
         return self.objects[obj.id]
     
     def receive_obj_request(self,msg):
         print("receive_obj_request:" + str(msg))
-        obj_ids = json.loads(msg['data'])
-        fr = base58.encode(msg['from'])
+        obj_id, response_channel = json.loads(msg['data'])
+        
+        if(obj_id in self.objects.keys()):
+            response_str = self.objects[obj_id].ser()
+        else:
+            response_str = 'n/a - tensor not found'
 
-        response = list()
-        for obj_id in obj_ids:
-            if(obj_id in self.objects.keys()):
-                response.append(self.objects[obj_id].ser())
-            else:
-                response.append('n/a - tensor not found')
-        response_str = json.dumps(response)
-
-        response_channel = channels.torch_listen_for_obj_req_response_callback(fr)
         self.worker.publish(channel=response_channel,message=response_str)
     
     
@@ -208,12 +204,13 @@ class TorchService(BaseService):
                 msg = json.loads(msg)
             if('data' in msg.keys()):
                 v = torch.FloatTensor(msg['data'])
-                v.owner = msg['owner']
             else:
                 v = torch.zeros(0)
-                v.owner = msg['owner']
-                
-            v.id = msg['id']
+            
+            del self.objects[v.id]
+            v_orig = self.objects[msg['id']].set_(v)
+            v_orig.owner = msg['owner']
+
             return v
 
         torch.FloatTensor.ser = ser
