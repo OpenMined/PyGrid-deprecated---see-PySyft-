@@ -48,7 +48,7 @@ class TorchService(BaseService):
 
     def receive_obj(self,msg):
         print("received obj:" + str(msg))
-        dic = json.loads(msg)
+        dic = json.loads(msg['data'])
 
         if(dic['type'] == 'torch.FloatTensor'):
             obj = torch.FloatTensor.de(dic)
