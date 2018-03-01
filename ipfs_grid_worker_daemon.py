@@ -59,7 +59,7 @@ def run():
         if args.payment_experiment:
             workers.compute.GridCompute(args.payment_experiment)
         else:
-            workers.computer.GridCompute(False)
+            workers.compute.GridCompute(False)
 
   except Exception as e:  # most generic exception you can catch
     print(e)
