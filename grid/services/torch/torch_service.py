@@ -48,8 +48,8 @@ class TorchService(BaseService):
         self.worker.listen_to_channel(listen_for_obj_callback_channel,self.receive_obj_request)
 
         # I listen for people to respond to my requests for tensors!!
-        listen_for_obj_req_response = channels.torch_listen_for_obj_req_response_callback(self.worker.id)
-        self.worker.listen_to_channel(listen_for_obj_req_response,self.receive_obj)
+        # listen_for_obj_req_response = channels.torch_listen_for_obj_req_response_callback(self.worker.id)
+        # self.worker.listen_to_channel(listen_for_obj_req_response,self.receive_obj)
 
         # listen_for_obj_response_callback_channel = channels.torch_listen_for_obj_response_callback(self.worker.id)
         # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
