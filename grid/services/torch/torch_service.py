@@ -30,6 +30,7 @@ class TorchService(BaseService):
         self.hook_float_tensor_send()
         self.hook_float_tensor_process_command()
         self.hook_float_tensor_get()
+        self.hook_float_tensor___repr__()
 
         def print_messages(message):
             print(message.keys())
@@ -224,6 +225,19 @@ class TorchService(BaseService):
         torch.FloatTensor.ser = ser
         torch.FloatTensor.de = de 
         
+
+    def hook_float_tensor___repr__(self):
+        def __repr__(self):
+            if(self.worker.id == self.owner):
+                return self.old__repr__()
+            else:
+                return "[ torch.FloatTensor - Location:" + str(self.owner) + " ]"
+
+        torch.FloatTensor.old__repr__ = torch.FloatTensor.__repr__
+        torch.FloatTensor.__repr__ = __repr__
+
+
+
     def hook_float_tensor_send(self):
         def send(self,new_owner):
             self.worker.services['torch_service'].send_obj(self,new_owner)
