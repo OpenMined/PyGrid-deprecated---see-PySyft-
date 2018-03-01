@@ -85,21 +85,22 @@ class TorchService(BaseService):
         return to.receive_command(command)
     
     def request_obj(self,obj):
-        random_channel = self.id + "_" + str(random.randint(0, 1e10))
+        random_channel = self.worker.id + "_" + str(random.randint(0, 1e10))
         self.worker.publish(channel=channels.torch_listen_for_obj_req_callback(obj.owner),message=[obj.id,random_channel])
 
-        response = self.listen_to_channel_sync(random_channel, message_handler)
+        response = self.worker.listen_to_channel_sync(random_channel, self.receive_obj)
         return response
     
     def receive_obj_request(self,msg):
         print("receive_obj_request:" + str(msg))
         obj_id, response_channel = json.loads(msg['data'])
-        
+        print("Obj Id:" + str(obj_id))
+        print("Response Channel:" + str(response_channel))
         if(obj_id in self.objects.keys()):
             response_str = self.objects[obj_id].ser()
         else:
             response_str = 'n/a - tensor not found'
-
+        print("responding on channel:" + str(response_channel))
         self.worker.publish(channel=response_channel,message=response_str)
     
     
