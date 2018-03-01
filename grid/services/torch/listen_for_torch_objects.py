@@ -1,5 +1,6 @@
 from ... import channels
 from ..base import BaseService
+from bitcoin import base58
 
 class ListenForTorchObjectsService(BaseService):
 
