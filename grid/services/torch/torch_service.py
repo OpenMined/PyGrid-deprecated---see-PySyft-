@@ -205,12 +205,15 @@ class TorchService(BaseService):
             else:
                 v = torch.zeros(0)
             
-            if(msg['id'] != v.id):
-                del self.objects[v.id]
-            v_orig = self.objects[msg['id']].set_(v)
-            v_orig.owner = msg['owner']
+            del self.objects[v.id]
+            if(msg['id'] in self.objects.keys()):
+                v_orig = self.objects[msg['id']].set_(v)
+                return v_orig
+            else:
+                self.objects[msg['id']] = v
+                v.owner = msg['owner']
+                return v
 
-            return v
 
         torch.FloatTensor.ser = ser
         torch.FloatTensor.de = de 
