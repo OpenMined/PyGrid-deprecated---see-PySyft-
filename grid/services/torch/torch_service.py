@@ -207,7 +207,7 @@ class TorchService(BaseService):
         
     def hook_float_tensor_send(self):
         def send(self,new_owner):
-            self.owner.send_obj(self,new_owner)
+            self.send_obj(self,new_owner)
             return self
 
         torch.FloatTensor.send = send
