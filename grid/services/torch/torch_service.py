@@ -8,7 +8,6 @@ from torch.autograd import Variable
 import inspect
 import random
 import copy
-from ...workers import client
 from ...lib import utils
 from ...lib import serde
 import json
