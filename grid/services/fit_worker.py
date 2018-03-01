@@ -12,7 +12,7 @@ class FitWorkerService(BaseService):
 	def __init__(self,worker):
 		super().__init__(worker)
 
-		self.listen_to_channel(channels.openmined, self.fit_worker)
+		self.worker.listen_to_channel(channels.openmined, self.fit_worker)
 
 	# TODO: torch
 	def fit_worker(self, message):
@@ -52,7 +52,7 @@ class FitWorkerService(BaseService):
 			raise NotImplementedError("The IPFS API only supports Python 3.6. Please modify your environment.")
 
 		# get input/validation data from ipfs
-		input, target, valid_input, valid_target = list(map(lambda x: self.worker.deserialize_numpy(x),np_strings))
+		input, target, valid_input, valid_target = list(map(lambda x: utils.deserialize_numpy(x),np_strings))
 
 		# sets up channel for sending logging information back to the client (so that they can see incremental progress)
 		train_channel = decoded['train_channel']
@@ -62,7 +62,7 @@ class FitWorkerService(BaseService):
 		# See `OutputPipe` for more info.
 		self.worker.learner_callback = output_pipe.OutputPipe(
 			id=self.worker.id,
-			publisher=self.publish,
+			publisher=self.worker.publish,
 			channel=train_channel,
 			epochs=decoded['epochs'],
 			model_addr=decoded['model_addr'],
@@ -72,7 +72,7 @@ class FitWorkerService(BaseService):
 		# When you train a model, you talk about it on a subchannel.
 		# Start listening on this channel for updates about training.
 		_args = (self.train_meta, train_channel + ':' + self.worker.id)
-		monitor_thread = threading.Thread(target=self.listen_to_channel,
+		monitor_thread = threading.Thread(target=self.worker.listen_to_channel,
 										  args=_args)
 		monitor_thread.start()
 
