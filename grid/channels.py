@@ -25,5 +25,9 @@ torch_listen_for_obj = 'openmined:torch_listen_for_obj'
 def torch_listen_for_obj_callback(id):
     return f'openmined:torch_listen_for_obj:{id}'
 
+torch_listen_for_obj_response = 'openmined:torch_listen_for_obj_res'
+
+def torch_listen_for_obj_response_callback(id):
+    return f'openmined:torch_listen_for_obj_res:{id}'
 
 
