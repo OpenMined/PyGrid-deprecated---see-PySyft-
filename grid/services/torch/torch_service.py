@@ -72,7 +72,7 @@ class TorchService(BaseService):
 
         response = list()
         for obj_id in obj_ids:
-            if(obj_id in self.objects.keys):
+            if(obj_id in self.objects.keys()):
                 response.append(self.objects[obj_id].ser())
             else:
                 response.append('n/a - tensor not found')
