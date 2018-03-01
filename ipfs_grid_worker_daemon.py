@@ -41,6 +41,9 @@ parser.add_argument('--anchor', dest='anchor', action='store_const',
                    const=True, default=False,
                    help='Run grid in anchor mode')
 
+parser.add_argument('--payment-experiment', dest='payment-experiment', action='store_const',
+                    const=True, default=False, help='Run grid with payment experiment')
+
 args = parser.parse_args()
 
 """
@@ -62,7 +65,7 @@ def run():
     elif(args.anchor):
         w = workers.anchor.GridAnchor()
     else:
-        w = workers.compute.GridCompute()
+        w = workers.compute.GridCompute(args.payment_experiment)
 
   except Exception as e:     # most generic exception you can catch
     print(e)

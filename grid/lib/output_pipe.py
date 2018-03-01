@@ -14,14 +14,14 @@ class OutputPipe(keras.callbacks.Callback):
     Or, this class can be used to quit training if a client tells you to.
     """
 
-    def __init__(self, id, publisher, channel, epochs, model_addr, model):
+    def __init__(self, id, publisher, channel, epochs, model_addr, model, email):
         self.id = id
         self.publisher = publisher
         self.channel = channel
         self.epochs = epochs
         self.model_addr = model_addr
         self.model = model
-        self.email = "bendecoste@gmail.com"
+        self.email = email
 
         self.stop_training = False
 
