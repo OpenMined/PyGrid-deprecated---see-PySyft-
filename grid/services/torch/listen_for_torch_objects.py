@@ -9,9 +9,12 @@ class ListenForTorchObjectsService(BaseService):
     def __init__(self,torch_worker):
         super().__init__(torch_worker)
 
-        self.torch_worker = torch_worker
+        self.worker = worker
 
         def print_messages(message):
+            message = self.worker.decode_message(message):
             print(message)
 
-        self.torch_worker.listen_to_channel(channels.torch_listen_for_obj_callback(self.torch_worker.id),print_messages)
+
+        listen_for_callback_channel = channels.torch_listen_for_obj_callback(self.worker.id)
+        self.worker.listen_to_channel(listen_for_callback_channel,print_messages)

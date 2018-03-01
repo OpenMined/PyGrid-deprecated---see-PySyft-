@@ -29,7 +29,6 @@ class TorchClient(client.BaseClient):
 
         self.services['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
 
-
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
         obj.owner = self
@@ -42,6 +41,9 @@ class TorchClient(client.BaseClient):
         obj.is_pointer_to_remote = True
         obj.owner = to
         return obj
+
+    def send_command(self,command,to):
+        return to.receive_command(command)
     
     def request_obj(self,obj):
         response = obj.owner.receive_obj_request(obj.id)
@@ -58,15 +60,12 @@ class TorchClient(client.BaseClient):
             obj.owner = self
             self.objects[obj.id] = obj
             return obj
-    def send_command(self,command,to):
-        return to.receive_command(command)
 
     def receive_command(self,command):
         if(command['base_type'] == 'torch.FloatTensor'):
             raw_response = torch.FloatTensor.process_command(self,command)
         
         return json.dumps(raw_response)
-            
     
     def process_response(self,response):
         response = json.loads(response)
@@ -100,7 +99,6 @@ class TorchClient(client.BaseClient):
         command['types'] = [type(val) for val in command['values']]
         
         return command
-
 
     # GENERIC
 
