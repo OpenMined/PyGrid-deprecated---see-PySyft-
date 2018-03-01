@@ -60,19 +60,17 @@ class TorchService(BaseService):
 
         dic = json.loads(msg['data'])
 
-        # print(type(dic))
-        # print(dic)
         if(dic['type'] == 'torch.FloatTensor'):
             obj = torch.FloatTensor.de(dic)
             obj.is_pointer_to_remote = False
-            obj.owner = self.worker
+            obj.owner = self.worker.id
             self.objects[obj.id] = obj
             return obj
-        return ""
+        return "not a float tensor"
                 
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
-        obj.owner = self.worker
+        obj.owner = self.worker.id
         obj.worker = self.worker
         obj.is_pointer_to_remote = False
         self.objects[obj.id] = obj
@@ -198,7 +196,7 @@ class TorchService(BaseService):
             if(include_data):
                 msg['data'] = self.tolist()
             msg['id'] = self.id
-            msg['owner'] = self.owner.id
+            msg['owner'] = self.owner
             
             return json.dumps(msg)
 
@@ -228,14 +226,15 @@ class TorchService(BaseService):
         
     def hook_float_tensor_send(self):
         def send(self,new_owner):
-            self.owner.services['torch_service'].send_obj(self,new_owner)
+            self.worker.services['torch_service'].send_obj(self,new_owner)
+            self.set_(torch.zeros(0))
             return self
 
         torch.FloatTensor.send = send
         
     def hook_float_tensor_get(self):
         def get(self):
-            self = self.worker.services['torch_service'].request_obj(self)
+            self.worker.services['torch_service'].request_obj(self)
             return self
         torch.FloatTensor.get = get
         
