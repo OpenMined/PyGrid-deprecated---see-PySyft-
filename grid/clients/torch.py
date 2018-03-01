@@ -25,9 +25,9 @@ class TorchClient(client.BaseClient):
         self.hook_float_tensor_process_command()
         self.hook_float_tensor_get()
 
-        self.processes = {}
+        self.services = {}
 
-        self.processes['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
+        self.services['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
 
 
     def register_object(self,obj,is_pointer_to_remote):

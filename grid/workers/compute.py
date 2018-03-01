@@ -37,4 +37,4 @@ class GridCompute(base_worker.GridWorker):
         # TORCH
 
         # this process listens for torch ops
-        self.processes['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
+        self.services['listen_for_torch_objects'] = ListenForTorchObjectsService(self)
