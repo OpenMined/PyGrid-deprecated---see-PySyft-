@@ -6,8 +6,8 @@ class ListenForTorchObjectsService(BaseService):
     # this service just listens on the general "openmined" channel so that other nodes
     # on the network know its there.
 
-    def __init__(self,torch_worker):
-        super().__init__(torch_worker)
+    def __init__(self,worker):
+        super().__init__(worker)
 
         self.worker = worker
 
