@@ -47,6 +47,7 @@ class TorchService(BaseService):
         # self.worker.listen_to_channel(listen_for_obj_response_callback_channel,print_messages)
 
     def receive_obj(self,msg):
+        print("received obj:" + str(msg))
         dic = json.loads(msg)
 
         if(dic['type'] == 'torch.FloatTensor'):
@@ -78,7 +79,7 @@ class TorchService(BaseService):
         return self.receive_obj(response)
     
     def receive_obj_request(self,msg):
-        
+        print("receive_obj_request:" + str(msg))
         obj_ids = json.loads(msg['data'])
         fr = base58.encode(msg['from'])
 
