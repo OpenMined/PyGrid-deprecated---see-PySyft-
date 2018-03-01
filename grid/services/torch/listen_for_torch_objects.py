@@ -12,7 +12,7 @@ class ListenForTorchObjectsService(BaseService):
         self.worker = worker
 
         def print_messages(message):
-            message = self.worker.decode_message(message):
+            message = self.worker.decode_message(message)
             print(message)
 
 
