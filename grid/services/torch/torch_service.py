@@ -60,7 +60,7 @@ class TorchService(BaseService):
 
     def register_object(self,obj,is_pointer_to_remote):
         obj.id = random.randint(0, 1e10)
-        obj.owner = self
+        obj.owner = self.worker
         obj.is_pointer_to_remote = False
         self.objects[obj.id] = obj
         return obj
