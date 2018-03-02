@@ -1,5 +1,6 @@
 from .. import base
 from ..services.broadcast_known_workers import BroadcastKnownWorkersService
+from ..services.whoami import WhoamiService
 from ..lib import utils
 from threading import Thread
 import json
@@ -16,7 +17,7 @@ class GridWorker():
         self.api = utils.get_ipfs_api()
         peer_id = self.api.config_show()['Identity']['PeerID']
         self.id = f'{peer_id}'
-        
+
         # switch to this to make local develop work
         # self.id = f'{mode}:{peer_id}'
         self.subscribed_list = []
@@ -33,6 +34,8 @@ class GridWorker():
         # with a list of the OpenMined nodes of which it is aware.
         self.services['broadcast_known_workers'] = BroadcastKnownWorkersService(self)
 
+        # WHOMAI
+        self.services['whoami_service'] = WhoamiService()
 
     def get_openmined_nodes(self):
         """
