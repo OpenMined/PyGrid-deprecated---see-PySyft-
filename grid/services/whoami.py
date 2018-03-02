@@ -24,7 +24,7 @@ class WhoamiService(BaseService):
 
         import psutil
         stats['worker_type'] = self.worker.node_type
-        stats['services_running'] = self.worker.services.keys()
+        stats['services_running'] = list(self.worker.services.keys())
         stats['id'] = self.worker.id
 
         if('torch_service' in self.worker.services.keys()):
