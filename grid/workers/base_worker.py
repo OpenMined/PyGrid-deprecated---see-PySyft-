@@ -72,7 +72,7 @@ class GridWorker():
         """
         This method makes a request over a channel to a specific node and
         will hang until it receives a response from that node. Note that
-        the channel used for the response is random.am 
+        the channel used for the response is random.
         """
 
 
@@ -81,8 +81,8 @@ class GridWorker():
         def send():
             self.publish(channel=channel,message=[message,random_channel])
 
-        response = self.listen_to_channel_sync(random_channel, response_handler, send)
-        return response
+        return self.listen_to_channel_sync(random_channel, response_handler, send)
+
 
     def listen_to_channel_sync(self, *args):
         """

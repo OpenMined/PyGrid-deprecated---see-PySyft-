@@ -85,7 +85,7 @@ class TorchService(BaseService):
         return self.worker.request_response(channel=channels.torch_listen_for_obj_req_callback(obj.owner),
                                             message=obj.id,
                                             response_handler=self.receive_obj_break)
-    
+
     def receive_obj_request(self,msg):
         
         obj_id, response_channel = json.loads(msg['data'])
