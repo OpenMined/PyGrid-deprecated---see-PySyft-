@@ -48,20 +48,20 @@ class WhoamiService(BaseService):
         stats['disk_free'] = disk.free
         stats['disk_percent'] = disk.percent
 
-        from tensorflow.python.client import device_lib
+        # from tensorflow.python.client import device_lib
 
-        def get_available_gpus():
-            local_device_protos = device_lib.list_local_devices()
-            return [x for x in local_device_protos if x.device_type == 'GPU']
+        # def get_available_gpus():
+        #     local_device_protos = device_lib.list_local_devices()
+        #     return [x for x in local_device_protos if x.device_type == 'GPU']
 
-        def get_available_cpus():
-            local_device_protos = device_lib.list_local_devices()
-            return [x for x in local_device_protos if x.device_type == 'CPU']
+        # def get_available_cpus():
+        #     local_device_protos = device_lib.list_local_devices()
+        #     return [x for x in local_device_protos if x.device_type == 'CPU']
 
         import torch
 
-        gpus = get_available_gpus()
-        cpus = get_available_cpus()
+        # gpus = get_available_gpus()
+        # cpus = get_available_cpus()
 
         # stats['gpus_tf'] = list()
 
