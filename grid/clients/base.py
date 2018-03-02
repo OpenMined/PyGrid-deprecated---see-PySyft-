@@ -18,3 +18,5 @@ class BaseClient(base_worker.GridWorker):
     
     def listen(self):
         self.services['listen_for_openmined_nodes'].listen_for_openmined_nodes()
+
+    def get_stats(self,worker_id)
