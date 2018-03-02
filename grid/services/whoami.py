@@ -14,7 +14,10 @@ class WhoamiService(BaseService):
         self.worker.listen_to_channel(channels.whoami_listener_callback(self.worker.id),self.get_stats)
 
 
-    def get_stats(self,message):
+    def get_stats(self,message_and_response_channel):
+
+        msg,response_channel = message_and_response_channel
+
         stats = {}
 
         import psutil
@@ -48,6 +51,8 @@ class WhoamiService(BaseService):
         stats['disk_free'] = disk.free
         stats['disk_percent'] = disk.percent
 
+
+        # running this seems to soak up all the GPU memory
         # from tensorflow.python.client import device_lib
 
         # def get_available_gpus():
@@ -89,5 +94,5 @@ class WhoamiService(BaseService):
           gpu_stats['name'] = torch.cuda.get_device_name(i)
           gpu_stats['cuda_major_verison'],gpu_stats['cuda_minor_verison'] = torch.cuda.get_device_capability(i)
           stats['gpus_pytorch'].append(gpu_stats)
-        print(stats)
-        return stats
+
+        self.publish(channel=response_channel, message=json.dumps(stats))
