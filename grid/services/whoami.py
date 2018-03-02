@@ -24,12 +24,12 @@ class WhoamiService(BaseService):
 
         import psutil
         stats['worker_type'] = self.worker.node_type
-        stats['services_running'] = self.worker.services.keys().tolist()
+        stats['services_running'] = list(self.worker.services.keys())
         stats['id'] = self.worker.id
 
         if('torch_service' in self.worker.services.keys()):
             stats['torch'] = {}
-            stats['torch']['objects'] = self.worker.services['torch_service'].objects.keys().tolist()
+            stats['torch']['objects'] = list(self.worker.services['torch_service'].objects.keys())
 
         stats['cpu_processor_percent_utilization'] = psutil.cpu_percent()
         stats['cpu_num_cores'] = psutil.cpu_count(logical=False)
