@@ -16,6 +16,7 @@ class GridWorker():
         self.api = utils.get_ipfs_api()
         peer_id = self.api.config_show()['Identity']['PeerID']
         self.id = f'{peer_id}'
+        
         # switch to this to make local develop work
         # self.id = f'{mode}:{peer_id}'
         self.subscribed_list = []
