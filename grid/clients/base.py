@@ -20,4 +20,8 @@ class BaseClient(base_worker.GridWorker):
         self.services['listen_for_openmined_nodes'].listen_for_openmined_nodes()
 
     def get_stats(self,worker_id):
-        ""
+
+        def ret(msg):
+            return json.loads(msg)
+            
+        self.request_response(channel=channels.whoami_listener_callback(worker_id),message=[],response_handler=ret)

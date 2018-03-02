@@ -89,7 +89,7 @@ class GridWorker():
         Synchronous version of listen_to_channel
         """
 
-        self.listen_to_channel_impl(*args)
+        return self.listen_to_channel_impl(*args)
 
     def listen_to_channel(self, *args):
         """
