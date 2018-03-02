@@ -82,6 +82,7 @@ class GridWorker():
             self.publish(channel=channel,message=[message,random_channel])
 
         response = self.listen_to_channel_sync(random_channel, response_handler, send)
+        return response
 
     def listen_to_channel_sync(self, *args):
         """
