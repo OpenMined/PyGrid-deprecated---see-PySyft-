@@ -15,7 +15,7 @@ class WhoamiService(BaseService):
 
 
     def get_stats(self,message_and_response_channel):
-
+        print(message_and_response_channel)
         msg,response_channel = message_and_response_channel
 
         stats = {}
