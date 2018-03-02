@@ -97,4 +97,4 @@ class WhoamiService(BaseService):
           gpu_stats['cuda_major_verison'],gpu_stats['cuda_minor_verison'] = torch.cuda.get_device_capability(i)
           stats['gpus_pytorch'].append(gpu_stats)
 
-        self.publish(channel=response_channel, message=json.dumps(stats))
+        self.worker.publish(channel=response_channel, message=json.dumps(stats))
