@@ -35,7 +35,7 @@ class GridWorker():
         self.services['broadcast_known_workers'] = BroadcastKnownWorkersService(self)
 
         # WHOMAI
-        self.services['whoami_service'] = WhoamiService()
+        self.services['whoami_service'] = WhoamiService(self)
 
     def get_openmined_nodes(self):
         """
