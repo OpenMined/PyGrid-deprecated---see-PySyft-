@@ -18,7 +18,7 @@ class WhoamiService(BaseService):
         stats = {}
 
         import psutil
-        stats['worker_type'] = self.node_type
+        stats['worker_type'] = self.worker.node_type
         stats['services_running'] = self.worker.services.keys()
         stats['id'] = self.worker.id
 
