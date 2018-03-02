@@ -63,16 +63,16 @@ class WhoamiService(BaseService):
         gpus = get_available_gpus()
         cpus = get_available_cpus()
 
-        stats['gpus_tf'] = list()
+        # stats['gpus_tf'] = list()
 
-        for gpu in gpus:
-          gpu_stats = {}
-          gpu_stats['memory_limit_tf'] = gpu.memory_limit
+        # for gpu in gpus:
+        #   gpu_stats = {}
+        #   gpu_stats['memory_limit_tf'] = gpu.memory_limit
 
-          desc_list =gpu.physical_device_desc.split(",")
-          gpu_stats['device_id_tf'] = int(desc_list[0].split(":")[1])
-          gpu_stats['device_name_tf'] = desc_list[1].split(":")[1].strip()
-          stats['gpus_tf'].append(gpu_stats)
+        #   desc_list =gpu.physical_device_desc.split(",")
+        #   gpu_stats['device_id_tf'] = int(desc_list[0].split(":")[1])
+        #   gpu_stats['device_name_tf'] = desc_list[1].split(":")[1].strip()
+        #   stats['gpus_tf'].append(gpu_stats)
 
         stats['gpus'] = list()
 
