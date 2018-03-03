@@ -2,7 +2,7 @@
 
 ## Modes
 
-Grid currently has two modes.
+Grid currently has three modes.
 
 `--tree` -- experimental
 
@@ -72,19 +72,6 @@ start_worker --tree
 
 # Troubleshooting
 
-<<<<<<< HEAD
-Make sure you have installed all dependencies
-
-```sh
-python setup.py install
-```
-
-You also must have keras installed.
-
-You can then run the worker daemon
-```sh
-python3.6 ipfs_grid_worker_daemon.py
-=======
 ### Unable To Find Scripts
 
 If running those commands doesn't work make sure the location of the installed script is in your PATH. This can be done by adding a the following similar line to your '~/.bash_profile' file:
@@ -114,31 +101,5 @@ And then to connect to the peer if you're not connected:
 ```
 ipfs swarm connect <ipfs_address>
 ```
-
-<<<<<<< HEAD
-navigate to `notebooks/pubsub/` and open `Keras Grid Client and Worker.ipynb` and
-follow along in that notebook.
-
-# Troubleshooting
-
-### Connect Error
-
-If you see this connect error `ERROR: could not connect to IPFS.  Is your daemon running with pubsub support at 127.0.0.1 on port 5001` make sure you run the following command:
-
-```
-ipfs daemon --enable-pubsub-experiment
-```
-
-### Trouble Running Experiment
-
-If you have any troubles running an experiment such as the other peers not learning about your jobs make sure you're connected to the peer. You can check if you're connected to the peer by running:
-
-```
-ipfs pubsub peers | grep <ipfs address>
-```
-
-And then to connect to the peer if you're not connected:
-
-`ipfs swarm connect <ipfs_address>`
 
 The swarm connect IPFS address should look something like this `/p2p-circuit/ipfs/QmXbV8HZwKYkkWAAZr1aYT3nRMCUnpp68KaxP3vccirUc8`. And can be found in the output of the daemon when you start it.

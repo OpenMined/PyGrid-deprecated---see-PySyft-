@@ -24,13 +24,13 @@ class TorchService(BaseService):
 
         self.objects = {}
 
-        self.hook_float_tensor_add()
-        self.hook_float_tensor___init__()
-        self.hook_float_tensor_serde()
-        self.hook_float_tensor_send()
-        self.hook_float_tensor_process_command()
-        self.hook_float_tensor_get()
-        self.hook_float_tensor___repr__()
+        # self.hook_float_tensor_add()
+        # self.hook_float_tensor___init__()
+        # self.hook_float_tensor_serde()
+        # self.hook_float_tensor_send()
+        # self.hook_float_tensor_process_command()
+        # self.hook_float_tensor_get()
+        # self.hook_float_tensor___repr__()
 
         def print_messages(message):
             print(message.keys())
