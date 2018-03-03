@@ -86,7 +86,8 @@ class BaseClient(base_worker.GridWorker):
                     try:
                         stat = self.get_stats(old_stat['id'])
                     except TimeoutError: 
-                        print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(old_stat['id']) + f'{Style.RESET_ALL}')
+                        if(print_stats):
+                            print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(old_stat['id']) + f'{Style.RESET_ALL}')
                         continue
 
                     end = time.time()
@@ -98,7 +99,7 @@ class BaseClient(base_worker.GridWorker):
                 
                 self.stats.append(stat)
                 if(print_stats):
-                    print(self.pretty_print_node(len(stats)-1,stat))
+                    print(self.pretty_print_node(len(self.stats)-1,stat))
 
             for idx_, id in enumerate(new_om_nodes):
                 idx = len(self.stats)
@@ -107,7 +108,8 @@ class BaseClient(base_worker.GridWorker):
                 try:
                     stat = self.get_stats(id)
                 except TimeoutError:
-                    print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(id) + f'{Style.RESET_ALL}')
+                    if(print_stats):
+                        print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(id) + f'{Style.RESET_ALL}')
                     continue
 
                 end = time.time()
@@ -115,7 +117,7 @@ class BaseClient(base_worker.GridWorker):
                 stat['status'] = 'ONLINE'
                 self.stats.append(stat)
                 if(print_stats):
-                    print(self.pretty_print_node(len(stats)-1,stat))
+                    print(self.pretty_print_node(len(self.stats)-1,stat))
 
         else:
             self.old_stats = self.stats
@@ -125,7 +127,8 @@ class BaseClient(base_worker.GridWorker):
                 try:
                     stat = self.get_stats(id)
                 except TimeoutError:
-                    print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(id) + f'{Style.RESET_ALL}')
+                    if(print_stats):
+                        print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(id) + f'{Style.RESET_ALL}')
                     continue
                 end = time.time()
                 stat['ping_time'] = end-start
