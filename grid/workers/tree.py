@@ -1,4 +1,5 @@
 from . import base_worker
+from ..services.listen_for_openmined_nodes import ListenForOpenMinedNodesService
 from ..lib import strings
 from .. import channels
 from .. import commands
