@@ -20,7 +20,6 @@ class BaseClient(base_worker.GridWorker):
         self.services['listen_for_openmined_nodes'] = ListenForOpenMinedNodesService(self,min_om_nodes,include_github_known_workers)
         # self.listen_for_openmined_nodes(min_om_nodes,include_github_known_workers)
         
-<<<<<<< HEAD
         self.stats = list()
         for w in self.services['listen_for_openmined_nodes'].known_workers:
             try:
@@ -28,8 +27,6 @@ class BaseClient(base_worker.GridWorker):
             except:
                 ""
 
-=======
->>>>>>> 99c010bff65118d91a8b388434d1addad48169a7
         self.stats = self.refresh_network_stats()
 
 
