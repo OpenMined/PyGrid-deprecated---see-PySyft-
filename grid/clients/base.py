@@ -21,6 +21,7 @@ class BaseClient(base_worker.GridWorker):
         self.services['listen_for_openmined_nodes'] = ListenForOpenMinedNodesService(self,min_om_nodes,include_github_known_workers)
         
         self.stats = list()
+        
         def ping_known_then_refresh():
         
             for w in self.services['listen_for_openmined_nodes'].known_workers:
@@ -32,7 +33,6 @@ class BaseClient(base_worker.GridWorker):
 
         t1 = Thread(target=ping_known_then_refresh, args=[])
         t1.start() 
-
 
 
 
@@ -88,6 +88,7 @@ class BaseClient(base_worker.GridWorker):
                     except TimeoutError: 
                         if(print_stats):
                             print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(old_stat['id']) + f'{Style.RESET_ALL}')
+
                         continue
 
                     end = time.time()
@@ -110,6 +111,7 @@ class BaseClient(base_worker.GridWorker):
                 except TimeoutError:
                     if(print_stats):
                         print(f'{Fore.LIGHTBLACK_EX}' + "NODE    - "+str(idx)+" - - timeout - - " + str(id) + f'{Style.RESET_ALL}')
+
                     continue
 
                 end = time.time()
