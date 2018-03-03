@@ -79,8 +79,7 @@ class BaseClient(base_worker.GridWorker):
         if(node['worker_type'] == 'ANCHOR'):
             node['worker_type'] = ' ANCHOR'
         return self.pretty_print_compute(node)
-        
 
-
-
+    def __len__(self):
+        return len(self.get_openmined_nodes())
 
