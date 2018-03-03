@@ -19,7 +19,7 @@ class BaseClient(base_worker.GridWorker):
         self.services['listen_for_openmined_nodes'] = ListenForOpenMinedNodesService(self,min_om_nodes,include_github_known_workers)
         # self.listen_for_openmined_nodes(min_om_nodes,include_github_known_workers)
     
-    def listen(self):
+    def refresh(self):
         self.services['listen_for_openmined_nodes'].listen_for_openmined_nodes()
 
     def get_stats(self,worker_id):
