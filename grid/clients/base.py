@@ -72,7 +72,7 @@ class BaseClient(base_worker.GridWorker):
         ping = ping[0] + "." + ping[1][0:2]
 
         
-        return wtype + " - Ping:" + str(ping) + "sec  CPUs:" + str(ncpu) + "  CPU Load:" + str(cpu_load) + "  Disk-util:" + str(dp) + "%" + "  RAM-util:" + str(rp) + "%  GPUs:" + gpus
+        return wtype + " - ID:"+str(stat['id'][-5:])+"  Ping:" + str(ping) + "sec  CPUs:" + str(ncpu) + "  CPU Load:" + str(cpu_load) + "  Disk-util:" + str(dp) + "%" + "  RAM-util:" + str(rp) + "%  GPUs:" + gpus
 
     def pretty_print_node(self,node):
 
