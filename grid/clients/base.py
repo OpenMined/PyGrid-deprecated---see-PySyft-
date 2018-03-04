@@ -190,8 +190,7 @@ class BaseClient(base_worker.GridWorker):
 
             hbox = widgets.HBox([widgets.Label(name), widgets.Label(addr)])
             self.all_tasks.children += (hbox, )
-
-
+            
     def find_tasks(self):
         self.publish(channels.list_tasks, "None")
         self.all_tasks = widgets.VBox([widgets.HBox([widgets.Label('TASK NAME'), widgets.Label('ADDRESS')])])
