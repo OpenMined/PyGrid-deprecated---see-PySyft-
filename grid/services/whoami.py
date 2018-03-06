@@ -1,7 +1,8 @@
 from .. import channels
 from .base import BaseService
-from bitcoin import base58
 import json
+import torch
+
 
 class WhoamiService(BaseService):
 
@@ -11,14 +12,11 @@ class WhoamiService(BaseService):
     def __init__(self,worker):
         super().__init__(worker)
 
-        self.worker.listen_to_channel(channels.whoami_listener_callback(self.worker.id),self.get_stats)
+        self.worker.listen_to_channel(channels.whoami_listener_callback(self.worker.id), self.get_stats)
 
+    def get_stats(self, message_and_response_channel):
 
-    def get_stats(self,message_and_response_channel):
-        
-
-        msg,response_channel = json.loads(message_and_response_channel['data'])
-        
+        msg, response_channel = json.loads(message_and_response_channel['data'])
 
         stats = {}
 
@@ -53,7 +51,6 @@ class WhoamiService(BaseService):
         stats['disk_free'] = disk.free
         stats['disk_percent'] = disk.percent
 
-
         # running this seems to soak up all the GPU memory
         # from tensorflow.python.client import device_lib
 
@@ -65,7 +62,6 @@ class WhoamiService(BaseService):
         #     local_device_protos = device_lib.list_local_devices()
         #     return [x for x in local_device_protos if x.device_type == 'CPU']
 
-        import torch
 
         # gpus = get_available_gpus()
         # cpus = get_available_cpus()
@@ -86,15 +82,15 @@ class WhoamiService(BaseService):
         try:
             import gpustat
             for gpu in gpustat.new_query().gpus:
-              stats['gpus'].append(gpu.jsonify())
+                stats['gpus'].append(gpu.jsonify())
         except:
             ""
 
         stats['gpus_pytorch'] = list()
         for i in range(torch.cuda.device_count()):
-          gpu_stats = {}
-          gpu_stats['name'] = torch.cuda.get_device_name(i)
-          gpu_stats['cuda_major_verison'],gpu_stats['cuda_minor_verison'] = torch.cuda.get_device_capability(i)
-          stats['gpus_pytorch'].append(gpu_stats)
-        
+            gpu_stats = {}
+            gpu_stats['name'] = torch.cuda.get_device_name(i)
+            gpu_stats['cuda_major_verison'], gpu_stats['cuda_minor_verison'] = torch.cuda.get_device_capability(i)
+            stats['gpus_pytorch'].append(gpu_stats)
+
         self.worker.publish(channel=response_channel, message=json.dumps(stats))
