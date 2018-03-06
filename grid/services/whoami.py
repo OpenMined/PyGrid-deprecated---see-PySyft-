@@ -25,8 +25,8 @@ class WhoamiService(BaseService):
         stats['worker_type'] = self.worker.node_type
         stats['services_running'] = list(self.worker.services.keys())
         stats['id'] = self.worker.id
-        stats['email'] = self.email
-        stats['name'] = self.name
+        stats['email'] = self.worker.email
+        stats['name'] = self.worker.name
 
         if('torch_service' in self.worker.services.keys()):
             stats['torch'] = {}
