@@ -54,7 +54,7 @@ def run():
     elif(args.anchor):
         workers.anchor.GridAnchor()
     else:
-        workers.compute.GridCompute(False)
+        workers.compute.GridCompute()
 
   except Exception as e:  # most generic exception you can catch
     print(e)
