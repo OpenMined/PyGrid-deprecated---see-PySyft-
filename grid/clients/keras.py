@@ -37,9 +37,6 @@ class KerasClient(base.BaseClient):
 
         self.listen_to_channel_sync(self.spec['train_channel'], message_handler)
 
-        if self.cb_helper and self.email and self.time_taken:
-            self.cb_helper.send_ether(self.email, self.time_taken)
-
         return self.load_model(self.spec['model_addr']), self.spec
 
     def update_progress(self, parent_model, worker_id, num_epochs, epoch_id):
@@ -111,11 +108,6 @@ class KerasClient(base.BaseClient):
 
         if(msg is not None):
             if(msg['type'] == 'transact'):
-                if('worker_email' in msg.keys()):
-                    self.email = msg['worker_email']
-                if('time_taken' in msg.keys()):
-                    self.time_taken = msg['time_taken']
-
                 return utils.ipfs2keras(msg['model_addr']), msg
             elif(msg['type'] == 'log'):
                 if(verbose):
