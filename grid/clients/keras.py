@@ -1,9 +1,9 @@
 from . import base
 from ..lib import utils
-from ..lib import serde
 from ..lib import coinbase_helper
 import json
 import random
+
 
 class KerasClient(base.BaseClient):
 
@@ -13,7 +13,6 @@ class KerasClient(base.BaseClient):
                         include_github_known_workers=include_github_known_workers,
                         verbose=verbose)
 
-        self.email = None
         self.time_taken = None
         self.cb_helper = None
 
