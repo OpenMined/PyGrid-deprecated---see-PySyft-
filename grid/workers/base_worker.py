@@ -8,20 +8,33 @@ import base64
 import time
 import random
 
+
 class GridWorker():
 
     def __init__(self):
-        # super().__init__('worker')
-
-
         self.api = utils.get_ipfs_api()
         peer_id = self.api.config_show()['Identity']['PeerID']
         self.id = f'{peer_id}'
 
+        # load email and name
+        whoami = utils.load_whoami()
+        if whoami:
+            self.email = whoami['email']
+            self.name = whoami['name']
+        else:
+            self.email = input('Enter your email for payment: ')
+            self.name = input('Enter an easy name to remember you by: ')
+
+            whoami = {
+                'email': self.email,
+                'name': self.name
+            }
+
+            utils.store_whoami(whoami)
+
         # switch to this to make local develop work
         # self.id = f'{mode}:{peer_id}'
         self.subscribed_list = []
-
 
         # LAUNCH SERVICES - these are non-blocking and run on their own threads
 

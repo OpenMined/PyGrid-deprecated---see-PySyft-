@@ -2,6 +2,7 @@ from .. import channels
 from .base import BaseService
 import json
 import torch
+from ..lib import utils
 
 
 class WhoamiService(BaseService):
@@ -24,6 +25,8 @@ class WhoamiService(BaseService):
         stats['worker_type'] = self.worker.node_type
         stats['services_running'] = list(self.worker.services.keys())
         stats['id'] = self.worker.id
+        stats['email'] = self.email
+        stats['name'] = self.name
 
         if('torch_service' in self.worker.services.keys()):
             stats['torch'] = {}
