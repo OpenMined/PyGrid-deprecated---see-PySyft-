@@ -132,8 +132,7 @@ class KerasClient(base.BaseClient):
                     quit['op_code'] = 'quit'
                     self.publish(self.spec['train_channel'] + ':' + worker_id,
                                  quit)
-    
-    """ the following moved from client/base.py """
+
     def best_models(self, task):
         self.show_models = widgets.VBox([widgets.HBox([widgets.Label('Model Address')])])
         self.listen_to_channel(channels.add_model(task), self.__added_model)
