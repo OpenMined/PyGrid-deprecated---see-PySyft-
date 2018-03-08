@@ -39,17 +39,6 @@ def deserialize_keras_model(model_bin):
         model = keras.models.load_model('temp_model2.h5')
         return model
 
-        def save_best_model_for_task(task, model):
-    ensure_exists(f'{Path.home()}/.openmined/models.json', {})
-    with open(f"{Path.home()}/.openmined/models.json", "r") as model_file:
-        models = json.loads(model_file.read())
-
-    models[task] = keras2ipfs(model)
-
-    with open(f"{Path.home()}/.openmined/models.json", "w") as model_file:
-        json.dump(models, model_file)
-
-
 def save_best_keras_model_for_task(task, model):
     ensure_exists(f'{Path.home()}/.openmined/models.json', {})
     with open(f"{Path.home()}/.openmined/models.json", "r") as model_file:

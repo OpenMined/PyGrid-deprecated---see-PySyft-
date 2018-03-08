@@ -19,15 +19,6 @@ def torch2ipfs(model):
 def ipfs2torch(model_addr):
     pass
 
-def serialize_keras_model(model):
-    lock = FileLock('temp_model.h5.lock')
-    with lock:
-        model.save('temp_model.h5')
-        with open('temp_model.h5', 'rb') as f:
-            model_bin = f.read()
-            f.close()
-        return model_bin
-
 def serialize_torch_model(model, **kwargs):
     """
     kwargs are the arguments needed to instantiate the model
