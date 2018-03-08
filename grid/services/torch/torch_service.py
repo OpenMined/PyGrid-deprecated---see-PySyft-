@@ -63,12 +63,17 @@ class TorchService(BaseService):
             return obj
         return "not a float tensor"
                 
-    def register_object(self,obj,is_pointer_to_remote):
+    def register_object(self,obj,is_pointer_to_remote, verbose=False):
+        if verbose is True:
+            print("self.worker.id", self.worker.id)
         obj.id = random.randint(0, 1e10)
         obj.owner = self.worker.id
         obj.worker = self.worker
         obj.is_pointer_to_remote = False
         self.objects[obj.id] = obj
+        if verbose is True:
+            print(obj.owner)
+            print(obj)
         return obj
     
     def send_obj(self,obj,to):
