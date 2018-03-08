@@ -193,5 +193,3 @@ class BaseClient(base_worker.GridWorker):
 
         data = json.dumps([{'name': name, 'address': addr}])
         self.publish('openmined:add_task', data)
-
-    """ the following moved to clients/keras.py """
