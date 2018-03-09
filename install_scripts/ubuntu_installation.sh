@@ -1,7 +1,7 @@
 sudo apt-get update
 sudo apt-get install curl libssl-dev  -y
 
-if [ ! -d "~/.ipfs" ]; then
+if [ ! -d "$HOME/.ipfs" ]; then
   curl -O https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
   tar -xvf go1.9.1.linux-amd64.tar.gz
   rm go1.9.1.linux-amd64.tar.gz
