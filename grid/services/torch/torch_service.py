@@ -63,18 +63,13 @@ class TorchService(BaseService):
             return obj
         return "not a float tensor"
                 
-    def register_object(self,obj,is_pointer_to_remote, verbose=False):
-        if verbose is True:
-            print("self.worker.id", self.worker.id)
-        obj.id = random.randint(0, 1e10)
-        obj.owner = self.worker.id
-        obj.worker = self.worker
-        obj.is_pointer_to_remote = False
-        self.objects[obj.id] = obj
-        if verbose is True:
-            print(obj.owner)
-            print(obj)
-        return obj
+    # Mutate the input Torch object
+    def register_object(self, torch_obj, is_pointer_to_remote):
+        torch_obj.id = random.randint(0, 1e10)
+        torch_obj.owner = self.worker.id
+        torch_obj.worker = self.worker
+        torch_obj.is_pointer_to_remote = False
+        self.objects[torch_obj.id] = torch_obj
     
     def send_obj(self,obj,to):
         self.worker.publish(channels.torch_listen_for_obj_callback(to),message=obj.ser())
@@ -162,7 +157,7 @@ class TorchService(BaseService):
     def hook_float_tensor___init__(service_self):
         def new___init__(self,tensor,owner=service_self, *args, **kwargs):
             super(torch.FloatTensor, self).__init__(*args, **kwargs)
-            self = owner.register_object(self,False)
+            owner.register_object(self,False)
          
         torch.FloatTensor.__init__ = new___init__
 
@@ -176,7 +171,8 @@ class TorchService(BaseService):
                 return command
             else:
                 result = self.old_add(other)
-                return self2.register_object(result,True)
+                self2.register_object(result,True)
+                return result
 
         try:
             torch.FloatTensor.old_add
@@ -224,6 +220,8 @@ class TorchService(BaseService):
 
     def hook_float_tensor___repr__(service_self):
         def __repr__(self):
+            if not hasattr(self, 'owner'):
+                import ipdb; ipdb.set_trace()
             if(service_self.worker.id == self.owner):
                 return self.old__repr__()
             else:
