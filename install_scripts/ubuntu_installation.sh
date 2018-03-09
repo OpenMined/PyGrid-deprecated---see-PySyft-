@@ -21,5 +21,3 @@ fi
 # sudo apt-get install python3-dev # didn't seem to help
 sudo apt-get install build-essential automake pkg-config libtool libffi-dev libgmp-dev -y
 pip install -r requirements.txt
-
-conda install pytorch-cpu torchvision -c pytorch
