@@ -1,0 +1,25 @@
+FROM ufoym/deepo:cpu
+
+# install libssl
+RUN apt-get update &&\
+    apt-get install -y libssl-dev
+
+# install requirements
+COPY ./requirements.txt /requirements.txt
+RUN pip install -r requirements.txt
+
+
+# jupyter
+RUN pip install jupyter
+COPY ./run_jupyter.sh /run_jupyter.sh
+COPY ./jupyter_notebook_config.py /root/.jupyter/
+RUN jupyter nbextension enable --py --sys-prefix widgetsnbextension && \
+    python -m ipykernel.kernelspec
+
+
+ENV PASSWORD=tf
+ENV ROOT_DIR='/workdir'
+
+WORKDIR '/workdir'
+
+CMD ["/run_jupyter.sh", "--allow-root"]

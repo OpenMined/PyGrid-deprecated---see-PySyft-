@@ -1,0 +1,38 @@
+version: "2"
+
+services:
+  ipfs:
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.ipfs
+    container_name: ipfs_host
+    privileged: true
+    ports:
+      - "4001:4001"
+      - "8080:8080"
+      - "5001:5001"
+
+  worker:
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.worker
+    container_name: worker
+    privileged: true
+    extra_hosts:
+      - "host_name:192.168.0.2"
+    volumes:
+      - "$PWD:/workdir"
+    command: python3 ipfs_grid_worker_daemon.py --compute
+
+  notebook:
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.worker
+    container_name: notebook
+    privileged: true
+    extra_hosts:
+      - "host_name:192.168.0.2"
+    volumes:
+      - "$PWD:/workdir"
+    ports:
+      - "8888:8888"
