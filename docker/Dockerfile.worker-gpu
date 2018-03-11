@@ -1,4 +1,4 @@
-FROM ufoym/deepo:gpu
+FROM ufoym/deepo
 
 # install libssl
 RUN apt-get update &&\
