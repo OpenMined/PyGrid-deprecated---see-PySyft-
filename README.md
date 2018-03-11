@@ -71,6 +71,25 @@ and if you want to run in `tree` mode, run:
 start_worker --tree
 ```
 
+# Launching a worker using docker
+
+1. Open the docker-compose.SERVICE.yml file you want to use.
+2. Replace the IP to your host IP next to host_name
+
+```
+      - "host_name:192.168.0.2"
+```
+3. Build
+
+```
+docker-compose -f docker-compose.SERVICE.yml build
+```
+4. Lauch the IPFS server, the worker as well as a notebook server.
+
+```
+docker-compose -f docker-compose.SERVICE.yml up
+```
+
 # Troubleshooting
 
 ### Unable To Find Scripts
