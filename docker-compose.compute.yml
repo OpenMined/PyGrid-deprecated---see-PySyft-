@@ -18,8 +18,8 @@ services:
       context: ./docker
       dockerfile: ./Dockerfile.worker
       args:
-        email: 'clement.thorey@gmail.com'
-        name: 'cthorey'
+        email: 'openmined@openmined.com'
+        name: 'openmined'
     container_name: worker
     privileged: true
     extra_hosts:

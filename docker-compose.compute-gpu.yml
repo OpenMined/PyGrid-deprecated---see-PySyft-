@@ -18,8 +18,8 @@ services:
       context: ./docker
       dockerfile: ./Dockerfile.worker-gpu
       args:
-        email: 'clement.thorey@gmail.com'
-        name: 'cthorey'
+        email: 'openmined@openmined.com'
+        name: 'openmined'
     container_name: worker
     privileged: true
     tty: true
