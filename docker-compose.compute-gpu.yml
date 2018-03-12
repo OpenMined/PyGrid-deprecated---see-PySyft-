@@ -24,7 +24,7 @@ services:
     privileged: true
     tty: true
     extra_hosts:
-      - "host_name:35.205.35.110"
+      - "host_name:$HOST_IP"
     devices:
       - /dev/nvidia0
     volumes:
@@ -41,7 +41,7 @@ services:
     privileged: true
     tty: true
     extra_hosts:
-      - "host_name:35.205.35.110"
+      - "host_name:$HOST_IP"
     devices:
       - /dev/nvidia0
     volumes:
