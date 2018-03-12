@@ -1,3 +1,4 @@
+nvidia-docker-compose.yml
 .cache
 *__pycache__*
 .eggs/

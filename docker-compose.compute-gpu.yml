@@ -7,6 +7,7 @@ services:
       dockerfile: ./Dockerfile.ipfs
     container_name: ipfs_host
     privileged: true
+    tty: true
     ports:
       - "4001:4001"
       - "8080:8080"
@@ -16,15 +17,21 @@ services:
     build:
       context: ./docker
       dockerfile: ./Dockerfile.worker-gpu
+      args:
+        email: 'clement.thorey@gmail.com'
+        name: 'cthorey'
     container_name: worker
     privileged: true
+    tty: true
     extra_hosts:
-      - "host_name:192.168.0.2"
+      - "host_name:35.205.35.110"
     devices:
       - /dev/nvidia0
     volumes:
       - "$PWD:/workdir"
     command: python3 ipfs_grid_worker_daemon.py --compute
+    depends_on:
+      - ipfs
 
   notebook:
     build:
@@ -32,8 +39,9 @@ services:
       dockerfile: ./Dockerfile.worker-gpu
     container_name: notebook
     privileged: true
+    tty: true
     extra_hosts:
-      - "host_name:192.168.0.2"
+      - "host_name:35.205.35.110"
     devices:
       - /dev/nvidia0
     volumes:

@@ -1,4 +1,10 @@
-FROM ufoym/deepo:cpu
+FROM ufoym/deepo:py36-cpu
+
+# setup user/mail
+ARG name
+ARG email
+RUN mkdir ~/.openmined && \
+    echo '{"email": "'${email}'", "name": "'${name}'"}' > ~/.openmined/whoami.json
 
 # install libssl
 RUN apt-get update &&\
