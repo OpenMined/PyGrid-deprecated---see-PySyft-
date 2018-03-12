@@ -75,12 +75,13 @@ start_worker --tree
 
 ## CPU version
 
-1. Open the docker-compose.SERVICE.yml file you want to use.
-2. Replace the IP to your host IP next to host_name
+1. Export your IP to an env variable called HOST\_IP
+   ```
+   export HOST_IP=YOURHOSTIP
+   ```
 
-```
-      - "host_name:192.168.0.2"
-```
+1. Open the docker-compose.SERVICE.yml file you want to use.
+2. Replace the name/email to the one you want to use
 3. Build
 
 ```
@@ -94,12 +95,12 @@ docker-compose -f docker-compose.SERVICE.yml up
 
 ## GPU version
 
+1. Export your IP to an env variable called HOST\_IP
+   ```
+   export HOST_IP=YOURHOSTIP
+   ```
 1. Open the docker-compose.SERVICE-gpu.yml file you want to use.
-2. Replace the IP to your host IP next to host_name
-
-```
-      - "host_name:192.168.0.2"
-```
+2. Replace the name/email to the one you want to use
 3. Build
 
 ```
@@ -109,6 +110,14 @@ docker-compose -f docker-compose.SERVICE-gpu.yml build
 
 ```
 nvidia-docker-compose -f docker-compose.SERVICE.yml up
+```
+
+By default, **nividia-docker** is going to use **nvidia0**, if you want to use multiple gpus, just pass them one after another
+
+```
+devices:
+    - /dev/nvidia0
+    - /dev/nvidia1
 ```
 
 # Troubleshooting
