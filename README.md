@@ -80,33 +80,24 @@ start_worker --tree
    export HOST_IP=YOURHOSTIP
    ```
 
-1. Open the docker-compose.SERVICE.yml file you want to use.
+1. Open the docker-compose.yml file you want to use.
 2. Replace the name/email to the one you want to use
+3. Replace **--compute** by the type of worker you want to launch
 3. Build
 
 ```
-docker-compose -f docker-compose.SERVICE.yml build
+docker-compose -f docker-compose.yml build
 ```
 4. Lauch the IPFS server, the worker as well as a notebook server.
 
 ```
-docker-compose -f docker-compose.SERVICE.yml up
+docker-compose -f docker-compose.yml up
 ```
 
 ## GPU version
 
-1. Export your IP to an env variable called HOST\_IP
-   ```
-   export HOST_IP=YOURHOSTIP
-   ```
-1. Open the docker-compose.SERVICE-gpu.yml file you want to use.
-2. Replace the name/email to the one you want to use
-3. Build
-
-```
-docker-compose -f docker-compose.SERVICE-gpu.yml build
-```
-4. Lauch the IPFS server, the worker as well as a notebook server.
+1. Follow the CPU instruction using the **docker-compose.gpu.yml**.
+4. Launch the IPFS server, the worker as well as a notebook server with [nvidia-docker-compose](https://github.com/eywalker/nvidia-docker-compose) instead of **docker-compose**
 
 ```
 nvidia-docker-compose -f docker-compose.SERVICE.yml up
