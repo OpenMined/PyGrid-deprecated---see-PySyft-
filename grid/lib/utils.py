@@ -6,6 +6,7 @@ import time
 from colorama import Fore, Style
 import sys
 import numpy as np
+from grid.ipfsapi.exceptions import ConnectionError
 
 
 def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
@@ -54,7 +55,11 @@ def _attempt_ipfs_connection(ipfs_addr,
     try:
         api = ipfsapi.connect(ipfs_addr, port)
         return api
-    except:
+    except ConnectionError:
+        # If client uses docker, host_name should redirect to the right host IP.
+        # Setup in the docker-compose.
+        api = ipfsapi.connect('host_name', port)
+    except ConnectionError:
         if current_tries == max_tries:
             return False
 
