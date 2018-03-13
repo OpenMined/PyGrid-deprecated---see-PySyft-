@@ -8,42 +8,80 @@ import sys
 import numpy as np
 
 
-def get_ipfs_api(ipfs_addr='127.0.0.1', port=5001, max_tries=10):
-    print(f'\n{Fore.BLUE}UPDATE: {Style.RESET_ALL}Connecting to IPFS... this can take a few seconds...')
+def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
+    print(
+        f'\n{Fore.BLUE}UPDATE: {Style.RESET_ALL}Connecting to IPFS... this can take a few seconds...'
+    )
 
-    try:
-        out = ipfsapi.connect(ipfs_addr, port)
-        print(f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: ' + str(out.config_show()['Identity']['PeerID']))
-        return out
-    except:
-        print(f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}? Let me try to start IPFS for you... (this will take ~15 seconds)')
-        os.system('ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &')
-        for i in range(15):
-            sys.stdout.write('.')
-            time.sleep(1)
+    api = _attempt_ipfs_connection(ipfs_addr, port, 0, 1)
+    if api:
+        id = get_id(mode, api)
+        print(
+            f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: {id}'
+        )
+        return api
 
-            try:
-                out = ipfsapi.connect(ipfs_addr, port)
-                print(f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: ' + str(out.config_show()['Identity']['PeerID']))
-                return out
-            except:
-                ""
+    print(
+        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}? Let me try to start IPFS for you... (this will take ~15 seconds)'
+    )
+    os.system(
+        'ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &')
 
-    for try_index in range(max_tries):
-        try:
-            out = ipfsapi.connect(ipfs_addr, port)
-            print(f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: ' + str(out.config_show()['Identity']['PeerID']))
-            return out
-        except:
-            print(f'\n{Fore.RED}ERROR: {Style.RESET_ALL}still could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}?')
-            time.sleep(5)
+    api = _attempt_ipfs_connection(ipfs_addr, port, 0, max_tries, _write_dot)
+    if api:
+        id = get_id(mode, api)
+        print(
+            f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: {id}'
+        )
+        return api
 
-    print(f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS. Failed after ' + str(max_tries) + ' attempts... Is IPFS installed? Consult the README at https://github.com/OpenMined/Grid')
+    print(
+        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS. Failed after {max_tries} attempts... Is IPFS installed? Consult the README at https://github.com/OpenMined/Grid'
+    )
     sys.exit()
 
 
-def save_adapter(addr):
-    adapter_bin = get_ipfs_api().cat(addr)
+def _write_dot():
+    sys.stdout.write('.')
+
+
+def _attempt_ipfs_connection(ipfs_addr,
+                             port,
+                             current_tries=0,
+                             max_tries=10,
+                             progress_fn=None):
+    current_tries += 1
+    try:
+        api = ipfsapi.connect(ipfs_addr, port)
+        return api
+    except:
+        if current_tries == max_tries:
+            return False
+
+        if progress_fn:
+            progress_fn()
+
+        time.sleep(1)
+        return _attempt_ipfs_connection(ipfs_addr, port, current_tries,
+                                        max_tries)
+
+
+def get_ipfs_id(api):
+    return api.config_show()['Identity']['PeerID']
+
+
+def get_id(node_type, api):
+    peer_id = get_ipfs_id(api)
+    return derive_id(node_type, peer_id)
+
+
+def derive_id(node_type, peer_id):
+    node_type = node_type.lower()
+    return f'{node_type}:{peer_id}'
+
+
+def save_adapter(ipfs, addr):
+    adapter_bin = ipfs.cat(addr)
     ensure_exists(f'{Path.home()}/grid/adapters/adapter.py', adapter_bin)
 
 
@@ -73,10 +111,7 @@ def store_task(name, address):
     with open(f"{Path.home()}/.openmined/tasks.json", "r") as task_file:
         tasks = json.loads(task_file.read())
 
-    task = {
-        'name': name,
-        'address': address
-    }
+    task = {'name': name, 'address': address}
 
     if task not in tasks:
         print("storing task", task['name'])
@@ -136,7 +171,8 @@ def ensure_exists(path, default_contents=None):
             with open(full_path, 'w') as f:
                 if isinstance(default_contents, str):
                     f.write(default_contents)
-                elif isinstance(default_contents, list) or isinstance(default_contents, dict):
+                elif isinstance(default_contents, list) or isinstance(
+                        default_contents, dict):
                     json.dump(default_contents, f)
                 else:
                     # Not sure what this is, try to tostring it.
