@@ -59,7 +59,8 @@ def _attempt_ipfs_connection(ipfs_addr,
         # If client uses docker, host_name should redirect to the right host IP.
         # Setup in the docker-compose.
         api = ipfsapi.connect('host_name', port)
-    except ConnectionError:
+        return api
+    except:
         if current_tries == max_tries:
             return False
 
