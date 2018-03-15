@@ -13,7 +13,8 @@ def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
     print(
         f'\n{Fore.BLUE}UPDATE: {Style.RESET_ALL}Connecting to IPFS... this can take a few seconds...'
     )
-
+    ipfs_addr = ipfs_addr if 'IPFS_ADDR' not in os.environ else os.environ[
+        'IPFS_ADDR']
     api = _attempt_ipfs_connection(ipfs_addr, port, 0, 1)
     if api:
         id = get_id(mode, api)
@@ -56,11 +57,6 @@ def _attempt_ipfs_connection(ipfs_addr,
         api = ipfsapi.connect(ipfs_addr, port)
         return api
     except ConnectionError:
-        # If client uses docker, host_name should redirect to the right host IP.
-        # Setup in the docker-compose.
-        api = ipfsapi.connect('host_name', port)
-        return api
-    except:
         if current_tries == max_tries:
             return False
 

@@ -14,34 +14,34 @@ services:
       - "5001:5001"
     command: daemon --migrate=true --enable-pubsub-experiment
 
-  # worker:
-  #   build:
-  #     context: ./docker
-  #     dockerfile: ./Dockerfile.worker
-  #     args:
-  #       email: "$USER_EMAIL"
-  #       name: "$USER_NAME"
-  #   container_name: worker
-  #   privileged: true
-  #   extra_hosts:
-  #     - "host_name:$HOST_IP"
-  #   volumes:
-  #     - "$PWD:/workdir"
-  #   tty: true
-  #   command: python3 ipfs_grid_worker_daemon.py --compute
-  #   depends_on:
-  #     - ipfs
+  worker:
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.worker
+      args:
+        email: 'openmined@openmined.com'
+        name: 'openmined'
+    container_name: worker
+    privileged: true
+    environment:
+      - "IPFS_ADDR=$IPFS_ADDR"
+    volumes:
+      - "$PWD:/workdir"
+    tty: true
+    command: python3 ipfs_grid_worker_daemon.py --compute
+    depends_on:
+      - ipfs
 
-  # notebook:
-  #   build:
-  #     context: ./docker
-  #     dockerfile: ./Dockerfile.worker
-  #   container_name: notebook
-  #   privileged: true
-  #   tty: true
-  #   extra_hosts:
-  #     - "host_name:$HOST_IP"
-  #   volumes:
-  #     - "$PWD:/workdir"
-  #   ports:
-  #     - "8888:8888"
+  notebook:
+    build:
+      context: ./docker
+      dockerfile: ./Dockerfile.worker
+    container_name: notebook
+    privileged: true
+    tty: true
+    environment:
+      - "IPFS_ADDR=$IPFS_ADDR"
+    volumes:
+      - "$PWD:/workdir"
+    ports:
+      - "8888:8888"
