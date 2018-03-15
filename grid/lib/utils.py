@@ -14,7 +14,7 @@ def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
     )
 
     api = _attempt_ipfs_connection(ipfs_addr, port, 0, 1)
-    if api is not False:
+    if api:
         id = get_id(mode, api)
         print(
             f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: {id}'
@@ -30,7 +30,7 @@ def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
         'ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &')
 
     api = _attempt_ipfs_connection(ipfs_addr, port, 0, max_tries, _write_dot)
-    if api is not False:
+    if api:
         id = get_id(mode, api)
         print(
             f'\n{Fore.GREEN}SUCCESS: {Style.RESET_ALL}Connected!!! - My ID: {id}'
@@ -70,8 +70,12 @@ def _attempt_ipfs_connection(ipfs_addr,
                                         max_tries)
 
 
+def get_ipfs_id(api):
+    return api.config_show()['Identity']['PeerID']
+
+
 def get_id(node_type, api):
-    peer_id = api.config_show()['Identity']['PeerID']
+    peer_id = get_ipfs_id(api)
     return derive_id(node_type, peer_id)
 
 

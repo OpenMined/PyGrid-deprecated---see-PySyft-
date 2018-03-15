@@ -10,7 +10,6 @@ import random
 
 
 class GridWorker():
-
     def __init__(self, node_type):
         self.node_type = node_type
         self.api = utils.get_ipfs_api(self.node_type)
@@ -25,10 +24,7 @@ class GridWorker():
             self.email = input('Enter your email for payment: ')
             self.name = input('Enter an easy name to remember you by: ')
 
-            whoami = {
-                'email': self.email,
-                'name': self.name
-            }
+            whoami = {'email': self.email, 'name': self.name}
 
             utils.store_whoami(whoami)
 
@@ -40,38 +36,43 @@ class GridWorker():
 
         self.services = {}
 
-        # this service serves the purpose of helping other nodes find out about nodes on the network.
-        # if someone queries the "list_worker" channel - it'll send a message directly to the querying node
-        # with a list of the OpenMined nodes of which it is aware.
-        self.services['broadcast_known_workers'] = BroadcastKnownWorkersService(self)
+        if node_type != 'client':
+            # this service serves the purpose of helping other nodes find out
+            # about nodes on the network.
+            # if someone queries the "list_worker" channel - it'll send a
+            # message directly to the querying node with a list of the
+            # OpenMined nodes of which it is aware.
+            self.services[
+                'broadcast_known_workers'] = BroadcastKnownWorkersService(self)
 
-        # WHOMAI
-        self.services['whoami_service'] = WhoamiService(self)
+            # WHOMAI
+            self.services['whoami_service'] = WhoamiService(self)
 
     def get_openmined_nodes(self):
         """
         This method returns the list of known openmined workers on the newtork.
-        Note - not all workers are necessarily "compute" workers. Some may only be anchors
-        and will ignore any jobs you send them.
+        Note - not all workers are necessarily "compute" workers.
+        Some may only be anchors and will ignore any jobs you send them.
         """
 
         nodes = self.api.pubsub_peers('openmined')['Strings']
-        if(nodes is not None):
+        if (nodes is not None):
             return nodes
         else:
             return []
 
     def get_nodes(self):
         nodes = self.api.pubsub_peers()['Strings']
-        if(nodes is not None):
+        if (nodes is not None):
             return nodes
         else:
             return []
 
     def publish(self, channel, message):
         """
-        This method sends a message over an IPFS channel. The number of people who receive it is
-        purely based on the number of people who happen to be listening.
+        This method sends a message over an IPFS channel. The number of people
+        who receive it is purely based on the number of people who happen
+        to be listening.
         """
 
         if isinstance(message, dict) or isinstance(message, list):
@@ -90,20 +91,22 @@ class GridWorker():
 
         def timeout_message(seconds):
             time.sleep(int(seconds))
-            self.publish(channel=random_channel,message=["timeout after " + str(seconds) + " seconds"])
+            self.publish(
+                channel=random_channel,
+                message=["timeout after " + str(seconds) + " seconds"])
 
         def send():
             self.publish(channel=channel, message=[message, random_channel])
             t1 = Thread(target=timeout_message, args={timeout})
             t1.start()
 
-        response = self.listen_to_channel_sync(random_channel, response_handler, send)
+        response = self.listen_to_channel_sync(random_channel,
+                                               response_handler, send)
 
-        if(len(response) == 1):
-            if('timeout' in response[0]):
+        if (len(response) == 1):
+            if ('timeout' in response[0]):
                 raise TimeoutError(response[0])
         return response
-
 
     def listen_to_channel_sync(self, *args):
         """
@@ -122,8 +125,11 @@ class GridWorker():
         t1 = Thread(target=self.listen_to_channel_impl, args=args)
         t1.start()
 
-    def listen_to_channel_impl(self, channel, handle_message,
-                               init_function=None, ignore_from_self=False):
+    def listen_to_channel_impl(self,
+                               channel,
+                               handle_message,
+                               init_function=None,
+                               ignore_from_self=False):
         """
         Do not call directly.  Use listen_to_channel or listen_to_channel_sync instead.
         """
@@ -131,16 +137,15 @@ class GridWorker():
         first_proc = True
 
         if channel not in self.subscribed_list:
-
-            # print(f"SUBSCRIBING TO {channel}")
             new_messages = self.api.pubsub_sub(topic=channel, stream=True)
             self.subscribed_list.append(channel)
 
         else:
-            print(f"ALREADY SUBSCRIBED TO {channel}")
             return
 
-
+        # new_messages is a generator which will keep yield new messages until
+        # you return from the loop. If you do return from the loop, we will no
+        # longer be subscribed.
         for m in new_messages:
             if init_function is not None and first_proc:
                 init_function()
@@ -148,15 +153,16 @@ class GridWorker():
 
             message = self.decode_message(m)
             if message is not None:
-                fr = utils.derive_id(self.node_type, base58.encode(message['from']))
-                if fr == self.id and ignore_from_self:
-                    print('ignored message from self')
-                    return None
-
-                return handle_message(message)
+                fr = base58.encode(message['from'])
+                if not ignore_from_self or fr != self.id:
+                    out = handle_message(message)
+                    if out is not None:
+                        return out
+                else:
+                    print('ignore mssage from self')
 
     def decode_message(self, encoded):
-        if('from' in encoded):
+        if ('from' in encoded):
             decoded = {}
             decoded['from'] = base64.standard_b64decode(encoded['from'])
             decoded['data'] = base64.standard_b64decode(
