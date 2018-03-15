@@ -2,9 +2,7 @@ version: "3"
 
 services:
   ipfs:
-    build:
-      context: ./docker
-      dockerfile: ./Dockerfile.ipfs
+    image: ipfs/go-ipfs
     container_name: ipfs_host
     tty: true
     privileged: true
@@ -16,31 +14,32 @@ services:
 
   worker:
     build:
-      context: ./docker
-      dockerfile: ./Dockerfile.worker
-      args:
-        email: 'openmined@openmined.com'
-        name: 'openmined'
+      context: .
+      dockerfile: ./docker/Dockerfile
     container_name: worker
     privileged: true
     environment:
       - "IPFS_ADDR=$IPFS_ADDR"
-    volumes:
-      - "$PWD:/workdir"
+      - "EMAIL=$EMAIL"
+      - "NAME=$NAME"
+      - "GRID_MODE=$GRID_MODE"
     tty: true
-    command: python3 ipfs_grid_worker_daemon.py --compute
-    depends_on:
-      - ipfs
+    volumes:
+      - "$PWD:/workdir" 
+    command: python3 ipfs_grid_worker_daemon.py
 
   notebook:
     build:
-      context: ./docker
-      dockerfile: ./Dockerfile.worker
+      context: .
+      dockerfile: ./docker/Dockerfile
     container_name: notebook
     privileged: true
     tty: true
     environment:
       - "IPFS_ADDR=$IPFS_ADDR"
+      - "EMAIL=$EMAIL"
+      - "NAME=$NAME"
+      - "GRID_MODE=$GRID_MODE"
     volumes:
       - "$PWD:/workdir"
     ports:

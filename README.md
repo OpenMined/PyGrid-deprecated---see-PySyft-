@@ -73,42 +73,58 @@ start_worker --tree
 
 # Launching a worker using docker
 
-## CPU version
+## Prerequisites
 
-1. Export your IP to an env variable called HOST\_IP
-   ```
-   export HOST_IP=YOURHOSTIP
-   ```
+- [docker](https://docs.docker.com/) 
+- [docker-compose](https://docs.docker.com/compose/)
 
-1. Open the docker-compose.yml file you want to use.
-2. Replace the name/email to the one you want to use
-3. Replace **--compute** by the type of worker you want to launch
-3. Build
+If you have GPU and want to use them, you will need to have [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)). Then, we need to configure the daemon to use the nvidia runtime by default which will allow us to use nvidia-docker and docker-compose.
+
+1. Make sure you can see you gpus using
+ ```
+docker run --runtime=nvidia --rm nvidia/cuda nvidia-smi 
+ ```
+2. Stop the docker daemon 
+ 
+ ```
+ service docker stop
+ ```
+ 
+3. Then you need to manually tune the daemon.json config file which is in **etc/docker**. You ll have
+
+ ```
+{
+    "runtimes": {
+        "nvidia": {
+            "path": "/usr/bin/nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    },
+    "default-runtime": "nvidia"
+}
+
+ ```
+
+4. Once that done, restart docker. The runtime **nvidia** will be setup by default. 
+
+## launching the worker
+
+The main scrip to launch the grid is **run_grid.sh**. It has several flags
 
 ```
-docker-compose -f docker-compose.yml build
-```
-4. Lauch the IPFS server, the worker as well as a notebook server.
-
-```
-docker-compose -f docker-compose.yml up
+Usage: ./run_grid.sh [-g <gpu>] [-m <grid-mode>] [-a <host_ip>] [-n <name>] [-e <email>]
 ```
 
-## GPU version
-
-1. Follow the CPU instruction using the **docker-compose.gpu.yml**.
-4. Launch the IPFS server, the worker as well as a notebook server with [nvidia-docker-compose](https://github.com/eywalker/nvidia-docker-compose) instead of **docker-compose**
+For instance, if I want to run a **worker** in **tree** mode with an aws instance with **gpus** on it whose ip is **10.34.23.45**, then Ill run
 
 ```
-nvidia-docker-compose -f docker-compose.SERVICE.yml up
+./run_grid.sh -g -m tree -a 10.34.23.45 -n jack -e jack@aws.com
 ```
 
-By default, **nividia-docker** is going to use **nvidia0**, if you want to use multiple gpus, just pass them one after another
+If you have only a latop without **gpus** in it, but you want to run a beautiful **amchor** because, why not
 
 ```
-devices:
-    - /dev/nvidia0
-    - /dev/nvidia1
+./run_grid.sh -m anchor -a 1.34.23.45 -n jack -e jack@laptop.com
 ```
 
 # Troubleshooting

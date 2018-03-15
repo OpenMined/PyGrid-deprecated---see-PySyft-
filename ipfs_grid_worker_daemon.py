@@ -1,7 +1,9 @@
 from grid import workers
 import argparse
 import time
+import json
 from colorama import Fore, Style
+import os
 
 title = f"""{Fore.GREEN}   ____                             _                __   ______     _     __
   / __ \____  ___  ____  ____ ___  (_____  ___  ____/ /  / _________(_____/ /
@@ -66,10 +68,28 @@ TODO: figure out a convenient way to make robust training procedure for torch
 logf = open("openmined.errors", "w")
 
 
-def run():
-    try:
-        print("\n\n")
+def create_whoami():
+    """
+    Create a whoami.json file.
+    """
+    if ('EMAIL' in os.environ) and ('NAME' in os.environ):
+        folder = os.path.join(os.environ['HOME'], '.openmined')
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
+        whoami = {env.lower(): os.environ[env] for env in ['EMAIL', 'NAME']}
+        json.dump(whoami, open(os.path.join(folder, 'whoami.json'), 'w+'))
 
+
+def run():
+    create_whoami()
+
+    if 'GRID_MODE' in os.environ:
+        args.tree = False
+        args.compute = False
+        args.anchor = False
+        setattr(args, os.environ['GRID_MODE'], True)
+
+    try:
         if (args.tree):
             workers.tree.GridTree(name=args.name,email=args.email)
         elif (args.anchor):
