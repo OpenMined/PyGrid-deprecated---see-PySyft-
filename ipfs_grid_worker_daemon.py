@@ -45,7 +45,7 @@ parser.add_argument(
     help='Run grid in anchor mode')
 
 parser.add_argument(
-    '--email',
+    '-email',
     dest='email',
     action='store_const',
     const=True,
@@ -53,7 +53,7 @@ parser.add_argument(
     help='Email account for your coinbase wallet')
 
 parser.add_argument(
-    '--name',
+    '-name',
     dest='name',
     action='store_const',
     const=True,
