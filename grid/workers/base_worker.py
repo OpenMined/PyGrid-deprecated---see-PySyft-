@@ -56,7 +56,9 @@ class GridWorker():
         Some may only be anchors and will ignore any jobs you send them.
         """
         
-        nodes = self.api.pubsub_peers('openmined')['Strings']
+        nodes = self.api.pubsub_peers('openmined')
+        print(nodes)
+        nodes = nodes['Strings']
 
         if (nodes is not None):
             return nodes
