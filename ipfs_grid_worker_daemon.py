@@ -44,7 +44,7 @@ parser.add_argument(
     default=False,
     help='Run grid in anchor mode')
 
-parse.add_argument(
+parser.add_argument(
     '--ignore-whoami',
     dest='ignore_whoami',
     action='store_const',
