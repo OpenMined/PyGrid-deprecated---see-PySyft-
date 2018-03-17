@@ -111,7 +111,7 @@ class HTTPClient(object):
                 for result in parser.parse_finalize():
                     yield result
             
-            # print("_request reqponse:" + str(type(response)))
+            print("_request reqponse:" + str(type(response)))
             return stream_decode()
         else:
             # First decode received item
