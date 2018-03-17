@@ -45,12 +45,12 @@ parser.add_argument(
     help='Run grid in anchor mode')
 
 parser.add_argument(
-    '-email',
+    '--email',
     default=None,
     help='Email account for your coinbase wallet')
 
 parser.add_argument(
-    '-name',
+    '--name',
     default=None,
     help='Name of your worker for others to see.')
 
