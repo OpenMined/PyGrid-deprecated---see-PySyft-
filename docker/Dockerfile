@@ -25,9 +25,7 @@ RUN add-apt-repository ppa:jonathonf/python-3.6 && \
 # install libssl
 RUN apt-get update &&\
     apt-get install -y libssl-dev
-    RUN apt-get install build-essential automake\
-        pkg-config libtool libffi-dev \
-        libgmp-dev -y
+RUN apt-get install build-essential automake pkg-config libtool libffi-dev libgmp-dev -y
 
 # pytorch
 RUN pip --no-cache-dir install --upgrade \

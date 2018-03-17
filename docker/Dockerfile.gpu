@@ -25,9 +25,7 @@ RUN add-apt-repository ppa:jonathonf/python-3.6 && \
 # install libssl
 RUN apt-get update &&\
     apt-get install -y libssl-dev
-    RUN apt-get install build-essential automake\
-        pkg-config libtool libffi-dev \
-        libgmp-dev -y
+RUN apt-get install build-essential automake pkg-config libtool libffi-dev libgmp-dev -y
 
 # pytorch
 RUN pip --no-cache-dir install --upgrade \
@@ -37,7 +35,6 @@ RUN pip --no-cache-dir install --upgrade \
 # install requirements
 COPY ./requirements.txt /requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
-RUN pip install tensorflow-gpu
 
 # jupyter
 COPY ./docker/run_jupyter.sh /run_jupyter.sh
@@ -50,3 +47,5 @@ ENV ROOT_DIR='/workdir'
 WORKDIR '/workdir'
 
 CMD ["/run_jupyter.sh", "--allow-root"]
+
+RUN pip install --upgrade --no-cache tensorflow-gpu
