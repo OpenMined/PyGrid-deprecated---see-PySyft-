@@ -28,6 +28,9 @@ class GridWorker():
                 whoami = {'email': self.email, 'name': self.name}
 
                 utils.store_whoami(whoami)
+            else:
+                self.email = "n/a"
+                self.name = "n/a"
 
         self.subscribed_list = []
 
