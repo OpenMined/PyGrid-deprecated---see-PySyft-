@@ -44,6 +44,14 @@ parser.add_argument(
     default=False,
     help='Run grid in anchor mode')
 
+parse.add_argument(
+    '--ignore-whoami',
+    dest='ignore_whoami',
+    action='store_const',
+    const=True,
+    default=False,
+    help='Don\'t block process and ask for email/name if config file not found.')
+
 args = parser.parse_args()
 """
 TODO: modify Client to store the source code for the model in IPFS.
@@ -65,7 +73,7 @@ def run():
         elif (args.anchor):
             workers.anchor.GridAnchor()
         else:
-            workers.compute.GridCompute()
+            workers.compute.GridCompute(ignore_whoami=workers.ignore_whoami)
 
     except Exception as e:  # most generic exception you can catch
         print(e)
