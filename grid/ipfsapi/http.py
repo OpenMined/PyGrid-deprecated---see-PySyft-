@@ -112,7 +112,7 @@ class HTTPClient(object):
                     yield result
             response = stream_decode()
 
-            print("_request reqponse:" + str(type(response)))
+            # print("_request reqponse:" + str(type(response)))
             return response
         else:
             # First decode received item
