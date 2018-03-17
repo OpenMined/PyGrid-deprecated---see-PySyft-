@@ -25,9 +25,9 @@ class GridWorker():
                 self.email = input('Enter your email for payment: ')
                 self.name = input('Enter an easy name to remember you by: ')
 
-            whoami = {'email': self.email, 'name': self.name}
+                whoami = {'email': self.email, 'name': self.name}
 
-            utils.store_whoami(whoami)
+                utils.store_whoami(whoami)
 
         self.subscribed_list = []
 
