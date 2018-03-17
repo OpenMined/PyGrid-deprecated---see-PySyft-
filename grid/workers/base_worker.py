@@ -57,6 +57,7 @@ class GridWorker():
         """
         
         nodes = self.api.pubsub_peers('openmined')
+        print(type(nodes))
         print(nodes)
         nodes = nodes['Strings']
 
