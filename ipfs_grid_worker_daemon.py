@@ -47,6 +47,7 @@ parser.add_argument(
 parser.add_argument(
     '--email',
     dest='email',
+    action='store_const',
     type='str',
     default=None,
     help='Email account for your coinbase wallet')
@@ -54,6 +55,7 @@ parser.add_argument(
 parser.add_argument(
     '--name',
     dest='name',
+    action='store_const',
     type='str',
     default=None,
     help='Name of your worker for others to see.')
