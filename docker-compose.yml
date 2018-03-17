@@ -27,6 +27,8 @@ services:
     volumes:
       - "$PWD:/workdir" 
     command: python3 ipfs_grid_worker_daemon.py
+    depends_on:
+      - ipfs
 
   notebook:
     build:
@@ -44,3 +46,5 @@ services:
       - "$PWD:/workdir"
     ports:
       - "8888:8888"
+    depends_on:
+      - ipfs
