@@ -73,7 +73,7 @@ def run():
         elif (args.anchor):
             workers.anchor.GridAnchor()
         else:
-            workers.compute.GridCompute(ignore_whoami=workers.ignorewhoami)
+            workers.compute.GridCompute(ignore_whoami=args.ignorewhoami)
 
     except Exception as e:  # most generic exception you can catch
         print(e)
