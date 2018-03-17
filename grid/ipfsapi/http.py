@@ -114,6 +114,7 @@ class HTTPClient(object):
             print("_request reqponse:" + str(type(response)))
             return response
         else:
+            print("_request response2_content:" + str(res.content))
             # First decode received item
             ret = parser.parse(res.content)
 
