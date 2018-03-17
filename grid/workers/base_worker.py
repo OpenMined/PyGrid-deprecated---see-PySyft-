@@ -10,27 +10,35 @@ import random
 
 
 class GridWorker():
-    def __init__(self, node_type, ignore_whoami=False):
+    def __init__(self, node_type, email=None, name=None):
         self.node_type = node_type
         self.api = utils.get_ipfs_api(self.node_type)
         self.id = utils.get_id(self.node_type, self.api)
 
         # load email and name
         whoami = utils.load_whoami()
-        if whoami:
-            self.email = whoami['email']
-            self.name = whoami['name']
-        else:
-            if(not ignore_whoami):
-                self.email = input('Enter your email for payment: ')
-                self.name = input('Enter an easy name to remember you by: ')
 
-                whoami = {'email': self.email, 'name': self.name}
-
-                utils.store_whoami(whoami)
+        if(email is None):
+            if whoami:
+                self.email = whoami['email']
             else:
-                self.email = "n/a"
-                self.name = "n/a"
+                self.email = input('Enter your email for payment: ')
+        else:
+            self.email = email
+
+
+        if(name is None):
+            if(whoami):
+                self.name = whoami['name']
+            else:
+                self.name = input('Enter an easy name to remember you by: ')
+        else:
+            self.name = name
+
+        whoami = {'email': self.email, 'name': self.name}
+
+        utils.store_whoami(whoami)
+        
 
         self.subscribed_list = []
 
