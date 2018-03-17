@@ -110,18 +110,14 @@ class HTTPClient(object):
                         yield result
                 for result in parser.parse_finalize():
                     yield result
-            response = stream_decode()
-            print("_request reqponse:" + str(type(response)))
-            return response
+            return stream_decode()
         else:
-            print("_request response2_content:" + str(res.content))
             # First decode received item
             ret = parser.parse(res.content)
 
             # Raise exception for response status
             # (optionally incorpating the response message, if applicable)
             self._do_raise_for_status(res, ret)
-            print("_request reqponse2:" + str(type(ret)))
             return ret
 
     @pass_defaults
