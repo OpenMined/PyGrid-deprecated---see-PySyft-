@@ -55,10 +55,9 @@ class GridWorker():
         Note - not all workers are necessarily "compute" workers.
         Some may only be anchors and will ignore any jobs you send them.
         """
-        try:
-            nodes = self.api.pubsub_peers('openmined')['Strings']
-        except:
-            print("Error:" + str(self.api.pubsub_peers('openmined')))
+        
+        nodes = self.api.pubsub_peers('openmined')
+
         if (nodes is not None):
             return nodes
         else:
