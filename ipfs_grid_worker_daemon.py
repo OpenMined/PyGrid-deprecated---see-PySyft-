@@ -18,8 +18,6 @@ print(title)
 program_desc = f"""
 """
 
-# print(title)
-
 parser = argparse.ArgumentParser(description=program_desc)
 
 parser.add_argument(
@@ -67,33 +65,21 @@ TODO: figure out a convenient way to make robust training procedure for torch
 
 logf = open("openmined.errors", "w")
 
-
-def create_whoami():
-    """
-    Create a whoami.json file.
-    """
-    if ('EMAIL' in os.environ) and ('NAME' in os.environ):
-        folder = os.path.join(os.environ['HOME'], '.openmined')
-        if not os.path.isdir(folder):
-            os.mkdir(folder)
-        whoami = {env.lower(): os.environ[env] for env in ['EMAIL', 'NAME']}
-        json.dump(whoami, open(os.path.join(folder, 'whoami.json'), 'w+'))
-
-
 def run():
-    create_whoami()
 
     if 'GRID_MODE' in os.environ:
         args.tree = False
         args.compute = False
         args.anchor = False
         setattr(args, os.environ['GRID_MODE'], True)
+    args.email = os.environ.get('EMAIL',args.email)
+    args.name = os.environ.get('NAME',args.email)
 
     try:
         if (args.tree):
             workers.tree.GridTree(name=args.name,email=args.email)
         elif (args.anchor):
-            workers.anchor.GridAnchor()
+            workers.anchor.GridAnchor(name=args.name,email=args.email)
         else:
             workers.compute.GridCompute(name=args.name,email=args.email)
 
