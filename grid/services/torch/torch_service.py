@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from ..base import BaseService
 from .hook_service import HookService
 from ... import channels
@@ -10,20 +9,6 @@ from bitcoin import base58
 import inspect
 import random
 import copy
-=======
-from ... import channels
-from ..base import BaseService
-from bitcoin import base58
-import torch
-
-import torch
-from torch.autograd import Variable
-import inspect
-import random
-import copy
-from ...lib import utils
-from ...lib import serde
->>>>>>> master
 import json
 
 
