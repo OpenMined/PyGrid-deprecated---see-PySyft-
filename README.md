@@ -78,34 +78,11 @@ start_worker --tree
 - [docker](https://docs.docker.com/) 
 - [docker-compose](https://docs.docker.com/compose/)
 
-If you have GPU and want to use them, you will need to have [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)). Then, we need to configure the daemon to use the nvidia runtime by default which will allow us to use nvidia-docker and docker-compose.
+If you have GPU and want to use them, you will need to have [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0)). Make sure you can see your gpus using
 
-1. Make sure you can see you gpus using
  ```
 docker run --runtime=nvidia --rm nvidia/cuda nvidia-smi 
  ```
-2. Stop the docker daemon 
- 
- ```
- service docker stop
- ```
- 
-3. Then you need to manually tune the daemon.json config file which is in **etc/docker**. You ll have
-
- ```
-{
-    "runtimes": {
-        "nvidia": {
-            "path": "/usr/bin/nvidia-container-runtime",
-            "runtimeArgs": []
-        }
-    },
-    "default-runtime": "nvidia"
-}
-
- ```
-
-4. Once that done, restart docker. The runtime **nvidia** will be setup by default. 
 
 ## launching the worker
 
