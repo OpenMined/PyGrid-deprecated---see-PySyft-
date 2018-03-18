@@ -1,4 +1,4 @@
-version: "3"
+version: "2.3"
 
 services:
 
@@ -6,8 +6,10 @@ services:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.gpu
+    runtime: nvidia
 
   notebook:
     build:
       context: .
       dockerfile: ./docker/Dockerfile.gpu
+    runtime: nvidia
