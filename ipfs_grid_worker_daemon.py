@@ -1,7 +1,6 @@
 from grid import workers
 import argparse
 import time
-import json
 from colorama import Fore, Style
 import os
 
@@ -76,6 +75,7 @@ def run():
     args.name = os.environ.get('NAME',args.email)
 
     try:
+        print("\n\n")
         if (args.tree):
             workers.tree.GridTree(name=args.name,email=args.email)
         elif (args.anchor):
