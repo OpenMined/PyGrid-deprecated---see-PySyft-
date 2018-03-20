@@ -298,7 +298,7 @@ class HookService(BaseService):
     def hook_var___new__(service_self):
         torch.autograd.variable.Variable.old___new__ = torch.autograd.variable.Variable.__new__
         def new___new__(cls, *args, **kwargs):
-            result = cls.old___new__(*args,  **kwargs)
+            result = cls.old___new__(cls, *args,  **kwargs)
             result = service_self.register_object(result, False)
             return result
         
