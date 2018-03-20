@@ -49,6 +49,7 @@ class HookService(BaseService):
     ## Registration and communication handlers
     def register_object(self, obj, is_pointer_to_remote):
         # TODO: Assign id more intelligently (low priority)
+        #       Consider popping id from long list of unique integers
         obj.id = random.randint(0, 1e10)
         obj.owner = self.worker.id
         obj.worker = self.worker
