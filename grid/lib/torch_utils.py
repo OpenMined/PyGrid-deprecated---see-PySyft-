@@ -6,13 +6,13 @@ from pathlib import Path
 from . import utils
 
 # Helpers for HookService and TorchService
-def check_workers(workers):
+def check_workers(self, workers):
     if type(workers) is str:
         workers = [workers]
     elif not hasattr(workers, '__iter__'):
         raise TypeError(
-            """'workers' must be a string worker ID or an iterable of
-            string worker IDs, not {}""".format(type(owners))
+            """Can only send {} to a string worker ID or an iterable of
+            string worker IDs, not {}""".format(self.__name__, type(owners))
             )
     return workers
 
@@ -26,9 +26,12 @@ def get_tensorvars(command):
     return tensorvar_args + tensorvar_kwvals
     
 def check_tensorvars(tensorvars):
+    # TODO: turn this line into a function `check_remote`
     has_remote = any([tensorvar.is_pointer_to_remote for tensorvar in tensorvars])
-    multiple_owners = len(set([tensorvar.owner for tensorvar in tensorvars])) != 1
-    return has_remote, multiple_owners
+    # TODO: turn the following into a function `get_owners`
+    owners = list(set([tensorvar.owner for tensorvar in tensorvars]))
+    multiple_owners = len(owners) != 1
+    return has_remote, multiple_owners, owners
 
 # Serializing torch stuffs (probably deprecated at this point)
 def torch2ipfs(model):
