@@ -51,8 +51,8 @@ class TorchService(HookService):
                                       self.receive_obj_request)
 
     # This will be deprecated; send_command in HookService should take over
-    def send_command(self, command, to):
-        return to.receive_command(command)
+    #def send_command(self, command, to):
+    #    return to.receive_command(command)
 
     def receive_obj_request(self, msg):
 
