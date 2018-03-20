@@ -46,7 +46,7 @@ class HookService(BaseService):
         self.var_exclude = ['__getattr__'] 
 
 
-    ## Reigstration and communication handlers
+    ## Registration and communication handlers
     def register_object(self, obj, is_pointer_to_remote):
         # TODO: Assign id more intelligently (low priority)
         obj.id = random.randint(0, 1e10)
@@ -333,6 +333,10 @@ class HookService(BaseService):
 
 
     ## Overloading Torch objects
+<<<<<<< HEAD
+=======
+
+>>>>>>> 25cfc02ec5e5071726ae921957bf94cc4bc05ba0
     # TODO: Issue #132 undo dependency on worker_ids -- no point wasting
     #       time integrating worker_ids into the rest if we're going to
     #       rewrite that part anyway (and we definitely need to rewrite that)
@@ -394,4 +398,8 @@ class HookService(BaseService):
                 new_attr = self.assign_workers_method(worker_ids)(passer)
                 setattr(torch.autograd.variable.Variable, 
                     'old_{}'.format(attr), lit)
+<<<<<<< HEAD
                 setattr(torch.autograd.variable.Variable, attr, new_attr)
+=======
+                setattr(torch.autograd.variable.Variable, attr, new_attr)
+>>>>>>> 25cfc02ec5e5071726ae921957bf94cc4bc05ba0
