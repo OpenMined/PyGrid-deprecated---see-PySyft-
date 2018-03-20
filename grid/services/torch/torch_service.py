@@ -12,7 +12,7 @@ import copy
 import json
 
 
-class TorchService(BaseService):
+class TorchService(HookService):
 
     # this service creates everything the client needs to be able to interact
     # with torch on the Grid (it's really awesome, but it's a WIP)
@@ -23,6 +23,13 @@ class TorchService(BaseService):
         self.worker = worker
 
         # TODO: call overload methods from HookService once they're there
+        worker_ids = ['A1','A2','B1'] # This will be gone soon
+        self.hook_torch_module(worker_ids)
+        for t_type in self.tensor_types:
+            self.hook_tensor(t_type, worker_ids)
+        self.hook_variable(worker_ids)
+        print('==============')
+        print("Overloading complete.")
 
         def print_messages(message):
             print(message.keys())
