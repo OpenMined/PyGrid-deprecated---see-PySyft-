@@ -26,8 +26,10 @@ def get_tensorvars(self, command):
     return tensorvar_args + tensorvar_kwvals
     
 def check_tensorvars(tensorvars):
+    # Had an efficiency reason for these TODOs, but forgot...
+
     # TODO: turn this line into a function `check_remote`
-    has_remote = any([tensorvar.is_pointer_to_remote for tensorvar in tensorvars])
+    has_remote = any([tensorvar.is_pointer for tensorvar in tensorvars])
     # TODO: turn the following into a function `get_owners`
     print([tensorvar.owners for tensorvar in tensorvars])
     owners = list(set([owner for tensorvar in tensorvars for owner in tensorvar.owners]))

@@ -7,12 +7,11 @@ import torch
 from bitcoin import base58
 
 import inspect
-import random
 import copy
 import json
 
 
-class TorchService(HookService):
+class TorchService(BaseService):
 
     # this service creates everything the client needs to be able to interact
     # with torch on the Grid (it's really awesome, but it's a WIP)
@@ -21,15 +20,6 @@ class TorchService(HookService):
         super().__init__(worker)
 
         self.worker = worker
-
-        # TODO: call overload methods from HookService once they're there
-        worker_ids = ['A1','A2','B1'] # This will be gone soon
-        self.hook_torch_module(worker_ids)
-        for t_type in self.tensor_types:
-            self.hook_tensor(t_type, worker_ids)
-        self.hook_variable(worker_ids)
-        print('==============')
-        print("Overloading complete.")
 
         def print_messages(message):
             print(message.keys())
@@ -50,6 +40,21 @@ class TorchService(HookService):
         self.worker.listen_to_channel(req_callback,
                                       self.receive_obj_request)
 
+
+    def receive_obj(self, msg):
+        # TODO: generalize to Variable
+        dic = json.loads(msg['data'])
+        obj_type = dic['type']
+        if obj_type in tensor_types:
+            obj = obj_type.de(dic)
+            obj.is_pointer = False
+            obj.owner = self.worker.id
+            self.objects[obj.id] = obj
+            return obj
+        raise TypeError(
+            "Tried to receive a non-Torch object of type {}.".format(
+                obj_type))
+
     # This will be deprecated; send_command in HookService should take over
     #def send_command(self, command, to):
     #    return to.receive_command(command)
@@ -65,28 +70,11 @@ class TorchService(HookService):
 
         self.worker.publish(channel=response_channel, message=response_str)
 
-    # This will be deprecated; receive_commands in HookService should take over
+    # TODO: Receive commands needs to be here;
+    #       should not depend on any of the torch hooking code;
+    #       should be completely general
     def receive_command(self, command):
         if (command['base_type'] == 'torch.FloatTensor'):
             raw_response = torch.FloatTensor.process_command(self, command)
 
         return json.dumps(raw_response)
-
-    # This will likely also be deprecated if it's needed in HookService;
-    # otherwise, will need to be rewritten to adapt to the other changes
-    def process_response(self, response):
-        response = json.loads(response)
-        tensor_ids = response
-        out_tensors = list()
-        for raw_msg in tensor_ids:
-            msg = json.loads(raw_msg)
-            if (msg["type"] == "torch.FloatTensor"):
-                obj = torch.FloatTensor.de(msg)
-            out_tensors.append(obj)
-
-        if (len(out_tensors) > 1):
-            return out_tensors
-        elif (len(out_tensors) == 1):
-            return out_tensors[0]
-        else:
-            return None
