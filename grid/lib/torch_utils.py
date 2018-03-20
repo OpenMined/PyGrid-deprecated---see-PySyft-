@@ -6,29 +6,35 @@ from pathlib import Path
 from . import utils
 
 # Helpers for HookService and TorchService
-def check_workers(workers):
+def check_workers(self, workers):
     if type(workers) is str:
         workers = [workers]
     elif not hasattr(workers, '__iter__'):
         raise TypeError(
-            """'workers' must be a string worker ID or an iterable of
-            string worker IDs, not {}""".format(type(owners))
+            """Can only send {} to a string worker ID or an iterable of
+            string worker IDs, not {}""".format(self.__name__, type(owners))
             )
     return workers
 
-def get_tensorvars(command):
+def get_tensorvars(self, command):
     args = command['args']
     kwargs = command['kwargs']
     arg_types = command['arg_types']
     kwarg_types = command['kwarg_types']
-    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in tensorvar_types]
-    tensorvar_kwargs = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in tensorvar_types]
-    return tensorvar_args + tensorvar_kwargs
+    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types]
+    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types]
+    return tensorvar_args + tensorvar_kwvals
     
 def check_tensorvars(tensorvars):
-    has_remote = any([tensorvar.is_pointer_to_remote for tensorvar in tensorvars])
-    multiple_owners = len(set([tensorvar.owner for tensorvar in tensorvars])) != 1
-    return has_remote, multiple_owners
+    # Had an efficiency reason for these TODOs, but forgot...
+
+    # TODO: turn this line into a function `check_remote`
+    has_remote = any([tensorvar.is_pointer for tensorvar in tensorvars])
+    # TODO: turn the following into a function `get_owners`
+    print([tensorvar.owners for tensorvar in tensorvars])
+    owners = list(set([owner for tensorvar in tensorvars for owner in tensorvar.owners]))
+    multiple_owners = len(owners) != 1
+    return has_remote, multiple_owners, owners
 
 # Serializing torch stuffs (probably deprecated at this point)
 def torch2ipfs(model):

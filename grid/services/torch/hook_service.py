@@ -2,6 +2,7 @@ import torch
 from ..base import BaseService
 from ... import channels
 from ...lib import torch_utils as tu
+
 from collections import OrderedDict
 from functools import wraps, partial, partialmethod
 import inspect
@@ -12,7 +13,6 @@ from types import *
 class HookService(BaseService):
     def __init__(self, worker):
         super().__init__(worker)
-        self.objects = {}
 
         self.tensor_types = [torch.FloatTensor,
                 torch.DoubleTensor,
@@ -42,67 +42,78 @@ class HookService(BaseService):
         # TODO: Handle the ones in "exclude" manually at some point
         self.exclude = ['ndimension', 'nelement', 'size','numel']
         # This one wasn't in dir(Variable) -- probably a C thing
-        self.var_exclude = ['__getattr__'] 
+        self.var_exclude = ['__getattr__']
+
+        # Perform overloading
+        self.hook_torch_module()
+        for t_type in self.tensor_types:
+            self.hook_tensor(t_type)
+        self.hook_variable()
+        print('==============')
+        print("Overloading complete.")
 
 
     ## Registration and communication handlers
-    def register_object(self, obj, is_pointer_to_remote):
-        # TODO: Assign id more intelligently (low priority)
-        obj.id = random.randint(0, 1e10)
-        obj.owner = self.worker.id
-        obj.worker = self.worker
-        obj.is_pointer_to_remote = False
-        self.objects[obj.id] = obj
-        return obj
 
-    def send_obj(self, obj, to):
+    def send_obj(self, obj, recipient):
         self.worker.publish(
-            channels.torch_listen_for_obj_callback(to), message=obj.ser())
-        obj.is_pointer_to_remote = True
-        obj.owner = to
-        return obj
+            channels.torch_listen_for_obj_callback(recipient),
+            message=obj.ser())
 
     def request_obj(self, obj):
         return self.worker.request_response(
             channel=channels.torch_listen_for_obj_req_callback(obj.owner),
             message=obj.id,
-            response_handler=self.receive_obj)
-
-    def receive_obj(self, msg):
-        # TODO: generalize to Variable
-        dic = json.loads(msg['data'])
-        obj_type = dic['type']
-        if obj_type in tensor_types:
-            obj = obj_type.de(dic)
-            obj.is_pointer_to_remote = False
-            obj.owner = self.worker.id
-            self.objects[obj.id] = obj
-            return obj
-        raise TypeError("Tried receiving a non-Torch object")
+            response_handler=self.worker.services['torch_service'].receive_obj)
 
     # TODO: See Issue #131
-    def send_command(command):
+    def send_command(self, command, recipient):
+        #self.worker.publish() # finish this
         print(command['command'])
         print([type(arg) for arg in command['args']])
         print([type(pair) for pair in command['kwargs']])
         print('===========')
         print()
-        return command['args'], command['kwargs']
+        # TODO: fix up after IPFS is integrated
+        torch_type = torch.FloatTensor
+        registration = dict(id=random.randint(0, 1e10),
+            owners=['other_worker'],
+            is_pointer=True)
+        return registration, torch_type
+
+    def assemble_result(self, registration, torch_type):
+        result = torch_type(0)
+        return self.register_object(result, **registration)
+
+    # TODO: inputs the response of a remote computation,
+    #       outputs it's registration and it's torch_type
+    def process_response(self, response):
+        response = json.loads(response)
+        tensor_ids = response
+        out_tensors = list()
+        for raw_msg in tensor_ids:
+            msg = json.loads(raw_msg)
+            if (msg["type"] == "torch.FloatTensor"):
+                obj = torch.FloatTensor.de(msg)
+            out_tensors.append(obj)
+
+        if (len(out_tensors) > 1):
+            return out_tensors
+        elif (len(out_tensors) == 1):
+            return out_tensors[0]
+        else:
+            return None
 
     # TODO: See Issue #131
-    def receive_commands(worker_ids):
-        print("""Placeholder print for receiving commands from workers
-            in the following list:""")
-        print(worker_ids)
-
-    # TODO: See Issue #131
-    def compile_command(partial_func):
+    @staticmethod
+    def compile_command(partial_func, has_self):
         func = partial_func.func
         args = partial_func.args
         kwargs = partial_func.keywords
         command = {}
         command['command'] = func.__name__
         command['command_type'] = type(func)
+        command['has_self'] = has_self
         command['args'] = args
         command['kwargs'] = kwargs
         command['arg_types'] = [type(x) for x in args]
@@ -110,14 +121,18 @@ class HookService(BaseService):
         return command
 
 
-    ## TorchService-specific method hooking
+    ## Grid-specific method hooking
 
     def hook_tensor_send(service_self):
         def send_(self, workers):
-            workers = tu.check_workers(workers)
+            workers = tu.check_workers(workers) # makes singleton, if needed
             for worker in workers:
-                # TODO: sync or async? (low priority)
+                # TODO: actually generalize this to multiple workers
+                # TODO: sync or async? likely won't be worth doing async,
+                #       but should check (low priority)
                 service_self.send_obj(self, worker)
+            self.is_pointer = True
+            self.owners = workers
             self.zero_()
             return self
 
@@ -125,12 +140,20 @@ class HookService(BaseService):
             setattr(torch_type, 'send_', send_)
 
     def hook_tensor_get(service_self):
-        def get(self, workers):
-            workers = tu.check_workers(workers)
-            for worker in workers:
-                if (service_self.worker.id != self.owner):
-                    service_self.request_obj(obj, worker)
-            return self
+        def get_(self, reduce = lambda x: torch.cat(x).mean(0)):
+            # reduce is untested
+            # TODO: actually generalize this to multiple workers; consider
+            #       adding arguments for other tensor ids, e.g. mapping workers
+            #       to tensors, and a reduce function (for example, would allow
+            #       for built in gradient averaging when Variable.get is done)
+            #       (low priority)
+            if service_self.worker.id in self.owners:
+                return self
+            collected = [service_self.request_obj(self, worker) for worker in self.owners]
+            return self.set_(reduce(collected))
+
+        for torch_type in tensor_types:
+            setattr(torch_type, 'get_', get_)
 
     # TODO: Generalize to other tensor types
     def hook_float_tensor_serde(self):
@@ -199,33 +222,31 @@ class HookService(BaseService):
             return partial(func, *args, **kwargs)
         return pass_args
 
-    def assign_workers_function(self, worker_ids): # TODO: See Issue #132
-        def decorate(func):
-            @wraps(func)
-            def send_to_workers(*args, **kwargs):
-                part = func(*args, **kwargs)
-                command = compile_command(part)
-                tensorvars = tu.get_tensorvars(command)
-                has_remote, multiple_owners = tu.check_tensorvars(tensorvars)
-                if not has_remote:
-                    result = part.func(*args, **kwargs)
-                    if type(result) in self.tensorvar_types:
-                        result = self.register_object(result, False)
-                    return result
-                elif multiple_owners:
-                    raise NotImplementedError("""MPC not yet implemented: 
-                        Torch objects need to be on the same machine in order
-                        to compute with them.""")
-                else:
-                    for worker in worker_ids:
-                        print("""Placeholder print for sending command to
-                            worker {}""".format(worker))
-                        args, kwargs = send_command(command)
-                    # Probably needs to happen async
-                    receive_commands(worker_ids)  
-                    return args, kwargs # TODO: See Issue #130
-            return send_to_workers
-        return decorate
+    def overload_function(self, func):
+        @wraps(func)
+        def send_to_workers(*args, **kwargs):
+            part = func(*args, **kwargs)
+            command = self.compile_command(part, has_self = False)
+            tensorvars = tu.get_tensorvars(self, command)
+            has_remote, multiple_owners, owners = tu.check_tensorvars(tensorvars)
+            if not has_remote:
+                result = part.func(*args, **kwargs)
+                if type(result) in self.tensorvar_types:
+                    result = self.register_object(result, is_pointer=False)
+                return result
+            # when the api is generalized to function on multiple workers,
+            # the following two cases should be consolidated
+            elif multiple_owners:
+                raise NotImplementedError("""MPC not yet implemented: 
+                    Torch objects need to be on the same machine in order
+                    to compute with them.""")
+            else:
+                for worker in owners:
+                    print("Placeholder print for sending command to worker {}".format(worker))
+                    registration, torch_type = self.send_command(command, worker)
+                    pointer = self.assemble_result(registration, torch_type)
+                return pointer
+        return send_to_workers
 
     @staticmethod
     def pass_method_args(method):
@@ -234,42 +255,39 @@ class HookService(BaseService):
             return partialmethod(method, *args, **kwargs)
         return pass_args
 
-    def assign_workers_method(service_self, worker_ids):
-        def decorate(method):
-            @wraps(method)
-            def send_to_workers(self, *args, **kwargs):
-                part = method(self, *args, **kwargs)
-                if self.is_pointer_to_remote:
-                    command = compile_command(part)
-                    tensorvars = get_tensorvars(command)
-                    has_remote, multiple_owners = check_tensorvars(tensorvars)
-                    if has_remote and not multiple_owners:
-                        for worker in worker_ids:
-                            print("""Placeholder print for sending command to
-                                worker {}""".format(worker))
-                            args, kwargs = send_command(command)
-                        # Probably needs to happen async
-                        receive_commands(worker_ids)
-                    else:
-                        raise NotImplementedError("""MPC not yet implemented:
-                            Torch objects need to be on the same machine in
-                            order to compute with them.""")
-                    return args, kwargs # TODO: See Issue #130
+    def overload_method(service_self, method):
+        @wraps(method)
+        def send_to_workers(self, *args, **kwargs):
+            part = method(self, *args, **kwargs)
+            if self.is_pointer:
+                command = service_self.compile_command(part, has_self=True)
+                tensorvars = tu.get_tensorvars(service_self, command)
+                has_remote, multiple_owners, owners = tu.check_tensorvars(tensorvars)
+                if has_remote and not multiple_owners:
+                    for worker in owners: # Right now, this can only be singleton
+                        print("""Placeholder print for sending command to worker {}""".format(worker))
+                        registration, torch_type = service_self.send_command(command, worker)
+                        pointer = service_self.assemble_result(registration, torch_type)
                 else:
-                    result = part.func(self, *args, **kwargs)
-                    if (type(result) in service_self.tensorvar_types and 
-                        not hasattr(result, 'owner')):
-                        result = service_self.register_object(result, False)
-                    return result
-            return send_to_workers
-        return decorate
+                    raise NotImplementedError("""MPC not yet implemented:
+                        Torch objects need to be on the same machine in
+                        order to compute with them.""")
+                return pointer
+            else:
+                result = part.func(self, *args, **kwargs)
+                if (type(result) in service_self.tensorvar_types and 
+                    not hasattr(result, 'owner')):
+                    result = service_self.register_object(result,
+                        is_pointer=False)
+                return result
+        return send_to_workers
 
 
     ## Special Tensor method hooks
     def hook_tensor___init__(service_self, tensor_type):
         def new___init__(self, *args):
             super(tensor_type, self).__init__()
-            self = service_self.register_object(self, False)
+            self = service_self.register_object(self, is_pointer=False)
 
         tensor_type.__init__ = new___init__
     
@@ -277,7 +295,7 @@ class HookService(BaseService):
         tensor_type.old___new__ = tensor_type.__new__
         def new___new__(cls, *args, **kwargs):
             result = cls.old___new__(cls, *args,  **kwargs)
-            result = service_self.register_object(result, False)
+            result = service_self.register_object(result, is_pointer=False)
             return result
         
         tensor_type.__new__ = new___new__
@@ -285,10 +303,13 @@ class HookService(BaseService):
     def hook_tensor___repr__(service_self, tensor_type):
         tensor_type.old__repr__ = tensor_type.__repr__
         def new___repr__(self):
-            if(service_self.worker.id == self.owner):
+            if service_self.worker.id in self.owners:
                 return self.old__repr__()
             else:
-                return "[ {} - Location:{} ]".format(tensor_type, self.owner)
+                return "[{}.{} - Locations:{}]".format(
+                    tensor_type.__module__,
+                    tensor_type.__name__,
+                    self.owners)
 
         tensor_type.__repr__ = new___repr__
 
@@ -298,7 +319,7 @@ class HookService(BaseService):
         torch.autograd.variable.Variable.old___new__ = torch.autograd.variable.Variable.__new__
         def new___new__(cls, *args, **kwargs):
             result = cls.old___new__(cls, *args,  **kwargs)
-            result = service_self.register_object(result, False)
+            result = service_self.register_object(result, is_pointer=False)
             return result
         
         torch.autograd.variable.Variable.__new__ = new___new__
@@ -312,7 +333,7 @@ class HookService(BaseService):
                 self.data_registered
             except AttributeError:
                 self.old_data = service_self.register_object(
-                    self.old_data, False)
+                    self.old_data, is_pointer=False)
                 self.data_registered = True
             return self.old_data
         
@@ -323,7 +344,7 @@ class HookService(BaseService):
             except AttributeError:
                 if self.old_grad is not None:
                     self.old_grad = service_self.register_object(
-                        self.old_grad, False)
+                        self.old_grad, is_pointer=False)
                     self.grad_registered = True
             return self.old_grad
         
@@ -337,7 +358,7 @@ class HookService(BaseService):
     #       time integrating worker_ids into the rest if we're going to
     #       rewrite that part anyway (and we definitely need to rewrite that)
 
-    def hook_torch_module(self, worker_ids):
+    def hook_torch_module(self):
         print('Overloading Torch module')
         for attr in self.torch_funcs:
             if attr == 'typename':
@@ -345,10 +366,10 @@ class HookService(BaseService):
             lit = getattr(torch, attr)
             if (type(lit) in [FunctionType, BuiltinFunctionType]):
                 passer = self.pass_func_args(lit)
-                new_attr = self.assign_workers_function(worker_ids)(passer)
+                new_attr = self.overload_function(passer)
                 setattr(torch, attr, new_attr)
 
-    def hook_tensor(self, tensor_type, worker_ids):
+    def hook_tensor(self, tensor_type):
         print('Overloading {}'.format(tensor_type.__name__))
         self.hook_tensor___init__(tensor_type)
         self.hook_tensor___new__(tensor_type)
@@ -368,11 +389,11 @@ class HookService(BaseService):
             if ((is_desc or (is_func and not is_service_func)) 
                 and not is_base and not is_old):
                 passer = self.pass_method_args(lit)
-                new_attr = self.assign_workers_method(worker_ids)(passer)
+                new_attr = self.overload_method(passer)
                 setattr(tensor_type, 'old_{}'.format(attr), lit)
                 setattr(tensor_type, attr, new_attr)
 
-    def hook_variable(self, worker_ids):
+    def hook_variable(self):
         print('Overloading Variable')
         self.hook_var___new__()
         self.hook_var_contents()
@@ -391,7 +412,7 @@ class HookService(BaseService):
             if ((is_desc or (is_func and not is_service_func)) 
                 and not is_base and not is_old):
                 passer = self.pass_method_args(lit)
-                new_attr = self.assign_workers_method(worker_ids)(passer)
+                new_attr = self.overload_method(passer)
                 setattr(torch.autograd.variable.Variable, 
                     'old_{}'.format(attr), lit)
                 setattr(torch.autograd.variable.Variable, attr, new_attr)

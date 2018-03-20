@@ -40,7 +40,7 @@ class GridWorker():
 
         utils.store_whoami(whoami)
 
-        self.subscribed_list = []
+        self.subscribed = []
 
         # LAUNCH SERVICES - these are non-blocking and run on their own threads
 
@@ -148,9 +148,9 @@ class GridWorker():
 
         first_proc = True
 
-        if channel not in self.subscribed_list:
+        if channel not in self.subscribed:
             new_messages = self.api.pubsub_sub(topic=channel, stream=True)
-            self.subscribed_list.append(channel)
+            self.subscribed.append(channel)
 
         else:
             return
