@@ -1,0 +1,12 @@
+numpy
+jupyter
+requests
+tensorflow
+colorama
+keras
+h5py
+python-bitcoinlib
+filelock
+coinbase
+gpustat
+psutil
