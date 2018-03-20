@@ -22,8 +22,8 @@ def get_tensorvars(command):
     arg_types = command['arg_types']
     kwarg_types = command['kwarg_types']
     tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in tensorvar_types]
-    tensorvar_kwargs = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in tensorvar_types]
-    return tensorvar_args + tensorvar_kwargs
+    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in tensorvar_types]
+    return tensorvar_args + tensorvar_kwvals
     
 def check_tensorvars(tensorvars):
     has_remote = any([tensorvar.is_pointer_to_remote for tensorvar in tensorvars])
