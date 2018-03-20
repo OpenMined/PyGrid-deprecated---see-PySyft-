@@ -2,7 +2,6 @@ import torch
 from ..base import BaseService
 from ... import channels
 from ...lib import torch_utils as tu
-
 from collections import OrderedDict
 from functools import wraps, partial, partialmethod
 import inspect
@@ -46,7 +45,7 @@ class HookService(BaseService):
         self.var_exclude = ['__getattr__'] 
 
 
-    ## Reigstration and communication handlers
+    ## Registration and communication handlers
     def register_object(self, obj, is_pointer_to_remote):
         # TODO: Assign id more intelligently (low priority)
         obj.id = random.randint(0, 1e10)
@@ -333,6 +332,7 @@ class HookService(BaseService):
 
 
     ## Overloading Torch objects
+
     # TODO: Issue #132 undo dependency on worker_ids -- no point wasting
     #       time integrating worker_ids into the rest if we're going to
     #       rewrite that part anyway (and we definitely need to rewrite that)
