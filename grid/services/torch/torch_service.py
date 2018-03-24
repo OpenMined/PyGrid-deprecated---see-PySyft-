@@ -49,7 +49,7 @@ class TorchService(BaseService):
             obj = obj_type.de(dic)
             obj.is_pointer = False
             obj.owner = self.worker.id
-            self.objects[obj.id] = obj
+            self.worker.objects[obj.id] = obj
             return obj
         raise TypeError(
             "Tried to receive a non-Torch object of type {}.".format(
@@ -63,8 +63,8 @@ class TorchService(BaseService):
 
         obj_id, response_channel = json.loads(msg['data'])
 
-        if (obj_id in self.objects.keys()):
-            response_str = self.objects[obj_id].ser()
+        if (obj_id in self.worker.objects.keys()):
+            response_str = self.worker.objects[obj_id].ser()
         else:
             response_str = 'n/a - tensor not found'
 

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from . import utils
+import torch
 
 # Helpers for HookService and TorchService
 def check_workers(self, workers):
@@ -32,9 +33,143 @@ def check_tensorvars(tensorvars):
     has_remote = any([tensorvar.is_pointer for tensorvar in tensorvars])
     # TODO: turn the following into a function `get_owners`
     print([tensorvar.owners for tensorvar in tensorvars])
-    owners = list(set([owner for tensorvar in tensorvars for owner in tensorvar.owners]))
+    owners = list(set([owner
+        for tensorvar in tensorvars
+        for owner in tensorvar.owners]))
     multiple_owners = len(owners) != 1
     return has_remote, multiple_owners, owners
+
+def replace_tensorvar(x):
+    try:
+        if torch.old_is_tensor(x) or isinstance(x, torch.autograd.Variable):
+            return '_fl.{}'.format(x.id)
+        else:
+            [replace_tensorvar(i) for i in x]
+    except (AttributeError, TypeError):
+        return x
+
+def replace_in_command(command_msg):
+    command_msg['args'] = tu.map_tuple(
+        None, command_msg['args'], tu.replace_tensorvar)
+    command_msg['kwargs'] = tu.map_dict(
+        None, command_msg['kwargs'], tu.replace_tensorvar)
+    try:
+        command_msg['self'] = tu.replace_tensorvar(command_msg['self'])
+    except KeyError:
+        pass
+    return command_msg
+
+# Client needs to identify a tensor before sending commands that use it
+def id_tensorvar(x):
+    pat = re.compile('_fl.(.*)')
+    try:
+        if isinstance(x, str):
+            return pat.search(x).group(1)
+        else:
+            return [id_tensorvar(i) for i in x]
+    except AttributeError:
+        return x
+
+# Safety checks for serializing and deserializing torch objects
+# Desperately needs stress testing before going out in the wild
+map_torch_type = {
+    'torch.FloatTensor':torch.FloatTensor,
+    'torch.DoubleTensor':torch.DoubleTensor,
+    'torch.HalfTensor':torch.HalfTensor,
+    'torch.ByteTensor':torch.ByteTensor,
+    'torch.CharTensor':torch.CharTensor,
+    'torch.ShortTensor':torch.ShortTensor,
+    'torch.IntTensor':torch.IntTensor,
+    'torch.LongTensor':torch.LongTensor,
+    'torch.autograd.variable.Variable':torch.autograd.variable.Variable,
+    'torch.nn.parameter.Parameter':torch.nn.parameter.Parameter
+}
+
+def types_guard(obj_type):
+    return map_torch_type[obj_type]
+
+def tensor_contents_guard(contents):
+    # TODO: check to make sure the incoming list isn't dangerous to use for
+    #       constructing a tensor (likely non-trivial)
+    pass
+
+def command_guard(command, allowed):
+    if command not in allowed:
+        raise RuntimeError(
+            'Command "{}" is not a supported Torch operation.'.format(command))
+    return command
+
+# Worker needs to retrieve tensor by ID before computing with it
+def retrieve_tensor(self, x):
+    try:
+        return self.worker.objects[id_tensorvar(x)]
+    except TypeError:
+        try:
+            return [self.worker.objects[i] for i in id_tensorvar(x)]
+        except TypeError:
+            return x
+    except KeyError:
+        return x
+
+def map_tuple(service, args, func):
+    if service:
+        return tuple(func(service, x) for x in args)
+    else:
+        return tuple(func(x) for x in args)
+
+def map_dict(service, kwargs, func):
+    if service:
+        return {key:func(service, val) for key, val in kwargs.items()}
+    else:
+        return {key:func(val) for key, val in kwargs.items()}
+
+
+# Serializing and deserializing torch objects
+def hook_tensor_serde(service_self, tensor_type):
+    def ser(self, include_data=True):
+        tensor_msg = {}
+        tensor_msg['torch_type'] = self.type()
+        if (include_data):
+            tensor_msg['data'] = self.tolist()
+        tensor_msg['id'] = self.id
+        tensor_msg['owners'] = self.owners
+        return json.dumps(msg)
+
+    def de(self, tensor_msg):
+        if (type(tensor_msg) == str):
+            tensor_msg = json.loads(tensor_msg)
+        _tensor_type = tensor_msg['type']
+        try:
+            tensor_type = types_guard(_tensor_type)
+        except KeyError:
+            RuntimeError('Object type {} is not supported'.format(_tensor_type))
+        # this could be a significant failure point, security-wise
+        if ('data' in msg.keys()):
+            data = msg['data']
+            tensor_contents_guard(data)
+            v = tensor_type(msg['data'])
+        else:
+            v = torch.old_zeros(0).type(tensor_type)
+
+        # TODO: check everything below here
+
+        del service_self.worker.objects[v.id]
+
+        if (msg['id'] in service_self.worker.objects.keys()):
+            v_orig = service_self.worker.objects[msg['id']].set_(v)
+            return v_orig
+        else:
+            self.worker.objects[msg['id']] = v
+            v.id = msg['id']
+            v.owner = msg['owner']
+            return v
+
+    tensor_type.ser = ser
+    tensor_type.de = de
+
+def hook_var_serde(service_self):
+    # TODO
+    pass
 
 # Serializing torch stuffs (probably deprecated at this point)
 def torch2ipfs(model):

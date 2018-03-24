@@ -10,33 +10,10 @@ import random
 import re
 from types import *
 
+
 class HookService(BaseService):
     def __init__(self, worker):
         super().__init__(worker)
-
-        self.tensor_types = [torch.FloatTensor,
-                torch.DoubleTensor,
-                torch.HalfTensor,
-                torch.ByteTensor,
-                torch.CharTensor,
-                torch.ShortTensor,
-                torch.IntTensor,
-                torch.LongTensor]
-        self.var_types = [torch.autograd.variable.Variable,
-                    torch.nn.parameter.Parameter]
-        self.tensorvar_types = self.tensor_types + self.var_types
-
-        # Any commands that don't appear in the following lists will not execute
-        self.torch_funcs = dir(torch)
-        # Consider changing this to a dictionary with lists of methods
-        # for each type in tensorvar_types
-        self.tensorvar_methods = list(
-            set(
-                [method
-                    for tensorvar in self.tensorvar_types
-                    for method in dir(tensorvar)]
-                )
-            )
 
         # Methods that caused infinite recursion during testing
         # TODO: Handle the ones in "exclude" manually at some point
@@ -75,6 +52,7 @@ class HookService(BaseService):
         print('===========')
         print()
         # TODO: fix up after IPFS is integrated
+        # torch_type, registration = ???
         torch_type = torch.FloatTensor
         registration = dict(id=random.randint(0, 1e10),
             owners=['other_worker'],
@@ -86,7 +64,9 @@ class HookService(BaseService):
         return self.register_object(result, **registration)
 
     # TODO: inputs the response of a remote computation,
-    #       outputs it's registration and it's torch_type
+    #       outputs it's registration(s) and it's torch_type(s)
+    # TODO: Allow for multiple tensor pointers
+    #       (e.g. torch.split should return a sequence of pointers)
     def process_response(self, response):
         response = json.loads(response)
         tensor_ids = response
@@ -111,9 +91,11 @@ class HookService(BaseService):
         args = partial_func.args
         kwargs = partial_func.keywords
         command = {}
-        command['command'] = func.__name__
-        command['command_type'] = type(func)
         command['has_self'] = has_self
+        if has_self:
+            command['self'] = args[0]
+            args = args[1:]
+        command['command'] = func.__name__
         command['args'] = args
         command['kwargs'] = kwargs
         command['arg_types'] = [type(x) for x in args]
@@ -123,24 +105,24 @@ class HookService(BaseService):
 
     ## Grid-specific method hooking
 
-    def hook_tensor_send(service_self):
+    def hook_tensor_send(service_self, tensor_type):
         def send_(self, workers):
             workers = tu.check_workers(workers) # makes singleton, if needed
             for worker in workers:
                 # TODO: actually generalize this to multiple workers
+                #       in the hooking wrappers
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
             self.is_pointer = True
             self.owners = workers
-            self.zero_()
+            self.set_(tensor_type(0))
             return self
 
-        for torch_type in tensor_types:
-            setattr(torch_type, 'send_', send_)
+        setattr(tensor_type, 'send_', send_)
 
-    def hook_tensor_get(service_self):
-        def get_(self, reduce = lambda x: torch.cat(x).mean(0)):
+    def hook_tensor_get(service_self, tensor_type):
+        def get_(self, reduce=lambda x: torch.cat(x).mean(0)):
             # reduce is untested
             # TODO: actually generalize this to multiple workers; consider
             #       adding arguments for other tensor ids, e.g. mapping workers
@@ -152,10 +134,9 @@ class HookService(BaseService):
             collected = [service_self.request_obj(self, worker) for worker in self.owners]
             return self.set_(reduce(collected))
 
-        for torch_type in tensor_types:
-            setattr(torch_type, 'get_', get_)
+        setattr(tensor_type, 'get_', get_)
 
-    # TODO: Generalize to other tensor types
+    # TODO: Remove, this is just a reference for implementing in lib/torch_utils.py
     def hook_float_tensor_serde(self):
         def ser(self, include_data=True):
 
@@ -177,13 +158,13 @@ class HookService(BaseService):
             else:
                 v = torch.zeros(0)
 
-            del self.objects[v.id]
+            del self.worker.objects[v.id]
 
-            if (msg['id'] in self.objects.keys()):
-                v_orig = self.objects[msg['id']].set_(v)
+            if (msg['id'] in self.worker.objects.keys()):
+                v_orig = self.worker.objects[msg['id']].set_(v)
                 return v_orig
             else:
-                self.objects[msg['id']] = v
+                self.worker.objects[msg['id']] = v
                 v.id = msg['id']
                 v.owner = msg['owner']
                 return v
@@ -374,6 +355,9 @@ class HookService(BaseService):
         self.hook_tensor___init__(tensor_type)
         self.hook_tensor___new__(tensor_type)
         self.hook_tensor___repr__(tensor_type)
+        self.hook_tensor_send(tensor_type)
+        self.hook_tensor_get(tensor_type)
+        #tu.hook_tensor_serde(tensor_type) # currently unfinished
         for attr in dir(tensor_type):
             if attr in self.exclude:
                 continue
