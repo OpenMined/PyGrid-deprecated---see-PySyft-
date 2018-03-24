@@ -133,7 +133,6 @@ class HookService(BaseService):
                 return self
             collected = [service_self.request_obj(self, worker) for worker in self.owners]
             return self.set_(reduce(collected))
-
         setattr(tensor_type, 'get_', get_)
 
     # TODO: Remove, this is just a reference for implementing in lib/torch_utils.py
