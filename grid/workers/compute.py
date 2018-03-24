@@ -36,5 +36,6 @@ class GridCompute(base_worker.GridWorker):
         # TORCH
 
         # this process listens for torch ops
+        import torch
         self.services['hook_worker_service'] = HookWorkerService(self)
         self.services['torch_service'] = TorchService(self)
