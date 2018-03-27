@@ -23,8 +23,7 @@ class WhoamiService(BaseService):
 
     def get_stats(self, message_and_response_channel):
 
-        msg, response_channel = json.loads(
-            message_and_response_channel['data'])
+        msg, response_channel = utils.unpack(message_and_response_channel)
 
         stats = {}
 

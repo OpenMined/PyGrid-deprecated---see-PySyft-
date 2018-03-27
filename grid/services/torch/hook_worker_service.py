@@ -7,8 +7,20 @@ class HookWorkerService(BaseService):
     def __init__(self, worker):
         super().__init__(worker)
         for tensor_type in self.tensor_types:
-            tu.hook_tensor_serde(self, tensor_type)
-        tu.hook_var_serde(self)
+            tu.hook_tensor_ser(self, tensor_type)
+        tu.hook_var_ser(self)
+
+        # Listen for command
+        comm_callback = channels.torch_listen_for_command_callback(
+            self.worker.id)
+        self.worker.listen_to_channel(comm_callback, self.handle_command)
+
+    def handle_command(self, message):
+        client_id = message['from']
+        message = utils.unpack(message)
+        result = self.process_command(message)
+        compiled = json.dumps(self.compile_result(result))
+        self.return_result(compiled, client_id)
 
     def process_command(self, command_msg):
         args = tu.map_tuple(self, command_msg['args'], tu.retrieve_tensor)
@@ -24,9 +36,28 @@ class HookWorkerService(BaseService):
             command = eval('torch.{}'.format(command))
         return command(*args, **kwargs)
 
-    def return_result(self, result):
-        # TODO
+    def compile_result(self, result):
+        # TODO: need to test this
         try:
             torch_type = result.type()
+            registration = dict(id=random.randint(0, 1e10),
+                owners=[self.worker.id], is_pointer=True)
+            return {'torch_type':torch_type, 'registration':registration}
         except AttributeError:
-            pass
+            return [compile_result(x) for x in result]
+
+    def return_result(self, compiled_result, client_id):
+        return self.worker.publish(
+            channels.torch_listen_for_command_response_callback(client_id),
+            message)
+
+    def receive_obj_request(self, msg):
+
+        obj_id, response_channel = utils.unpack(msg)
+
+        if (obj_id in self.worker.objects.keys()):
+            response_str = self.worker.objects[obj_id].ser()
+        else:
+            response_str = 'n/a - tensor not found'
+
+        self.worker.publish(channel=response_channel, message=response_str)

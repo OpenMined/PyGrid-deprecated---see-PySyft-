@@ -35,11 +35,11 @@ class HookService(BaseService):
     def send_obj(self, obj, recipient):
         self.worker.publish(
             channels.torch_listen_for_obj_callback(recipient),
-            message=obj.ser())
+            message=obj.ser(include_data=True))
 
-    def request_obj(self, obj):
+    def request_obj(self, obj, sender):
         return self.worker.request_response(
-            channel=channels.torch_listen_for_obj_req_callback(obj.owner),
+            channel=channels.torch_listen_for_obj_req_callback(sender),
             message=obj.id,
             response_handler=self.worker.services['torch_service'].receive_obj)
 
@@ -52,14 +52,15 @@ class HookService(BaseService):
         print('===========')
         print()
         # TODO: fix up after IPFS is integrated
-        # torch_type, registration = ???
+        # 
+        # torch_type, registration = self.process_response(response_msg)
         torch_type = torch.FloatTensor
         registration = dict(id=random.randint(0, 1e10),
             owners=['other_worker'],
             is_pointer=True)
         return registration, torch_type
 
-    def assemble_result(self, registration, torch_type):
+    def assemble_result_pointer(self, registration, torch_type):
         result = torch_type(0)
         return self.register_object(result, **registration)
 
@@ -114,9 +115,10 @@ class HookService(BaseService):
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
-            self.is_pointer = True
-            self.owners = workers
             self.set_(tensor_type(0))
+            self = service_self.register_object(self,
+                is_pointer=True,
+                owners=workers)
             return self
 
         setattr(tensor_type, 'send_', send_)
@@ -134,42 +136,6 @@ class HookService(BaseService):
             collected = [service_self.request_obj(self, worker) for worker in self.owners]
             return self.set_(reduce(collected))
         setattr(tensor_type, 'get_', get_)
-
-    # TODO: Remove, this is just a reference for implementing in lib/torch_utils.py
-    def hook_float_tensor_serde(self):
-        def ser(self, include_data=True):
-
-            msg = {}
-            msg['type'] = 'torch.FloatTensor'
-            if (include_data):
-                msg['data'] = self.tolist()
-            msg['id'] = self.id
-            msg['owner'] = self.owner
-
-            return json.dumps(msg)
-
-        def de(msg):
-            if (type(msg) == str):
-                msg = json.loads(msg)
-
-            if ('data' in msg.keys()):
-                v = torch.FloatTensor(msg['data'])
-            else:
-                v = torch.zeros(0)
-
-            del self.worker.objects[v.id]
-
-            if (msg['id'] in self.worker.objects.keys()):
-                v_orig = self.worker.objects[msg['id']].set_(v)
-                return v_orig
-            else:
-                self.worker.objects[msg['id']] = v
-                v.id = msg['id']
-                v.owner = msg['owner']
-                return v
-
-        torch.FloatTensor.ser = ser
-        torch.FloatTensor.de = de
 
     # TODO: Generalize a ton; see Issue #129; use torch_funcs and 
     #       tensorvar_methods class attributes
@@ -224,7 +190,8 @@ class HookService(BaseService):
                 for worker in owners:
                     print("Placeholder print for sending command to worker {}".format(worker))
                     registration, torch_type = self.send_command(command, worker)
-                    pointer = self.assemble_result(registration, torch_type)
+                    pointer = self.assemble_result_pointer(registration,
+                        torch_type)
                 return pointer
         return send_to_workers
 
@@ -246,8 +213,10 @@ class HookService(BaseService):
                 if has_remote and not multiple_owners:
                     for worker in owners: # Right now, this can only be singleton
                         print("""Placeholder print for sending command to worker {}""".format(worker))
-                        registration, torch_type = service_self.send_command(command, worker)
-                        pointer = service_self.assemble_result(registration, torch_type)
+                        registration, torch_type = service_self.send_command(
+                            command, worker)
+                        pointer = service_self.assemble_result_pointer(
+                            registration, torch_type)
                 else:
                     raise NotImplementedError("""MPC not yet implemented:
                         Torch objects need to be on the same machine in

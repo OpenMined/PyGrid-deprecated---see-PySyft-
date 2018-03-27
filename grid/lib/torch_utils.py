@@ -28,6 +28,8 @@ def get_tensorvars(self, command):
     
 def check_tensorvars(tensorvars):
     # Had an efficiency reason for these TODOs, but forgot...
+    # Oh, I think it was to structure overload_method and overload_function
+    # more efficiently -- double check that though
 
     # TODO: turn this line into a function `check_remote`
     has_remote = any([tensorvar.is_pointer for tensorvar in tensorvars])
@@ -91,7 +93,7 @@ def types_guard(obj_type):
 def tensor_contents_guard(contents):
     # TODO: check to make sure the incoming list isn't dangerous to use for
     #       constructing a tensor (likely non-trivial)
-    pass
+    return contents
 
 def command_guard(command, allowed):
     if command not in allowed:
@@ -125,7 +127,8 @@ def map_dict(service, kwargs, func):
 
 
 # Serializing and deserializing torch objects
-def hook_tensor_serde(service_self, tensor_type):
+def hook_tensor_ser(service_self, tensor_type):
+    # The inverse of TorchService.receive_obj
     def ser(self, include_data=True):
         tensor_msg = {}
         tensor_msg['torch_type'] = self.type()
@@ -135,39 +138,9 @@ def hook_tensor_serde(service_self, tensor_type):
         tensor_msg['owners'] = self.owners
         return json.dumps(msg)
 
-    def de(self, tensor_msg):
-        if (type(tensor_msg) == str):
-            tensor_msg = json.loads(tensor_msg)
-        _tensor_type = tensor_msg['type']
-        try:
-            tensor_type = types_guard(_tensor_type)
-        except KeyError:
-            RuntimeError('Object type {} is not supported'.format(_tensor_type))
-        # this could be a significant failure point, security-wise
-        if ('data' in msg.keys()):
-            data = msg['data']
-            tensor_contents_guard(data)
-            v = tensor_type(msg['data'])
-        else:
-            v = torch.old_zeros(0).type(tensor_type)
-
-        # TODO: check everything below here
-
-        del service_self.worker.objects[v.id]
-
-        if (msg['id'] in service_self.worker.objects.keys()):
-            v_orig = service_self.worker.objects[msg['id']].set_(v)
-            return v_orig
-        else:
-            self.worker.objects[msg['id']] = v
-            v.id = msg['id']
-            v.owner = msg['owner']
-            return v
-
     tensor_type.ser = ser
-    tensor_type.de = de
 
-def hook_var_serde(service_self):
+def hook_var_ser(service_self):
     # TODO
     pass
 
