@@ -48,7 +48,7 @@ class BaseService(object):
             obj.id = (kwargs['id']
                 if 'id' in keys
                 else random.randint(0, 1e10))
-        if not hasattr(obj, 'owners')
+        if not hasattr(obj, 'owners'):
             obj.owners = (kwargs['owners']
                 if 'owners' in keys
                 else [self.worker.id])

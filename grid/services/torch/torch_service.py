@@ -29,11 +29,6 @@ class TorchService(BaseService):
             self.worker.id)
         self.worker.listen_to_channel(rec_callback, self.receive_obj)
 
-        # I listen for people to ask me for tensors!!
-        req_callback = channels.torch_listen_for_obj_req_callback(
-            self.worker.id)
-        self.worker.listen_to_channel(req_callback, self.receive_obj_request)
-
 
     def receive_obj(self, msg):
         ## The inverse of Tensor.ser (defined in torch_utils.py)

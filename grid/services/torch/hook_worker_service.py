@@ -10,7 +10,12 @@ class HookWorkerService(BaseService):
             tu.hook_tensor_ser(self, tensor_type)
         tu.hook_var_ser(self)
 
-        # Listen for command
+        # I listen for people to ask me for torch objects
+        req_callback = channels.torch_listen_for_obj_req_callback(
+            self.worker.id)
+        self.worker.listen_to_channel(req_callback, self.receive_obj_request)
+
+        # Listen for torch commands
         comm_callback = channels.torch_listen_for_command_callback(
             self.worker.id)
         self.worker.listen_to_channel(comm_callback, self.handle_command)
