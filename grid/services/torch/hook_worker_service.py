@@ -15,12 +15,14 @@ class HookWorkerService(BaseService):
             self.worker.id)
         self.worker.listen_to_channel(comm_callback, self.handle_command)
 
+
     def handle_command(self, message):
         client_id = message['from']
         message = utils.unpack(message)
         result = self.process_command(message)
         compiled = json.dumps(self.compile_result(result))
         self.return_result(compiled, client_id)
+
 
     def process_command(self, command_msg):
         args = tu.map_tuple(self, command_msg['args'], tu.retrieve_tensor)
@@ -36,6 +38,7 @@ class HookWorkerService(BaseService):
             command = eval('torch.{}'.format(command))
         return command(*args, **kwargs)
 
+
     def compile_result(self, result):
         # TODO: need to test this
         try:
@@ -46,10 +49,12 @@ class HookWorkerService(BaseService):
         except AttributeError:
             return [compile_result(x) for x in result]
 
+
     def return_result(self, compiled_result, client_id):
         return self.worker.publish(
             channels.torch_listen_for_command_response_callback(client_id),
-            message)
+            message=compiled_result)
+
 
     def receive_obj_request(self, msg):
 

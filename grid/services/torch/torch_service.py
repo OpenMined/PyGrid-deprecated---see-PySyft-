@@ -12,10 +12,8 @@ import json
 
 
 class TorchService(BaseService):
-
     # this service is responsible for certain things
     # common to both clients and workers
-
     def __init__(self, worker):
         super().__init__(worker)
 
@@ -58,18 +56,8 @@ class TorchService(BaseService):
         else:
             v = torch.old_zeros(0).type(tensor_type)
 
-        # delete registration just in case we want to override
+        # delete registration from init, cause it's got an incorrect id
         del self.worker.objects[v.id]
 
-        v = self.register_object(v, id=obj_msg['id'], owners=v.owners)
+        v = self.register_object(v, id=obj_msg['id'])
         return v
-
-
-    # TODO: Receive commands needs to be here;
-    #       should not depend on any of the torch hooking code;
-    #       should be completely general
-    def receive_command(self, command):
-        if (command['base_type'] == 'torch.FloatTensor'):
-            raw_response = torch.FloatTensor.process_command(self, command)
-
-        return json.dumps(raw_response)

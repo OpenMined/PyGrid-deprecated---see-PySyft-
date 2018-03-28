@@ -6,6 +6,7 @@ from pathlib import Path
 from . import utils
 import torch
 
+
 # Helpers for HookService and TorchService
 def check_workers(self, workers):
     if type(workers) is str:
@@ -17,6 +18,7 @@ def check_workers(self, workers):
             )
     return workers
 
+
 def get_tensorvars(self, command):
     args = command['args']
     kwargs = command['kwargs']
@@ -25,21 +27,19 @@ def get_tensorvars(self, command):
     tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types]
     tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types]
     return tensorvar_args + tensorvar_kwvals
-    
-def check_tensorvars(tensorvars):
-    # Had an efficiency reason for these TODOs, but forgot...
-    # Oh, I think it was to structure overload_method and overload_function
-    # more efficiently -- double check that though
 
-    # TODO: turn this line into a function `check_remote`
-    has_remote = any([tensorvar.is_pointer for tensorvar in tensorvars])
-    # TODO: turn the following into a function `get_owners`
-    print([tensorvar.owners for tensorvar in tensorvars])
+
+def check_remote(tensorvars):
+    return any([tensorvars.is_pointer for tensorvar in tensorvars])
+
+
+def get_owners(tensorvars):
     owners = list(set([owner
         for tensorvar in tensorvars
         for owner in tensorvar.owners]))
     multiple_owners = len(owners) != 1
-    return has_remote, multiple_owners, owners
+    return multiple_owners, owners
+
 
 def replace_tensorvar(x):
     try:
@@ -49,6 +49,7 @@ def replace_tensorvar(x):
             [replace_tensorvar(i) for i in x]
     except (AttributeError, TypeError):
         return x
+
 
 def replace_in_command(command_msg):
     command_msg['args'] = tu.map_tuple(
@@ -72,6 +73,7 @@ def id_tensorvar(x):
     except AttributeError:
         return x
 
+
 # Safety checks for serializing and deserializing torch objects
 # Desperately needs stress testing before going out in the wild
 map_torch_type = {
@@ -87,19 +89,23 @@ map_torch_type = {
     'torch.nn.parameter.Parameter':torch.nn.parameter.Parameter
 }
 
+
 def types_guard(obj_type):
     return map_torch_type[obj_type]
+
 
 def tensor_contents_guard(contents):
     # TODO: check to make sure the incoming list isn't dangerous to use for
     #       constructing a tensor (likely non-trivial)
     return contents
 
+
 def command_guard(command, allowed):
     if command not in allowed:
         raise RuntimeError(
             'Command "{}" is not a supported Torch operation.'.format(command))
     return command
+
 
 # Worker needs to retrieve tensor by ID before computing with it
 def retrieve_tensor(self, x):
@@ -113,11 +119,13 @@ def retrieve_tensor(self, x):
     except KeyError:
         return x
 
+
 def map_tuple(service, args, func):
     if service:
         return tuple(func(service, x) for x in args)
     else:
         return tuple(func(x) for x in args)
+
 
 def map_dict(service, kwargs, func):
     if service:
@@ -140,65 +148,7 @@ def hook_tensor_ser(service_self, tensor_type):
 
     tensor_type.ser = ser
 
+
 def hook_var_ser(service_self):
     # TODO
     pass
-
-# Serializing torch stuffs (probably deprecated at this point)
-def torch2ipfs(model):
-    pass
-
-
-def ipfs2torch(model_addr):
-    pass
-
-
-def serialize_torch_model(model, **kwargs):
-    """
-    kwargs are the arguments needed to instantiate the model
-    """
-    state = {'state_dict': model.state_dict(), 'kwargs': kwargs}
-    torch.save(state, 'temp_model.pth.tar')
-    with open('temp_model.pth.tar', 'rb') as f:
-        model_bin = f.read()
-    return model_bin
-
-
-def deserialize_torch_model(model_bin, model_class, **kwargs):
-    """
-    model_class is needed since PyTorch uses pickle for serialization
-        see https://discuss.pytorch.org/t/loading-pytorch-model-without-a-code/12469/2 for details
-    kwargs are the arguments needed to instantiate the model from model_class
-    """
-    with open('temp_model2.pth.tar', 'wb') as g:
-        g.write(model_bin)
-    state = torch.load()
-    model = model_class(**state['kwargs'])
-    model.load_state_dict(state['state_dict'])
-    return model
-
-
-def save_best_torch_model_for_task(task, model):
-    utils.ensure_exists(f'{Path.home()}/.openmined/models.json', {})
-    with open(f"{Path.home()}/.openmined/models.json", "r") as model_file:
-        models = json.loads(model_file.read())
-
-    models[task] = torch2ipfs(model)
-
-    with open(f"{Path.home()}/.openmined/models.json", "w") as model_file:
-        json.dump(models, model_file)
-
-
-def best_torch_model_for_task(task, return_model=False):
-    if not os.path.exists(f'{Path.home()}/.openmined/models.json'):
-        return None
-
-    with open(f'{Path.home()}/.openmined/models.json', 'r') as model_file:
-        models = json.loads(model_file.read())
-        if task in models.keys():
-            if return_model:
-                return ipfs2torch(models[task])
-            else:
-                return models[task]
-
-    return None
