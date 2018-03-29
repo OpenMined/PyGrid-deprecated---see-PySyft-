@@ -84,7 +84,7 @@ class HookService(BaseService):
     ## Grid-specific method hooking
     def hook_tensor_send(service_self, tensor_type):
         def send_(self, workers):
-            workers = tu.check_workers(workers) # makes singleton, if needed
+            workers = tu.check_workers(self, workers) # makes singleton, if needed
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
