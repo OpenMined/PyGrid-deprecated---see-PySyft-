@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 from pathlib import Path
 
@@ -115,6 +116,9 @@ def command_guard(command, allowed):
 # Worker needs to retrieve tensor by ID before computing with it
 def retrieve_tensor(self, x):
     try:
+        print(id_tensorvar(x))
+        print(self.worker.objects)
+        print(self.worker.objects[id_tensorvar(x)])
         return self.worker.objects[id_tensorvar(x)]
     except TypeError:
         try:
@@ -122,6 +126,7 @@ def retrieve_tensor(self, x):
         except TypeError:
             return x
     except KeyError:
+        print('KeyError')
         return x
 
 
