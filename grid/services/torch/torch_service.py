@@ -1,7 +1,7 @@
 from ..base import BaseService
 from .hook_service import HookService
 from ... import channels
-from ...lib import utils
+from ...lib import utils,torch_utils as tu
 
 import torch
 from bitcoin import base58
@@ -52,7 +52,10 @@ class TorchService(BaseService):
             v = torch.old_zeros(0).type(tensor_type)
 
         # delete registration from init, cause it's got an incorrect id
-        del self.worker.objects[v.id]
+        try:
+            del self.worker.objects[v.id]
+        except (AttributeError, KeyError):
+            pass
 
-        v = self.register_object(v, id=obj_msg['id'])
+        v = self.register_object(v, id=obj_msg['id'], owners=obj_msg['owners'])
         return v

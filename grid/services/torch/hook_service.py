@@ -85,14 +85,14 @@ class HookService(BaseService):
     def hook_tensor_send(service_self, tensor_type):
         def send_(self, workers):
             workers = tu.check_workers(self, workers) # makes singleton, if needed
+            self = service_self.register_object(self,
+                is_pointer=True,
+                owners=workers)
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
             self.set_(tensor_type(0))
-            self = service_self.register_object(self,
-                is_pointer=True,
-                owners=workers)
             return self
 
         setattr(tensor_type, 'send_', send_)
