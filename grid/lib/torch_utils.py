@@ -144,7 +144,7 @@ def hook_tensor_ser(service_self, tensor_type):
             tensor_msg['data'] = self.tolist()
         tensor_msg['id'] = self.id
         tensor_msg['owners'] = self.owners
-        return json.dumps(msg)
+        return json.dumps(tensor_msg)
 
     tensor_type.ser = ser
 
