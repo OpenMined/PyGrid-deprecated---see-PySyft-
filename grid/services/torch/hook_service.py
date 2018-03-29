@@ -41,7 +41,7 @@ class HookService(BaseService):
         return self.worker.request_response(
             channel=channels.torch_listen_for_obj_req_callback(sender),
             message=obj.id,
-            response_handler=self.worker.services['torch_service'].receive_obj)
+            response_handler=self.worker.services['torch_service'].receive_obj_break)
 
 
     def send_command(self, command, recipient):
@@ -54,15 +54,19 @@ class HookService(BaseService):
 
     def assemble_result_pointer(self, registration, torch_type):
         # TODO: extend to iterables of tensor pointers
+        try:
+            torch_type = tu.types_guard(torch_type)
+        except KeyError:
+            raise TypeError(
+                "Tried to receive a non-Torch object of type {}.".format(
+                    _tensor_type))
         result = torch_type(0)
         return self.register_object(result, **registration)
 
 
     def process_response(self, response):
-        print(response)
         response = utils.unpack(response)
-        print(response)
-        return response['tensor_type'], response['registration']
+        return response['torch_type'], response['registration']
 
 
     @staticmethod
@@ -88,21 +92,19 @@ class HookService(BaseService):
         def send_(self, workers):
             workers = tu.check_workers(self, workers) # makes singleton, if needed
             self = service_self.register_object(self, id=self.id, owners=workers)
-            print(self.owners)
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
             self = service_self.register_object(self.old_set_(tensor_type(0)),
                 id=self.id, owners=workers, is_pointer=True)
-            print(self.owners)
             return self
 
         setattr(tensor_type, 'send_', send_)
 
 
     def hook_tensor_get(service_self, tensor_type):
-        def get_(self, reduce=lambda x: torch.cat(x).mean(0)):
+        def get_(self, reduce=lambda x:x[0]):
             # reduce is untested
             # TODO: fully generalize this to multiple workers; consider
             #       adding arguments for other tensor ids, e.g. mapping workers
@@ -111,8 +113,11 @@ class HookService(BaseService):
             #       (low priority)
             if service_self.worker.id in self.owners:
                 return self
-            collected = [service_self.request_obj(self, worker) for worker in self.owners]
-            return self.old_set_(reduce(collected))
+            collected = []
+            for worker in self.owners:
+                x = service_self.request_obj(self, worker)
+                collected.append(service_self.register_object(x, id=x.id))  
+            return service_self.register_object(self.old_set_(reduce(collected)), id=self.id)
         setattr(tensor_type, 'get_', get_)
 
 
@@ -138,16 +143,14 @@ class HookService(BaseService):
             tensorvars = tu.get_tensorvars(self, command)
             has_remote = tu.check_remote(tensorvars)
             if has_remote:
-                multiple_owners, owners = get_owners(tensorvars)
+                multiple_owners, owners = tu.get_owners(tensorvars)
                 if multiple_owners:
-                    print(part.func)
                     raise NotImplementedError("""MPC not yet implemented: 
                     Torch objects need to be on the same machine in order
                     to compute with them.""")
                 else:
                     command = tu.replace_in_command(command)
                     for worker in owners:
-                        print("Placeholder print for sending command to worker {}".format(worker))
                         registration, torch_type = self.send_command(command, worker)
                         pointer = self.assemble_result_pointer(registration,
                             torch_type)
@@ -181,7 +184,6 @@ class HookService(BaseService):
                 if has_remote and not multiple_owners:
                     for worker in owners:
                         command = tu.replace_in_command(command)
-                        print(command)
                         registration, torch_type = service_self.send_command(
                             command, worker)
                         # only returns last pointer, since tensors will

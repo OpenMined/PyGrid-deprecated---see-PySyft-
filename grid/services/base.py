@@ -45,7 +45,6 @@ class BaseService(object):
         # TODO: Assign default id more intelligently (low priority)
         #       Consider popping id from long list of unique integers
         keys = kwargs.keys()
-        print(keys)
         obj.id = (kwargs['id']
             if 'id' in keys
             else random.randint(0, 1e10))

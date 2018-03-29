@@ -1,4 +1,6 @@
 import json
+import random
+import re
 
 import torch
 from ..base import BaseService
@@ -24,43 +26,41 @@ class HookWorkerService(BaseService):
 
 
     def handle_command(self, message):
-        print(self.worker.objects)
         client_id = message['from']
         message, response_channel = utils.unpack(message)
-        result = self.process_command(message)
-        print(result)
-        compiled = json.dumps(self.compile_result(result))
+        result, owners = self.process_command(message)
+        compiled = json.dumps(self.compile_result(result, owners))
         self.return_result(compiled, response_channel)
 
 
     def process_command(self, command_msg):
         args = tu.map_tuple(self, command_msg['args'], tu.retrieve_tensor)
         kwargs = tu.map_dict(self, command_msg['kwargs'], tu.retrieve_tensor)
-        print(args)
-        print(kwargs)
         has_self = command_msg['has_self']
+        # TODO: Implement get_owners and refactor to make it prettier
+        combined = list(args) + list(kwargs.values())
         if has_self:
             command = tu.command_guard(command_msg['command'],
                 self.tensorvar_methods)
             obj_self = tu.retrieve_tensor(self, command_msg['self'])
-            print(obj_self)
+            combined = combined + [obj_self]
             command = eval('obj_self.{}'.format(command))
         else:
             command = tu.command_guard(command_msg['command'], self.torch_funcs)
             command = eval('torch.{}'.format(command))
-        return command(*args, **kwargs)
+        _, owners = tu.get_owners(combined)
+        return command(*args, **kwargs), owners
 
 
-    def compile_result(self, result):
-        # TODO: need to test this
+    def compile_result(self, result, owners):
         try:
             torch_type = result.type()
-            registration = dict(id=random.randint(0, 1e10),
-                owners=[self.worker.id], is_pointer=True)
+            result = self.register_object(result, owners=owners)
+            registration = dict(id=result.id,
+                owners=result.owners, is_pointer=True)
             return {'torch_type':torch_type, 'registration':registration}
         except AttributeError:
-            #return [self.compile_result(x) for x in result]
-            pass
+            return [self.compile_result(x, owners) for x in result]
 
 
     def return_result(self, compiled_result, response_channel):
@@ -73,7 +73,10 @@ class HookWorkerService(BaseService):
         obj_id, response_channel = utils.unpack(msg)
 
         if (obj_id in self.worker.objects.keys()):
-            response_str = self.worker.objects[obj_id].ser()
+            new_owner = re.search('(.+)_[0-9]{1,11}', response_channel).group(1)
+            obj = self.register_object(self.worker.objects[obj_id],
+                id=obj_id, owners=[new_owner])
+            response_str = obj.ser()
         else:
             response_str = 'n/a - tensor not found'
 

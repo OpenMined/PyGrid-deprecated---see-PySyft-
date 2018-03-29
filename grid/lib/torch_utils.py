@@ -39,7 +39,6 @@ def get_owners(tensorvars):
         for tensorvar in tensorvars
         for owner in tensorvar.owners]))
     multiple_owners = len(owners) > 1
-    print(len(owners))
     return multiple_owners, owners
 
 
@@ -73,7 +72,7 @@ def id_tensorvar(x):
     pat = re.compile('_fl.(.*)')
     try:
         if isinstance(x, str):
-            return pat.search(x).group(1)
+            return int(pat.search(x).group(1))
         else:
             return [id_tensorvar(i) for i in x]
     except AttributeError:
@@ -116,9 +115,6 @@ def command_guard(command, allowed):
 # Worker needs to retrieve tensor by ID before computing with it
 def retrieve_tensor(self, x):
     try:
-        print(id_tensorvar(x))
-        print(self.worker.objects)
-        print(self.worker.objects[id_tensorvar(x)])
         return self.worker.objects[id_tensorvar(x)]
     except TypeError:
         try:
@@ -126,7 +122,6 @@ def retrieve_tensor(self, x):
         except TypeError:
             return x
     except KeyError:
-        print('KeyError')
         return x
 
 

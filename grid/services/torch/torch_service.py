@@ -29,8 +29,11 @@ class TorchService(BaseService):
             self.worker.id)
         self.worker.listen_to_channel(rec_callback, self.receive_obj)
 
-
     def receive_obj(self, msg):
+        self.receive_obj_break(msg)
+
+
+    def receive_obj_break(self, msg):
         ## The inverse of Tensor.ser (defined in torch_utils.py)
         # TODO: generalize to Variable
         obj_msg = utils.unpack(msg)
