@@ -17,7 +17,7 @@ class HookService(BaseService):
 
         # Methods that caused infinite recursion during testing
         # TODO: May want to handle the ones in "exclude" manually at some point
-        self.exclude = ['ndimension', 'nelement', 'size','numel']
+        self.exclude = ['ndimension', 'nelement', 'size','numel', 'type', 'tolist', 'dim', '__iter__', 'select']
         # This one wasn't in dir(Variable) -- probably a C thing
         self.var_exclude = ['__getattr__']
 
@@ -85,14 +85,15 @@ class HookService(BaseService):
     def hook_tensor_send(service_self, tensor_type):
         def send_(self, workers):
             workers = tu.check_workers(self, workers) # makes singleton, if needed
-            self = service_self.register_object(self,
-                is_pointer=True,
-                owners=workers)
+            self = service_self.register_object(self, id=self.id, owners=workers)
+            print(self.owners)
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
-            self.set_(tensor_type(0))
+            self = service_self.register_object(self.old_set_(tensor_type(0)),
+                id=self.id, owners=workers, is_pointer=True)
+            print(self.owners)
             return self
 
         setattr(tensor_type, 'send_', send_)
@@ -109,7 +110,7 @@ class HookService(BaseService):
             if service_self.worker.id in self.owners:
                 return self
             collected = [service_self.request_obj(self, worker) for worker in self.owners]
-            return self.set_(reduce(collected))
+            return self.old_set_(reduce(collected))
         setattr(tensor_type, 'get_', get_)
 
 
@@ -137,6 +138,7 @@ class HookService(BaseService):
             if has_remote:
                 multiple_owners, owners = get_owners(tensorvars)
                 if multiple_owners:
+                    print(part.func)
                     raise NotImplementedError("""MPC not yet implemented: 
                     Torch objects need to be on the same machine in order
                     to compute with them.""")
@@ -173,6 +175,9 @@ class HookService(BaseService):
                 tensorvars = tu.get_tensorvars(service_self, command)
                 has_remote = tu.check_remote(tensorvars)
                 multiple_owners, owners = tu.get_owners(tensorvars)
+                print(part.func)
+                print('mult: ',multiple_owners)
+                print('remote: ', has_remote)
                 if has_remote and not multiple_owners:
                     for worker in owners:
                         registration, torch_type = service_self.send_command(
@@ -288,9 +293,6 @@ class HookService(BaseService):
         self.hook_tensor___init__(tensor_type)
         self.hook_tensor___new__(tensor_type)
         self.hook_tensor___repr__(tensor_type)
-        self.hook_tensor_send(tensor_type)
-        self.hook_tensor_get(tensor_type)
-        tu.hook_tensor_ser(self, tensor_type)
         for attr in dir(tensor_type):
             if attr in self.exclude:
                 continue
@@ -309,6 +311,9 @@ class HookService(BaseService):
                 new_attr = self.overload_method(passer)
                 setattr(tensor_type, 'old_{}'.format(attr), lit)
                 setattr(tensor_type, attr, new_attr)
+        self.hook_tensor_send(tensor_type)
+        self.hook_tensor_get(tensor_type)
+        tu.hook_tensor_ser(self, tensor_type)
 
 
     def hook_variable(self):

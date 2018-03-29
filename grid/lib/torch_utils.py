@@ -30,14 +30,15 @@ def get_tensorvars(self, command):
 
 
 def check_remote(tensorvars):
-    return any([tensorvars.is_pointer for tensorvar in tensorvars])
+    return any([tensorvar.is_pointer for tensorvar in tensorvars])
 
 
 def get_owners(tensorvars):
     owners = list(set([owner
         for tensorvar in tensorvars
         for owner in tensorvar.owners]))
-    multiple_owners = len(owners) != 1
+    multiple_owners = len(owners) > 1
+    print(len(owners))
     return multiple_owners, owners
 
 
