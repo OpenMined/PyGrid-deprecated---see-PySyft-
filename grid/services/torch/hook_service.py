@@ -290,7 +290,7 @@ class HookService(BaseService):
         self.hook_tensor___repr__(tensor_type)
         self.hook_tensor_send(tensor_type)
         self.hook_tensor_get(tensor_type)
-        #tu.hook_tensor_serde(tensor_type) # currently unfinished
+        tu.hook_tensor_ser(self, tensor_type)
         for attr in dir(tensor_type):
             if attr in self.exclude:
                 continue
