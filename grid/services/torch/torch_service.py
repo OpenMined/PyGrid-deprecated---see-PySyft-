@@ -36,7 +36,7 @@ class TorchService(BaseService):
         obj_msg = utils.unpack(msg)
         if (type(obj_msg) == str):
             obj_msg = json.loads(obj_msg)
-        _tensor_type = obj_msg['type']
+        _tensor_type = obj_msg['torch_type']
         try:
             tensor_type = tu.types_guard(_tensor_type)
         except KeyError:
