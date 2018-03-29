@@ -24,10 +24,11 @@ class HookWorkerService(BaseService):
     def handle_command(self, message):
         client_id = message['from']
         print(message)
-        message = utils.unpack(message)
+        message, response_channel = utils.unpack(message)
+
         result = self.process_command(message)
         compiled = json.dumps(self.compile_result(result))
-        self.return_result(compiled, client_id)
+        self.return_result(compiled, response_channel)
 
 
     def process_command(self, command_msg):
@@ -57,10 +58,9 @@ class HookWorkerService(BaseService):
             return [compile_result(x) for x in result]
 
 
-    def return_result(self, compiled_result, client_id):
+    def return_result(self, compiled_result, response_channel):
         return self.worker.publish(
-            channels.torch_listen_for_command_response_callback(client_id),
-            message=compiled_result)
+            channel=response_channel, message=compiled_result)
 
 
     def receive_obj_request(self, msg):
