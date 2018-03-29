@@ -55,7 +55,7 @@ class HookWorkerService(BaseService):
                 owners=[self.worker.id], is_pointer=True)
             return {'torch_type':torch_type, 'registration':registration}
         except AttributeError:
-            return [compile_result(x) for x in result]
+            return [self.compile_result(x) for x in result]
 
 
     def return_result(self, compiled_result, response_channel):
