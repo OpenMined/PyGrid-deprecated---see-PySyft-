@@ -1,6 +1,6 @@
 import torch
 from ..base import BaseService
-from ...lib import torch_utils as tu
+from ...lib import utils, torch_utils as tu
 from ... import channels
 
 class HookWorkerService(BaseService):
@@ -23,6 +23,7 @@ class HookWorkerService(BaseService):
 
     def handle_command(self, message):
         client_id = message['from']
+        print(message)
         message = utils.unpack(message)
         result = self.process_command(message)
         compiled = json.dumps(self.compile_result(result))
@@ -30,6 +31,7 @@ class HookWorkerService(BaseService):
 
 
     def process_command(self, command_msg):
+        print(command_msg)
         args = tu.map_tuple(self, command_msg['args'], tu.retrieve_tensor)
         kwargs = tu.map_dict(self, command_msg['kwargs'], tu.retrieve_tensor)
         has_self = command_msg['has_self']
