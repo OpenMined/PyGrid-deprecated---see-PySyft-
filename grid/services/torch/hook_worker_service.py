@@ -1,7 +1,7 @@
 import torch
 from ..base import BaseService
-from ..lib import torch_utils as tu
-
+from ...lib import torch_utils as tu
+from ... import channels
 
 class HookWorkerService(BaseService):
     def __init__(self, worker):
