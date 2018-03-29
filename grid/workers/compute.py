@@ -4,6 +4,7 @@ from .. import channels
 from ..services.fit_worker import FitWorkerService
 from ..services.listen_for_openmined_nodes import ListenForOpenMinedNodesService
 from ..services.torch.torch_service import TorchService
+from ..services.torch.hook_worker_service import HookWorkerService
 import json
 import threading
 

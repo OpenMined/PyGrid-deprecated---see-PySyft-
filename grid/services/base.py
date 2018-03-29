@@ -20,6 +20,7 @@ class BaseService(object):
         # but it inherits all of Variable's hooked methods
         self.var_types = [torch.autograd.variable.Variable]
         self.tensorvar_types = self.tensor_types + self.var_types
+        self.tensorvar_types_strs = [x.__name__ for x in self.tensorvar_types]
 
         # Any commands that don't appear in the following two lists
         # will not execute
@@ -34,7 +35,13 @@ class BaseService(object):
                 )
             )
 
+
     def register_object(self, obj, **kwargs):
+        # Defaults:
+        #   id -- random integer between 0 and 1e10
+        #   owners -- list containing local worker's IPFS id
+        #   is_pointer -- False
+
         # TODO: Assign default id more intelligently (low priority)
         #       Consider popping id from long list of unique integers
         keys = kwargs.keys()
@@ -48,7 +55,8 @@ class BaseService(object):
             if 'is_pointer' in keys
             else False)
         mal_points_away = obj.is_pointer and self.worker.id in obj.owners
-        mal_points_here = not obj.is_pointer and self.worker.id not in obj.owners
+        mal_points_here = False
+        #mal_points_here = not obj.is_pointer and self.worker.id not in obj.owners
         if mal_points_away or mal_points_here:
             raise RuntimeError(
                 'Invalid registry: is_pointer is {} but owners is {}'.format(

@@ -1,7 +1,7 @@
 from ..base import BaseService
 from .hook_service import HookService
 from ... import channels
-from ...lib import utils
+from ...lib import utils,torch_utils as tu
 
 import torch
 from bitcoin import base58
@@ -12,14 +12,10 @@ import json
 
 
 class TorchService(BaseService):
-
-    # this service creates everything the client needs to be able to interact
-    # with torch on the Grid (it's really awesome, but it's a WIP)
-
+    # this service is responsible for certain things
+    # common to both clients and workers
     def __init__(self, worker):
         super().__init__(worker)
-
-        self.worker = worker
 
         def print_messages(message):
             print(message.keys())
@@ -31,50 +27,38 @@ class TorchService(BaseService):
         # I listen for people to send me tensors!!
         rec_callback = channels.torch_listen_for_obj_callback(
             self.worker.id)
-        self.worker.listen_to_channel(rec_callback,
-                                      self.receive_obj)
-
-        # I listen for people to ask me for tensors!!
-        req_callback = channels.torch_listen_for_obj_req_callback(
-            self.worker.id)
-        self.worker.listen_to_channel(req_callback,
-                                      self.receive_obj_request)
-
+        self.worker.listen_to_channel(rec_callback, self.receive_obj)
 
     def receive_obj(self, msg):
+        self.receive_obj_break(msg)
+
+
+    def receive_obj_break(self, msg):
+        ## The inverse of Tensor.ser (defined in torch_utils.py)
         # TODO: generalize to Variable
-        dic = json.loads(msg['data'])
-        obj_type = dic['type']
-        if obj_type in tensor_types:
-            obj = obj_type.de(dic)
-            obj.is_pointer = False
-            obj.owner = self.worker.id
-            self.worker.objects[obj.id] = obj
-            return obj
-        raise TypeError(
-            "Tried to receive a non-Torch object of type {}.".format(
-                obj_type))
-
-    # This will be deprecated; send_command in HookService should take over
-    #def send_command(self, command, to):
-    #    return to.receive_command(command)
-
-    def receive_obj_request(self, msg):
-
-        obj_id, response_channel = json.loads(msg['data'])
-
-        if (obj_id in self.worker.objects.keys()):
-            response_str = self.worker.objects[obj_id].ser()
+        obj_msg = utils.unpack(msg)
+        if (type(obj_msg) == str):
+            obj_msg = json.loads(obj_msg)
+        _tensor_type = obj_msg['torch_type']
+        try:
+            tensor_type = tu.types_guard(_tensor_type)
+        except KeyError:
+            raise TypeError(
+                "Tried to receive a non-Torch object of type {}.".format(
+                    _tensor_type))
+        # this could be a significant failure point, security-wise
+        if ('data' in msg.keys()):
+            data = obj_msg['data']
+            data = tu.tensor_contents_guard(data)
+            v = tensor_type(data)
         else:
-            response_str = 'n/a - tensor not found'
+            v = torch.old_zeros(0).type(tensor_type)
 
-        self.worker.publish(channel=response_channel, message=response_str)
+        # delete registration from init, cause it's got an incorrect id
+        try:
+            del self.worker.objects[v.id]
+        except (AttributeError, KeyError):
+            pass
 
-    # TODO: Receive commands needs to be here;
-    #       should not depend on any of the torch hooking code;
-    #       should be completely general
-    def receive_command(self, command):
-        if (command['base_type'] == 'torch.FloatTensor'):
-            raw_response = torch.FloatTensor.process_command(self, command)
-
-        return json.dumps(raw_response)
+        v = self.register_object(v, id=obj_msg['id'], owners=obj_msg['owners'])
+        return v
