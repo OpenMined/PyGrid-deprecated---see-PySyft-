@@ -1,3 +1,5 @@
+import json
+
 import torch
 from ..base import BaseService
 from ...lib import utils, torch_utils as tu
@@ -22,24 +24,26 @@ class HookWorkerService(BaseService):
 
 
     def handle_command(self, message):
+        print(self.worker.objects)
         client_id = message['from']
-        print(message)
         message, response_channel = utils.unpack(message)
-
         result = self.process_command(message)
+        print(result)
         compiled = json.dumps(self.compile_result(result))
         self.return_result(compiled, response_channel)
 
 
     def process_command(self, command_msg):
-        print(command_msg)
         args = tu.map_tuple(self, command_msg['args'], tu.retrieve_tensor)
         kwargs = tu.map_dict(self, command_msg['kwargs'], tu.retrieve_tensor)
+        print(args)
+        print(kwargs)
         has_self = command_msg['has_self']
         if has_self:
             command = tu.command_guard(command_msg['command'],
                 self.tensorvar_methods)
             obj_self = tu.retrieve_tensor(self, command_msg['self'])
+            print(obj_self)
             command = eval('obj_self.{}'.format(command))
         else:
             command = tu.command_guard(command_msg['command'], self.torch_funcs)
@@ -55,7 +59,8 @@ class HookWorkerService(BaseService):
                 owners=[self.worker.id], is_pointer=True)
             return {'torch_type':torch_type, 'registration':registration}
         except AttributeError:
-            return [compile_result(x) for x in result]
+            #return [self.compile_result(x) for x in result]
+            pass
 
 
     def return_result(self, compiled_result, response_channel):
