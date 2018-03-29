@@ -20,6 +20,7 @@ class BaseService(object):
         # but it inherits all of Variable's hooked methods
         self.var_types = [torch.autograd.variable.Variable]
         self.tensorvar_types = self.tensor_types + self.var_types
+        self.tensorvar_types_strs = [x.__name__ for x in self.tensorvar_types]
 
         # Any commands that don't appear in the following two lists
         # will not execute

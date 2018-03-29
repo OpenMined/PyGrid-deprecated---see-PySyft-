@@ -24,8 +24,8 @@ def get_tensorvars(self, command):
     kwargs = command['kwargs']
     arg_types = command['arg_types']
     kwarg_types = command['kwarg_types']
-    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types]
-    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types]
+    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types_strs]
+    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
     return tensorvar_args + tensorvar_kwvals
 
 
@@ -43,8 +43,12 @@ def get_owners(tensorvars):
 
 
 def replace_tensorvar(x):
+    if hasattr(torch, 'old_is_tensor'):
+        check = torch.old_is_tensor
+    else:
+        check = torch.is_tensor
     try:
-        if torch.old_is_tensor(x) or isinstance(x, torch.autograd.Variable):
+        if check(x) or isinstance(x, torch.autograd.Variable):
             return '_fl.{}'.format(x.id)
         else:
             [replace_tensorvar(i) for i in x]
@@ -53,12 +57,12 @@ def replace_tensorvar(x):
 
 
 def replace_in_command(command_msg):
-    command_msg['args'] = tu.map_tuple(
-        None, command_msg['args'], tu.replace_tensorvar)
-    command_msg['kwargs'] = tu.map_dict(
-        None, command_msg['kwargs'], tu.replace_tensorvar)
+    command_msg['args'] = map_tuple(
+        None, command_msg['args'], replace_tensorvar)
+    command_msg['kwargs'] = map_dict(
+        None, command_msg['kwargs'], replace_tensorvar)
     try:
-        command_msg['self'] = tu.replace_tensorvar(command_msg['self'])
+        command_msg['self'] = replace_tensorvar(command_msg['self'])
     except KeyError:
         pass
     return command_msg

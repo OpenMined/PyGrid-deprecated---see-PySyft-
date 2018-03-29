@@ -1,7 +1,7 @@
 import torch
 from ..base import BaseService
 from ... import channels
-from ...lib import torch_utils as tu
+from ...lib import utils, torch_utils as tu
 
 from collections import OrderedDict
 from functools import wraps, partial, partialmethod
@@ -59,7 +59,9 @@ class HookService(BaseService):
 
 
     def process_response(self, response):
+        print(response)
         response = utils.unpack(response)
+        print(response)
         return response['tensor_type'], response['registration']
 
 
@@ -76,8 +78,8 @@ class HookService(BaseService):
         command['command'] = func.__name__
         command['args'] = args
         command['kwargs'] = kwargs
-        command['arg_types'] = [type(x) for x in args]
-        command['kwarg_types'] = [type(kwargs[x]) for x in kwargs]
+        command['arg_types'] = [type(x).__name__ for x in args]
+        command['kwarg_types'] = [type(kwargs[x]).__name__ for x in kwargs]
         return command
 
 
@@ -143,6 +145,7 @@ class HookService(BaseService):
                     Torch objects need to be on the same machine in order
                     to compute with them.""")
                 else:
+                    command = tu.replace_in_command(command)
                     for worker in owners:
                         print("Placeholder print for sending command to worker {}".format(worker))
                         registration, torch_type = self.send_command(command, worker)
@@ -175,11 +178,10 @@ class HookService(BaseService):
                 tensorvars = tu.get_tensorvars(service_self, command)
                 has_remote = tu.check_remote(tensorvars)
                 multiple_owners, owners = tu.get_owners(tensorvars)
-                print(part.func)
-                print('mult: ',multiple_owners)
-                print('remote: ', has_remote)
                 if has_remote and not multiple_owners:
                     for worker in owners:
+                        command = tu.replace_in_command(command)
+                        print(command)
                         registration, torch_type = service_self.send_command(
                             command, worker)
                         # only returns last pointer, since tensors will
@@ -285,6 +287,7 @@ class HookService(BaseService):
             if (type(lit) in [FunctionType, BuiltinFunctionType]):
                 passer = self.pass_func_args(lit)
                 new_attr = self.overload_function(passer)
+                setattr(torch, 'old_{}'.format(attr), lit)
                 setattr(torch, attr, new_attr)
 
 
