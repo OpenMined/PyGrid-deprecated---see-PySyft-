@@ -139,10 +139,9 @@ def map_dict(service, kwargs, func):
         return {key:func(val) for key, val in kwargs.items()}
 
 
-# Serializing and deserializing torch objects
 def hook_tensor_ser(service_self, tensor_type):
-    # The inverse of TorchService.receive_obj
     def ser(self, include_data=True):
+        """Serializes a {} object to JSON.""".format(tensor_type)
         tensor_msg = {}
         tensor_msg['torch_type'] = self.type()
         if (include_data):

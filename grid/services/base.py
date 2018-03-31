@@ -25,8 +25,9 @@ class BaseService(object):
         # Any commands that don't appear in the following two lists
         # will not execute
         self.torch_funcs = dir(torch)
-        # Consider changing this to a dictionary with lists of methods
-        # for each type in tensorvar_types
+        # TODO: Consider changing the following to a dictionary with each
+        #       type in tensorvar_types mapped to a list of appropriate
+        #       methods
         self.tensorvar_methods = list(
             set(
                 [method
@@ -37,11 +38,18 @@ class BaseService(object):
 
 
     def register_object(self, obj, **kwargs):
-        # Defaults:
-        #   id -- random integer between 0 and 1e10
-        #   owners -- list containing local worker's IPFS id
-        #   is_pointer -- False
+        """
+        Registers an object with the current worker node.
+        Selects an id for the object, assigns a list of owners,
+        and establishes whether it's a pointer or not.
 
+        Args:
+            obj: a Torch instance, e.g. Tensor or Variable
+        Default kwargs:
+            id: random integer between 0 and 1e10
+            owners: list containing local worker's IPFS id
+            is_pointer: False
+        """
         # TODO: Assign default id more intelligently (low priority)
         #       Consider popping id from long list of unique integers
         keys = kwargs.keys()
@@ -55,8 +63,13 @@ class BaseService(object):
             if 'is_pointer' in keys
             else False)
         mal_points_away = obj.is_pointer and self.worker.id in obj.owners
+        # The following was meant to assure that we didn't try to
+        # register objects we didn't have. We end up needing to register
+        # objects with non-local owners on the worker side before sending
+        # things off, so it's been relaxed.  Consider using a 'strict'
+        # kwarg for strict checking of this stuff
         mal_points_here = False
-        #mal_points_here = not obj.is_pointer and self.worker.id not in obj.owners
+        # mal_points_here = not obj.is_pointer and self.worker.id not in obj.owners
         if mal_points_away or mal_points_here:
             raise RuntimeError(
                 'Invalid registry: is_pointer is {} but owners is {}'.format(

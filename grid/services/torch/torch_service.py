@@ -24,7 +24,7 @@ class TorchService(BaseService):
             print("From:" + fr)
             # return message
 
-        # I listen for people to send me tensors!!
+        # Listen for people to send me tensors
         rec_callback = channels.torch_listen_for_obj_callback(
             self.worker.id)
         self.worker.listen_to_channel(rec_callback, self.receive_obj)
@@ -34,31 +34,38 @@ class TorchService(BaseService):
 
 
     def receive_obj_break(self, msg):
-        ## The inverse of Tensor.ser (defined in torch_utils.py)
         # TODO: generalize to Variable
         obj_msg = utils.unpack(msg)
         if (type(obj_msg) == str):
             obj_msg = json.loads(obj_msg)
-        _tensor_type = obj_msg['torch_type']
-        try:
-            tensor_type = tu.types_guard(_tensor_type)
+
+        try: # The inverse of Tensor.ser (defined in torch_utils.py)
+            _tensor_type = obj_msg['torch_type']
+            try:
+                # Ensure
+                tensor_type = tu.types_guard(_tensor_type)
+            except KeyError:
+                raise TypeError(
+                    "Tried to receive a non-Torch object of type {}.".format(
+                        _tensor_type))
+            # this could be a significant failure point, security-wise
+            if ('data' in msg.keys()):
+                data = obj_msg['data']
+                data = tu.tensor_contents_guard(data)
+                v = tensor_type(data)
+            else:
+                v = torch.old_zeros(0).type(tensor_type)
+
+            try:
+                # TorchClient case
+                # delete registration from init; it's got the wrong id
+                del self.worker.objects[v.id]
+            except (AttributeError, KeyError):
+                # Worker case: v was never formally registered
+                pass
+
+            v = self.register_object(v, id=obj_msg['id'], owners=obj_msg['owners'])
+            return v
+            
         except KeyError:
-            raise TypeError(
-                "Tried to receive a non-Torch object of type {}.".format(
-                    _tensor_type))
-        # this could be a significant failure point, security-wise
-        if ('data' in msg.keys()):
-            data = obj_msg['data']
-            data = tu.tensor_contents_guard(data)
-            v = tensor_type(data)
-        else:
-            v = torch.old_zeros(0).type(tensor_type)
-
-        # delete registration from init, cause it's got an incorrect id
-        try:
-            del self.worker.objects[v.id]
-        except (AttributeError, KeyError):
-            pass
-
-        v = self.register_object(v, id=obj_msg['id'], owners=obj_msg['owners'])
-        return v
+            return obj_msg['numeric']
