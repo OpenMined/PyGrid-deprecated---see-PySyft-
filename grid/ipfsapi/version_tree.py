@@ -22,7 +22,7 @@ class VersionTreeNode:
         this node is the root of a version tree. """
         self.contents = contents
         # Convert empty string to None to minimize typing bugs.
-        self.parent_hash = parent_hash.decode("utf-8") or None
+        self.parent_hash = parent_hash or None
         self.ipfs_client = ipfs_client
 
     # TODO: Should there just be a singleton IPFS client in the ipfsapi.client
@@ -81,5 +81,14 @@ class VersionTreeNode:
         """ In case the contents section happens to contain the DELIMITER
         string, only splits on the final occurrence of DELIMITER. The
         multihash is hexadecimal, so it won't contain the non-hex DELIMITER."""
-        return VersionTreeNode(*b.rsplit(VersionTreeNode.DELIMITER,
-                                         maxsplit=1))
+        contents, parent_hash_bytes = b.rsplit(VersionTreeNode.DELIMITER,
+                                               maxsplit=1)
+        return VersionTreeNode(contents, parent_hash_bytes.decode("utf-8"))
+
+    def __repr__(self):
+        return "VersionTreeNode with contents: {}\nparent_hash: {}".format(
+            str(self.contents), self.parent_hash)
+
+    def __eq__(self, other):
+        return self.contents == other.contents and \
+            self.parent_hash == other.parent_hash
