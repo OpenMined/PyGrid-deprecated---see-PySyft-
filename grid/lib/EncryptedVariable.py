@@ -14,18 +14,18 @@ PRECISION = PRECISION_INTEGRAL + PRECISION_FRACTIONAL
 BOUND = BASE**PRECISION
 
 # Q field
-Q = 2**41  # < 64 bits
+field = 2**41  # < 64 bits
 #Q = 2147483648
 Q_MAXDEGREE = 1
 
 
-def encode(rational, field=Q, precision_fractional=PRECISION_FRACTIONAL):
+def encode(rational, precision_fractional=PRECISION_FRACTIONAL):
     upscaled = (rational * BASE**precision_fractional).long()
     upscaled.remainder_(field)
     return upscaled
 
 
-def decode(field_element, field=Q, precision_fractional=PRECISION_FRACTIONAL):
+def decode(field_element, precision_fractional=PRECISION_FRACTIONAL):
     field_element = field_element.data
     neg_values = field_element.gt(field)
     #pos_values = field_element.le(field)
@@ -35,13 +35,13 @@ def decode(field_element, field=Q, precision_fractional=PRECISION_FRACTIONAL):
     return rational
 
 
-def share(secret, field=Q):
+def share(secret):
     first = torch.LongTensor(secret.shape).random_(field)
     second = (secret - first) % field
     return [first, second]
 
 
-def reconstruct(shares, field=Q):
+def reconstruct(shares):
     return sum(shares) % field
 
 
@@ -63,7 +63,7 @@ def swap_shares(share, party):
     return share_other
 
 
-def truncate(x, party, amount=PRECISION_FRACTIONAL, field=Q):
+def truncate(x, party, amount=PRECISION_FRACTIONAL):
     if (x.party == 0):
         return x//BASE**amount
     return field-((field-x)//BASE**amount)
@@ -76,20 +76,20 @@ def public_add(x, y, party):
         return x
 
 
-def spdz_add(a, b, field=Q):
+def spdz_add(a, b):
     return (a+b % field)
 
 
-def generate_mul_triple(m, n, field=Q):
+def generate_mul_triple(m, n):
     r = torch.LongTensor(m, n).random_(field)
     s = torch.LongTensor(m, m).random_(field)
     t = r * s
     return r, s, t
 
 
-def generate_mul_triple_communication(m, n, party, field=Q):
+def generate_mul_triple_communication(m, n, party):
     if (party == 0):
-        r, s, t = generate_mul_triple(m, n, field)
+        r, s, t = generate_mul_triple(m, n)
 
         r_alice, r_bob = share(r)
         s_alice, s_bob = share(s)
@@ -109,19 +109,19 @@ def generate_mul_triple_communication(m, n, party, field=Q):
         return triple_bob
 
 
-def spdz_mul(x, y, party, field=Q):
+def spdz_mul(x, y, party):
     if x.shape != y.shape:
         raise ValueError()
     m, n = x.shape
-    triple = generate_mul_triple_communication(m, n, party, field)
+    triple = generate_mul_triple_communication(m, n, party)
     a, b, c = triple
     d = x - a
     e = y - b
 
     d_other = swap_shares(d, party)
     e_other = swap_shares(e, party)
-    delta = reconstruct([d, d_other], field)
-    epsilon = reconstruct([e, e_other], field)
+    delta = reconstruct([d, d_other])
+    epsilon = reconstruct([e, e_other])
     r = delta * epsilon
     s = a * epsilon
     t = b * delta
@@ -131,16 +131,16 @@ def spdz_mul(x, y, party, field=Q):
     return share
 
 
-def generate_matmul_triple(m, n, k, field=Q):
+def generate_matmul_triple(m, n, k):
     r = torch.LongTensor(m, k).random_(field)
     s = torch.LongTensor(k, n).random_(field)
     t = (r @ s) % field
     return r, s, t
 
 
-def generate_matmul_triple_communication(m, n, k, party, field=Q):
+def generate_matmul_triple_communication(m, n, k, party):
     if(party == 0):
-        r, s, t = generate_matmul_triple(m, n, k, field)
+        r, s, t = generate_matmul_triple(m, n, k)
         r_alice, r_bob = share(r)
         s_alice, s_bob = share(s)
         t_alice, t_bob = share(t)
@@ -159,7 +159,7 @@ def generate_matmul_triple_communication(m, n, k, party, field=Q):
         return triple_bob
 
 
-def spdz_matmul(x, y, party, field=Q):
+def spdz_matmul(x, y, party):
     x_height = x.shape[0]
     x_width = x.shape[1]
 
@@ -169,7 +169,7 @@ def spdz_matmul(x, y, party, field=Q):
     assert x_width == y_height
 
     r, s, t = generate_matmul_triple_communication(
-        x_height, y_width, x_width, party, field)
+        x_height, y_width, x_width, party)
 
     rho_local = x - r
     sigma_local = y - s
@@ -179,8 +179,8 @@ def spdz_matmul(x, y, party, field=Q):
     sigma_other = swap_shares(sigma_local, party)
 
     # They both add up the shares locally
-    rho = reconstruct([rho_local, rho_other], field)
-    sigma = reconstruct([sigma_local, sigma_other], field)
+    rho = reconstruct([rho_local, rho_other])
+    sigma = reconstruct([sigma_local, sigma_other])
 
     r_sigma = r @ sigma
     rho_s = rho @ s
@@ -194,12 +194,12 @@ def spdz_matmul(x, y, party, field=Q):
     return share
 
 
-def generate_sigmoid_shares_communication(x, party, field=Q):
+def generate_sigmoid_shares_communication(x, party):
     if (party == 0):
-        W0 = encode(torch.FloatTensor(x.shape).one_()*1/2, field)
-        W1 = encode(torch.FloatTensor(x.shape).one_()*1/4, field)
-        W3 = encode(torch.FloatTensor(x.shape).one_()*-1/48, field)
-        W5 = encode(torch.FloatTensor(x.shape).one_()*1/480, field)
+        W0 = encode(torch.FloatTensor(x.shape).one_()*1/2)
+        W1 = encode(torch.FloatTensor(x.shape).one_()*1/4)
+        W3 = encode(torch.FloatTensor(x.shape).one_()*-1/48)
+        W5 = encode(torch.FloatTensor(x.shape).one_()*1/480)
 
         W0_alice, W0_bob = share(W0)
         W1_alice, W1_bob = share(W1)
@@ -222,8 +222,8 @@ def generate_sigmoid_shares_communication(x, party, field=Q):
         return quad_bob
 
 
-def spdz_sigmoid(x, party, field=Q):
-    W0, W1, W3, W5 = generate_sigmoid_shares_communication(x, party, field)
+def spdz_sigmoid(x, party):
+    W0, W1, W3, W5 = generate_sigmoid_shares_communication(x, party)
     x2 = spdz_mul(x, x, party)
     x3 = spdz_mul(x, x2, party)
     x5 = spdz_mul(x3, x2, party)
@@ -238,8 +238,8 @@ def spdz_sigmoid(x, party, field=Q):
 class EncryptedAdd(Function):
 
     @staticmethod
-    def forward(ctx, a, b, field=Q):
-        return spdz_add(a, b, field)
+    def forward(ctx, a, b):
+        return spdz_add(a, b)
         # compute a + b on encrypted data - they are regular PyTorch tensors
 
     @staticmethod
@@ -294,20 +294,21 @@ class EncryptedSigmoid(Function):
 
 class EncryptedVariable(object):
 
-    def __init__(self, var, party, field=Q, requires_grad=True):
+    def __init__(self, var, party, requires_grad=True):
         self.requires_grad = requires_grad
         if not isinstance(var, Variable):
             self.var = Variable(var, requires_grad=requires_grad)
         else:
+            if self.requires_grad != var.requires_grad:
+                raise ValueError("Requires grad Values do not match")
             self.var = var
         self.party = party
-        self.field = field
 
     def __neg__(self):
-        return EncryptedVariable(torch.Tensor.neg(self.var), self.party, self.field, self.requires_grad)
+        return EncryptedVariable(torch.Tensor.neg(self.var), self.party, self.requires_grad)
 
     def __add__(self, other):
-        return EncryptedVariable(EncryptedAdd.apply(self.var, other.var), self.party, self.field, self.requires_grad)
+        return EncryptedVariable(EncryptedAdd.apply(self.var, other.var), self.party, self.requires_grad)
 
     def __mul__(self, other):
         return EncryptedVariable(EncryptedMult.apply(self.var, other.var), self.party)
