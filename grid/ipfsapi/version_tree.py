@@ -79,3 +79,10 @@ class VersionTreeNode:
         contents, parent_hash_bytes = b.rsplit(cls.DELIMITER, maxsplit=1)
         return cls(contents, parent_hash_bytes.decode("utf-8"))
 
+    def __repr__(self):
+        return "VersionTreeNode with contents: {}\nparent_hash: {}".format(
+            str(self.contents), self.parent_hash)
+
+    def __eq__(self, other):
+        return self.contents == other.contents and \
+            self.parent_hash == other.parent_hash
