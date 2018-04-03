@@ -1,12 +1,14 @@
+import base64
+import json
+import random
+import time
+from threading import Thread
+
+from bitcoin import base58
+
+from ..lib import utils
 from ..services.broadcast_known_workers import BroadcastKnownWorkersService
 from ..services.whoami import WhoamiService
-from ..lib import utils
-from threading import Thread
-import json
-from bitcoin import base58
-import base64
-import time
-import random
 
 
 class GridWorker():
@@ -15,10 +17,13 @@ class GridWorker():
         self.api = utils.get_ipfs_api(self.node_type)
         self.id = utils.get_id(self.node_type, self.api)
 
+        # Maps IDs to objects we don't want to pass around, e.g. torch objects
+        self.objects = {}
+
         # load email and name
         whoami = utils.load_whoami()
 
-        if(email is None):
+        if (email is None):
             if whoami:
                 self.email = whoami['email']
             else:
@@ -26,9 +31,8 @@ class GridWorker():
         else:
             self.email = email
 
-
-        if(name is None):
-            if(whoami):
+        if (name is None):
+            if (whoami):
                 self.name = whoami['name']
             else:
                 self.name = input('Enter an easy name to remember you by: ')
@@ -38,9 +42,8 @@ class GridWorker():
         whoami = {'email': self.email, 'name': self.name}
 
         utils.store_whoami(whoami)
-        
 
-        self.subscribed_list = []
+        self.subscribed = []
 
         # LAUNCH SERVICES - these are non-blocking and run on their own threads
 
@@ -66,17 +69,15 @@ class GridWorker():
         Note - not all workers are necessarily "compute" workers.
         Some may only be anchors and will ignore any jobs you send them.
         """
-        
-        nodes = self.api.pubsub_peers('openmined')
-        nodes = nodes['Strings']
 
+        nodes = self.api.pubsub_peers('openmined')
         if (nodes is not None):
             return nodes
         else:
             return []
 
     def get_nodes(self):
-        nodes = self.api.pubsub_peers()['Strings']
+        nodes = self.api.pubsub_peers()
         if (nodes is not None):
             return nodes
         else:
@@ -150,9 +151,9 @@ class GridWorker():
 
         first_proc = True
 
-        if channel not in self.subscribed_list:
+        if channel not in self.subscribed:
             new_messages = self.api.pubsub_sub(topic=channel, stream=True)
-            self.subscribed_list.append(channel)
+            self.subscribed.append(channel)
 
         else:
             return
