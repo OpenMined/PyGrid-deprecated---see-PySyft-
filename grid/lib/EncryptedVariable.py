@@ -308,16 +308,26 @@ class EncryptedVariable(object):
         return EncryptedVariable(torch.Tensor.neg(self.var), self.party, self.requires_grad)
 
     def __add__(self, other):
-        return EncryptedVariable(EncryptedAdd.apply(self.var, other.var), self.party, self.requires_grad)
+        return add(self, other)
 
     def __mul__(self, other):
-        return EncryptedVariable(EncryptedMult.apply(self.var, other.var), self.party)
+        return mul(self, other)
 
     def __matmul__(self, other):
-        return EncryptedVariable(EncryptedMatmul.apply(self.var, other.var, self.party), self.party)
+        return matmul(self, other)
 
     def sigmoid(self):
         return EncryptedVariable(EncryptedSigmoid.apply(self.var, self.party), self.party)
+
+    @staticmethod
+    def add(a, b):
+        return EncryptedVariable(EncryptedAdd.apply(a.var, b.var), a.party, a.requires_grad)
+
+    def mul(a.b):
+        return EncryptedVariable(EncryptedMult.apply(a.var, b.var, a.party), a.party)
+
+    def matmul(a, b):
+        return EncryptedVariable(EncryptedMatmul.apply(self.var, other.var, self.party), self.party)
 
     def grad(self):
         return self.var.grad
