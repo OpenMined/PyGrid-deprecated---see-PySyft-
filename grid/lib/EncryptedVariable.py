@@ -327,3 +327,6 @@ class EncryptedVariable(object):
 
     def __repr__(self):
         return self.var.__repr__()
+
+    def type(self):
+        return 'EncryptedVariable'

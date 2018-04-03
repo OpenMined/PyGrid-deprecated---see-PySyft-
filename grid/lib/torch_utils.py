@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 
-from . import utils
+from . import utils, EncryptedVariable
 import torch
 
 
@@ -16,7 +16,7 @@ def check_workers(self, workers):
         raise TypeError(
             """Can only send {} to a string worker ID or an iterable of
             string worker IDs, not {}""".format(self.__name__, type(owners))
-            )
+        )
     return workers
 
 
@@ -25,8 +25,10 @@ def get_tensorvars(self, command):
     kwargs = command['kwargs']
     arg_types = command['arg_types']
     kwarg_types = command['kwarg_types']
-    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types_strs]
-    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
+    tensorvar_args = [args[i] for i in range(
+        len(args)) if arg_types[i] in self.tensorvar_types_strs]
+    tensorvar_kwvals = [kwargs[i][1] for i in range(
+        len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
     return tensorvar_args + tensorvar_kwvals
 
 
@@ -36,8 +38,8 @@ def check_remote(tensorvars):
 
 def get_owners(tensorvars):
     owners = list(set([owner
-        for tensorvar in tensorvars
-        for owner in tensorvar.owners]))
+                       for tensorvar in tensorvars
+                       for owner in tensorvar.owners]))
     multiple_owners = len(owners) > 1
     return multiple_owners, owners
 
@@ -68,6 +70,8 @@ def replace_in_command(command_msg):
     return command_msg
 
 # Client needs to identify a tensor before sending commands that use it
+
+
 def id_tensorvar(x):
     pat = re.compile('_fl.(.*)')
     try:
@@ -82,16 +86,17 @@ def id_tensorvar(x):
 # Safety checks for serializing and deserializing torch objects
 # Desperately needs stress testing before going out in the wild
 map_torch_type = {
-    'torch.FloatTensor':torch.FloatTensor,
-    'torch.DoubleTensor':torch.DoubleTensor,
-    'torch.HalfTensor':torch.HalfTensor,
-    'torch.ByteTensor':torch.ByteTensor,
-    'torch.CharTensor':torch.CharTensor,
-    'torch.ShortTensor':torch.ShortTensor,
-    'torch.IntTensor':torch.IntTensor,
-    'torch.LongTensor':torch.LongTensor,
-    'torch.autograd.variable.Variable':torch.autograd.variable.Variable,
-    'torch.nn.parameter.Parameter':torch.nn.parameter.Parameter
+    'torch.FloatTensor': torch.FloatTensor,
+    'torch.DoubleTensor': torch.DoubleTensor,
+    'torch.HalfTensor': torch.HalfTensor,
+    'torch.ByteTensor': torch.ByteTensor,
+    'torch.CharTensor': torch.CharTensor,
+    'torch.ShortTensor': torch.ShortTensor,
+    'torch.IntTensor': torch.IntTensor,
+    'torch.LongTensor': torch.LongTensor,
+    'torch.autograd.variable.Variable': torch.autograd.variable.Variable,
+    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
+    'EncryptedVariable': EncryptedVariable
 }
 
 
@@ -134,9 +139,9 @@ def map_tuple(service, args, func):
 
 def map_dict(service, kwargs, func):
     if service:
-        return {key:func(service, val) for key, val in kwargs.items()}
+        return {key: func(service, val) for key, val in kwargs.items()}
     else:
-        return {key:func(val) for key, val in kwargs.items()}
+        return {key: func(val) for key, val in kwargs.items()}
 
 
 def hook_tensor_ser(service_self, tensor_type):
