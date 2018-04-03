@@ -158,6 +158,6 @@ def hook_tensor_ser(service_self, tensor_type):
     tensor_type.ser = ser
 
 
-def hook_var_ser(service_self):
+def hook_var_ser(service_self, var_type):
     # TODO
     pass
