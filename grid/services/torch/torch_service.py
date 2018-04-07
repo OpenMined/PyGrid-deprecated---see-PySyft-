@@ -91,12 +91,12 @@ class TorchService(BaseService):
         try:
             # TorchClient case
             # delete registration from init; it's got the wrong id
-            del self.worker.objects[v.id]
+            del self.worker.objects[torch_object.id]
         except (AttributeError, KeyError):
             # Worker case: v was never formally registered
             pass
 
-        v = self.register_object(
-            v, id=obj_msg['id'], owners=obj_msg['owners'])
-        return v
+        torch_object = self.register_object(
+            torch_object, id=obj_msg['id'], owners=obj_msg['owners'])
+        return torch_object
 
