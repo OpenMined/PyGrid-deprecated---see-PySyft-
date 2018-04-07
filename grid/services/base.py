@@ -16,10 +16,8 @@ class BaseService(object):
                 torch.ShortTensor,
                 torch.IntTensor,
                 torch.LongTensor]
-        # torch.nn.Parameter is also technically a var_type,
-        # but it inherits all of Variable's hooked methods
-        self.var_types = [torch.autograd.variable.Variable]
-        self.tensorvar_types = self.tensor_types + self.var_types
+        self.var_types = [torch.autograd.variable.Variable, torch.nn.Parameter]
+        self.tensorvar_types = self.tensor_types + [torch.autograd.variable.Variable]
         self.tensorvar_types_strs = [x.__name__ for x in self.tensorvar_types]
 
         # Any commands that don't appear in the following two lists

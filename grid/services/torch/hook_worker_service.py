@@ -12,8 +12,8 @@ class HookWorkerService(BaseService):
     def __init__(self, worker):
         super().__init__(worker)
         for tensor_type in self.tensor_types:
-            tu.hook_tensor_ser(self, tensor_type)
-        tu.hook_var_ser(self)
+            tu.hook_tensor__ser(self, tensor_type)
+        tu.hook_var__ser(self)
 
         # Listen for torch object requests
         req_callback = channels.torch_listen_for_obj_req_callback(
@@ -99,7 +99,7 @@ class HookWorkerService(BaseService):
             new_owner = re.search('(.+)_[0-9]{1,11}', response_channel).group(1)
             obj = self.register_object(self.worker.objects[obj_id],
                 id=obj_id, owners=[new_owner])
-            response_str = obj.ser()
+            response_str = obj._ser()
         else:
             # TODO: replace this with something that triggers a nicer
             #       error on the client

@@ -39,7 +39,7 @@ class HookService(BaseService):
         """Send Torch object to recipient."""
         self.worker.publish(
             channels.torch_listen_for_obj_callback(recipient),
-            message=obj.ser(include_data=True))
+            message=obj._ser())
 
 
     def request_obj(self, obj, sender):
@@ -320,8 +320,8 @@ class HookService(BaseService):
                 self.data_registered
             except AttributeError:
                 self.old_data = service_self.register_object(
-                    self.old_data, id=self.id,
-                    owners=self.owners, is_pointer=self.is_pointer)
+                    self.old_data, owners=self.owners,
+                    is_pointer=self.is_pointer)
                 self.data_registered = True
             return self.old_data
         
@@ -332,8 +332,8 @@ class HookService(BaseService):
             except AttributeError:
                 if self.old_grad is not None:
                     self.old_grad = service_self.register_object(
-                        self.old_grad, id=self.id,
-                    owners=self.owners, is_pointer=self.is_pointer)
+                        self.old_grad, owners=self.owners,
+                        is_pointer=self.is_pointer)
                     self.grad_registered = True
             return self.old_grad
         
@@ -392,7 +392,7 @@ class HookService(BaseService):
         # Add in our own Grid-specific methods
         self.hook_tensor_send(tensor_type)
         self.hook_tensor_get(tensor_type)
-        tu.hook_tensor_ser(self, tensor_type)
+        tu.hook_tensor__ser(self, tensor_type)
 
 
     def hook_variable(self):
