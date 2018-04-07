@@ -115,10 +115,10 @@ class HookService(BaseService):
 
 
     ## Grid-specific method hooking
-    def hook_tensor_send(service_self, tensor_type):
+    def hook_send_(service_self, torch_type):
         def send_(self, workers):
             """
-            Sends a Tensor object to a (sequence of) Grid workers.
+            Sends a Torch object to a (sequence of) Grid workers.
 
             Args:
             workers: string (or sequence) containing IPFS address(es)
@@ -134,13 +134,13 @@ class HookService(BaseService):
                 id=self.id, owners=workers, is_pointer=True)
             return self
 
-        setattr(tensor_type, 'send_', send_)
+        setattr(torch_type, 'send_', send_)
 
 
-    def hook_tensor_get(service_self, tensor_type):
+    def hook_get_(service_self, torch_type):
         def get_(self, reduce=lambda x:x[0]):
             """
-            Gets a Tensor object from its current owners.
+            Gets a Torch object from its current owners.
 
             Args:
             reduce: (EXPERIMENTAL) How to reduce tensors that come from
@@ -158,12 +158,7 @@ class HookService(BaseService):
                 x = service_self.request_obj(self, worker)
                 collected.append(service_self.register_object(x, id=x.id))  
             return service_self.register_object(self.old_set_(reduce(collected)), id=self.id)
-        setattr(tensor_type, 'get_', get_)
-
-
-    # TODO: Variable.send, Variable.get (will need to send/get Variable
-    #       registration attributes, handling data and grad tensors properly)
-    #       Resolve Issue #148 before attempting
+        setattr(torch_type, 'get_', get_)
 
 
     ## General hooking wrappers
@@ -390,8 +385,8 @@ class HookService(BaseService):
                 setattr(tensor_type, attr, new_attr)
 
         # Add in our own Grid-specific methods
-        self.hook_tensor_send(tensor_type)
-        self.hook_tensor_get(tensor_type)
+        self.hook_send_(tensor_type)
+        self.hook_get_(tensor_type)
         tu.hook_tensor__ser(self, tensor_type)
 
 
@@ -423,3 +418,6 @@ class HookService(BaseService):
                 setattr(torch.autograd.variable.Variable, 
                     'old_{}'.format(attr), lit)
                 setattr(torch.autograd.variable.Variable, attr, new_attr)
+
+        self.hook_send_(torch.autograd.variable.Variable)
+        self.hook_get_(torch.autograd.variable.Variable)
