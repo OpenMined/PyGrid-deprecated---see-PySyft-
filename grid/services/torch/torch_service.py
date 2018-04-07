@@ -87,8 +87,6 @@ class TorchService(BaseService):
         return var
 
 
-
-
     def handle_register(self, torch_object, obj_msg):
         try:
             # TorchClient case

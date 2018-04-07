@@ -119,10 +119,10 @@ class HookService(BaseService):
 
 
     ## Grid-specific method hooking
-    def hook_send_(service_self, torch_type):
+    def hook_tensor_send_(service_self, tensor_type):
         def send_(self, workers):
             """
-            Sends a Torch object to a (sequence of) Grid workers.
+            Sends a Tensor object to a (sequence of) Grid workers.
 
             Args:
             workers: string (or sequence) containing IPFS address(es)
@@ -139,6 +139,36 @@ class HookService(BaseService):
             return self
 
         setattr(torch_type, 'send_', send_)
+
+
+    def hook_var_send_(service_self):
+        def send_(self, workers):
+            """
+            Sends a Variable object to a (sequence of) Grid workers.
+
+            Args:
+            workers: string (or sequence) containing IPFS address(es)
+                of worker node(s).
+            """
+            workers = tu.check_workers(self, workers) # makes singleton, if needed
+            self = service_self.register_object(self, id=self.id, owners=workers)
+            for worker in workers:
+                # TODO: sync or async? likely won't be worth doing async,
+                #       but should check (low priority)
+                service_self.send_obj(self, worker)
+            self = service_self.register_object(self, id=self.id,
+                owners=self.owners, is_pointer=True)
+            if self.grad is not None:
+                self.grad.data = service_self.register_object(
+                    self.grad.data.old_set_(self.grad.data.__class__(0)),
+                    id=self.grad.id, owners=workers, is_pointer=True)
+            self.data = service_self.register_object(
+                self.data.old_set_(self.data.__class__(0)),
+                id=self.data.id, owners=workers, is_pointer=True)
+
+            return self
+
+        setattr(torch.autograd.variable.Variable, 'send_', send_)
 
 
     def hook_get_(service_self, torch_type):
@@ -444,3 +474,4 @@ class HookService(BaseService):
 
         self.hook_send_(torch.autograd.variable.Variable)
         self.hook_get_(torch.autograd.variable.Variable)
+        tu.hook_var__ser(self)
