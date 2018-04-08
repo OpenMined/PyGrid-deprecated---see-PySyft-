@@ -35,7 +35,7 @@ class BaseService(object):
             )
 
 
-    def register_object(self, obj, **kwargs):
+    def register_object_(self, obj, **kwargs):
         """
         Registers an object with the current worker node.
         Selects an id for the object, assigns a list of owners,

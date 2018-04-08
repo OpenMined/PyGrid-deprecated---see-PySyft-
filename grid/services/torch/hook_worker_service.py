@@ -74,14 +74,28 @@ class HookWorkerService(BaseService):
             # result is infrequently a numeric
             if isinstance(result, numbers.Number):
                 return {'numeric':result}
-            # Usually result is a tensor
-            torch_type = result.type()
-            result = self.register_object(result, owners=owners)
+            # result is usually a tensor/variable
+            print(result)
+            torch_type = re.search("<class '(torch.(.*))'>",
+                str(result.__class__)).group(1)
+
+            try:
+                var_data = self.compile_result(result.data, owners)
+            except (AttributeError, RuntimeError):
+                var_data = None
+            try:
+                assert result.grad is not None
+                var_grad = self.compile_result(result.grad, owners)
+            except (AttributeError, AssertionError):
+                var_grad = None
+
+            result = self.register_object_(result, owners=owners)
             registration = dict(id=result.id,
                 owners=result.owners, is_pointer=True)
-            return {'torch_type':torch_type, 'registration':registration}
+            return dict(registration=registration, torch_type=torch_type,
+                var_data=var_data, var_grad=var_grad)
         except AttributeError:
-            # Sometimes result is a sequence of tensors
+            # result is occasionally a sequence of tensors or variables
             return [self.compile_result(x, owners) for x in result]
 
 
@@ -97,7 +111,7 @@ class HookWorkerService(BaseService):
 
         if (obj_id in self.worker.objects.keys()):
             new_owner = re.search('(.+)_[0-9]{1,11}', response_channel).group(1)
-            obj = self.register_object(self.worker.objects[obj_id],
+            obj = self.register_object_(self.worker.objects[obj_id],
                 id=obj_id, owners=[new_owner])
             response_str = obj._ser()
         else:

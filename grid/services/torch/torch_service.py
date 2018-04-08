@@ -74,8 +74,8 @@ class TorchService(BaseService):
             data = self.handle_register(data_obj, data_msg)
 
         if 'grad' in obj_msg.keys():
-            grad_msg = json.loads(obj_msg['grad'])
-            if grad_msg is not None:
+            if obj_msg['grad'] is not None:
+                grad_msg = json.loads(obj_msg['grad'])
                 var_type = tu.types_guard(grad_msg)
                 grad_obj = self.build_var(grad_msg, var_type)
                 grad = self.handle_register(grad_obj, grad_msg)
@@ -96,7 +96,7 @@ class TorchService(BaseService):
             # Worker case: v was never formally registered
             pass
 
-        torch_object = self.register_object(
+        torch_object = self.register_object_(
             torch_object, id=obj_msg['id'], owners=obj_msg['owners'])
         return torch_object
 
