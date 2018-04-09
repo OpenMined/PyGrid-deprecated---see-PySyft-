@@ -48,7 +48,6 @@ class VersionTreeNode:
             self.broadcast_child_periodically(ipfs_client, broadcast_period)
             
         return self.id_hash
-        #return (ipfs_client or self.ipfs_client).add_bytes(self.to_bytes())
 
     @classmethod
     def get_node_by_hash(cls,
@@ -135,15 +134,15 @@ class VersionTreeNode:
         """Listen to openmined:children_of_<parent_hash> and 
         return list of children (VersionTreeNode)"""
         channel = 'openmined:children_of_' + str(parent_hash)
-        child_attributes =  self.listen_to_channel_impl(ipfs_client, 
+        child_messages =  self.listen_to_channel_impl(ipfs_client, 
                                            channel, 
                                            self.receive_child, 
                                            timeout)
         
-        node_list = [self.get_node_by_hash(child['id_hash'],ipfs_client) 
-                     for child in child_attributes]
+        children_list = [self.get_node_by_hash(child['id_hash'],ipfs_client) 
+                        for child in child_messages]
     
-        return node_list
+        return children_list
     
     def receive_child(self, message: str) -> dict:
         """Extract child attributes from messages
