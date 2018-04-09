@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 
-from . import utils, EncryptedVariable
+from . import utils, SharedVariable
 import torch
 
 
@@ -96,7 +96,7 @@ map_torch_type = {
     'torch.LongTensor': torch.LongTensor,
     'torch.autograd.variable.Variable': torch.autograd.variable.Variable,
     'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
-    'EncryptedVariable': EncryptedVariable
+    'SharedVariable': SharedVariable
 }
 
 

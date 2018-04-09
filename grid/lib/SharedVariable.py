@@ -235,12 +235,12 @@ def spdz_sigmoid(x, party):
     return spdz_add(W0, temp531)
 
 
-class EncryptedAdd(Function):
+class SharedAdd(Function):
 
     @staticmethod
     def forward(ctx, a, b):
         return spdz_add(a, b)
-        # compute a + b on encrypted data - they are regular PyTorch tensors
+        # compute a + b on Shared data - they are regular PyTorch tensors
 
     @staticmethod
     def backward(ctx, grad_out):
@@ -249,13 +249,13 @@ class EncryptedAdd(Function):
         # not grad_out operators are overloaded
 
 
-class EncryptedMult(Function):
+class SharedMult(Function):
 
     @staticmethod
     def forward(ctx, a, b, party):
         ctx.save_for_backward(a, b)
         return spdz_mul(a, b, party)
-        # compute a * b on encrypted data - they are regular PyTorch tensors
+        # compute a * b on Shared data - they are regular PyTorch tensors
 
     @staticmethod
     def backward(ctx, grad_out, party):
@@ -265,7 +265,7 @@ class EncryptedMult(Function):
         # not grad_out operators are overloaded
 
 
-class EncryptedMatmul(Function):
+class SharedMatmul(Function):
 
     @staticmethod
     def forward(ctx, a, b, party):
@@ -278,7 +278,7 @@ class EncryptedMatmul(Function):
         return spdz_matmul(grad_out,  b.t_(), party), spdz_matmul(grad_out, a.t_(), party)
 
 
-class EncryptedSigmoid(Function):
+class SharedSigmoid(Function):
 
     @staticmethod
     def forward(ctx, a, party):
@@ -292,7 +292,7 @@ class EncryptedSigmoid(Function):
         return spdz_mul(a, public_add(ones, -a, party), party)
 
 
-class EncryptedVariable(object):
+class SharedVariable(object):
 
     def __init__(self, var, party, requires_grad=True):
         self.requires_grad = requires_grad
@@ -305,29 +305,28 @@ class EncryptedVariable(object):
         self.party = party
 
     def __neg__(self):
-        return EncryptedVariable(torch.Tensor.neg(self.var), self.party, self.requires_grad)
+        return SharedVariable(torch.Tensor.neg(self.var), self.party, self.requires_grad)
 
     def __add__(self, other):
-        return add(self, other)
+        return self.add(other)
 
     def __mul__(self, other):
-        return mul(self, other)
+        return self.mul(other)
 
     def __matmul__(self, other):
-        return matmul(self, other)
+        return self.matmul(other)
 
     def sigmoid(self):
-        return EncryptedVariable(EncryptedSigmoid.apply(self.var, self.party), self.party)
+        return SharedVariable(SharedSigmoid.apply(self.var, self.party), self.party)
 
-    @staticmethod
-    def add(a, b):
-        return EncryptedVariable(EncryptedAdd.apply(a.var, b.var), a.party, a.requires_grad)
+    def add(self,other):
+        return SharedVariable(SharedAdd.apply(self.var, other.var), self.party, self.requires_grad)
 
-    def mul(a.b):
-        return EncryptedVariable(EncryptedMult.apply(a.var, b.var, a.party), a.party)
+    def mul(self,other):
+        return SharedVariable(SharedMult.apply(self.var, other.var, self.party), self.party,self.requires_grad)
 
-    def matmul(a, b):
-        return EncryptedVariable(EncryptedMatmul.apply(self.var, other.var, self.party), self.party)
+    def matmul(self,other):
+        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party), self.party,self.requires_grad)
 
     def grad(self):
         return self.var.grad
@@ -339,4 +338,4 @@ class EncryptedVariable(object):
         return self.var.__repr__()
 
     def type(self):
-        return 'EncryptedVariable'
+        return 'SharedVariable'
