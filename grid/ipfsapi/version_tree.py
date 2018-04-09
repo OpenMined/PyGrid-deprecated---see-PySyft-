@@ -2,8 +2,16 @@
 version-control system, which is structured as a directed in-tree with nodes
 represented by the bytes representation of the VersionTreeNode class. """
 from typing import Optional, Iterator
+from datetime import datetime
+import json
+import numpy as np
+import pickle
+import base64
+from bitcoin import base58
+import threading 
 
 from grid import ipfsapi
+from grid.lib import utils
 
 # TODO: Unit tests.
 # TODO: Do we want to store the hash on the node after it's been committed?
@@ -27,7 +35,10 @@ class VersionTreeNode:
         self.parent_hash = parent_hash or None
         self.ipfs_client = ipfs_client
 
-    def commit(self, ipfs_client: ipfsapi.Client = None) -> str:
+    def commit(self, ipfs_client: ipfsapi.Client = None,
+                parent_hash = None,
+                broadcast = True, 
+                broadcast_period = 1) -> str:
         """ Commits the node to the version tree,if broadcast set to true, 
         broadcast child periodically on pubsub and 
         returns the UTF-8 multihash representing its IPFS ID"""
@@ -122,11 +133,12 @@ class VersionTreeNode:
     
     def get_children(
             self, 
+            parent_hash,
             ipfs_client: ipfsapi.Client,
             timeout = 5) -> Iterator["VersionTreeNode"]:
         """Listen to openmined:children_of_<parent_hash> and 
         return list of children (VersionTreeNode)"""
-        channel = 'openmined:children_of_' + str(self.parent_hash)
+        channel = 'openmined:children_of_' + str(parent_hash)
         child_attributes =  self.listen_to_channel_impl(ipfs_client, 
                                            channel, 
                                            self.receive_child, 
