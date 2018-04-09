@@ -23,7 +23,6 @@ class VersionTreeNode:
 
     def __init__(self,
                  contents: bytes,
-                 id_hash: Optional[str] = None,
                  parent_hash: Optional[str] = None,
                  ipfs_client: ipfsapi.Client = None):
         """ parent_hash is a UTF-8 IPFS multihash identifying
@@ -31,20 +30,16 @@ class VersionTreeNode:
         this node is the root of a version tree. """
         self.contents = contents
         # Convert empty string to None to minimize typing bugs.
-        self.id_hash = id_hash or None
+        self.id_hash =  None
         self.parent_hash = parent_hash or None
         self.ipfs_client = ipfs_client
 
     def commit(self, ipfs_client: ipfsapi.Client = None,
-                parent_hash = None,
                 broadcast = True, 
                 broadcast_period = 1) -> str:
         """ Commits the node to the version tree,if broadcast set to true, 
         broadcast child periodically on pubsub and 
         returns the UTF-8 multihash representing its IPFS ID"""
-        
-        if parent_hash is not None:
-            self.parent_hash = parent_hash
             
         self.id_hash = (ipfs_client or self.ipfs_client).add_bytes(self.to_bytes())
         # If there parent_hash is set to None it means it's the root of the tree
@@ -53,6 +48,7 @@ class VersionTreeNode:
             self.broadcast_child_periodically(ipfs_client, broadcast_period)
             
         return self.id_hash
+        #return (ipfs_client or self.ipfs_client).add_bytes(self.to_bytes())
 
     @classmethod
     def get_node_by_hash(cls,
