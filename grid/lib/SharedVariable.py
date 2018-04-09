@@ -314,16 +314,16 @@ class SharedVariable(object):
         return self.matmul(other)
 
     def sigmoid(self):
-        return SharedVariable(SharedSigmoid.apply(self.var, self.party, self.interface), self.party)
+        return SharedVariable(SharedSigmoid.apply(self.var, self.party, self.interface), self.party,self.interface)
 
     def add(self, other):
-        return SharedVariable(SharedAdd.apply(self.var, other.var), self.party, self.requires_grad)
+        return SharedVariable(SharedAdd.apply(self.var, other.var), self.party, self.interface,self.requires_grad)
 
     def mul(self, other):
-        return SharedVariable(SharedMult.apply(self.var, other.var, self.party, self.interface), self.party, self.requires_grad)
+        return SharedVariable(SharedMult.apply(self.var, other.var, self.party, self.interface), self.party,self.interface, self.requires_grad)
 
     def matmul(self, other):
-        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party, self.interface), self.party, self.requires_grad)
+        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party, self.interface), self.party,self.interface, self.requires_grad)
 
     def grad(self):
         return self.var.grad
