@@ -45,21 +45,13 @@ def reconstruct(shares):
     return sum(shares) % field
 
 
-def send_share(value):
-    raise NotImplementedError()
-
-
-def receive_share():
-    raise NotImplementedError()
-
-
-def swap_shares(share, party):
+def swap_shares(share, party, interface):
     if (party == 0):
-        send_share(share)
-        share_other = receive_share()
+        interface.send(share)
+        share_other = interface.receive()
     elif (party == 1):
-        share_other = receive_share()
-        send_share(share)
+        share_other = interface.receive()
+        interface.send(share)
     return share_other
 
 
@@ -87,7 +79,7 @@ def generate_mul_triple(m, n):
     return r, s, t
 
 
-def generate_mul_triple_communication(m, n, party):
+def generate_mul_triple_communication(m, n, party, interface):
     if (party == 0):
         r, s, t = generate_mul_triple(m, n)
 
@@ -95,31 +87,31 @@ def generate_mul_triple_communication(m, n, party):
         s_alice, s_bob = share(s)
         t_alice, t_bob = share(t)
 
-        swap_shares(r_bob, party)
-        swap_shares(s_bob, party)
-        swap_shares(t_bob, party)
+        swap_shares(r_bob, party, interface)
+        swap_shares(s_bob, party, interface)
+        swap_shares(t_bob, party, interface)
 
         triple_alice = [r_alice, s_alice, t_alice]
         return triple_alice
     elif (party == 1):
-        r_bob = swap_shares(torch.LongTensor(m, n).zero_(), party)
-        s_bob = swap_shares(torch.LongTensor(m, n).zero_(), party)
-        t_bob = swap_shares(torch.LongTensor(m, n).zero_(), party)
+        r_bob = swap_shares(torch.LongTensor(m, n).zero_(), party, interface)
+        s_bob = swap_shares(torch.LongTensor(m, n).zero_(), party, interface)
+        t_bob = swap_shares(torch.LongTensor(m, n).zero_(), party, interface)
         triple_bob = [r_bob, s_bob, t_bob]
         return triple_bob
 
 
-def spdz_mul(x, y, party):
+def spdz_mul(x, y, party, interface):
     if x.shape != y.shape:
         raise ValueError()
     m, n = x.shape
-    triple = generate_mul_triple_communication(m, n, party)
+    triple = generate_mul_triple_communication(m, n, party, interface)
     a, b, c = triple
     d = x - a
     e = y - b
 
-    d_other = swap_shares(d, party)
-    e_other = swap_shares(e, party)
+    d_other = swap_shares(d, party, interface)
+    e_other = swap_shares(e, party, interface)
     delta = reconstruct([d, d_other])
     epsilon = reconstruct([e, e_other])
     r = delta * epsilon
@@ -138,28 +130,28 @@ def generate_matmul_triple(m, n, k):
     return r, s, t
 
 
-def generate_matmul_triple_communication(m, n, k, party):
+def generate_matmul_triple_communication(m, n, k, party, interface):
     if(party == 0):
         r, s, t = generate_matmul_triple(m, n, k)
         r_alice, r_bob = share(r)
         s_alice, s_bob = share(s)
         t_alice, t_bob = share(t)
 
-        swap_shares(r_bob, party)
-        swap_shares(s_bob, party)
-        swap_shares(t_bob, party)
+        swap_shares(r_bob, party, interface)
+        swap_shares(s_bob, party, interface)
+        swap_shares(t_bob, party, interface)
 
         triple_alice = [r_alice, s_alice, t_alice]
         return triple_alice
     elif (party == 1):
-        r_bob = swap_shares(torch.LongTensor(m, k).zero_(), party)
-        s_bob = swap_shares(torch.LongTensor(k, n).zero_(), party)
-        t_bob = swap_shares(torch.LongTensor(m, n).zero_(), party)
+        r_bob = swap_shares(torch.LongTensor(m, k).zero_(), party, interface)
+        s_bob = swap_shares(torch.LongTensor(k, n).zero_(), party, interface)
+        t_bob = swap_shares(torch.LongTensor(m, n).zero_(), party, interface)
         triple_bob = [r_bob, s_bob, t_bob]
         return triple_bob
 
 
-def spdz_matmul(x, y, party):
+def spdz_matmul(x, y, party, interface):
     x_height = x.shape[0]
     x_width = x.shape[1]
 
@@ -169,14 +161,14 @@ def spdz_matmul(x, y, party):
     assert x_width == y_height
 
     r, s, t = generate_matmul_triple_communication(
-        x_height, y_width, x_width, party)
+        x_height, y_width, x_width, party, interface)
 
     rho_local = x - r
     sigma_local = y - s
 
     # Communication
-    rho_other = swap_shares(rho_local, party)
-    sigma_other = swap_shares(sigma_local, party)
+    rho_other = swap_shares(rho_local, party, interface)
+    sigma_other = swap_shares(sigma_local, party, interface)
 
     # They both add up the shares locally
     rho = reconstruct([rho_local, rho_other])
@@ -194,7 +186,7 @@ def spdz_matmul(x, y, party):
     return share
 
 
-def generate_sigmoid_shares_communication(x, party):
+def generate_sigmoid_shares_communication(x, party, interface):
     if (party == 0):
         W0 = encode(torch.FloatTensor(x.shape).one_()*1/2)
         W1 = encode(torch.FloatTensor(x.shape).one_()*1/4)
@@ -206,30 +198,34 @@ def generate_sigmoid_shares_communication(x, party):
         W3_alice, W3_bob = share(W3)
         W5_alice, W5_bob = share(W5)
 
-        swap_shares(W0_bob, party)
-        swap_shares(W1_bob, party)
-        swap_shares(W3_bob, party)
-        swap_shares(W5_bob, party)
+        swap_shares(W0_bob, party, interface)
+        swap_shares(W1_bob, party, interface)
+        swap_shares(W3_bob, party, interface)
+        swap_shares(W5_bob, party, interface)
 
         quad_alice = [W0_alice, W1_alice, W3_alice, W5_alice]
         return quad_alice
     elif (party == 1):
-        W0_bob = swap_shares(torch.LongTensor(x.shape).zero_(), party)
-        W1_bob = swap_shares(torch.LongTensor(x.shape).zero_(), party)
-        W3_bob = swap_shares(torch.LongTensor(x.shape).zero_(), party)
-        W5_bob = swap_shares(torch.LongTensor(x.shape).zero_(), party)
+        W0_bob = swap_shares(torch.LongTensor(
+            x.shape).zero_(), party, interface)
+        W1_bob = swap_shares(torch.LongTensor(
+            x.shape).zero_(), party, interface)
+        W3_bob = swap_shares(torch.LongTensor(
+            x.shape).zero_(), party, interface)
+        W5_bob = swap_shares(torch.LongTensor(
+            x.shape).zero_(), party, interface)
         quad_bob = [W0_bob, W1_bob, W3_bob, W5_bob]
         return quad_bob
 
 
-def spdz_sigmoid(x, party):
-    W0, W1, W3, W5 = generate_sigmoid_shares_communication(x, party)
-    x2 = spdz_mul(x, x, party)
-    x3 = spdz_mul(x, x2, party)
-    x5 = spdz_mul(x3, x2, party)
-    temp5 = spdz_mul(x5, W5, party)
-    temp3 = spdz_mul(x3, W3, party)
-    temp1 = spdz_mul(x, W1, party)
+def spdz_sigmoid(x, party, interface):
+    W0, W1, W3, W5 = generate_sigmoid_shares_communication(x, party, interface)
+    x2 = spdz_mul(x, x, party, interface)
+    x3 = spdz_mul(x, x2, party, interface)
+    x5 = spdz_mul(x3, x2, party, interface)
+    temp5 = spdz_mul(x5, W5, party, interface)
+    temp3 = spdz_mul(x3, W3, party, interface)
+    temp1 = spdz_mul(x, W1, party, interface)
     temp53 = spdz_add(temp5, temp3)
     temp531 = spdz_add(temp53, temp1)
     return spdz_add(W0, temp531)
@@ -252,49 +248,49 @@ class SharedAdd(Function):
 class SharedMult(Function):
 
     @staticmethod
-    def forward(ctx, a, b, party):
+    def forward(ctx, a, b, party, interface):
         ctx.save_for_backward(a, b)
-        return spdz_mul(a, b, party)
+        return spdz_mul(a, b, party, interface)
         # compute a * b on Shared data - they are regular PyTorch tensors
 
     @staticmethod
-    def backward(ctx, grad_out, party):
+    def backward(ctx, grad_out, party, interface):
         a, b = ctx.saved_tensors
         grad_out = grad_out
-        return Variable(spdz_mul(grad_out.data, b, party)), Variable(spdz_mul(grad_out.data, a, party))
+        return Variable(spdz_mul(grad_out.data, b, party, interface)), Variable(spdz_mul(grad_out.data, a, party, interface))
         # not grad_out operators are overloaded
 
 
 class SharedMatmul(Function):
 
     @staticmethod
-    def forward(ctx, a, b, party):
+    def forward(ctx, a, b, party, interface):
         ctx.save_for_backward(a, b)
-        return spdz_matmul(a, b, party)
+        return spdz_matmul(a, b, party, interface)
 
     @staticmethod
     def backward(ctx, grad_out, party):
         a, b = ctx.saved_tensors
-        return spdz_matmul(grad_out,  b.t_(), party), spdz_matmul(grad_out, a.t_(), party)
+        return spdz_matmul(grad_out,  b.t_(), party, interface), spdz_matmul(grad_out, a.t_(), party, interface)
 
 
 class SharedSigmoid(Function):
 
     @staticmethod
-    def forward(ctx, a, party):
+    def forward(ctx, a, party, interface):
         ctx.save_for_backwards(a)
-        return spdz_sigmoid(a, party)
+        return spdz_sigmoid(a, party, interface)
 
     @staticmethod
-    def backward(ctx, grad_out, party):
+    def backward(ctx, grad_out, party, interface):
         a = ctx.saved_tensors
         ones = encode(torch.FloatTensor(a.shape).one_())
-        return spdz_mul(a, public_add(ones, -a, party), party)
+        return spdz_mul(a, public_add(ones, -a, party), party, interface)
 
 
 class SharedVariable(object):
 
-    def __init__(self, var, party, requires_grad=True):
+    def __init__(self, var, party, interface, requires_grad=True):
         self.requires_grad = requires_grad
         if not isinstance(var, Variable):
             self.var = Variable(var, requires_grad=requires_grad)
@@ -303,6 +299,7 @@ class SharedVariable(object):
                 raise ValueError("Requires grad Values do not match")
             self.var = var
         self.party = party
+        self.interface = interface
 
     def __neg__(self):
         return SharedVariable(torch.Tensor.neg(self.var), self.party, self.requires_grad)
@@ -317,16 +314,16 @@ class SharedVariable(object):
         return self.matmul(other)
 
     def sigmoid(self):
-        return SharedVariable(SharedSigmoid.apply(self.var, self.party), self.party)
+        return SharedVariable(SharedSigmoid.apply(self.var, self.party, self.interface), self.party)
 
-    def add(self,other):
+    def add(self, other):
         return SharedVariable(SharedAdd.apply(self.var, other.var), self.party, self.requires_grad)
 
-    def mul(self,other):
-        return SharedVariable(SharedMult.apply(self.var, other.var, self.party), self.party,self.requires_grad)
+    def mul(self, other):
+        return SharedVariable(SharedMult.apply(self.var, other.var, self.party, self.interface), self.party, self.requires_grad)
 
-    def matmul(self,other):
-        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party), self.party,self.requires_grad)
+    def matmul(self, other):
+        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party, self.interface), self.party, self.requires_grad)
 
     def grad(self):
         return self.var.grad
