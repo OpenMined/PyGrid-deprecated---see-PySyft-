@@ -236,13 +236,12 @@ class SharedAdd(Function):
     @staticmethod
     def forward(ctx, a, b):
         return spdz_add(a, b)
-        # compute a + b on Shared data - they are regular PyTorch tensors
 
     @staticmethod
     def backward(ctx, grad_out):
         grad_out = grad_out.data
         return grad_out, grad_out
-        # not grad_out operators are overloaded
+
 
 
 class SharedMult(Function):
@@ -251,14 +250,12 @@ class SharedMult(Function):
     def forward(ctx, a, b, party, interface):
         ctx.save_for_backward(a, b)
         return spdz_mul(a, b, party, interface)
-        # compute a * b on Shared data - they are regular PyTorch tensors
 
     @staticmethod
     def backward(ctx, grad_out, party, interface):
         a, b = ctx.saved_tensors
         grad_out = grad_out
         return Variable(spdz_mul(grad_out.data, b, party, interface)), Variable(spdz_mul(grad_out.data, a, party, interface))
-        # not grad_out operators are overloaded
 
 
 class SharedMatmul(Function):
