@@ -97,7 +97,7 @@ map_tensor_type = {
 }
 map_var_type = {
     'torch.autograd.variable.Variable': torch.autograd.variable.Variable,
-    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter
+    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
     'SharedVariable': SharedVariable
 }
 map_torch_type = dict(map_tensor_type, **map_var_type)

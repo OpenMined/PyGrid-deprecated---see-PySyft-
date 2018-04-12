@@ -30,8 +30,7 @@ class HookService(BaseService):
         self.hook_torch_module()
         for t_type in self.tensor_types:
             self.hook_tensor(t_type)
-        for v_type in self.var_types:
-            self.hook_variable(v_type)
+        self.hook_variable()
         print('Overloading complete.')
 
     # Registration and communication handlers
@@ -56,7 +55,6 @@ class HookService(BaseService):
             message=command,
             response_handler=self.process_response)
         return registration, torch_type, var_data, var_grad
-
 
     def assemble_result_pointer(self, registration, torch_type, var_data, var_grad):
         """
@@ -94,7 +92,7 @@ class HookService(BaseService):
         response = utils.unpack(response)
         try:
             return (response['registration'], response['torch_type'],
-                response['var_data'], response['var_grad'])
+                    response['var_data'], response['var_grad'])
         except:
             return response
 
@@ -124,8 +122,7 @@ class HookService(BaseService):
         command['kwarg_types'] = [type(kwargs[x]).__name__ for x in kwargs]
         return command
 
-
-    ## Grid-specific method hooking
+    # Grid-specific method hooking
     def hook_tensor_send_(service_self, tensor_type):
         def send_(self, workers):
             """
@@ -135,18 +132,19 @@ class HookService(BaseService):
             workers: string (or sequence) containing IPFS address(es)
                 of worker node(s).
             """
-            workers = tu.check_workers(self, workers) # makes singleton, if needed
-            self = service_self.register_object_(self, id=self.id, owners=workers)
+            workers = tu.check_workers(
+                self, workers)  # makes singleton, if needed
+            self = service_self.register_object_(
+                self, id=self.id, owners=workers)
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
             self = service_self.register_object_(self.old_set_(tensor_type(0)),
-                id=self.id, owners=workers, is_pointer=True)
+                                                 id=self.id, owners=workers, is_pointer=True)
             return self
 
         setattr(tensor_type, 'send_', send_)
-
 
     def hook_var_send_(service_self):
         def send_(self, workers):
@@ -157,19 +155,20 @@ class HookService(BaseService):
             workers: string (or sequence) containing IPFS address(es)
                 of worker node(s).
             """
-            workers = tu.check_workers(self, workers) # makes singleton, if needed
-            self = service_self.register_object_(self, id=self.id, owners=workers)
+            workers = tu.check_workers(
+                self, workers)  # makes singleton, if needed
+            self = service_self.register_object_(
+                self, id=self.id, owners=workers)
             for worker in workers:
                 # TODO: sync or async? likely won't be worth doing async,
                 #       but should check (low priority)
                 service_self.send_obj(self, worker)
             service_self.register_object_(self, id=self.id,
-                owners=self.owners, is_pointer=True)
+                                          owners=self.owners, is_pointer=True)
 
             return service_self.var_to_pointer(self)
 
         setattr(torch.autograd.variable.Variable, 'send_', send_)
-
 
     def var_to_pointer(self, var):
         if var.grad is not None:
@@ -177,13 +176,12 @@ class HookService(BaseService):
 
         var.data.old_set_(var.data.__class__(0))
         self.register_object_(var.data, id=var.data.id, owners=var.owners,
-            is_pointer=True)
+                              is_pointer=True)
 
         return var
 
-
     def hook_get_(service_self, torch_type):
-        def get_(self, reduce=lambda x:x[0]):
+        def get_(self, reduce=lambda x: x[0]):
             """
             Gets a Torch object from its current owners.
 
@@ -201,7 +199,7 @@ class HookService(BaseService):
             collected = []
             for worker in self.owners:
                 x = service_self.request_obj(self, worker)
-                collected.append(service_self.register_object_(x, id=x.id))  
+                collected.append(service_self.register_object_(x, id=x.id))
             return service_self.register_object_(self.old_set_(reduce(collected)), id=self.id)
         setattr(torch_type, 'get_', get_)
 
@@ -291,15 +289,14 @@ class HookService(BaseService):
                 return pointer
             else:
                 result = part.func(self, *args, **kwargs)
-                if (type(result) in service_self.tensorvar_types and 
-                    not hasattr(result, 'owner')):
+                if (type(result) in service_self.tensorvar_types and
+                        not hasattr(result, 'owner')):
                     result = service_self.register_object_(result,
-                        is_pointer=False)
+                                                           is_pointer=False)
                 return result
         return send_to_workers
 
-
-    ## Special Tensor method HookService
+    # Special Tensor method HookService
     def hook_tensor___init__(service_self, tensor_type):
         """Overload tensor_type.__init__"""
 
@@ -314,11 +311,13 @@ class HookService(BaseService):
 
         if('old___new__' not in dir(tensor_type)):
             tensor_type.old___new__ = tensor_type.__new__
+
             def new___new__(cls, *args, **kwargs):
                 result = cls.old___new__(cls, *args,  **kwargs)
-                result = service_self.register_object_(result, is_pointer=False)
+                result = service_self.register_object_(
+                    result, is_pointer=False)
                 return result
-            
+
             tensor_type.__new__ = new___new__
 
         tensor_type.__new__ = new___new__
@@ -327,6 +326,7 @@ class HookService(BaseService):
         """Overload tensor_type.__repr__"""
         if('old__repr__' not in dir(tensor_type)):
             tensor_type.old__repr__ = tensor_type.__repr__
+
             def new___repr__(self):
                 if service_self.worker.id in self.owners:
                     return self.old__repr__()
@@ -341,7 +341,7 @@ class HookService(BaseService):
     # Special Variable method hooks
     def hook_var___new__(service_self):
         """Overload Variable.__new__"""
-    
+
         torch.autograd.variable.Variable.old___new__ = torch.autograd.variable.Variable.__new__
 
         def new___new__(cls, *args, **kwargs):
@@ -370,14 +370,14 @@ class HookService(BaseService):
         @new_data.setter
         def new_data(self, new):
             self.old_data = new
-        
+
         @property
         def new_grad(self):
             try:
                 self.grad_registered
             except AttributeError:
                 if self.old_grad is not None:
-                    self.old_grad = service_self.register_object(
+                    self.old_grad = service_self.register_object_(
                         self.old_grad, owners=self.owners,
                         is_pointer=self.is_pointer)
                     self.grad_registered = True
@@ -386,7 +386,7 @@ class HookService(BaseService):
         @new_grad.setter
         def new_grad(self, new):
             self.old_grad = new
-        
+
         torch.autograd.variable.Variable.data = new_data
         torch.autograd.variable.Variable.grad = new_grad
 
@@ -415,8 +415,6 @@ class HookService(BaseService):
                 setattr(torch, 'old_{}'.format(attr), lit)
                 setattr(torch, attr, new_attr)
 
-
-
     def hook_tensor(self, tensor_type):
         """Overloading a given tensor_type"""
         # Overload 'special' methods here
@@ -433,7 +431,7 @@ class HookService(BaseService):
                 lit = getattr(tensor_type, attr)
                 is_base = attr in dir(object)
                 is_desc = inspect.ismethoddescriptor(lit)
-                is_func = type(lit)==FunctionType
+                is_func = type(lit) == FunctionType
                 try:
                     is_service_func = 'HookService' in lit.__qualname__
                 except:
@@ -441,8 +439,8 @@ class HookService(BaseService):
                 is_old = re.match('old*', attr) is not None
 
                 # Where the overloading happens
-                if ((is_desc or (is_func and not is_service_func)) 
-                    and not is_base and not is_old):
+                if ((is_desc or (is_func and not is_service_func))
+                        and not is_base and not is_old):
                     passer = self.pass_method_args(lit)
                     new_attr = self.overload_method(passer)
                     setattr(tensor_type, 'old_{}'.format(attr), lit)
@@ -453,12 +451,12 @@ class HookService(BaseService):
         self.hook_get_(tensor_type)
         tu.hook_tensor__ser(self, tensor_type)
 
-    def hook_variable(self, var_type):
+    def hook_variable(self):
         # Overload 'special' methods here
         self.hook_var___new__()
         self.hook_var_contents()
 
-        for attr in dir(var_type):
+        for attr in dir(torch.autograd.variable.Variable):
 
             # Conditions for inclusion/exclusion
             if attr in self.exclude + self.var_exclude:
