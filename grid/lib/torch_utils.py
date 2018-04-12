@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 
-from . import utils, SharedVariable
+from . import utils, shared_variable.SharedVariable
 import torch
 
 
