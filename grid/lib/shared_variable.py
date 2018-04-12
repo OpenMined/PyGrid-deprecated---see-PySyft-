@@ -243,7 +243,6 @@ class SharedAdd(Function):
         return grad_out, grad_out
 
 
-
 class SharedMult(Function):
 
     @staticmethod
@@ -325,6 +324,10 @@ class SharedVariable(object):
     @property
     def grad(self):
         return self.var.grad
+
+    @property
+    def data(self):
+        return self.var.data
 
     def t_(self):
         self.var = self.var.t_()
