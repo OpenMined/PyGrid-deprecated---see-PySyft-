@@ -322,6 +322,7 @@ class SharedVariable(object):
     def matmul(self, other):
         return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party, self.interface), self.party, self.interface, self.requires_grad)
 
+    @property
     def grad(self):
         return self.var.grad
 
