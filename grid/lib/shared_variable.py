@@ -289,10 +289,8 @@ class SharedVariable(object):
     def __init__(self, var, party, interface, requires_grad=True):
         self.requires_grad = requires_grad
         if not isinstance(var, Variable):
-            self.var = Variable(var, requires_grad=requires_grad)
+            raise ValueError('Var must be a variable')
         else:
-            if self.requires_grad != var.requires_grad:
-                raise ValueError("Requires grad Values do not match")
             self.var = var
         self.party = party
         self.interface = interface
