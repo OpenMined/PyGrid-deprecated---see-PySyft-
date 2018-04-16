@@ -1,7 +1,7 @@
 from ..base import BaseService
 from .hook_service import HookService
 from ... import channels
-from ...lib import utils,torch_utils as tu
+from ...lib import utils, torch_utils as tu
 
 import torch
 from bitcoin import base58
@@ -32,7 +32,6 @@ class TorchService(BaseService):
     def receive_obj(self, msg):
         self.receive_obj_break(msg)
 
-
     def receive_obj_break(self, msg):
         # TODO: generalize to Variable
         obj_msg = utils.unpack(msg)
@@ -48,11 +47,10 @@ class TorchService(BaseService):
                 v = self.build_tensor(obj_msg, torch_type)
 
             return self.handle_register(v, obj_msg)
-            
+
         except KeyError:
             # if obj_msg has no 'torch_type' key
             return obj_msg['numeric']
-
 
     @classmethod
     def build_tensor(cls, obj_msg, torch_type):
@@ -66,7 +64,7 @@ class TorchService(BaseService):
         return v
 
     def build_var(self, obj_msg, torch_type):
-        
+
         if 'data' in obj_msg.keys():
             data_msg = json.loads(obj_msg['data'])
             tensor_type = tu.types_guard(data_msg)
@@ -82,10 +80,9 @@ class TorchService(BaseService):
             else:
                 grad = None
         var = torch_type(data, volatile=obj_msg['volatile'],
-            requires_grad=obj_msg['requires_grad'])
+                         requires_grad=obj_msg['requires_grad'])
         var.grad = grad
         return var
-
 
     def handle_register(self, torch_object, obj_msg):
         try:
@@ -99,4 +96,3 @@ class TorchService(BaseService):
         torch_object = self.register_object_(
             torch_object, id=obj_msg['id'], owners=obj_msg['owners'])
         return torch_object
-
