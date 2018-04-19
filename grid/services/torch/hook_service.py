@@ -80,9 +80,10 @@ class HookService(BaseService):
 
         if var_data is not None:
             data = self.assemble_result_pointer(**var_data)
-            self.register_object_(data, **var_data['registration'])
+            data = self.register_object_(data, **var_data['registration'])
         else:
             data = 0
+        print(data)
         result = torch_type(data)
         if var_grad is not None:
             grad = self.assemble_result_pointer(**var_grad)
@@ -205,8 +206,18 @@ class HookService(BaseService):
             collected = []
             for worker in self.owners:
                 x = service_self.request_obj(self, worker)
-                collected.append(service_self.register_object_(x, id=x.id))  
-            return service_self.register_object_(self.old_set_(reduce(collected)), id=self.id)
+                collected.append(service_self.register_object_(x, id=x.id)) 
+            try:
+                service_self.register_object_(self.data, id=self.data.id,
+                    owners=[service_self.worker.id])
+                if self.grad is not None:
+                    service_self.register_object_(self.grad, id=self.grad.id,
+                        owners=[service_self.worker.id])
+            except RuntimeError:
+                pass
+            return service_self.register_object_(
+                self.old_set_(reduce(collected)),
+                id=self.id, owners=[service_self.worker.id])
         setattr(torch_type, 'get_', get_)
 
 
@@ -236,6 +247,7 @@ class HookService(BaseService):
             has_remote = tu.check_remote(tensorvars)
             if has_remote:
                 multiple_owners, owners = tu.get_owners(tensorvars)
+                print(owners)
                 if multiple_owners:
                     raise NotImplementedError("""MPC not yet implemented: 
                     Torch objects need to be on the same machine in order
@@ -246,6 +258,8 @@ class HookService(BaseService):
                         # TODO: extend to iterables of pointers
                         registration, torch_type, var_data, var_grad = self.send_command(
                             command, worker)
+                        if registration is None:
+                            return
                         pointer = self.assemble_result_pointer(
                             registration, torch_type, var_data, var_grad)
                     return pointer
@@ -283,11 +297,14 @@ class HookService(BaseService):
                 tensorvars = tu.get_tensorvars(service_self, command)
                 has_remote = tu.check_remote(tensorvars)
                 multiple_owners, owners = tu.get_owners(tensorvars)
+                print(owners)
                 if has_remote and not multiple_owners:
                     for worker in owners:
                         command = tu.replace_in_command(command)
                         registration, torch_type, var_data, var_grad = service_self.send_command(
                             command, worker)
+                        if registration is None:
+                            return
                         # only returns last pointer, since tensors will
                         # be identical across machines for right now
                         pointer = service_self.assemble_result_pointer(
@@ -360,45 +377,6 @@ class HookService(BaseService):
         torch.autograd.variable.Variable.__new__ = new___new__
 
 
-    def hook_var_contents(service_self):
-        """Overload Variable.data and Variable.grad properties."""
-        torch.autograd.variable.Variable.old_data = torch.autograd.variable.Variable.data
-        torch.autograd.variable.Variable.old_grad = torch.autograd.variable.Variable.grad
-        @property
-        def new_data(self):
-            try:
-                self.data_registered
-            except AttributeError:
-                self.old_data = service_self.register_object_(
-                    self.old_data, owners=self.owners,
-                    is_pointer=self.is_pointer)
-                self.data_registered = True
-            return self.old_data
-
-        @new_data.setter
-        def new_data(self, new):
-            self.old_data = new
-        
-        @property
-        def new_grad(self):
-            try:
-                self.grad_registered
-            except AttributeError:
-                if self.old_grad is not None:
-                    self.old_grad = service_self.register_object(
-                        self.old_grad, owners=self.owners,
-                        is_pointer=self.is_pointer)
-                    self.grad_registered = True
-            return self.old_grad
-
-        @new_grad.setter
-        def new_grad(self, new):
-            self.old_grad = new
-        
-        torch.autograd.variable.Variable.data = new_data
-        torch.autograd.variable.Variable.grad = new_grad
-
-
     ## Overloading Torch objects
     def hook_torch_module(self):
         """Overload functions in the main torch module"""
@@ -466,7 +444,7 @@ class HookService(BaseService):
     def hook_variable(self):
         # Overload 'special' methods here
         self.hook_var___new__()
-        self.hook_var_contents()
+        tu.hook_var_contents(self)
 
         for attr in dir(torch.autograd.variable.Variable):
 

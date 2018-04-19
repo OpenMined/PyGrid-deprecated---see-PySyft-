@@ -27,6 +27,8 @@ def get_tensorvars(self, command):
     kwarg_types = command['kwarg_types']
     tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types_strs]
     tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
+    if command['has_self']:
+        tensorvar_args.insert(0, command['self'])
     return tensorvar_args + tensorvar_kwvals
 
 
@@ -181,3 +183,52 @@ def hook_var__ser(service_self):
 
     torch.autograd.variable.Variable._ser = _ser
 
+
+def hook_var_contents(service_self):
+        """Overload Variable.data and Variable.grad properties."""
+        torch.autograd.variable.Variable.old_data = torch.autograd.variable.Variable.data
+        torch.autograd.variable.Variable.old_grad = torch.autograd.variable.Variable.grad
+        @property
+        def new_data(self):
+            try:
+                self.data_registered
+            except AttributeError:
+                self.old_data = service_self.register_object_(
+                    self.old_data, id=self.old_data.id, owners=self.owners,
+                    is_pointer=self.is_pointer)
+                self.data_registered = True
+            except AttributeError:
+                self.old_data = service_self.register_object_(
+                    self.old_data, owners=self.owners,
+                    is_pointer=self.is_pointer)
+                self.data_registered = True
+            return self.old_data
+
+        @new_data.setter
+        def new_data(self, new):
+            self.old_data = new
+        
+        @property
+        def new_grad(self):
+            try:
+                self.grad_registered
+            except AttributeError:
+                if self.old_grad is not None:
+                    self.old_grad = service_self.register_object(
+                        self.old_grad, owners=self.owners,
+                        is_pointer=self.is_pointer)
+                    self.grad_registered = True
+            except AttributeError:
+                if self.old_grad is not None:
+                    self.old_grad = service_self.register_object(
+                        self.old_grad, id=self.old_grad.id, owners=self.owners,
+                        is_pointer=self.is_pointer)
+                    self.grad_registered = True
+            return self.old_grad
+
+        @new_grad.setter
+        def new_grad(self, new):
+            self.old_grad = new
+        
+        torch.autograd.variable.Variable.data = new_data
+        torch.autograd.variable.Variable.grad = new_grad
