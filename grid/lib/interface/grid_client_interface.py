@@ -1,4 +1,4 @@
-from base_interface import BaseInterface
+from grid.lib.interface.base_interface import BaseInterface
 
 
 class GridClientInterface(BaseInterface):

@@ -1,5 +1,5 @@
 import torch
-from torch.autograd import Variable, Function
+from torch.autograd import Variable
 import inspect
 import random
 import copy
