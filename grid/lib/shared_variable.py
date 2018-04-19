@@ -56,7 +56,7 @@ def swap_shares(share, party, interface):
 
 
 def truncate(x, party, amount=PRECISION_FRACTIONAL):
-    if (x.party == 0):
+    if (party == 0):
         return x//BASE**amount
     return field-((field-x)//BASE**amount)
 
