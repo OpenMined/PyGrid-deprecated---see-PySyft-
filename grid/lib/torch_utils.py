@@ -4,7 +4,10 @@ import re
 
 from pathlib import Path
 
-from . import utils, shared_variable.SharedVariable
+from .. import channels
+
+from . import utils
+# from .shared_variable import SharedVariable
 import torch
 
 
@@ -97,8 +100,9 @@ map_tensor_type = {
 }
 map_var_type = {
     'torch.autograd.variable.Variable': torch.autograd.variable.Variable,
-    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
-    'SharedVariable': SharedVariable
+    # 'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
+    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter
+    # 'SharedVariable': SharedVariable
 }
 map_torch_type = dict(map_tensor_type, **map_var_type)
 
@@ -153,6 +157,13 @@ def map_dict(service, kwargs, func):
         return {key: func(val) for key, val in kwargs.items()}
 
 
+def send_obj(service, obj, recipient):
+        """Send Torch object to recipient."""
+        service.worker.publish(
+            channels.torch_listen_for_obj_callback(recipient),
+            message=obj._ser())
+
+
 def hook_tensor__ser(service_self, tensor_type):
     def _ser(self, include_data=True):
         """Serializes a {} object to JSON.""".format(tensor_type)
@@ -186,3 +197,89 @@ def hook_var__ser(service_self):
         return json.dumps(var_msg)
 
     torch.autograd.variable.Variable._ser = _ser
+
+
+def hook_tensor_send_(service_self, tensor_type):
+    def send_(self, workers):
+        """
+        Sends a Tensor object to a (sequence of) Grid workers.
+
+        Args:
+        workers: string (or sequence) containing IPFS address(es)
+            of worker node(s).
+        """
+        workers = check_workers(
+            self, workers)  # makes singleton, if needed
+        self = service_self.register_object_(
+            self, id=self.id, owners=workers)
+        for worker in workers:
+            # TODO: sync or async? likely won't be worth doing async,
+            #       but should check (low priority)
+            send_obj(service_self, self, worker)
+        self = service_self.register_object_(self.old_set_(tensor_type(0)),
+                                             id=self.id, owners=workers,
+                                             is_pointer=True)
+        return self
+
+    setattr(tensor_type, 'send_', send_)
+
+
+def hook_var_send_(service_self):
+    def send_(self, workers):
+        """
+        Sends a Variable object to a (sequence of) Grid workers.
+
+        Args:
+        workers: string (or sequence) containing IPFS address(es)
+            of worker node(s).
+        """
+        workers = check_workers(
+            self, workers)  # makes singleton, if needed
+        self = service_self.register_object_(
+            self, id=self.id, owners=workers)
+        for worker in workers:
+            # TODO: sync or async? likely won't be worth doing async,
+            #       but should check (low priority)
+            send_obj(service_self, self, worker)
+        service_self.register_object_(self, id=self.id,
+                                      owners=self.owners, is_pointer=True)
+
+        return var_to_pointer(service_self, self)
+
+    setattr(torch.autograd.variable.Variable, 'send_', send_)
+
+
+def var_to_pointer(service, var):
+    if var.grad is not None:
+        var_to_pointer(service, var.grad)
+
+    var.data.old_set_(var.data.__class__(0))
+    service.register_object_(var.data, id=var.data.id, owners=var.owners,
+                          is_pointer=True)
+
+    return var
+
+
+def hook_get_(service_self, torch_type):
+    def get_(self, reduce=lambda x: x[0]):
+        """
+        Gets a Torch object from its current owners.
+
+        Args:
+        reduce: (EXPERIMENTAL) How to reduce tensors that come from
+            multiple workers
+        """
+        # TODO: fully generalize this to multiple workers; consider
+        #       adding arguments for other tensor ids, e.g. mapping workers
+        #       to tensors, and a reduce function (for example, would allow
+        #       for built-in gradient averaging when Variable.get is done)
+        #       (low priority)
+        if service_self.worker.id in self.owners:
+            return self
+        collected = []
+        for worker in self.owners:
+            x = service_self.request_obj(self, worker)
+            collected.append(service_self.register_object_(x, id=x.id))
+        return service_self.register_object_(self.old_set_(reduce(collected)),
+                                                id=self.id)
+    setattr(torch_type, 'get_', get_)

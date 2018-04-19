@@ -89,7 +89,6 @@ class GridWorker():
         who receive it is purely based on the number of people who happen
         to be listening.
         """
-
         if isinstance(message, dict) or isinstance(message, list):
             self.api.pubsub_pub(topic=channel, payload=json.dumps(message))
         else:

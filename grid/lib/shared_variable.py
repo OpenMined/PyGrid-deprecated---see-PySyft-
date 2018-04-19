@@ -1,6 +1,9 @@
 import torch
 from torch.autograd import Variable, Function
-import spdz
+import sys
+for x in sys.path:
+    print(x)
+from grid.lib import spdz
 
 
 class SharedAdd(Function):

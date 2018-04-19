@@ -14,7 +14,9 @@ class HookWorkerService(BaseService):
         super().__init__(worker)
         for tensor_type in self.tensor_types:
             tu.hook_tensor__ser(self, tensor_type)
+            tu.hook_tensor_send_
         tu.hook_var__ser(self)
+        tu.hook_var_send_(self)
 
         # Listen for torch object requests
         req_callback = channels.torch_listen_for_obj_req_callback(
@@ -74,7 +76,6 @@ class HookWorkerService(BaseService):
             if isinstance(result, numbers.Number):
                 return {'numeric': result}
             # result is usually a tensor/variable
-            print(result)
             torch_type = re.search("<class '(torch.(.*))'>",
                                    str(result.__class__)).group(1)
 
@@ -105,7 +106,8 @@ class HookWorkerService(BaseService):
     def receive_obj_request(self, msg):
         """Handles requests for Torch objects."""
         obj_id, response_channel = utils.unpack(msg)
-
+        print(obj_id)
+        print(self.worker.objects.keys())
         if (obj_id in self.worker.objects.keys()):
             new_owner = re.search(
                 '(.+)_[0-9]{1,11}', response_channel).group(1)
@@ -115,6 +117,7 @@ class HookWorkerService(BaseService):
         else:
             # TODO: replace this with something that triggers a nicer
             #       error on the client
+            print("{} not found".format(obj_id))
             response_str = 'n/a - tensor not found'
 
         self.worker.publish(channel=response_channel, message=response_str)

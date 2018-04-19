@@ -1,6 +1,6 @@
 from . import base
-from ..services.torch.torch_service import TorchService
-from ..services.torch.hook_service import HookService
+from ..services.torch_services.torch_service import TorchService
+from ..services.torch_services.hook_service import HookService
 
 
 class TorchClient(base.BaseClient):

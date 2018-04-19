@@ -34,18 +34,19 @@ class HookService(BaseService):
         print('Overloading complete.')
 
     # Registration and communication handlers
-    def send_obj(self, obj, recipient):
-        """Send Torch object to recipient."""
-        self.worker.publish(
-            channels.torch_listen_for_obj_callback(recipient),
-            message=obj._ser())
-
     def request_obj(self, obj, sender):
         """Request Torch object from sender."""
-        return self.worker.request_response(
-            channel=channels.torch_listen_for_obj_req_callback(sender),
-            message=obj.id,
-            response_handler=self.worker.services['torch_service'].receive_obj_break)
+        try:
+            return self.worker.request_response(
+                channel=channels.torch_listen_for_obj_req_callback(sender),
+                message=obj.id,
+                response_handler=self.worker.services['torch_service'].receive_obj_break)
+        except AttributeError:
+            obj_id = obj
+            return self.worker.request_response(
+                channel=channels.torch_listen_for_obj_req_callback(sender),
+                message=obj_id,
+                response_handler=self.worker.services['torch_service'].receive_obj_break)
 
     def send_command(self, command, recipient):
         """Send Torch command to recipient."""
@@ -122,86 +123,6 @@ class HookService(BaseService):
         command['kwarg_types'] = [type(kwargs[x]).__name__ for x in kwargs]
         return command
 
-    # Grid-specific method hooking
-    def hook_tensor_send_(service_self, tensor_type):
-        def send_(self, workers):
-            """
-            Sends a Tensor object to a (sequence of) Grid workers.
-
-            Args:
-            workers: string (or sequence) containing IPFS address(es)
-                of worker node(s).
-            """
-            workers = tu.check_workers(
-                self, workers)  # makes singleton, if needed
-            self = service_self.register_object_(
-                self, id=self.id, owners=workers)
-            for worker in workers:
-                # TODO: sync or async? likely won't be worth doing async,
-                #       but should check (low priority)
-                service_self.send_obj(self, worker)
-            self = service_self.register_object_(self.old_set_(tensor_type(0)),
-                                                 id=self.id, owners=workers, is_pointer=True)
-            return self
-
-        setattr(tensor_type, 'send_', send_)
-
-    def hook_var_send_(service_self):
-        def send_(self, workers):
-            """
-            Sends a Variable object to a (sequence of) Grid workers.
-
-            Args:
-            workers: string (or sequence) containing IPFS address(es)
-                of worker node(s).
-            """
-            workers = tu.check_workers(
-                self, workers)  # makes singleton, if needed
-            self = service_self.register_object_(
-                self, id=self.id, owners=workers)
-            for worker in workers:
-                # TODO: sync or async? likely won't be worth doing async,
-                #       but should check (low priority)
-                service_self.send_obj(self, worker)
-            service_self.register_object_(self, id=self.id,
-                                          owners=self.owners, is_pointer=True)
-
-            return service_self.var_to_pointer(self)
-
-        setattr(torch.autograd.variable.Variable, 'send_', send_)
-
-    def var_to_pointer(self, var):
-        if var.grad is not None:
-            self.var_to_pointer(var.grad)
-
-        var.data.old_set_(var.data.__class__(0))
-        self.register_object_(var.data, id=var.data.id, owners=var.owners,
-                              is_pointer=True)
-
-        return var
-
-    def hook_get_(service_self, torch_type):
-        def get_(self, reduce=lambda x: x[0]):
-            """
-            Gets a Torch object from its current owners.
-
-            Args:
-            reduce: (EXPERIMENTAL) How to reduce tensors that come from
-                multiple workers
-            """
-            # TODO: fully generalize this to multiple workers; consider
-            #       adding arguments for other tensor ids, e.g. mapping workers
-            #       to tensors, and a reduce function (for example, would allow
-            #       for built-in gradient averaging when Variable.get is done)
-            #       (low priority)
-            if service_self.worker.id in self.owners:
-                return self
-            collected = []
-            for worker in self.owners:
-                x = service_self.request_obj(self, worker)
-                collected.append(service_self.register_object_(x, id=x.id))
-            return service_self.register_object_(self.old_set_(reduce(collected)), id=self.id)
-        setattr(torch_type, 'get_', get_)
 
     # General hooking wrappers
     @staticmethod
@@ -447,8 +368,8 @@ class HookService(BaseService):
                     setattr(tensor_type, attr, new_attr)
 
         # Add in our own Grid-specific methods
-        self.hook_tensor_send_(tensor_type)
-        self.hook_get_(tensor_type)
+        tu.hook_tensor_send_(self, tensor_type)
+        tu.hook_get_(self, tensor_type)
         tu.hook_tensor__ser(self, tensor_type)
 
     def hook_variable(self):
@@ -480,6 +401,6 @@ class HookService(BaseService):
                         'old_{}'.format(attr), lit)
                 setattr(torch.autograd.variable.Variable, attr, new_attr)
 
-        self.hook_var_send_()
-        self.hook_get_(torch.autograd.variable.Variable)
+        tu.hook_var_send_(self)
+        tu.hook_get_(self, torch.autograd.variable.Variable)
         tu.hook_var__ser(self)
