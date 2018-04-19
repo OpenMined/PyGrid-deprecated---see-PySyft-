@@ -248,11 +248,13 @@ class SharedMult(Function):
     @staticmethod
     def forward(ctx, a, b, interface):
         ctx.save_for_backward(a, b)
+        ctx.interface = interface
         return spdz_mul(a, b, interface)
 
     @staticmethod
-    def backward(ctx, grad_out, interface):
+    def backward(ctx, grad_out):
         a, b = ctx.saved_tensors
+        interface = ctx.interface
         grad_out = grad_out
         return Variable(spdz_mul(grad_out.data, b, interface)), Variable(spdz_mul(grad_out.data, a, interface))
 
@@ -262,11 +264,13 @@ class SharedMatmul(Function):
     @staticmethod
     def forward(ctx, a, b, interface):
         ctx.save_for_backward(a, b)
+        ctx.interface = interface
         return spdz_matmul(a, b, interface)
 
     @staticmethod
-    def backward(ctx, grad_out, interface):
+    def backward(ctx, grad_out):
         a, b = ctx.saved_tensors
+        interface = ctx.interface
         return spdz_matmul(grad_out,  b.t_(), interface), spdz_matmul(grad_out, a.t_(), interface)
 
 
@@ -275,11 +279,13 @@ class SharedSigmoid(Function):
     @staticmethod
     def forward(ctx, a, interface):
         ctx.save_for_backwards(a)
+        ctx.interface = interface
         return spdz_sigmoid(a, interface)
 
     @staticmethod
-    def backward(ctx, grad_out, interface):
+    def backward(ctx, grad_out):
         a = ctx.saved_tensors
+        interface = ctx.interface
         ones = encode(torch.FloatTensor(a.shape).one_())
         return spdz_mul(a, public_add(ones, -a, interface), interface)
 
@@ -307,16 +313,16 @@ class SharedVariable(object):
         return self.matmul(other)
 
     def sigmoid(self):
-        return SharedVariable(SharedSigmoid.apply(self.var, self.interface), self.party, self.interface)
+        return SharedVariable(SharedSigmoid.apply(self.var, self.interface), self.interface)
 
     def add(self, other):
         return SharedVariable(SharedAdd.apply(self.var, other.var), self.interface, self.requires_grad)
 
     def mul(self, other):
-        return SharedVariable(SharedMult.apply(self.var, other.var, self.interface), self.party, self.interface, self.requires_grad)
+        return SharedVariable(SharedMult.apply(self.var, other.var, self.interface), self.interface, self.requires_grad)
 
     def matmul(self, other):
-        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.party, self.interface), self.party, self.interface, self.requires_grad)
+        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.interface), self.interface, self.requires_grad)
 
     @property
     def grad(self):
