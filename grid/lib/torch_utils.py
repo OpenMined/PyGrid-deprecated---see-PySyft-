@@ -4,7 +4,7 @@ import re
 
 from pathlib import Path
 
-from . import utils
+from . import utils, shared_variable.SharedVariable
 import torch
 
 
@@ -16,7 +16,7 @@ def check_workers(self, workers):
         raise TypeError(
             """Can only send {} to a string worker ID or an iterable of
             string worker IDs, not {}""".format(self.__name__, type(owners))
-            )
+        )
     return workers
 
 
@@ -25,8 +25,10 @@ def get_tensorvars(self, command):
     kwargs = command['kwargs']
     arg_types = command['arg_types']
     kwarg_types = command['kwarg_types']
-    tensorvar_args = [args[i] for i in range(len(args)) if arg_types[i] in self.tensorvar_types_strs]
-    tensorvar_kwvals = [kwargs[i][1] for i in range(len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
+    tensorvar_args = [args[i] for i in range(
+        len(args)) if arg_types[i] in self.tensorvar_types_strs]
+    tensorvar_kwvals = [kwargs[i][1] for i in range(
+        len(kwargs)) if kwarg_types[i] in self.tensorvar_types_strs]
     return tensorvar_args + tensorvar_kwvals
 
 
@@ -36,8 +38,8 @@ def check_remote(tensorvars):
 
 def get_owners(tensorvars):
     owners = list(set([owner
-        for tensorvar in tensorvars
-        for owner in tensorvar.owners]))
+                       for tensorvar in tensorvars
+                       for owner in tensorvar.owners]))
     multiple_owners = len(owners) > 1
     return multiple_owners, owners
 
@@ -68,6 +70,8 @@ def replace_in_command(command_msg):
     return command_msg
 
 # Client needs to identify a tensor before sending commands that use it
+
+
 def id_tensorvar(x):
     pat = re.compile('_fl.(.*)')
     try:
@@ -82,18 +86,19 @@ def id_tensorvar(x):
 # Safety checks for serializing and deserializing torch objects
 # Desperately needs stress testing before going out in the wild
 map_tensor_type = {
-    'torch.FloatTensor':torch.FloatTensor,
-    'torch.DoubleTensor':torch.DoubleTensor,
-    'torch.HalfTensor':torch.HalfTensor,
-    'torch.ByteTensor':torch.ByteTensor,
-    'torch.CharTensor':torch.CharTensor,
-    'torch.ShortTensor':torch.ShortTensor,
-    'torch.IntTensor':torch.IntTensor,
-    'torch.LongTensor':torch.LongTensor
+    'torch.FloatTensor': torch.FloatTensor,
+    'torch.DoubleTensor': torch.DoubleTensor,
+    'torch.HalfTensor': torch.HalfTensor,
+    'torch.ByteTensor': torch.ByteTensor,
+    'torch.CharTensor': torch.CharTensor,
+    'torch.ShortTensor': torch.ShortTensor,
+    'torch.IntTensor': torch.IntTensor,
+    'torch.LongTensor': torch.LongTensor
 }
 map_var_type = {
-    'torch.autograd.variable.Variable':torch.autograd.variable.Variable,
-    'torch.nn.parameter.Parameter':torch.nn.parameter.Parameter
+    'torch.autograd.variable.Variable': torch.autograd.variable.Variable,
+    'torch.nn.parameter.Parameter': torch.nn.parameter.Parameter,
+    'SharedVariable': SharedVariable
 }
 map_torch_type = dict(map_tensor_type, **map_var_type)
 
@@ -106,6 +111,7 @@ def types_guard(obj_msg):
         raise TypeError(
             "Tried to receive a non-Torch object of type {}.".format(
                 _torch_type))
+
 
 def tensor_contents_guard(contents):
     # TODO: check to make sure the incoming list isn't dangerous to use for
@@ -142,9 +148,9 @@ def map_tuple(service, args, func):
 
 def map_dict(service, kwargs, func):
     if service:
-        return {key:func(service, val) for key, val in kwargs.items()}
+        return {key: func(service, val) for key, val in kwargs.items()}
     else:
-        return {key:func(val) for key, val in kwargs.items()}
+        return {key: func(val) for key, val in kwargs.items()}
 
 
 def hook_tensor__ser(service_self, tensor_type):
@@ -166,7 +172,7 @@ def hook_var__ser(service_self):
     def _ser(self, include_data=True):
         var_msg = {}
         var_msg['torch_type'] = re.search("<class '(.*)'>",
-            str(self.__class__)).group(1)
+                                          str(self.__class__)).group(1)
         var_msg['requires_grad'] = self.requires_grad
         var_msg['volatile'] = self.volatile
         var_msg['data'] = self.data._ser(include_data)
@@ -180,4 +186,3 @@ def hook_var__ser(service_self):
         return json.dumps(var_msg)
 
     torch.autograd.variable.Variable._ser = _ser
-
