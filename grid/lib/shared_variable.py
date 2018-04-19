@@ -7,7 +7,7 @@ class SharedAdd(Function):
 
     @staticmethod
     def forward(ctx, a, b):
-        return spdz_add(a, b)
+        return spdz.spdz_add(a, b)
 
     @staticmethod
     def backward(ctx, grad_out):
