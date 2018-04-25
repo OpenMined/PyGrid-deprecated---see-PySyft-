@@ -9,24 +9,24 @@ KAPPA = 3  # ~29 bits
 
 # TODO set these intelligently
 PRECISION_INTEGRAL = 2
-PRECISION_FRACTIONAL = 5
+PRECISION_FRACTIONAL = 0
 PRECISION = PRECISION_INTEGRAL + PRECISION_FRACTIONAL
 BOUND = BASE**PRECISION
 
 # Q field
-field = 2**41  # < 64 bits
+field = 2**31 -1  # < 64 bits
 #Q = 2147483648
 Q_MAXDEGREE = 1
 
 
 def encode(rational, precision_fractional=PRECISION_FRACTIONAL):
     upscaled = (rational * BASE**precision_fractional).long()
-    upscaled.remainder_(field)
-    return upscaled
+    field_element = upscaled % field 
+    return field_element
 
 
 def decode(field_element, precision_fractional=PRECISION_FRACTIONAL):
-    field_element = field_element.data
+    field_element = field_element
     neg_values = field_element.gt(field)
     #pos_values = field_element.le(field)
     #upscaled = field_element*(neg_valuese+pos_values)
@@ -46,35 +46,36 @@ def reconstruct(shares):
 
 
 def swap_shares(share, interface):
+    share_other = torch.LongTensor(share.shape).zero_()
     if (interface.get_party() == 0):
         interface.send(share)
-        share_other = interface.recv()
+        share_other = interface.recv(share_other)
     elif (interface.get_party() == 1):
-        share_other = interface.recv()
+        share_other = interface.recv(share_other)
         interface.send(share)
     return share_other
 
 
 def truncate(x, interface, amount=PRECISION_FRACTIONAL):
     if (interface.get_party() == 0):
-        return x//BASE**amount
-    return field-((field-x)//BASE**amount)
+        return (x/BASE**amount) %field
+    return (field-((field-x)/BASE**amount)) %field
 
 
 def public_add(x, y, interface):
     if (interface.get_party() == 0):
-        return x+y
+        return (x+y)
     elif(interface.get_party() == 1):
         return x
 
 
 def spdz_add(a, b):
-    return (a+b % field)
+    return ((a+b) % field)
 
 
 def generate_mul_triple(m, n):
     r = torch.LongTensor(m, n).random_(field)
-    s = torch.LongTensor(m, m).random_(field)
+    s = torch.LongTensor(m, n).random_(field)
     t = r * s
     return r, s, t
 
@@ -107,13 +108,13 @@ def spdz_mul(x, y, interface):
     m, n = x.shape
     triple = generate_mul_triple_communication(m, n, interface)
     a, b, c = triple
-    d = x - a
-    e = y - b
+    d = (x - a) %field
+    e = (y - b) %field
 
     d_other = swap_shares(d, interface)
     e_other = swap_shares(e, interface)
-    delta = reconstruct([d, d_other])
-    epsilon = reconstruct([e, e_other])
+    delta = (d+ d_other) %field
+    epsilon = (e+  e_other) %field
     r = delta * epsilon
     s = a * epsilon
     t = b * delta

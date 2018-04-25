@@ -1,13 +1,18 @@
-from grid.lib.interface.base_interface import BaseInterface
+from interface.base_interface import BaseInterface
 import os
 import torch
 import torch.distributed as dist
 
 
-class DistributedInterface(BaseInterface):
+class DistributedInterface(object):
 
-    def __init__(self, party, master_addr='127.0.0.1', master_port='29500'):
-        super().__init__(self, party)
+    def __init__(self,party, master_addr='127.0.0.1', master_port='29500'):
+        print("ran")
+        self.party=party
+        if party:
+            self.other = 0
+        else:
+            self.other = 1
         os.environ['MASTER_ADDR'] = master_addr
         os.environ['MASTER_PORT'] = master_port
         # currently only supports sending between 2 parties over tcp
@@ -19,3 +24,5 @@ class DistributedInterface(BaseInterface):
     def recv(self, var):
         dist.recv(tensor=var, src=self.other)
         return var
+    def get_party(self):
+        return self.party
