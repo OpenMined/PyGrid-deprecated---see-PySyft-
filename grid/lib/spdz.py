@@ -72,6 +72,8 @@ def public_add(x, y, interface):
 def spdz_add(a, b):
     return ((a+b) % field)
 
+def spdz_neg(a):
+    return (field - a)%field
 
 def generate_mul_triple(m, n):
     r = torch.LongTensor(m, n).random_(field)

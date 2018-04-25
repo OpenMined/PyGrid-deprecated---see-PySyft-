@@ -11,8 +11,28 @@ class SharedAdd(Function):
 
     @staticmethod
     def backward(ctx, grad_out):
-        grad_out = grad_out.data
+        grad_out = grad_out
         return grad_out, grad_out
+    
+class SharedNeg(Function):
+    
+    @staticmethod
+    def forward(ctx,a):
+        return spdz.spdz_neg(a)
+    
+    @staticmethod
+    def backward(ctx,grad_out):
+        return spdz.spdz_neg(grad_out)
+    
+class SharedSub(Function):
+    
+    @staticmethod
+    def forward(ctx,a,b):
+        return spdz.spdz_add(a,spdz.spdz_neg(b))
+    
+    @staticmethod
+    def backward(ctx,grad_out):
+        return grad_out, spdz.spdz_neg(grad_out)
 
 
 class SharedMult(Function):
@@ -73,10 +93,13 @@ class SharedVariable(object):
         self.interface = interface
 
     def __neg__(self):
-        return SharedVariable(torch.Tensor.neg(self.var), self.requires_grad)
+        return self.neg()
 
     def __add__(self, other):
         return self.add(other)
+    
+    def __sub__(self,other):
+        return self.sub(other)
 
     def __mul__(self, other):
         return self.mul(other)
@@ -86,9 +109,15 @@ class SharedVariable(object):
 
     def sigmoid(self):
         return SharedVariable(SharedSigmoid.apply(self.var, self.interface), self.interface)
-
+    
+    def neg(self):
+        return SharedVariable(SharedNeg.apply(self.var),self.interface)
+    
     def add(self, other):
         return SharedVariable(SharedAdd.apply(self.var, other.var), self.interface, self.requires_grad)
+    
+    def sub(self,other):
+        return SharedVariable(SharedSub.apply(self.var,other.var),self.interface)
 
     def mul(self, other):
         return SharedVariable(SharedMult.apply(self.var, other.var, self.interface), self.interface, self.requires_grad)
