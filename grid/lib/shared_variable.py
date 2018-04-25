@@ -84,8 +84,7 @@ class SharedSigmoid(Function):
 
 class SharedVariable(object):
 
-    def __init__(self, var, interface, requires_grad=True):
-        self.requires_grad = requires_grad
+    def __init__(self, var, interface):
         if not isinstance(var, Variable):
             raise ValueError('Var must be a variable')
         else:
@@ -120,10 +119,10 @@ class SharedVariable(object):
         return SharedVariable(SharedSub.apply(self.var,other.var),self.interface)
 
     def mul(self, other):
-        return SharedVariable(SharedMult.apply(self.var, other.var, self.interface), self.interface, self.requires_grad)
+        return SharedVariable(SharedMult.apply(self.var, other.var, self.interface), self.interface)
 
     def matmul(self, other):
-        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.interface), self.interface, self.requires_grad)
+        return SharedVariable(SharedMatmul.apply(self.var, other.var, self.interface), self.interface)
 
     @property
     def grad(self):
