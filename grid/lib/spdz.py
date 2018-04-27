@@ -129,7 +129,7 @@ def spdz_mul(x, y, interface):
 def generate_matmul_triple(m, n, k):
     r = torch.LongTensor(m, k).random_(field)
     s = torch.LongTensor(k, n).random_(field)
-    t = (r @ s) % field
+    t = r @ s 
     return r, s, t
 
 
@@ -156,18 +156,24 @@ def generate_matmul_triple_communication(m, n, k, interface):
 
 def spdz_matmul(x, y, interface):
     x_height = x.shape[0]
-    x_width = x.shape[1]
+    if len(x.shape)!=1:
+        x_width = x.shape[1]
+    else:
+        x_width = 1
 
     y_height = y.shape[0]
-    y_width = y.shape[1]
+    if len(y.shape)!=1:
+        y_width = y.shape[1]
+    else:
+        y_width = 1
 
-    assert x_width == y_height
+    assert x_width == y_height, 'dimension mismatch: %r != %r'%(x_width,y_height)
 
     r, s, t = generate_matmul_triple_communication(
         x_height, y_width, x_width, interface)
 
-    rho_local = x - r
-    sigma_local = y - s
+    rho_local = (x - r) %field
+    sigma_local = (y - s) %field
 
     # Communication
     rho_other = swap_shares(rho_local, interface)

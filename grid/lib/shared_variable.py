@@ -48,7 +48,7 @@ class SharedMult(Function):
         a, b = ctx.saved_tensors
         interface = ctx.interface
         grad_out = grad_out
-        return Variable(spdz.spdz_mul(grad_out.data, b, interface)), Variable(spdz.spdz_mul(grad_out.data, a, interface))
+        return Variable(spdz.spdz_mul(grad_out.data, b, interface)), Variable(spdz.spdz_mul(grad_out.data, a, interface)),None
 
 
 class SharedMatmul(Function):
@@ -63,7 +63,10 @@ class SharedMatmul(Function):
     def backward(ctx, grad_out):
         a, b = ctx.saved_tensors
         interface = ctx.interface
-        return spdz.spdz_matmul(grad_out,  b.t_(), interface), spdz.spdz_matmul(grad_out, a.t_(), interface)
+        grad_out = grad_out.data
+        a_grad = Variable(spdz.spdz_matmul(grad_out,  b.t_(), interface))
+        b_grad = Variable(spdz.spdz_matmul( a.t_(),grad_out, interface)) 
+        return a_grad,b_grad ,None
 
 
 class SharedSigmoid(Function):

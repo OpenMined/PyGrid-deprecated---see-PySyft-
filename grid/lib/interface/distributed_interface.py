@@ -7,7 +7,6 @@ import torch.distributed as dist
 class DistributedInterface(object):
 
     def __init__(self,party, master_addr='127.0.0.1', master_port='29500'):
-        print("ran")
         self.party=party
         if party:
             self.other = 0
