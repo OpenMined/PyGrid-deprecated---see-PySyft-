@@ -50,7 +50,7 @@ def replace_tensorvar(x):
     else:
         check = torch.is_tensor
     try:
-        if check(x) or isinstance(x, torch.autograd.Variable):
+        if check(x) or isinstance(x, torch.autograd.Variable) or isinstance(x, torch.nn.Parameter):
             return '_fl.{}'.format(x.id)
         else:
             [replace_tensorvar(i) for i in x]
@@ -78,6 +78,7 @@ def id_tensorvar(x):
         else:
             return [id_tensorvar(i) for i in x]
     except AttributeError:
+        print('attr error in id_tensorvar')
         return x
 
 
