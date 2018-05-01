@@ -288,6 +288,7 @@ class HookService(BaseService):
                     to compute with them.""")
                 else:
                     command = tu.replace_in_command(command)
+                    print(command)
                     for worker in owners:
                         # TODO: extend to iterables of pointers
                         registration, torch_type, var_data, var_grad = self.send_command(

@@ -66,6 +66,7 @@ class HookWorkerService(BaseService):
         # we need the original tensorvar owners so that we can register
         # the result properly later on
         tensorvars = [x for x in combined if type(x).__name__ in self.tensorvar_types_strs]
+        print(tensorvars)
         _, owners = tu.get_owners(tensorvars)
 
         return command(*args, **kwargs), owners
