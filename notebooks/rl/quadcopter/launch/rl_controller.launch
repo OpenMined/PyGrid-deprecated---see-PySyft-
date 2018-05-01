@@ -1,0 +1,16 @@
+<launch>
+    <!-- Command-line args; e.g. task:=Hover agent:=TRPO -->
+    <arg name="task" default="Takeoff" doc="Task to run, a subclass of BaseTask" />
+    <arg name="agent" default="DDPG" doc="Agent to execute task, a subclass of BaseAgent" />
+    <arg name="sim" default="$(find quad_controller_rl)/sim/DroneSim" doc="Full path/command to run simulator (must be an executable)" />
+    <arg name="out" default="$(find quad_controller_rl)/out" doc="Path to output directory" />
+
+    <!-- Parameters; access in code, e.g. rospy.get_param('task') -->
+    <param name="task" value="$(arg task)" />
+    <param name="agent" value="$(arg agent)" />
+    <param name="out" value="$(arg out)" />
+
+    <!-- ROS nodes (processes) to launch -->
+    <node name="rl_controller" pkg="quad_controller_rl" type="rl_controller_node" output="screen" />
+    <node name="drone_sim" pkg="quad_controller_rl" type="drone_sim" args="$(arg sim)" />
+</launch>
