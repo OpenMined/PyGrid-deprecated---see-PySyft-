@@ -52,6 +52,7 @@ class HookWorkerService(BaseService):
         has_self = command_msg['has_self']
         # TODO: Implement get_owners and refactor to make it prettier
         combined = list(args) + list(kwargs.values())
+        print(combined)
 
         if has_self:
             command = tu.command_guard(command_msg['command'],

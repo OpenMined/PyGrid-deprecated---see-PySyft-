@@ -335,6 +335,7 @@ class HookService(BaseService):
                 if has_remote and not multiple_owners:
                     for worker in owners:
                         command = tu.replace_in_command(command)
+                        print(command)
                         registration, torch_type, var_data, var_grad = service_self.send_command(
                             command, worker)
                         if registration is None:
