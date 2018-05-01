@@ -68,8 +68,6 @@ class HookWorkerService(BaseService):
         tensorvars = [x for x in combined if type(x).__name__ in self.tensorvar_types_strs]
         _, owners = tu.get_owners(tensorvars)
 
-        print('args: {}'.format(args))
-        print('kwargs: {}'.format(kwargs))
         return command(*args, **kwargs), owners
 
 

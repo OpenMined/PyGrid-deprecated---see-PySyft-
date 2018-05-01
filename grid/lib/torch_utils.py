@@ -78,7 +78,6 @@ def id_tensorvar(x):
         else:
             return [id_tensorvar(i) for i in x]
     except AttributeError:
-        print('attr error in id_tensorvar')
         return x
 
 
@@ -126,16 +125,13 @@ def command_guard(command, allowed):
 # Worker needs to retrieve tensor by ID before computing with it
 def retrieve_tensor(self, x):
     try:
-        print(sorted(list(self.worker.objects.keys())))
         return self.worker.objects[id_tensorvar(x)]
     except TypeError:
         try:
             return [self.worker.objects[i] for i in id_tensorvar(x)]
         except TypeError:
-            print('type error')
             return x
     except KeyError:
-        print('key error')
         return x
 
 
