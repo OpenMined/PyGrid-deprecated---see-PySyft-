@@ -44,10 +44,17 @@ class HookService(BaseService):
 
     def request_obj(self, obj, sender):
         """Request Torch object from sender."""
-        return self.worker.request_response(
-            channel=channels.torch_listen_for_obj_req_callback(sender),
-            message=obj.id,
-            response_handler=self.worker.services['torch_service'].receive_obj_break)
+        try:
+            return self.worker.request_response(
+                channel=channels.torch_listen_for_obj_req_callback(sender),
+                message=obj.id,
+                response_handler=self.worker.services['torch_service'].receive_obj_break)
+        except AttributeError:
+            obj_id = obj
+            return self.worker.request_response(
+                channel=channels.torch_listen_for_obj_req_callback(sender),
+                message=obj_id,
+                response_handler=self.worker.services['torch_service'].receive_obj_break)
 
 
     def send_command(self, command, recipient):
@@ -81,9 +88,10 @@ class HookService(BaseService):
         if var_data is not None:
             data = self.assemble_result_pointer(**var_data)
             data = self.register_object_(data, **var_data['registration'])
+        elif torch_type in self.var_types:
+            data = torch.Tensor(0)
         else:
             data = 0
-        print(data)
         result = torch_type(data)
         if var_grad is not None:
             grad = self.assemble_result_pointer(**var_grad)
@@ -201,23 +209,50 @@ class HookService(BaseService):
             #       to tensors, and a reduce function (for example, would allow
             #       for built-in gradient averaging when Variable.get is done)
             #       (low priority)
+            try:
+                assert len(self.owners) == 1
+            except AssertionError:
+                raise NotImplementedError('Only able to get_ tensors belonging \
+                                            to a single worker right now.')
             if service_self.worker.id in self.owners:
                 return self
-            collected = []
-            for worker in self.owners:
-                x = service_self.request_obj(self, worker)
-                collected.append(service_self.register_object_(x, id=x.id)) 
+            x = service_self.request_obj(self, self.owners[0])
+            service_self.register_object_(x, id=x.id)
+            # collected = []
+            # collected_grads = []
+            # for worker in self.owners:
+            #     x = service_self.request_obj(self, worker)
+            #     collected.append(service_self.register_object_(x, id=x.id))
+            #     try:
+            #         collected_grads.append(service_self.register_object_(x.grad, x.grad.id))
+            #     except AttributeError:
+            #         pass
             try:
-                service_self.register_object_(self.data, id=self.data.id,
+                self =  service_self.register_object_(
+                    self.old_set_(x.type(self.type())),
+                    id=self.id, owners=[service_self.worker.id])
+            except TypeError:
+                self =  service_self.register_object_(
+                    self.old_set_(x.type(self.data.type())),
+                    id=self.id, owners=[service_self.worker.id])
+            try:
+                self.data = service_self.register_object_(x.data, id=x.data.id,
                     owners=[service_self.worker.id])
-                if self.grad is not None:
-                    service_self.register_object_(self.grad, id=self.grad.id,
-                        owners=[service_self.worker.id])
+                try:
+                    self.grad = service_self.register_object_(x.grad,
+                        id=x.grad.id, owners=[service_self.worker.id])
+                except AttributeError:
+                    pass
             except RuntimeError:
                 pass
-            return service_self.register_object_(
-                self.old_set_(reduce(collected)),
-                id=self.id, owners=[service_self.worker.id])
+
+            # try:
+            #     self.grad = reduce(collected_grads)
+            #     assert self.grad is not None
+            #     service_self.register_object_(self.grad,
+            #         owners=[service_self.worker.id])
+            return self
+
         setattr(torch_type, 'get_', get_)
 
 
@@ -247,7 +282,6 @@ class HookService(BaseService):
             has_remote = tu.check_remote(tensorvars)
             if has_remote:
                 multiple_owners, owners = tu.get_owners(tensorvars)
-                print(owners)
                 if multiple_owners:
                     raise NotImplementedError("""MPC not yet implemented: 
                     Torch objects need to be on the same machine in order
@@ -259,7 +293,7 @@ class HookService(BaseService):
                         registration, torch_type, var_data, var_grad = self.send_command(
                             command, worker)
                         if registration is None:
-                            return
+                            return var_data
                         pointer = self.assemble_result_pointer(
                             registration, torch_type, var_data, var_grad)
                     return pointer
@@ -297,14 +331,13 @@ class HookService(BaseService):
                 tensorvars = tu.get_tensorvars(service_self, command)
                 has_remote = tu.check_remote(tensorvars)
                 multiple_owners, owners = tu.get_owners(tensorvars)
-                print(owners)
                 if has_remote and not multiple_owners:
                     for worker in owners:
                         command = tu.replace_in_command(command)
                         registration, torch_type, var_data, var_grad = service_self.send_command(
                             command, worker)
                         if registration is None:
-                            return
+                            return var_data
                         # only returns last pointer, since tensors will
                         # be identical across machines for right now
                         pointer = service_self.assemble_result_pointer(

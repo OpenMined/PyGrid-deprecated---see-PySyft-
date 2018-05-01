@@ -35,6 +35,9 @@ class HookWorkerService(BaseService):
         compiled = json.dumps(self.compile_result(result, owners))
         if compiled is not None:
             self.return_result(compiled, response_channel)
+        else:
+            self.return_result(dict(registration=None, torch_type=None,
+                var_data=None, var_grad=None), response_channel)
 
 
     def process_command(self, command_msg):
@@ -61,7 +64,7 @@ class HookWorkerService(BaseService):
             command = eval('torch.{}'.format(command))
 
         # we need the original tensorvar owners so that we can register
-        # the result properly
+        # the result properly later on
         tensorvars = [x for x in combined if type(x).__name__ in self.tensorvar_types_strs]
         _, owners = tu.get_owners(tensorvars)
 
