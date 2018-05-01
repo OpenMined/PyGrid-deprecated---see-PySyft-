@@ -130,8 +130,10 @@ def retrieve_tensor(self, x):
         try:
             return [self.worker.objects[i] for i in id_tensorvar(x)]
         except TypeError:
+            print('type error')
             return x
     except KeyError:
+        print('key error')
         return x
 
 

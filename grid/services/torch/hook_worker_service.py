@@ -52,7 +52,6 @@ class HookWorkerService(BaseService):
         has_self = command_msg['has_self']
         # TODO: Implement get_owners and refactor to make it prettier
         combined = list(args) + list(kwargs.values())
-        print(combined)
 
         if has_self:
             command = tu.command_guard(command_msg['command'],
@@ -67,9 +66,10 @@ class HookWorkerService(BaseService):
         # we need the original tensorvar owners so that we can register
         # the result properly later on
         tensorvars = [x for x in combined if type(x).__name__ in self.tensorvar_types_strs]
-        print(tensorvars)
         _, owners = tu.get_owners(tensorvars)
 
+        print('args: {}'.format(args))
+        print('kwargs: {}'.format(kwargs))
         return command(*args, **kwargs), owners
 
 
