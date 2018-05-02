@@ -134,6 +134,9 @@ class SharedVariable(object):
     @property
     def data(self):
         return self.var.data
+    
+    def backward(self,grad):
+        return self.var.backward(grad)
 
     def t_(self):
         self.var = self.var.t_()
