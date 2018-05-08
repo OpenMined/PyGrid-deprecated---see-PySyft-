@@ -28,7 +28,9 @@ def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
         return api
 
     print(
-        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is your daemon running with pubsub support at {ipfs_addr} on port {port}? Let me try to start IPFS for you... (this will take ~15 seconds)'
+        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS.  Is\
+         your daemon running with pubsub support at {ipfs_addr} on port {port}?\
+          Let me try to start IPFS for you... (this will take ~15 seconds)'
     )
     os.system(
         'ipfs daemon --enable-pubsub-experiment  > ipfs.log 2> ipfs.log.err &')
@@ -42,7 +44,9 @@ def get_ipfs_api(mode, ipfs_addr='127.0.0.1', port=5001, max_tries=25):
         return api
 
     print(
-        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS. Failed after {max_tries} attempts... Is IPFS installed? Consult the README at https://github.com/OpenMined/Grid'
+        f'\n{Fore.RED}ERROR: {Style.RESET_ALL}could not connect to IPFS. Failed\
+         after {max_tries} attempts... Is IPFS installed? Consult the README at\
+          https://github.com/OpenMined/Grid'
     )
     sys.exit()
 
