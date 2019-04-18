@@ -156,6 +156,9 @@ def launch_on_heroku(grid_name="opengrid5", verbose=True, check_deps=True):
 
     run_commands_in(commands, logs, cleanup=False, verbose=verbose)
 
+    logs = list()
+    commands = list()
+
     logs.append("\nStep 11: Pushing code to Heroku (this can take take a few seconds)...")
     commands.append("heroku create " + grid_name)
 
