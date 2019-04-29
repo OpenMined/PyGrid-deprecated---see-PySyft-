@@ -1,27 +1,54 @@
+from app import app
 import os
 import redis
 from flask import Flask, session, request
 import json
 import syft as sy
+from syft.serde import serialize
 import torch as th
 import binascii
-
+from app import app
+from app import db
+from app.models import Tensor as ModelTensor
 
 hook = sy.TorchHook(th)
 
-app = Flask(__name__)
 app.secret_key = b'keepmesecret'
 
 try:
-    db=redis.from_url(os.environ['REDISCLOUD_URL'])
+    redis_db=redis.from_url(os.environ['REDISCLOUD_URL'])
 except:
-    db=redis.from_url('redis://127.0.0.1:6379')
+    redis_db=redis.from_url('redis://127.0.0.1:6379')
 
 @app.route('/')
+@app.route('/index')
 def hello_world():
-    name=db.get('name') or'World'
-    db.set('del_ctr', 0)
+    name=redis_db.get('name') or'World'
+    redis_db.set('del_ctr', 0)
     return 'Howdy %s!' % str(name)
+
+@app.route('/xcmd/', methods=['POST'])
+def xcmd():
+    try:
+        worker = sy.VirtualWorker(hook, "grid", auto_add=False)
+        print("\t \nCREATING NEW WORKER!!")
+        worker.verbose = True
+        sy.torch.hook.local_worker.add_worker(worker)
+
+        message = request.form['message']
+        message = binascii.unhexlify(message[2:-1])
+
+        response = worker._recv_msg(message)
+
+        response = str(binascii.hexlify(response))
+
+        print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")
+        mt = ModelTensor(tensorb = sy.serde.serialize(worker, force_full_simplification=True), description="test")
+        db.session.add(mt)
+        db.session.commit()
+        return response
+    except Exception as e:
+        return str(e)
 
 @app.route("/identity/")
 def is_this_an_opengrid_node():
@@ -36,7 +63,7 @@ def is_this_an_opengrid_node():
 @app.route('/cmd/', methods=['POST'])
 def cmd():
     try:
-        worker = db.get('worker')
+        worker = redis_db.get('worker')
 
         if(worker is None):
             worker = sy.VirtualWorker(hook, "grid", auto_add=False)
@@ -56,7 +83,7 @@ def cmd():
         response = str(binascii.hexlify(response))
 
         print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")
-        db.set('worker', sy.serde.serialize(worker, force_full_simplification=True))
+        redis_db.set('worker', sy.serde.serialize(worker, force_full_simplification=True))
 
         return response
     except Exception as e:
@@ -87,5 +114,3 @@ def cmd():
 #     db.set('name',str(worker.id))
 #     return 'Name updated to ' + str(worker.id) + ' or ' + str(name)
 
-if __name__ == '__main__':
-    app.run()

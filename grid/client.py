@@ -22,7 +22,7 @@ class GridClient(BaseWorker):
 
         # Try the message 10 times before quitting
         for i in range(10):
-            r = requests.post(self.addr + '/cmd/', data={'message': message})
+            r = requests.post(self.addr + '/xcmd/', data={'message': message})
 
             response = r.text
             try:
@@ -32,6 +32,7 @@ class GridClient(BaseWorker):
                 response = None
                 continue
 
+            print(response)
             return response
 
 
