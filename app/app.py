@@ -15,7 +15,7 @@ app.secret_key = b'keepmesecret'
 try:
     db=redis.from_url(os.environ['REDISCLOUD_URL'])
 except:
-    db=redis.from_url('http://127.0.0.1:6379')
+    db=redis.from_url('redis://127.0.0.1:6379')
 
 @app.route('/')
 def hello_world():
