@@ -38,7 +38,7 @@ def _request_message(worker):
     return response
 
 def _store_worker(worker, worker_name: str = 'worker'):
-    db.set(worker_name, sy.serde.serialize(worker, force_full=True))
+    db.set(worker_name, sy.serde.serialize(worker, force_full_simplification=True))
 
 
 @app.route('/')
