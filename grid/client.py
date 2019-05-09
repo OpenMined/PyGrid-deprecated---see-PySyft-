@@ -11,7 +11,7 @@ from grid import utils as gr_utils
 class GridClient(BaseWorker):
     """GridClient."""
 
-    def __init__(self, addr, verbose: bool = True):
+    def __init__(self, addr: str, verbose: bool = True):
         super().__init__(hook=sy.hook, id="grid", verbose=verbose)
         print("WARNING: Grid nodes publish datasets online and are for EXPERIMENTAL use only."
               "Deploy nodes at your own risk. Do not use OpenGrid with any data/models you wish to "
@@ -20,8 +20,8 @@ class GridClient(BaseWorker):
         self._verify_identity()
 
     def _verify_identity(self):
-        r = requests.post(self.addr + "/identity")
-        if r != "OpenGrid":
+        r = requests.get(self.addr + "/identity/")
+        if r.text != "OpenGrid":
             raise PermissionError("App is not an OpenGrid app.")
 
     def _send_msg(self, message: bin, location: BaseWorker) -> bin:
