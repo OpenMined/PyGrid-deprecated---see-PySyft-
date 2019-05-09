@@ -1,5 +1,5 @@
 ### Running tests
 
 ```bash
-redis-server & python app/app.py & pytest tests/
+redis-server & python app/app.py & pytest test/
 ```

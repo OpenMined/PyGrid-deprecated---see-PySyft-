@@ -51,7 +51,7 @@ def execute(cmd):
         raise subprocess.CalledProcessError(return_code, cmd)
 
 
-def launch_on_heroku(grid_name:str, force=False, verbose=True, check_deps=True, dev_user=None):
+def launch_on_heroku(grid_name: str, verbose=True, check_deps=True, dev_user=None):
     app_addr = "https://" + str(grid_name) + ".herokuapp.com"
     if check_deps:
         if verbose:
@@ -93,12 +93,8 @@ def launch_on_heroku(grid_name:str, force=False, verbose=True, check_deps=True, 
             print("\t" + str(output))
     except:
         output = list(execute(("rm -rf tmp").split(" ")))
-        if force:
-            print("APP EXISTS: Running on force mode... destroying existing app")
-            gr_utils.exec_os_cmd("heroku destroy " + grid_name + " --confirm " + grid_name)
-        else:
-            print("APP EXISTS: You can already connect to your app at " + app_addr)
-            return app_addr
+        print("APP EXISTS: You can already connect to your app at " + app_addr)
+        return app_addr
 
     commands = list()
     logs = list()
@@ -142,16 +138,11 @@ def launch_on_heroku(grid_name:str, force=False, verbose=True, check_deps=True, 
 
     logs.append("Step 5: cloning heroku app code from Github")
     if dev_user:
-        commands.append("git clone https://github.com/{}/Grid".format(dev_user))
-        
-        logs.append("cd to grid folder...")
-        commands.append("cd Grid")
-        
+        commands.append("git clone -b dev https://github.com/{}/Grid".format(dev_user))
+
         logs.append("Checking out dev version...")
         commands.append("git checkout origin/dev")
-        
-        logs.append("leave grid folder...")
-        commands.append("cd ..")
+
     else:
         commands.append("git clone https://github.com/OpenMined/Grid")
 
