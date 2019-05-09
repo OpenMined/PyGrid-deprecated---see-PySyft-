@@ -143,8 +143,15 @@ def launch_on_heroku(grid_name:str, force=False, verbose=True, check_deps=True, 
     logs.append("Step 5: cloning heroku app code from Github")
     if dev_user:
         commands.append("git clone https://github.com/{}/Grid".format(dev_user))
+        
+        logs.append("cd to grid folder...")
+        commands.append("cd Grid")
+        
         logs.append("Checking out dev version...")
         commands.append("git checkout origin/dev")
+        
+        logs.append("leave grid folder...")
+        commands.append("cd ..")
     else:
         commands.append("git clone https://github.com/OpenMined/Grid")
 
