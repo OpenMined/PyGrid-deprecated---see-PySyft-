@@ -6,6 +6,9 @@ import subprocess
 from grid.client import GridClient
 from grid import utils as gr_utils
 
+__all__ = [
+    "workers",
+ ]
 
 __all__ = [
     "workers",
