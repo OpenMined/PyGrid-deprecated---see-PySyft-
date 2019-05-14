@@ -8,6 +8,8 @@ from syft.workers import BaseWorker
 from grid import utils as gr_utils
 
 
+
+
 class GridClient(BaseWorker):
     """GridClient."""
 
@@ -43,7 +45,6 @@ class GridClient(BaseWorker):
                 response = None
                 continue
 
-            print(response)
             return response
 
 
