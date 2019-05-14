@@ -40,7 +40,6 @@ def _request_message(worker):
 def _store_worker(worker, worker_name: str = 'worker'):
     db.set(worker_name, sy.serde.serialize(worker, force_full_simplification=True))
 
-
 @app.route('/')
 def hello_world():
 #    name = db.get('name') or'World'
@@ -72,3 +71,4 @@ def cmd():
         return response
     except Exception as e:
         return str(e)
+
