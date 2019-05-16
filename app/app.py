@@ -46,7 +46,7 @@ def _request_message(worker,message):
 def hello_world():
     name = db.get('name') or'World'
     db.set('del_ctr', 0)
-    return 'Howdy %s!' % str(name)
+    return 'Websocket Howdy %s!' % str(name)
 
 
 @sio.on("/identity/")
@@ -56,7 +56,7 @@ def is_this_an_opengrid_node():
     can be an app that does something totally different. So we want to have
     some endpoint which just casually identifies this server as an OpenGrid
     server."""
-    sio.emit('/identity', "OpenGrid")
+    sio.emit('/identity', "Websocket OpenGrid")
 
 
 @sio.on('/cmd/')
