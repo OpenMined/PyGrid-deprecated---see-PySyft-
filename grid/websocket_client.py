@@ -20,8 +20,7 @@ class WebsocketGridClient(BaseWorker):
     def __init__(
         self,
         hook,
-        host: str,
-        port: int,
+        addr: str
         id: Union[int, str] = 0,
         is_client_worker: bool = False,
         log_msgs: bool = False,
@@ -44,7 +43,7 @@ class WebsocketGridClient(BaseWorker):
 
         self.port = port
         self.host = host
-        self.uri = f"http://{self.host}:{self.port}"
+        self.uri = addr
 
         self.response_from_client = None
         self.wait_for_client_event = False
