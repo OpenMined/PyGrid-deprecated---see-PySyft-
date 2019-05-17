@@ -1,4 +1,4 @@
-# Contributors Guidelines to PySyft
+# Contributors Guidelines to Grid
 
 ## Getting Started
 
@@ -14,14 +14,14 @@ On <https://github.com/OpenMined/Grid/issues> you can find all open Issues. You 
 
 ### Forking a Repository
 
-To contribute to PySyft you will need to fork the OpenMind/PySyft repository.
+To contribute to Grid you will need to fork the OpenMind/Grid repository.
 Then you can work risk-free on your fork.
 
 You will just need to fork once. After that you can call `git fetch upstream` and `git pull 'branch-name'` before you do your local changes to get the remote changes and be up-to-date
 
 ### Setting up Pre-Commit Hook
 
-PySyft uses the python package `pre-commit` to make sure the correct formatting (black & flake) is applied.
+Grid uses the python package `pre-commit` to make sure the correct formatting (black & flake) is applied.
 
 You can install it via `pip install pre-commit`
 
@@ -31,7 +31,7 @@ This can all also be done by running `make install_hooks`
 
 ### Syncing a Forked Repository
 
-To sync your fork with the OpenMined/PySyft repository please see this [Guide](https://help.github.com/articles/syncing-a-fork/) on how to sync your fork.
+To sync your fork with the OpenMined/Grid repository please see this [Guide](https://help.github.com/articles/syncing-a-fork/) on how to sync your fork.
 
 ## Contributing
 
