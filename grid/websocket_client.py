@@ -20,7 +20,7 @@ class WebsocketGridClient(BaseWorker):
     def __init__(
         self,
         hook,
-        addr: str
+        addr: str,
         id: Union[int, str] = 0,
         is_client_worker: bool = False,
         log_msgs: bool = False,
@@ -41,8 +41,6 @@ class WebsocketGridClient(BaseWorker):
                 initialized with (such as datasets)
         """
 
-        self.port = port
-        self.host = host
         self.uri = addr
 
         self.response_from_client = None
@@ -92,7 +90,6 @@ class WebsocketGridClient(BaseWorker):
 
     def connect(self):
         self.sio.connect(self.uri)
-        self.sio.emit("client_id", self.id)
 
     def disconnect(self):
         self.sio.disconnect()
