@@ -37,11 +37,6 @@ def _store_worker(worker, worker_name: str = 'worker'):
     db.set(worker_name, sy.serde.serialize(worker, force_full_simplification=True))
 
 
-def _request_message(worker,message):
-    response = worker._recv_msg(message)
-    return response
-
-
 @app.route('/')
 def hello_world():
     name = db.get('name') or'World'
@@ -67,7 +62,7 @@ def cmd(sid, message):
         worker.verbose = True
         sy.torch.hook.local_worker.add_worker(worker)
 
-        response = _request_message(worker,message)
+        response = worker._recv_msg(message)
 
         print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")
 
@@ -81,6 +76,7 @@ def cmd(sid, message):
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     if sio.async_mode == 'gevent':
         # deploy with gevent
         from gevent import pywsgi
@@ -96,3 +92,6 @@ if __name__ == '__main__':
             pywsgi.WSGIServer(('', 5000), app).serve_forever()
     else:
         print('Unknown async_mode: ' + sio.async_mode)
+=======
+    app.run()
+>>>>>>> origin/dev
