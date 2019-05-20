@@ -12,10 +12,7 @@ from syft.workers import BaseWorker
 
 
 class WebsocketGridClient(BaseWorker):
-    """A worker that forwards a message to a SocketIO server and wait for its response.
-    This client then waits until the server returns with a result or an ACK at which point it finishes the
-    _recv_msg operation.
-    """
+    """ Websocket Grid Client """
 
     def __init__(
         self,
@@ -30,8 +27,7 @@ class WebsocketGridClient(BaseWorker):
         """
         Args:
             hook (sy.TorchHook): a normal TorchHook object
-            host (str): the host this client connects to
-            port (int): the port this client connects to
+            addr (str): the address this client connects to
             id (str or id): the unique id of the worker (string or int)
             log_msgs (bool): whether or not all messages should be
                 saved locally for later inspection.
@@ -40,9 +36,7 @@ class WebsocketGridClient(BaseWorker):
             data (dict): any initial tensors the server should be
                 initialized with (such as datasets)
         """
-
         self.uri = addr
-
         self.response_from_client = None
         self.wait_for_client_event = False
 
@@ -57,25 +51,23 @@ class WebsocketGridClient(BaseWorker):
             if msg != "OpenGrid":
                 raise PermissionError("App is not an OpenGrid app")
 
-        @self.sio.on("/cmd/")
+        @self.sio.on("/cmd")
         def on_client_result(args):
             if log_msgs:
                 print("Receiving result from client {}".format(args))
             # The server broadcasted the results from another client
-            self.response_from_client = args
+            self.response_from_client = binascii.unhexlify(args[2:-1])
             # Tell the wait_for_client_event to clear up and continue execution
             self.wait_for_client_event = False
 
     def _send_msg(self, message: bin) -> bin:
-        raise RuntimeError(
-            "_send_msg should never get called on a ",
-            "WebsocketIOClientWorker. Did you accidentally "
-            "make hook.local_worker a WebsocketIOClientWorker?",
-        )
+        raise NotImplementedError
+
 
     def _recv_msg(self, message: bin) -> bin:
+        message = str(binascii.hexlify(message))
         # Sends the message to the server
-        self.sio.emit("/cmd/", message)
+        self.sio.emit("/cmd", {"message" : message} )
 
         self.wait_for_client_event = True
         # Wait until the server gets back with a result or an ACK
