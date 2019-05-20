@@ -1,2 +1,1 @@
-pip uninstall syft --y
-web: gunicorn -k flask_sockets.worker app:app --log-file -
+web: gunicorn --worker-class eventlet -w 1 websocket_app:app
