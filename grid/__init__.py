@@ -4,6 +4,7 @@ import sys
 import subprocess
 
 from grid.client import GridClient
+from grid.websocket_client import WebsocketGridClient
 from grid import utils as gr_utils
 
 __all__ = [
