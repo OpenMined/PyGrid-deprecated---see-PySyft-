@@ -63,6 +63,8 @@ def cmd():
         worker.verbose = True
         sy.torch.hook.local_worker.add_worker(worker)
 
+        print("WORKER", worker)
+
         response = _request_message(worker)
 
         print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")

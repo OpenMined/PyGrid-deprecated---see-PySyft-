@@ -4,10 +4,11 @@ import sys
 import subprocess
 
 from grid.client import GridClient
-from grid import utils as gr_utils
+from . import utils as gr_utils
 
 __all__ = [
     "workers",
+    "app"
  ]
 
 def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
