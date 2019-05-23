@@ -26,14 +26,14 @@ class WebsocketGridClient(BaseWorker):
     ):
         """
         Args:
-            hook (sy.TorchHook): a normal TorchHook object
-            addr (str): the address this client connects to
-            id (str or id): the unique id of the worker (string or int)
-            log_msgs (bool): whether or not all messages should be
+            hook : a normal TorchHook object
+            addr : the address this client connects to
+            id : the unique id of the worker (string or int)
+            log_msgs : whether or not all messages should be
                 saved locally for later inspection.
-            verbose (bool): a verbose option - will print all messages
+            verbose : a verbose option - will print all messages
                 sent/received to stdout
-            data (dict): any initial tensors the server should be
+            data : any initial tensors the server should be
                 initialized with (such as datasets)
         """
         self.uri = addr
