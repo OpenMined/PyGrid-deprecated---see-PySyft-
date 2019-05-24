@@ -1,6 +1,6 @@
 import torch
 import syft as sy
-from syft.workers.socketio_server import WebsocketIOServerWorker
+from grid.workers.socketio_server import WebsocketIOServerWorker
 
 # Use Numpy serialization strategy
 sy.serde._serialize_tensor = sy.serde.numpy_tensor_serializer
