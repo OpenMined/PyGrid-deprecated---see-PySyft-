@@ -1,7 +1,7 @@
-
 from app import app, db
 from app.models import Tensor
 
+
 @app.shell_context_processor
 def make_shell_context():
-    return {'db': db, 'Tensor': Tensor}
+    return {"db": db, "Tensor": Tensor}
