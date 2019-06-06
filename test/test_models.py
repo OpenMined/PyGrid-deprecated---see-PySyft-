@@ -1,6 +1,6 @@
 from grid.app.models import Worker, WorkerObject
-from grid.app import db
-from grid.app import app
+from grid.app.config import db
+from grid.app.config import app
 import unittest
 
 from sqlalchemy import create_engine

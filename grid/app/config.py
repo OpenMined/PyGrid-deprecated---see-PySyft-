@@ -1,6 +1,6 @@
 import os
-
-basedir = os.path.abspath(os.path.dirname(__file__))
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 
 class Config(object):
@@ -15,3 +15,8 @@ class Config(object):
         "postgresql://%(user)s:\%(pw)s@%(host)s:%(port)s/%(db)s" % POSTGRES
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+app = Flask(__name__)
+app.config.from_object(Config)
+db = SQLAlchemy(app)

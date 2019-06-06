@@ -1,5 +1,6 @@
-from . import db
-from sqlalchemy.orm import sessionmaker, relationship
+from .config import db
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import relationship
 
 import syft as sy
 
