@@ -12,11 +12,8 @@ class Worker(db.Model):
     public_id = db.Column(db.String(64), index=True, unique=True)
     worker_objects = db.relationship("WorkerObject", backref="workers", lazy="dynamic")
 
-    def tensor(self):
-        return sy.serde.deserialize(self.tensorb)
-
     def __repr__(self):
-        return f"<Tensor {self.id}>"
+        return f"<Worker {self.id}>"
 
 
 class WorkerObject(db.Model):
