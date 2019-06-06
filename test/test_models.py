@@ -1,4 +1,5 @@
-from grid.app.models import Worker, WorkerObject
+from grid.app.models import Worker
+from grid.app.models import WorkerObject
 from grid.app.config import db
 from grid.app.config import app
 import unittest
