@@ -61,7 +61,7 @@ class WebsocketGridClient(BaseWorker):
         @self.__sio.on("/connect-node")
         def connect_node(msg):
             print(msg)
-    
+
     def _send_msg(self, message: bin) -> bin:
         raise NotImplementedError
 
