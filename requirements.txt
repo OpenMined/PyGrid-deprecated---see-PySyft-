@@ -2,6 +2,7 @@ black
 coverage
 Flask
 flask_socketio
+numpy>=1.14.0
 pre-commit
 pytest
 python-socketio>=4.0.3
@@ -9,3 +10,5 @@ requests
 syft
 websocket_client
 websockets>=7.0
+flask_sqlalchemy
+flask_migrate
