@@ -54,6 +54,7 @@ def is_this_an_opengrid_node():
 def set_grid_name(msg):
     me = hook.local_worker
     me.id = msg["id"]
+    me.is_client_worker = False
 
 
 @socketio.on("/connect-node")
@@ -71,7 +72,6 @@ def connect_node(msg):
 def cmd(message):
     try:
         worker = hook.local_worker
-        worker.verbose = True
         response = _request_message(worker, message)
         socketio.emit("/cmd", response)
     except Exception as e:
