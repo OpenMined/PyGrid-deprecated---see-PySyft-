@@ -11,7 +11,6 @@ import sys
 
 hook = sy.TorchHook(th)
 
-know_nodes = {}
 
 # Set up REDIS URL
 try:
@@ -62,7 +61,6 @@ def connect_node(msg):
     try:
         new_worker = gr.WebsocketGridClient(hook, msg["uri"], id=msg["id"])
         new_worker.connect()
-        know_nodes[msg["id"]] = new_worker
         socketio.emit("/connect-node", "Succefully connected!")
     except Exception as e:
         socketio.emit("/connect-node", str(e))
