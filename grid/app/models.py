@@ -33,7 +33,7 @@ class WorkerObject(db.Model):
 
     @object.setter
     def object(self, value):
-        self.data = sy.serde.serialize(value)
+        self.data = sy.serde.serialize(value, force_full_simplification=True)
 
     def __repr__(self):
         return f"<Tensor {self.id}>"
