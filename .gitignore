@@ -11,6 +11,7 @@ grid.egg-info/
 *.h5
 *.log
 *.lock
+.DS_Store
 .openmined
 nohup.out
 data
