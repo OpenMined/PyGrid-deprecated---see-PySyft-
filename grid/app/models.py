@@ -1,6 +1,3 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import relationship
 from . import db
 import syft as sy
 
