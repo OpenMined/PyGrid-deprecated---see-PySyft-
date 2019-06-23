@@ -12,6 +12,7 @@ db = SQLAlchemy()
 from .models import Worker as WorkerMDL
 from .models import WorkerObject
 
+
 def _maybe_create_worker(worker_name: str = "worker", virtual_worker_id: str = "grid"):
     worker_mdl = WorkerMDL.query.filter_by(public_id=worker_name).first()
     if worker_mdl is None:
@@ -39,9 +40,13 @@ def _request_message(worker):
 
 def _store_worker(worker, worker_mdl: WorkerMDL, worker_name: str = "worker"):
     db.session.query(WorkerObject).filter_by(worker_id=worker_mdl.id).delete()
-    objects = [WorkerObject(worker_id=worker_mdl.id, object=obj) for key,obj in worker._objects.items()]
+    objects = [
+        WorkerObject(worker_id=worker_mdl.id, object=obj)
+        for key, obj in worker._objects.items()
+    ]
     result = db.session.add_all(objects)
     db.session.commit()
+
 
 def create_app(test_config=None):
 
@@ -49,19 +54,16 @@ def create_app(test_config=None):
     migrate = Migrate(app, db)
     if test_config is None:
         # TODO: move to configuration
-        db_url="postgresql://postgres:password@localhost:5432/grid_example_dev"
+        db_url = "postgresql://postgres:password@localhost:5432/grid_example_dev"
         app.config.from_mapping(
-            SQLALCHEMY_DATABASE_URI=db_url,
-            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            SQLALCHEMY_DATABASE_URI=db_url, SQLALCHEMY_TRACK_MODIFICATIONS=False
         )
 
     else:
         # load the test config if passed in
-        app.config['SQLALCHEMY_DATABASE_URI'] = test_config['SQLALCHEMY_DATABASE_URI']
-        app.config['TESTING'] = True
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_config["SQLALCHEMY_DATABASE_URI"]
+        app.config["TESTING"] = True
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
 
@@ -79,7 +81,6 @@ def create_app(test_config=None):
         server."""
         return "OpenGrid"
 
-
     @app.route("/cmd/", methods=["POST"])
     def cmd():
         try:
@@ -94,5 +95,5 @@ def create_app(test_config=None):
         except Exception as e:
             return str(e)
 
-    app.add_url_rule('/', endpoint='index')
+    app.add_url_rule("/", endpoint="index")
     return app

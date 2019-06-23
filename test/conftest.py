@@ -11,6 +11,7 @@ import tempfile
 import syft
 from syft import TorchHook
 
+
 @pytest.fixture()
 def start_proc():  # pragma: no cover
     """ helper function for spinning up a websocket participant """
@@ -31,5 +32,3 @@ def start_proc():  # pragma: no cover
 def hook():
     hook = TorchHook(torch)
     return hook
-
-
