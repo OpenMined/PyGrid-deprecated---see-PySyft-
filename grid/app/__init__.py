@@ -1,9 +1,5 @@
-import os
 from flask import Flask
 from flask import session, request
-#from .config import app
-#from .config import db
-
 
 from flask_migrate import Migrate
 import binascii
@@ -11,11 +7,7 @@ import syft as sy
 import torch as th
 from flask_sqlalchemy import SQLAlchemy
 
-__version__ = (1, 0, 0, "dev")
-
-
 hook = sy.TorchHook(th)
-
 db = SQLAlchemy()
 from .models import Worker as WorkerMDL
 from .models import WorkerObject
@@ -56,6 +48,7 @@ def create_app(test_config=None):
     app = Flask(__name__)
     migrate = Migrate(app, db)
     if test_config is None:
+        # TODO: move to configuration
         db_url="postgresql://postgres:password@localhost:5432/grid_example_dev"
         app.config.from_mapping(
             SQLALCHEMY_DATABASE_URI=db_url,
