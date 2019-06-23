@@ -1,7 +1,7 @@
-from .config import db
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import relationship
-
+from . import db
 import syft as sy
 
 
@@ -18,6 +18,7 @@ class Worker(db.Model):
 
 class WorkerObject(db.Model):
     __tablename__ = "worker_objects"
+
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(64), index=True, unique=True)
     data = db.Column(db.Binary(64))

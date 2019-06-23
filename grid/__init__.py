@@ -235,3 +235,4 @@ def launch_on_heroku(
     print("SUCCESS: You can now connect to your app at " + app_addr)
 
     return app_addr
+

@@ -35,7 +35,6 @@ class GridClient(BaseWorker):
         # Try to request the message `N` times.
         for _ in range(N):
             r = requests.post(self.addr + "/cmd/", data={"message": message})
-
             response = r.text
             try:
                 response = binascii.unhexlify(response[2:-1])
