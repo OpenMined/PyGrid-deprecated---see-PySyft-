@@ -2,7 +2,7 @@ from __future__ import print_function  # Only Python 2.x
 
 import sys
 import subprocess
-
+import os
 from grid.client import GridClient
 from grid.websocket_client import WebsocketGridClient
 from grid import utils as gr_utils
@@ -113,7 +113,8 @@ def launch_on_heroku(
         if verbose:
             print("\t" + str(output))
     except:
-        output = list(execute(("rm -rf tmp").split(" ")))
+        if os.name != "nt":
+            output = list(execute(("rm -rf tmp").split(" ")))
         print("APP EXISTS: You can already connect to your app at " + app_addr)
         return app_addr
 
