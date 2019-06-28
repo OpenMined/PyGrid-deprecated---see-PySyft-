@@ -68,9 +68,8 @@ def create_app(test_config=None):
     db.init_app(app)
 
     @app.route("/")
-    def hello_world():
-        name = "World"
-        return "Howdy %s!" % str(name)
+    def success():
+        return "success"
 
     @app.route("/identity/")
     def is_this_an_opengrid_node():

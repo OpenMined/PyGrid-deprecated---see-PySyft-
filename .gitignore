@@ -22,3 +22,4 @@ notebooks/ipfs.log
 .pytest_cache
 .idea/*
 venv/
+test_flask_grid_server.db

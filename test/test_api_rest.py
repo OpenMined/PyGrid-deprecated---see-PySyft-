@@ -18,15 +18,19 @@ import io
 
 
 class APIRestTests(LiveServerTestCase):
+    """
+    These integration tests perform IO on multiple threads. We use the
+    filesystem for the sqlite database exceptionally since keeping it in memory
+    seems to cause unexpected behavior
+    """
     def create_app(self):
         BASEDIR = os.path.dirname(os.path.dirname(__file__))
         app = create_app(
             {
                 "SQLALCHEMY_DATABASE_URI": "sqlite:///"
-                + os.path.join(BASEDIR, "app_test.db")
+                + os.path.join(BASEDIR, "test_flask_grid_server.db")
             }
         )
-        app.config['LIVESERVER_PORT'] = 8945
         return app
 
     def setUp(self):
@@ -41,7 +45,7 @@ class APIRestTests(LiveServerTestCase):
 
     def test_empty_db(self):
         rv = requests.get(self.get_server_url())
-        assert "Howdy World" in rv.text
+        assert "success" in rv.text
 
     def test_identity(self):
         rv = requests.get(f"{self.get_server_url()}/identity/")
@@ -57,7 +61,7 @@ class APIRestTests(LiveServerTestCase):
             f"{self.get_server_url()}/cmd/", data={"message": bin_message}
         )
         worker_mdl = WorkerMDL.query.filter_by(public_id="worker").first()
-        assert worker_mdl.worker_objects[0].object.sum() == x.sum()
+        assert (worker_mdl.worker_objects[0].object == x).all()
 
     def test_send_receive_tensors(self):
         db.create_all()
@@ -66,4 +70,4 @@ class APIRestTests(LiveServerTestCase):
         grid = GridClient(self.get_server_url())
         tensor = th.tensor([1, 2, 3, 4])
         pointer_tensor = tensor.send(grid)
-        assert tensor.sum() == pointer_tensor.sum().get()
+        assert (tensor == pointer_tensor.get()).all()
