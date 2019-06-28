@@ -6,10 +6,12 @@ from . import db
 import binascii
 import torch as th
 import syft as sy
+
 hook = sy.TorchHook(th)
 
 worker_router_bp = Blueprint("grid_worker", __name__)
 worker_router_bp.config = {}
+
 
 @worker_router_bp.record
 def record_params(setup_state):
@@ -17,7 +19,10 @@ def record_params(setup_state):
     Copy config so we can easily work with it
     """
     app = setup_state.app
-    worker_router_bp.config = dict([(key,value) for (key,value) in app.config.items()])
+    worker_router_bp.config = dict(
+        [(key, value) for (key, value) in app.config.items()]
+    )
+
 
 def _store_worker(worker, worker_mdl: WorkerMDL, worker_name: str = "worker"):
     """
@@ -31,7 +36,10 @@ def _store_worker(worker, worker_mdl: WorkerMDL, worker_name: str = "worker"):
     result = db.session.add_all(objects)
     db.session.commit()
 
-def _maybe_create_worker(worker_name: str = "worker", virtual_worker_id: str = "grid", verbose: bool = False):
+
+def _maybe_create_worker(
+    worker_name: str = "worker", virtual_worker_id: str = "grid", verbose: bool = False
+):
     """
     Find or create a worker by public_id
 
@@ -71,6 +79,7 @@ def success():
     """
     return "success"
 
+
 @worker_router_bp.route("/identity/")
 def is_this_an_opengrid_node():
     """This exists because in the automation scripts which deploy nodes,
@@ -80,12 +89,13 @@ def is_this_an_opengrid_node():
     server."""
     return "OpenGrid"
 
+
 @worker_router_bp.route("/cmd/", methods=["POST"])
 def cmd():
     """
     Worker command execution endpoint
     """
-    verbose = worker_router_bp.config['VERBOSE']
+    verbose = worker_router_bp.config["VERBOSE"]
     try:
         worker, worker_mdl = _maybe_create_worker("worker", "grid")
         worker.verbose = verbose
@@ -98,4 +108,3 @@ def cmd():
         return response
     except Exception as e:
         return str(e)
-

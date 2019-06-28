@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 from .worker_router import worker_router_bp
 
+
 def create_app(test_config=None, verbose=False):
     app = Flask(__name__)
     db_url = os.environ.get("DATABASE_URL")
@@ -17,10 +18,10 @@ def create_app(test_config=None, verbose=False):
 
     else:
         # load the test config if passed in
-        app.config["SQLALCHEMY_DATABASE_URI"] = test_config['SQLALCHEMY_DATABASE_URI']
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_config["SQLALCHEMY_DATABASE_URI"]
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config['VERBOSE'] = verbose
+    app.config["VERBOSE"] = verbose
     db.init_app(app)
     app.register_blueprint(worker_router_bp)
     app.add_url_rule("/", endpoint="index")

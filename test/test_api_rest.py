@@ -23,6 +23,7 @@ class APIRestTests(LiveServerTestCase):
     filesystem for the sqlite database exceptionally since keeping it in memory
     seems to cause unexpected behavior
     """
+
     def create_app(self):
         BASEDIR = os.path.dirname(os.path.dirname(__file__))
         app = create_app(
@@ -30,7 +31,7 @@ class APIRestTests(LiveServerTestCase):
                 "SQLALCHEMY_DATABASE_URI": "sqlite:///"
                 + os.path.join(BASEDIR, "test_flask_grid_server.db")
             },
-            verbose=True
+            verbose=True,
         )
         return app
 
