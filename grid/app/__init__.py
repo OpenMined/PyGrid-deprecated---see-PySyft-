@@ -13,20 +13,21 @@ from .models import Worker as WorkerMDL
 from .models import WorkerObject
 
 
-def _maybe_create_worker(worker_name: str = "worker", virtual_worker_id: str = "grid"):
+def _maybe_create_worker(worker_name: str = "worker", virtual_worker_id: str = "grid", verbose: bool = False):
     worker_mdl = WorkerMDL.query.filter_by(public_id=worker_name).first()
     if worker_mdl is None:
         worker_mdl = WorkerMDL(public_id=worker_name)
         db.session.add(worker_mdl)
         db.session.commit()
         worker = sy.VirtualWorker(hook, virtual_worker_id, auto_add=False)
-        print("\t \nCREATING NEW WORKER!!")
+        if verbose:
+            print("\t \nCREATING NEW WORKER!!")
     else:
         worker = sy.VirtualWorker(hook, virtual_worker_id, auto_add=False)
         for obj in worker_mdl.worker_objects:
-            print("ADDING", obj)
             worker.register_obj(obj.object)
-        print("\t \nFOUND OLD WORKER!! " + str(worker._objects.keys()))
+        if verbose:
+            print("\t \nFOUND OLD WORKER!! " + str(worker._objects.keys()))
     return worker, worker_mdl
 
 
@@ -48,7 +49,7 @@ def _store_worker(worker, worker_mdl: WorkerMDL, worker_name: str = "worker"):
     db.session.commit()
 
 
-def create_app(test_config=None):
+def create_app(test_config=None, verbose=False):
 
     app = Flask(__name__)
     migrate = Migrate(app, db)
@@ -84,10 +85,11 @@ def create_app(test_config=None):
     def cmd():
         try:
             worker, worker_mdl = _maybe_create_worker("worker", "grid")
-            worker.verbose = True
+            worker.verbose = verbose
             sy.torch.hook.local_worker.add_worker(worker)
             response = _request_message(worker)
-            print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")
+            if verbose:
+                print("\t NEW WORKER STATE:" + str(worker._objects.keys()) + "\n\n")
             _store_worker(worker, worker_mdl, "worker")
             db.session.flush()
             return response

@@ -29,7 +29,8 @@ class APIRestTests(LiveServerTestCase):
             {
                 "SQLALCHEMY_DATABASE_URI": "sqlite:///"
                 + os.path.join(BASEDIR, "test_flask_grid_server.db")
-            }
+            },
+            verbose=True
         )
         return app
 
