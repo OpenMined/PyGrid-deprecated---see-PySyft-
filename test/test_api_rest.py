@@ -10,9 +10,11 @@ from grid.app.models import WorkerObject
 from grid.client import GridClient
 from flask_testing import LiveServerTestCase
 import requests
+import msgpack
 
 import time
 import os
+import io
 
 
 class RestAPITests(LiveServerTestCase):
@@ -24,6 +26,7 @@ class RestAPITests(LiveServerTestCase):
                 + os.path.join(BASEDIR, "app_test.db")
             }
         )
+        app.config['LIVESERVER_PORT'] = 8945
         return app
 
     def setUp(self):
@@ -33,6 +36,8 @@ class RestAPITests(LiveServerTestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        db.session.commit()
+        db.session.remove()
 
     def test_empty_db(self):
         rv = requests.get(self.get_server_url())
