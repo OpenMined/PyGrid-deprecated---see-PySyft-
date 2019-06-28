@@ -17,7 +17,7 @@ def create_app(test_config=None, verbose=False):
 
     else:
         # load the test config if passed in
-        app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_config['SQLALCHEMY_DATABASE_URI']
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config['VERBOSE'] = verbose
