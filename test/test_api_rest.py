@@ -17,7 +17,7 @@ import os
 import io
 
 
-class RestAPITests(LiveServerTestCase):
+class APIRestTests(LiveServerTestCase):
     def create_app(self):
         BASEDIR = os.path.dirname(os.path.dirname(__file__))
         app = create_app(
