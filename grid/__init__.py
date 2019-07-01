@@ -115,6 +115,8 @@ def launch_on_heroku(
     except:
         if os.name != "nt":
             output = list(execute(("rm -rf tmp").split(" ")))
+            if verbose:
+                print("\t" + str(output))
         print("APP EXISTS: You can already connect to your app at " + app_addr)
         return app_addr
 
