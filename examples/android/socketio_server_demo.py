@@ -1,3 +1,4 @@
+#Import dependencies
 import torch
 import syft as sy
 from grid.workers.socketio_server import WebsocketIOServerWorker
@@ -25,7 +26,7 @@ def _payload(location):
     print(z)
     print("End of payload")
 
-
+#Bringing it all together
 if __name__ == "__main__":
     hook = sy.TorchHook(torch)
     server_worker = WebsocketIOServerWorker(hook, "localhost", 5000, log_msgs=True)
