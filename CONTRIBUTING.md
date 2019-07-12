@@ -4,7 +4,7 @@
 
 ### Code of Conduct
 
-On <https://github.com/parthatom/Grid/CODE_OF_CONDUCT.md> you can find the code of conduct for an efficient working of this community.
+In [CODE_OF_CONDUCT.md][https://github.com/parthatom/Grid/CODE_OF_CONDUCT.md] you can find the code of conduct for an efficient working of this community.
 
 ### Slack
 
