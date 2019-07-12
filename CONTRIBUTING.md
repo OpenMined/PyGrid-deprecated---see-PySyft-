@@ -4,7 +4,8 @@
 
 ### Code of Conduct
 
-In [CODE_OF_CONDUCT.md][https://github.com/parthatom/Grid/CODE_OF_CONDUCT.md] you can find the code of conduct for an efficient working of this community.
+
+You can find our code of conduct at [CODE_OF_CONDUCT.md][https://github.com/OpenMined/Grid/CODE_OF_CONDUCT.md]. We ask that all members of the community follow this code in order to promote a welcoming and productive environment.
 
 ### Slack
 
