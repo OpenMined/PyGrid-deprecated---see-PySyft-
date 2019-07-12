@@ -2,6 +2,10 @@
 
 ## Getting Started
 
+### Code of Conduct
+
+On <https://github.com/parthatom/Grid/CODE_OF_CONDUCT.md> you can find the code of conduct for an efficient working of this community.
+
 ### Slack
 
 A great first place to join the Community is the Slack channel <http://slack.openmined.org>.
