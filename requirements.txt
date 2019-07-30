@@ -12,5 +12,4 @@ websocket_client
 websockets>=7.0
 flask_sqlalchemy
 flask_migrate
-Flask-Migrate
 flask_testing
