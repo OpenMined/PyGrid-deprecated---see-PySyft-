@@ -23,6 +23,7 @@ def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
             print(logs[i] + "...")
 
         cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
+        print('running', cmd)
         o = gr_utils.exec_os_cmd(cmd)
         outputs.append(str(o))
 
@@ -128,7 +129,7 @@ def launch_on_heroku(
         )
     try:
         output = list(
-#            execute(("heroku addons:create rediscloud -a " + grid_name).split(" ")),
+#            execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" ")),
             execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" "))
         )
         if verbose:
@@ -152,10 +153,10 @@ def launch_on_heroku(
             )
 
         msg = (
-            """Creating rediscloud on ⬢ """
+            """Creating heroku-postgresql:hobby-dev on ⬢ """
             + grid_name
             + """... ⣾
-        ⣽⣻⢿⡿⣟⣯⣷⣾⣽Creating rediscloud on ⬢ """
+        ⣽⣻⢿⡿⣟⣯⣷⣾⣽Creating heroku-postgresql:hobby-dev on ⬢ """
             + grid_name
             + """... !
          ▸    Please verify your account to install this add-on plan (please enter a
@@ -170,7 +171,7 @@ def launch_on_heroku(
         raise Exception(msg)
 
     if verbose:
-        print("\nStep 3: Cleaning up heroku/redis checks...")
+        print("\nStep 3: Cleaning up heroku/postgres checks...")
     output = list(
         execute(("heroku destroy " + grid_name + " --confirm " + grid_name).split(" "))
     )
@@ -221,8 +222,8 @@ def launch_on_heroku(
     )
     commands.append("heroku create " + grid_name)
 
-    logs.append("Step 12: Creating Redis database... (this can take a few seconds)")
-    commands.append("heroku addons:create rediscloud -a " + grid_name)
+    logs.append("Step 12: Creating Postgres database... (this can take a few seconds)")
+    commands.append("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name)
 
     logs.append(
         "Step 13: Pushing code to Heroku (this can take take a few minutes"
