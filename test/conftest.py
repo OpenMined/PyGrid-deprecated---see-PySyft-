@@ -4,15 +4,11 @@ from multiprocessing import Process
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import os
-import tempfile
-
+import sys
 # We need to add our rest api as a path since it is a separate application
 # deployed on Heroku:
-import sys, os
-
-myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + "/../app/pg_rest_api")
-from pg_app import create_app
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/../app/pg_rest_api")
+#from pg_app import create_app
 
 import syft
 from syft import TorchHook
