@@ -12,7 +12,7 @@ import tempfile
 import sys, os
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../app/pg_rest_api')
-from app.pg_rest_api.pg_app import create_app
+from pg_app import create_app
 
 import syft
 from syft import TorchHook
