@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import session, request
 from .models import Worker as WorkerMDL
 from .models import WorkerObject
-from . import db
+from .models import db
 import binascii
 import torch as th
 import syft as sy

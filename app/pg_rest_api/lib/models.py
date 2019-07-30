@@ -1,4 +1,5 @@
-from . import db
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy()
 import syft as sy
 
 

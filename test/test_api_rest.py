@@ -5,9 +5,10 @@ import syft as sy
 from syft import codes, TorchHook
 import torch as th
 
-from app.pg_rest_api import create_app, db
-from app.pg_rest_api.models import Worker as WorkerMDL
-from app.pg_rest_api.models import WorkerObject
+from app.pg_rest_api.pg_app import create_app
+from app.pg_rest_api.lib.models import db
+from app.pg_rest_api.lib.models import Worker as WorkerMDL
+from app.pg_rest_api.lib.models import WorkerObject
 
 from grid.client import GridClient
 from flask_testing import LiveServerTestCase

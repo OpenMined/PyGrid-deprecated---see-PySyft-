@@ -1,5 +1,6 @@
-from app.pg_rest_api import create_app, db
-from app.pg_rest_api.models import Worker, WorkerObject
+from app.pg_rest_api.pg_app import create_app
+from app.pg_rest_api.lib.models import Worker, WorkerObject
+from app.pg_rest_api.lib.models import db
 from .flask_base_test import FlaskBaseTestCase
 import torch
 
