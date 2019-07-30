@@ -198,7 +198,7 @@ def launch_on_heroku(
         commands.append("git clone https://github.com/OpenMined/Grid")
 
     logs.append("Step 6: copying app code from cloned repo")
-    commands.append("cp Grid/app/{}/* ./".format(app_type))
+    commands.append("cp -r Grid/app/{}/* ./".format(app_type))
 
     logs.append("Step 7: removing the rest of the cloned code")
     commands.append("rm -rf Grid")
