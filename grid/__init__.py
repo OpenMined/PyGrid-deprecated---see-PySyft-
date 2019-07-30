@@ -60,7 +60,7 @@ def execute(cmd):
 
 def launch_on_heroku(
     grid_name: str,
-    app_type: str = "rest_api",
+    app_type: str = "pg_rest_api",
     verbose=True,
     check_deps=True,
     dev_user=None,

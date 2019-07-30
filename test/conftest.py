@@ -1,7 +1,7 @@
 import pytest
 import torch
 from multiprocessing import Process
-from grid.app import create_app
+from app.pg_rest_api import create_app
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import os

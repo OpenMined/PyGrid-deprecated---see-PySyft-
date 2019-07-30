@@ -4,9 +4,11 @@ import binascii
 import syft as sy
 from syft import codes, TorchHook
 import torch as th
-from grid.app import create_app, db
-from grid.app.models import Worker as WorkerMDL
-from grid.app.models import WorkerObject
+
+from app.pg_rest_api import create_app, db
+from app.pg_rest_api.models import Worker as WorkerMDL
+from app.pg_rest_api.models import WorkerObject
+
 from grid.client import GridClient
 from flask_testing import LiveServerTestCase
 import requests

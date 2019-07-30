@@ -1,5 +1,5 @@
-from grid.app import create_app, db
-from grid.app.models import Worker, WorkerObject
+from app.pg_rest_api import create_app, db
+from app.pg_rest_api.models import Worker, WorkerObject
 from .flask_base_test import FlaskBaseTestCase
 import torch
 
