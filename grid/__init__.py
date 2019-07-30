@@ -223,7 +223,7 @@ def launch_on_heroku(
     commands.append("heroku create " + grid_name)
 
     logs.append("Step 12: Creating Postgres database... (this can take a few seconds)")
-    commands.append("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name)
+    commands.append(f"heroku addons:create heroku-postgresql:hobby-dev -a {grid_name}")
 
     logs.append(
         "Step 13: Pushing code to Heroku (this can take take a few minutes"
@@ -232,7 +232,10 @@ def launch_on_heroku(
     )
     commands.append("git push heroku master")
 
-    logs.append("Step 14: Cleaning up!")
+    logs.append("Step 14: Create Database")
+    commands.append(f"heroku run -a {grid_name} flask db upgrade")
+
+    logs.append("Step 15: Cleaning up!")
     commands.append("rm -rf .git")
 
     run_commands_in(commands, logs, cleanup=True, verbose=verbose)
