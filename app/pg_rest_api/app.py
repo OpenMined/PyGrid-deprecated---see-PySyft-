@@ -26,4 +26,6 @@ def create_app(test_config=None, verbose=False):
     app.add_url_rule("/", endpoint="index")
     return app
 
-create_app()
+
+if __name__ == "__main__":
+    create_app().run()
