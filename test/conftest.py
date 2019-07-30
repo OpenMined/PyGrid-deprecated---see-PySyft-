@@ -1,4 +1,3 @@
-
 import pytest
 import torch
 from multiprocessing import Process
@@ -10,8 +9,9 @@ import tempfile
 # We need to add our rest api as a path since it is a separate application
 # deployed on Heroku:
 import sys, os
+
 myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + '/../app/pg_rest_api')
+sys.path.insert(0, myPath + "/../app/pg_rest_api")
 from pg_app import create_app
 
 import syft

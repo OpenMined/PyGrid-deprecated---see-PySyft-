@@ -23,7 +23,6 @@ def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
             print(logs[i] + "...")
 
         cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
-        print('running', cmd)
         o = gr_utils.exec_os_cmd(cmd)
         outputs.append(str(o))
 
@@ -129,8 +128,12 @@ def launch_on_heroku(
         )
     try:
         output = list(
-#            execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" ")),
-            execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" "))
+            #            execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" ")),
+            execute(
+                (
+                    "heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name
+                ).split(" ")
+            )
         )
         if verbose:
             print("\t" + str(output))

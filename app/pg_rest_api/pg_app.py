@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from lib.models import db
 from lib.worker_router import worker_router_bp
 
+
 def create_app(test_config=None, verbose=False):
     global db
     app = Flask(__name__)
@@ -26,4 +27,3 @@ def create_app(test_config=None, verbose=False):
     app.register_blueprint(worker_router_bp)
     app.add_url_rule("/", endpoint="index")
     return app
-
