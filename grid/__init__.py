@@ -121,11 +121,12 @@ def launch_on_heroku(
     logs = list()
     if verbose:
         print(
-            "\nStep 2: Making Sure Redis Database Can Be Spun Up on Heroku (this can take a couple seconds)..."
+            "\nStep 2: Making Sure Postgres  Database Can Be Spun Up on Heroku (this can take a couple seconds)..."
         )
     try:
         output = list(
-            execute(("heroku addons:create rediscloud -a " + grid_name).split(" "))
+#            execute(("heroku addons:create rediscloud -a " + grid_name).split(" ")),
+            execute(("heroku addons:create heroku-postgresql:hobby-dev -a " + grid_name).split(" "))
         )
         if verbose:
             print("\t" + str(output))
