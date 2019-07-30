@@ -12,3 +12,5 @@ https://download.pytorch.org/whl/cpu/torch-1.0.1-cp36-cp36m-win_amd64.whl; sys_p
 torch; sys_platform == "darwin"
 torchvision
 psycopg2
+flask_sqlalchemy
+flask_migrate
