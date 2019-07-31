@@ -14,6 +14,7 @@ import subprocess
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 # We need to add our rest api as a path since it is a separate application
 # deployed on Heroku:
 path = os.path.dirname(os.path.abspath(__file__)) + "/app/pg_rest_api"
