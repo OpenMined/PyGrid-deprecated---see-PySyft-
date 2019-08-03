@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 
 def create_app(debug=False):
-    """Create flask socket-io application."""
+    """Create flask application."""
     app = Flask(__name__)
     app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
