@@ -32,7 +32,7 @@ def connect_node(msg):
 
 @socketio.on("/cmd")
 def cmd(message):
-    """ Forward pysyft command to hook virtual worker """
+    """ Forward pysyft command to virtual worker """
     try:
         worker = hook.local_worker
 
