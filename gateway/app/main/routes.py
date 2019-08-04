@@ -6,12 +6,8 @@ from flask import render_template, Response, request
 from . import main
 import json
 
-import syft as sy
-import torch as th
-import grid as gr
 import requests
 
-hook = sy.TorchHook(th)
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
