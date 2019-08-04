@@ -5,10 +5,70 @@
 Grid is a peer-to-peer network of data owners and data scientists who can collectively train AI models using [PySyft](https://github.com/OpenMined/PySyft/).
 
 
+## Overview
+- [How to install](#how-to-install)
+- [Getting Started](#getting-started)
+- [Try out the Tutorials](#try-out-the-tutorials)
+- [Start Contributing](#start-contributing)
+- [High Level Architecture](#high-level-architecture)
+- [Disclaimer](#disclaimer)
+
+## How to install
+
+### Grid library
+```
+$ python setup.py install
+```
+### Grid Node
+```
+$ cd app/websocket
+$ pip install -r requirements.txt
+```
+### Grid Gateway
+```
+$ cd gateway
+$ pip install -r requirements.txt
+```
+
+## Getting started
+To boot the entire grid platform locally, we will use docker containers. To install the dependencies, just follow these steps:
+### Docker dependencies
+```
+$ sudo apt update
+$ sudo apt install docker docker-io docker-compose
+```
+
+### Build images
+```
+$ docker build -t node ./app/websocket/  # Build grid node image
+$ docker build -t gateway ./gateway/  # Build gateway image
+```
+
+### Let's put all together
+**PS:** Fell free to increase/decrease the number of initial grid nodes ***(you can do this changing docker-compose.yml file)***
+```
+$ docker-compose up
+```
+Done! now we have a gateway and three nodes (by default) running locally
+
+## Try out the Tutorials
+A comprehensive list of tutorials can be found [here](https://github.com/OpenMined/Grid/tree/master/examples)
+
+These tutorials cover how to perform techniques such as federated learning and differential privacy using PySyft/Grid.
+
+## Start Contributing
+The guide for contributors can be found [here](https://github.com/OpenMined/PySyft/tree/master/CONTRIBUTING.md). It covers all that you need to know to start contributing code to PySyft in an easy way.
+
+Also join the rapidly growing community of 2500+ on [Slack](http://slack.openmined.org). The slack community is very friendly and great about quickly answering questions about the use and development of Grid/PySyft!
+
+
 ## High-level Architecture
 
 ![alt text](art/Grid-Arch.png "High-level Architecture")
 
+
+## Disclaimer
+Do ***NOT*** use this code to protect data (private or otherwise) - at present it is very insecure.
 
 ## License
 
