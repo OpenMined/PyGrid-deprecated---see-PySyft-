@@ -35,10 +35,8 @@ class GridNetwork(object):
         # Connect with grid nodes that contains the dataset and get their pointers
         tensor_set = []
         for node in match_nodes:
-            worker = WebsocketGridClient(sy.hook, node[1], node[0])
-
-            # Connection already exists
             if node[0] not in self.connected_grid_nodes:
+                worker = WebsocketGridClient(sy.hook, node[1], node[0])
                 self.connected_grid_nodes[node[0]] = worker
                 worker.connect()
             else:
