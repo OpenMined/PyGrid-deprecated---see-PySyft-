@@ -15,16 +15,16 @@ Grid is a peer-to-peer network of data owners and data scientists who can collec
 
 ## How to install
 
-### Grid library
+#### Grid library
 ```
 $ python setup.py install
 ```
-### Grid Node
+#### Grid Node
 ```
 $ cd app/websocket
 $ pip install -r requirements.txt
 ```
-### Grid Gateway
+#### Grid Gateway
 ```
 $ cd gateway
 $ pip install -r requirements.txt
@@ -32,19 +32,19 @@ $ pip install -r requirements.txt
 
 ## Getting started
 To boot the entire grid platform locally, we will use docker containers. To install the dependencies, just follow these steps:
-### Docker dependencies
+#### Docker dependencies
 ```
 $ sudo apt update
 $ sudo apt install docker docker-io docker-compose
 ```
 
-### Build images
+#### Build images
 ```
 $ docker build -t node ./app/websocket/  # Build grid node image
 $ docker build -t gateway ./gateway/  # Build gateway image
 ```
 
-### Let's put all together
+#### Let's put all together
 **PS:** Fell free to increase/decrease the number of initial grid nodes ***(you can do this changing docker-compose.yml file)***
 ```
 $ docker-compose up
