@@ -25,9 +25,9 @@ def connect_node(msg):
     try:
         new_worker = gr.WebsocketGridClient(hook, msg["uri"], id=msg["id"])
         new_worker.connect()
-        emit("/connect-node", "Succefully connected!")
+        emit("/connect-node-response", "Succefully connected!")
     except Exception as e:
-        emit("/connect-node", str(e))
+        emit("/connect-node-response", str(e))
 
 
 @socketio.on("/cmd")
@@ -44,6 +44,6 @@ def cmd(message):
         decoded_response = worker._recv_msg(decoded_message)
         encoded_response = str(binascii.hexlify(decoded_response))
 
-        socketio.emit("/cmd", encoded_response)
+        socketio.emit("/cmd-response", encoded_response)
     except Exception as e:
-        socketio.emit("/cmd", str(e))
+        socketio.emit("/cmd-response", str(e))

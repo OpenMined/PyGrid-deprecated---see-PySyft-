@@ -55,7 +55,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
             if msg != "OpenGrid":
                 raise PermissionError("App is not an OpenGrid app")
 
-        @self.__sio.on("/cmd")
+        @self.__sio.on("/cmd-response")
         def on_client_result(args):
             if log_msgs:
                 print("Receiving result from client {}".format(args))
@@ -64,7 +64,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
             # Tell the wait_for_client_event to clear up and continue execution
             self.wait_for_client_event = False
 
-        @self.__sio.on("/connect-node")
+        @self.__sio.on("/connect-node-response")
         def connect_node(msg):
             if self.verbose:
                 print("Connect Grid Node: ", msg)
