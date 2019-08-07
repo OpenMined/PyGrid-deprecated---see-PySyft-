@@ -1,5 +1,5 @@
 """
-This file exists to provide one common place for all grid node http requests
+This file exists to provide one common place for all grid node http requests.
 """
 from flask import render_template, request, Response
 from . import main, hook
@@ -8,7 +8,7 @@ import json
 
 @main.route("/", methods=["GET"])
 def index():
-    """ Main Page """
+    """ Main Page. """
     return render_template("index.html")
 
 
@@ -24,7 +24,7 @@ def search_dataset_tags():
     results = hook.local_worker.search(*body["query"])
 
     body_response = {"content": False}
-    if len(results) > 0:
+    if len(results):
         body_response["content"] = True
 
     return Response(json.dumps(body_response), status=200, mimetype="application/json")

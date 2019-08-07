@@ -1,5 +1,5 @@
 """
-This file exists to provide one common place for all websocket events
+This file exists to provide one common place for all websocket events.
 """
 
 from flask import session
@@ -13,7 +13,7 @@ import binascii
 
 @socketio.on("/set-grid-id")
 def set_grid_name(msg):
-    """ Set Grid node ID """
+    """ Set Grid node ID. """
     me = hook.local_worker
     me.id = msg["id"]
     me.is_client_worker = False
@@ -21,7 +21,7 @@ def set_grid_name(msg):
 
 @socketio.on("/connect-node")
 def connect_node(msg):
-    """ Open connection between different grid nodes"""
+    """ Open connection between different grid nodes. """
     try:
         new_worker = gr.WebsocketGridClient(hook, msg["uri"], id=msg["id"])
         new_worker.connect()
@@ -32,7 +32,7 @@ def connect_node(msg):
 
 @socketio.on("/cmd")
 def cmd(message):
-    """ Forward pysyft command to virtual worker """
+    """ Forward pysyft command to hook virtual worker. """
     try:
         worker = hook.local_worker
 

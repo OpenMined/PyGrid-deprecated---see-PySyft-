@@ -1,5 +1,5 @@
 """
-    All Gateway routes (REST API)
+    All Gateway routes (REST API).
 """
 
 from flask import render_template, Response, request
@@ -15,14 +15,14 @@ grid_nodes = {}
 
 @main.route("/", methods=["GET"])
 def index():
-    """ Main Page """
+    """ Main Page. """
     return render_template("index.html")
 
 
 @main.route("/join", methods=["POST"])
 def join_grid_node():
     """ Register a new grid node at grid network. 
-        TODO: Add Authentication process
+        TODO: Add Authentication process.
     """
     data = json.loads(request.data)
 
@@ -44,7 +44,7 @@ def join_grid_node():
 
 @main.route("/connected-nodes", methods=["GET"])
 def get_connected_nodes():
-    """ Get a list of connected nodes """
+    """ Get a list of connected nodes. """
     return Response(
         json.dumps({"grid-nodes": list(grid_nodes.keys())}),
         status=200,
@@ -69,7 +69,7 @@ def search_dataset_tags():
         ).content
         response = json.loads(response)
         # If contains
-        if response["content"] == True:
+        if response["content"]:
             match_grid_nodes.append((node, grid_nodes[node]))
 
     # Return a list[ (id, address) ]  with all grid nodes that have the desired data

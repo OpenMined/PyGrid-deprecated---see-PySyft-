@@ -8,7 +8,7 @@ class GridNetwork(object):
     """  The purpose of the Grid Network class is to control the entire communication flow by abstracting operational steps.
     
         Attributes:
-            - gateway_url : network address to which you want to connect
+            - gateway_url : network address to which you want to connect.
             - connected_grid_nodes : Grid nodes that are connected to the application.
     """
 
@@ -17,12 +17,12 @@ class GridNetwork(object):
         self.connected_grid_nodes = {}
 
     def search(self, *query):
-        """ Search a set of tags across the grid network 
+        """ Search a set of tags across the grid network.
             
-            Parameters:
-                query : A set of dataset tags
-            Return:
-                tensor_set : matrix of tensor pointers
+            Arguments:
+                query : A set of dataset tags.
+            Returns:
+                tensor_matrix : matrix of tensor pointers.
         """
         body = json.dumps({"query": list(query)})
 
@@ -34,14 +34,14 @@ class GridNetwork(object):
 
         # Connect with grid nodes that contains the dataset and get their pointers
         tensor_set = []
-        for node in match_nodes:
-            if node[0] not in self.connected_grid_nodes:
-                worker = WebsocketGridClient(sy.hook, node[1], node[0])
-                self.connected_grid_nodes[node[0]] = worker
+        for node_id, node_url in match_nodes:
+            if node_id not in self.connected_grid_nodes:
+                worker = WebsocketGridClient(sy.hook, node_url, node_id)
+                self.connected_grid_nodes[node_id] = worker
                 worker.connect()
             else:
                 # There is already a connection to this node
-                worker = self.connected_grid_nodes[node[0]]
+                worker = self.connected_grid_nodes[node_id]
             tensor_set.append(worker.search(*query))
         return tensor_set
 

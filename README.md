@@ -31,7 +31,9 @@ $ pip install -r requirements.txt
 ```
 
 ## Getting started
-To boot the entire grid platform locally, we will use docker containers. To install the dependencies, just follow these steps:
+To boot the entire grid platform locally, we will use docker containers.  
+To install the dependencies, just follow these steps:
+
 #### Docker dependencies
 ```
 $ sudo apt update
@@ -45,16 +47,16 @@ $ docker build -t gateway ./gateway/  # Build gateway image
 ```
 
 #### Let's put all together
-**PS:** Fell free to increase/decrease the number of initial grid nodes ***(you can do this changing docker-compose.yml file)***
+**PS:** Fell free to increase/decrease the number of initial grid nodes ***(you can do this by changing the docker-compose.yml file)***.
 ```
 $ docker-compose up
 ```
-Done! now we have a gateway and three nodes (by default) running locally
+Done! now we have a gateway and three nodes (by default) running locally.
 
 ## Try out the Tutorials
-A comprehensive list of tutorials can be found [here](https://github.com/OpenMined/Grid/tree/master/examples)
+A comprehensive list of tutorials can be found [here](https://github.com/OpenMined/Grid/tree/master/examples).
 
-These tutorials cover how to perform techniques such as federated learning and differential privacy using PySyft/Grid.
+These tutorials cover how to create a grid node and what operations you can perform.
 
 ## Start Contributing
 The guide for contributors can be found [here](https://github.com/OpenMined/PySyft/tree/master/CONTRIBUTING.md). It covers all that you need to know to start contributing code to PySyft in an easy way.

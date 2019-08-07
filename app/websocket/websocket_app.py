@@ -1,6 +1,6 @@
 #!/bin/env python
 """
-    Grid Node is a Socket/HTTP server used to manage / compute data remotely
+    Grid Node is a Socket/HTTP server used to manage / compute data remotely.
 """
 
 from app import create_app, socketio
