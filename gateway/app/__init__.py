@@ -3,7 +3,6 @@ from flask_cors import CORS
 import os
 
 
-
 def create_app(debug=False):
     """Create flask application."""
     app = Flask(__name__)
