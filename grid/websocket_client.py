@@ -65,7 +65,8 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
                 self.response_from_client = binascii.unhexlify(args[2:-1])
             except:
                 print(args)
-                raise Exception()
+                raise Exception(args)
+
             # Tell the wait_for_client_event to clear up and continue execution
             self.wait_for_client_event = False
 
