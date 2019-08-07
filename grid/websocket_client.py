@@ -59,8 +59,13 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         def on_client_result(args):
             if log_msgs:
                 print("Receiving result from client {}".format(args))
-            # The server broadcasted the results from another client
-            self.response_from_client = binascii.unhexlify(args[2:-1])
+                
+            try:
+                # The server broadcasted the results from another client
+                self.response_from_client = binascii.unhexlify(args[2:-1])
+            except:
+                print(args)
+                raise Exception()
             # Tell the wait_for_client_event to clear up and continue execution
             self.wait_for_client_event = False
 
