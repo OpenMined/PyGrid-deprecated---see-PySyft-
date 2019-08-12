@@ -59,7 +59,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         def on_client_result(args):
             if log_msgs:
                 print("Receiving result from client {}".format(args))
-                
+
             try:
                 # The server broadcasted the results from another client
                 self.response_from_client = binascii.unhexlify(args[2:-1])

@@ -9,6 +9,12 @@ from . import hook
 
 import grid as gr
 import binascii
+import json
+
+
+@socketio.on("connect")
+def on_connect():
+    emit("/connect-response", json.dumps({"status": "connected"}))
 
 
 @socketio.on("/set-grid-id")
@@ -23,9 +29,10 @@ def set_grid_name(msg):
 def connect_node(msg):
     """ Open connection between different grid nodes. """
     try:
-        new_worker = gr.WebsocketGridClient(hook, msg["uri"], id=msg["id"])
-        new_worker.connect()
-        emit("/connect-node-response", "Succefully connected!")
+        if msg["id"] not in hook.local_worker._known_workers:
+            new_worker = gr.WebsocketGridClient(hook, msg["uri"], id=msg["id"])
+            new_worker.connect()
+            emit("/connect-node-response", "Succefully connected!")
     except Exception as e:
         emit("/connect-node-response", str(e))
 
@@ -44,6 +51,6 @@ def cmd(message):
         decoded_response = worker._recv_msg(decoded_message)
         encoded_response = str(binascii.hexlify(decoded_response))
 
-        socketio.emit("/cmd-response", encoded_response)
+        emit("/cmd-response", encoded_response)
     except Exception as e:
-        socketio.emit("/cmd-response", str(e))
+        emit("/cmd-response", str(e))
