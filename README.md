@@ -31,14 +31,9 @@ $ pip install -r requirements.txt
 ```
 
 ## Getting started
-To boot the entire grid platform locally, we will use docker containers.  
-To install the dependencies, just follow these steps:
+To boot the entire grid platform locally, we will use docker containers.
+To install docker the dependencies, just follow [docker documentation](https://docs.docker.com/install/).
 
-#### Docker dependencies
-```
-$ sudo apt update
-$ sudo apt install docker docker-io docker-compose
-```
 
 #### Build images
 ```
