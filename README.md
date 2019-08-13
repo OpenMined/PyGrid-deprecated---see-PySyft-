@@ -31,7 +31,7 @@ $ pip install -r requirements.txt
 ```
 
 ## Getting started
-To boot the entire grid platform locally, we will use docker containers.
+To boot the entire grid platform locally, we will use docker containers.  
 To install docker the dependencies, just follow [docker documentation](https://docs.docker.com/install/).
 
 

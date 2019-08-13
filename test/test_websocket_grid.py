@@ -79,7 +79,7 @@ class SocketIOAPITest(unittest.TestCase):
                 hook, "http://localhost:" + port + "/", id=node_id
             )
             node.connect()
-            time.sleep(1)
+            time.sleep(0.2)
             self.nodes.append(node)
 
     def tearDown(self):
