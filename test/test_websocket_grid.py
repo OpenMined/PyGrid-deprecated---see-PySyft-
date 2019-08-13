@@ -68,7 +68,7 @@ for (node_id, port) in zip(ids, ports):
     p.daemon = True
     p.start()
 
-time.sleep(10)
+time.sleep(20)
 
 
 class SocketIOAPITest(unittest.TestCase):
@@ -79,6 +79,7 @@ class SocketIOAPITest(unittest.TestCase):
                 hook, "http://localhost:" + port + "/", id=node_id
             )
             node.connect()
+            time.sleep(1)
             self.nodes.append(node)
 
     def tearDown(self):
