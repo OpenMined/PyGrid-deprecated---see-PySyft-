@@ -14,7 +14,6 @@ class GridNetwork(object):
 
     def __init__(self, gateway_url):
         self.gateway_url = gateway_url
-        self.connected_grid_nodes = {}
 
     def search(self, *query):
         """ Search a set of tags across the grid network.
@@ -35,16 +34,17 @@ class GridNetwork(object):
         # Connect with grid nodes that contains the dataset and get their pointers
         tensor_set = []
         for node_id, node_url in match_nodes:
-            if node_id not in self.connected_grid_nodes:
+            if node_id not in sy.hook.local_worker._known_workers:
                 worker = WebsocketGridClient(sy.hook, node_url, node_id)
-                self.connected_grid_nodes[node_id] = worker
                 worker.connect()
             else:
                 # There is already a connection to this node
-                worker = self.connected_grid_nodes[node_id]
+                worker = sy.hook.local_worker._known_workers[node_id]
+                worker.connect()
             tensor_set.append(worker.search(*query))
         return tensor_set
 
     def disconnect_nodes(self):
-        for node in self.connected_grid_nodes:
-            self.connected_grid_nodes[node].disconnect()
+        for node in sy.hook.local_worker._known_workers:
+            if( isinstance(sy.hook.local_worker._known_workers[node], WebsocketGridClient) ):
+                sy.hook.local_worker._known_workers[node].disconnect()
