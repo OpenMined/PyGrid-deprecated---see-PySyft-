@@ -4,7 +4,7 @@ import syft as sy
 import torch as th
 import time
 import pytest
-from . import PORTS,IDS
+from . import PORTS, IDS
 
 hook = sy.TorchHook(th)
 
@@ -34,7 +34,7 @@ class SocketIOTest(unittest.TestCase):
                         time.sleep(0.2)
         except:
             self.fail("test_connect_nodes : Exception raised!")
-    
+
     def test_multiple_connections_to_same_node(self):
         try:
             for i in range(10):
@@ -192,4 +192,3 @@ class SocketIOTest(unittest.TestCase):
 
         result_s = x_s.matmul(y_s.t())
         self.assertEqual(result_s.get().tolist(), result.tolist())
-

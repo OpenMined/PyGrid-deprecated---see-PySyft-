@@ -46,5 +46,7 @@ class GridNetwork(object):
 
     def disconnect_nodes(self):
         for node in sy.hook.local_worker._known_workers:
-            if( isinstance(sy.hook.local_worker._known_workers[node], WebsocketGridClient) ):
+            if isinstance(
+                sy.hook.local_worker._known_workers[node], WebsocketGridClient
+            ):
                 sy.hook.local_worker._known_workers[node].disconnect()
