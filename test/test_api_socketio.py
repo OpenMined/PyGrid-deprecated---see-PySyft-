@@ -1,85 +1,22 @@
-from app.websocket.app import create_app
-from flask import Flask, session, request, json as flask_json
-from flask_socketio import (
-    SocketIO,
-    send,
-    emit,
-    join_room,
-    leave_room,
-    Namespace,
-    disconnect,
-)
-
 import unittest
-import threading
-import multiprocessing
 import grid as gr
 import syft as sy
 import torch as th
 import time
-import requests
-import json
+import pytest
+from . import PORTS,IDS
 
 hook = sy.TorchHook(th)
 
 
-gateway_url = "http://localhost:8080"
-
-ports = ["3000", "3001", "3002"]
-ids = ["Bob", "Alice", "James"]
-
-
-def setUpGateway(port):
-    import os
-
-    os.environ["SECRET_KEY"] = "Secretkeyhere"
-    from gateway.app import create_app
-
-    app = create_app(debug=False)
-    app.run(host="0.0.0.0", port="8080")
-
-
-def setUpNodes(config):
-    from app.websocket.app import create_app, socketio
-
-    requests.post(
-        gateway_url + "/join",
-        data=json.dumps(
-            {
-                "node-id": config[0],
-                "node-address": "http://localhost:" + config[1] + "/",
-            }
-        ),
-    )
-    app = create_app(debug=False)
-    socketio.run(app, host="0.0.0.0", port=port)
-
-
-# Init Grid Gateway
-p = multiprocessing.Process(target=setUpGateway, args=("8080",))
-p.daemon = True
-p.start()
-time.sleep(5)
-
-# Init Grid Nodes
-for (node_id, port) in zip(ids, ports):
-    config = (node_id, port)
-    p = multiprocessing.Process(target=setUpNodes, args=(config,))
-    p.daemon = True
-    p.start()
-
-time.sleep(20)
-
-
-class SocketIOAPITest(unittest.TestCase):
+class SocketIOTest(unittest.TestCase):
     def setUp(self):
         self.nodes = []
-        for (node_id, port) in zip(ids, ports):
+        for (node_id, port) in zip(IDS, PORTS):
             node = gr.WebsocketGridClient(
                 hook, "http://localhost:" + port + "/", id=node_id
             )
             node.connect()
-            time.sleep(0.2)
             self.nodes.append(node)
 
     def tearDown(self):
@@ -97,7 +34,7 @@ class SocketIOAPITest(unittest.TestCase):
                         time.sleep(0.2)
         except:
             self.fail("test_connect_nodes : Exception raised!")
-
+    
     def test_multiple_connections_to_same_node(self):
         try:
             for i in range(10):
@@ -256,65 +193,3 @@ class SocketIOAPITest(unittest.TestCase):
         result_s = x_s.matmul(y_s.t())
         self.assertEqual(result_s.get().tolist(), result.tolist())
 
-
-class GridAPITest(unittest.TestCase):
-    def setUp(self):
-        self.my_grid = gr.GridNetwork(gateway_url)
-
-    def tearDown(self):
-        self.my_grid.disconnect_nodes()
-
-    def test_connected_nodes(self):
-        response = json.loads(requests.get(gateway_url + "/connected-nodes").content)
-        self.assertEqual(len(response["grid-nodes"]), 3)
-        self.assertTrue("Bob" in response["grid-nodes"])
-        self.assertTrue("Alice" in response["grid-nodes"])
-        self.assertTrue("James" in response["grid-nodes"])
-
-    def test_grid_search(self):
-        nodes = []
-        for (node_id, port) in zip(ids, ports):
-            node = gr.WebsocketGridClient(
-                hook, "http://localhost:" + port + "/", id=node_id
-            )
-            node.connect()
-            nodes.append(node)
-
-        x = th.tensor([1, 2, 3, 4, 5]).tag("#simple-tensor").describe("Simple tensor")
-        y = (
-            th.tensor([[4], [5], [7], [8]])
-            .tag("#2d-tensor")
-            .describe("2d tensor example")
-        )
-        z = (
-            th.tensor([[0, 0, 0, 0, 0]])
-            .tag("#zeros-tensor")
-            .describe("tensor with zeros")
-        )
-        w = (
-            th.tensor([[0, 0, 0, 0, 0]])
-            .tag("#zeros-tensor")
-            .describe("tensor with zeros")
-        )
-
-        x_s = x.send(nodes[0])
-        y_s = y.send(nodes[1])
-        z_s = z.send(nodes[2])
-        w_s = w.send(nodes[0])
-
-        x_s.child.garbage_collect_data = False
-        y_s.child.garbage_collect_data = False
-        z_s.child.garbage_collect_data = False
-        w_s.child.garbage_collect_data = False
-
-        for node in nodes:
-            node.disconnect()
-
-        simple_tensor = self.my_grid.search("#simple-tensor")
-        self.assertEqual(len(simple_tensor), 1)
-        zeros_tensor = self.my_grid.search("#zeros-tensor")
-        self.assertEqual(len(zeros_tensor), 2)
-        d_tensor = self.my_grid.search("#2d-tensor")
-        self.assertEqual(len(d_tensor), 1)
-        nothing = self.my_grid.search("#nothing")
-        self.assertEqual(len(nothing), 0)
