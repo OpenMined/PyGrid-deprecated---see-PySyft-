@@ -5,190 +5,218 @@ import torch as th
 import time
 import pytest
 from . import PORTS, IDS
+import numpy as np
+from random import randint, sample
 
 hook = sy.TorchHook(th)
 
 
-class SocketIOTest(unittest.TestCase):
-    def setUp(self):
-        self.nodes = []
-        for (node_id, port) in zip(IDS, PORTS):
-            node = gr.WebsocketGridClient(
-                hook, "http://localhost:" + port + "/", id=node_id
-            )
-            node.connect()
-            self.nodes.append(node)
+@pytest.mark.parametrize(
+    "test_input, expected", [(node_id, node_id) for node_id in IDS]
+)
+def test_connect_nodes(test_input, expected, connected_node):
+    assert connected_node[test_input].id == expected
 
-    def tearDown(self):
-        for node in self.nodes:
-            node.disconnect()
 
-    def test_connect_nodes(self):
-        try:
-            for node in self.nodes:
-                for n in self.nodes:
+@pytest.mark.parametrize("n_times", range(5))
+def test_connect_nodes(n_times, connected_node):
+    try:
+        for _ in range(n_times):
+            for node in connected_node:
+                for n in connected_node:
                     if n == node:
                         continue
                     else:
-                        node.connect_grid_node(n.uri, n.id)
+                        connected_node[node].connect_grid_node(
+                            connected_node[n].uri, connected_node[n].id
+                        )
                         time.sleep(0.2)
-        except:
-            self.fail("test_connect_nodes : Exception raised!")
+    except:
+        unittest.TestCase.fail("test_connect_nodes : Exception raised!")
 
-    def test_multiple_connections_to_same_node(self):
-        try:
-            for i in range(10):
-                for node in self.nodes:
-                    for n in self.nodes:
-                        if n == node:
-                            continue
-                        else:
-                            node.connect_grid_node(n.uri, n.id)
-                            time.sleep(0.2)
-        except:
-            self.fail("test_multiple_connections_to_same_node: Exception raised!")
 
-    def test_send_tensor(self):
-        x = th.tensor([1, 2, 3, 4])
-        x_s = x.send(self.nodes[0])
-        self.assertEqual(x_s.location.id, self.nodes[0].id)
-        self.assertEqual(x_s.get().tolist(), x.tolist())
+@pytest.mark.parametrize(
+    "node_id, tensor", list(map(lambda x: (x, np.random.rand(3, 2)), IDS))
+)
+def test_send_tensor(node_id, tensor, connected_node):
+    x = th.tensor(tensor)
+    x_s = x.send(connected_node[node_id])
 
-    def test_send_tag_tensor(self):
-        x = th.tensor([1, 2, 3, 4, 5]).tag("#simple-tensor").describe("Simple tensor")
-        y = (
-            th.tensor([[4], [5], [7], [8]])
-            .tag("#2d-tensor")
-            .describe("2d tensor example")
+    assert x_s.location.id == node_id
+    assert x_s.get().tolist() == x.tolist()
+
+
+@pytest.mark.parametrize(
+    "node_id, tensor,tag",
+    list(
+        map(
+            lambda x, y: (x, np.random.rand(3, 2), y),
+            IDS,
+            ["#first", "#second", "#third"],
         )
-        z = (
-            th.tensor([[0, 0, 0, 0, 0]])
-            .tag("#zeros-tensor")
-            .describe("tensor with zeros")
-        )
-        w = (
-            th.tensor([[0, 0, 0, 0, 0]])
-            .tag("#zeros-tensor")
-            .describe("tensor with zeros")
-        )
+    ),
+)
+def test_send_tag_tensor(node_id, tensor, tag, connected_node):
+    x = th.tensor(tensor).tag(tag).describe(tag + " description")
 
-        x_s = x.send(self.nodes[0])
-        y_s = y.send(self.nodes[1])
-        z_s = z.send(self.nodes[2])
-        w_s = w.send(self.nodes[0])
+    x_s = x.send(connected_node[node_id])
+    x_s.child.garbage_collect_data = False
 
-        x_s.child.garbage_collect_data = False
-        y_s.child.garbage_collect_data = False
-        z_s.child.garbage_collect_data = False
-        w_s.child.garbage_collect_data = False
+    assert x_s.description == (tag + " description")
 
-        self.assertEqual(x_s.description, "Simple tensor")
-        self.assertEqual(y_s.description, "2d tensor example")
-        self.assertEqual(z_s.description, "tensor with zeros")
-        self.assertEqual(w_s.description, "tensor with zeros")
 
-    def test_move_tensor(self):
-        x = th.tensor([1, 2, 3, 4])
-        x_s = x.send(self.nodes[0])
-        self.assertEqual(x_s.location.id, self.nodes[0].id)
-        x1_s = x_s.move(self.nodes[1])
-        self.assertEqual(x1_s.location.id, self.nodes[1].id)
+@pytest.mark.parametrize(
+    "node_id, tensor, dest",
+    list(map(lambda x, y: (x, np.random.rand(3, 2), y), IDS, IDS[::-1])),
+)
+def test_move_tensor(node_id, tensor, dest, connected_node):
+    x = th.tensor(tensor)
+    x_s = x.send(connected_node[node_id])
+    assert x_s.location.id == node_id
 
-    def test_add_remote_tensors(self):
-        x = th.tensor([1, 2, 3, 4])
-        y = th.tensor([4, 5, 6, 7])
-        result = x + y
+    if node_id != dest:
+        x1_s = x_s.move(connected_node[dest])
+        assert x1_s.location.id == dest
 
-        x_s = x.send(self.nodes[0])
-        y_s = y.send(self.nodes[0])
 
-        result_s = x_s + y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+@pytest.mark.parametrize(
+    "node_id, x_value, y_value",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+)
+def test_add_remote_tensors(node_id, x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+    result = x + y
 
-    def test_sub_remote_tensors(self):
-        x = th.tensor([1, 2, 3, 4, 5])
-        y = th.tensor([4, 5, 6, 7, 8])
+    x_s = x.send(connected_node[node_id])
+    y_s = y.send(connected_node[node_id])
 
-        result = x - y
+    result_s = x_s + y_s
+    assert result_s.get().tolist() == result.tolist()
 
-        x_s = x.send(self.nodes[0])
-        y_s = y.send(self.nodes[0])
 
-        result_s = x_s - y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+@pytest.mark.parametrize(
+    "node_id, x_value, y_value",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+)
+def test_sub_remote_tensors(node_id, x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+    result = x - y
 
-    def test_mul_remote_tensors(self):
-        x = th.tensor([1, 2, 3, 4, 5])
-        y = th.tensor([4, 5, 6, 7, 8])
+    x_s = x.send(connected_node[node_id])
+    y_s = y.send(connected_node[node_id])
 
-        result = x * y
+    result_s = x_s - y_s
+    assert result_s.get().tolist() == result.tolist()
 
-        x_s = x.send(self.nodes[0])
-        y_s = y.send(self.nodes[0])
 
-        result_s = x_s * y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+@pytest.mark.parametrize(
+    "node_id, x_value, y_value",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+)
+def test_mul_remote_tensors(node_id, x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+    result = x * y
 
-    def test_exp_remote_tensor(self):
-        x = th.tensor([1, 2, 3, 4, 5])
-        result = x ** 2
+    x_s = x.send(connected_node[node_id])
+    y_s = y.send(connected_node[node_id])
 
-        x_s = x.send(self.nodes[0])
-        result_s = x_s ** 2
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+    result_s = x_s * y_s
+    assert result_s.get().tolist() == result.tolist()
 
-    def test_div_remote_tensor(self):
-        x = th.tensor([1, 2, 3, 4, 5, 6])
-        y = th.tensor([2, 4, 6, 8, 10, 12])
 
-        result = x / y
+@pytest.mark.parametrize(
+    "node_id, x_value, y_value",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+)
+def test_div_remote_tensors(node_id, x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+    result = x / y
 
-        x_s = x.send(self.nodes[0])
-        y_s = y.send(self.nodes[0])
+    x_s = x.send(connected_node[node_id])
+    y_s = y.send(connected_node[node_id])
 
-        result_s = x_s / y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+    result_s = x_s / y_s
+    assert result_s.get().tolist() == result.tolist()
 
-    def test_share_tensors(self):
-        x = th.tensor([1, 2, 3, 4, 5, 6])
-        x_s = x.share(self.nodes[0], self.nodes[1], self.nodes[2])
-        self.assertTrue(
-            [node_id in x_s.child.child for node_id in [node.id for node in self.nodes]]
-        )
-        self.assertEqual(x_s.get().tolist(), x.tolist())
 
-    def test_add_shared_tensors(self):
-        x = th.tensor([1, 2, 3, 4])
-        y = th.tensor([4, 5, 6, 7])
-        result = x + y
+@pytest.mark.parametrize(
+    "node_id, x_value, y_value",
+    list(map(lambda x: (x, np.random.rand(3, 2), randint(0, 10)), IDS)),
+)
+def test_exp_remote_tensor(node_id, x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    result = x ** y_value
 
-        x_s = x.share(*self.nodes)
-        y_s = y.share(*self.nodes)
+    x_s = x.send(connected_node[node_id])
+    result_s = x_s ** y_value
+    assert result_s.get().tolist() == result.tolist()
 
-        result_s = x_s + y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
 
-    def test_sub_shared_tensors(self):
-        x = th.tensor([1, 2, 3, 4, 5])
-        y = th.tensor([4, 5, 6, 7, 8])
+@pytest.mark.parametrize("node_id", IDS)
+def test_share_tensors(node_id, connected_node):
+    x = th.tensor([1, 2, 3, 4, 5, 6])
+    x_s = x.share(*connected_node.values())
+    assert node_id in x_s.child.child
+    assert x_s.get().tolist() == x.tolist()
 
-        result = x - y
 
-        x_s = x.share(*self.nodes)
-        y_s = y.share(*self.nodes)
+@pytest.mark.parametrize(
+    "x_value, y_value",
+    [(sample(range(i + 1), i + 1), sample(range(i + 1), i + 1)) for i in range(10)],
+)
+def test_add_shared_tensors(x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+    result = x + y
 
-        result_s = x_s - y_s
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+    x_s = x.share(*connected_node.values())
+    y_s = y.share(*connected_node.values())
 
-    def test_mul_shared_tensors(self):
-        x = th.tensor([[1], [2], [3], [15], [50]])
+    result_s = x_s + y_s
+    assert result_s.get().tolist() == result.tolist()
 
-        y = th.tensor([5])
 
-        result = x.matmul(y.t())
+@pytest.mark.parametrize(
+    "x_value, y_value",
+    [(sample(range(i + 1), i + 1), sample(range(i + 1), i + 1)) for i in range(10)],
+)
+def test_sub_shared_tensors(x_value, y_value, connected_node):
+    x = th.tensor([1, 2, 3, 4])
+    y = th.tensor([5, 6, 7, 8])
+    result = x - y
 
-        x_s = x.share(self.nodes[0], self.nodes[1], crypto_provider=self.nodes[2])
-        y_s = y.share(self.nodes[0], self.nodes[1], crypto_provider=self.nodes[2])
+    x_s = x.share(*connected_node.values())
+    y_s = y.share(*connected_node.values())
 
-        result_s = x_s.matmul(y_s.t())
-        self.assertEqual(result_s.get().tolist(), result.tolist())
+    result_s = x_s - y_s
+    assert result_s.get().tolist() == result.tolist()
+
+
+@pytest.mark.parametrize(
+    "x_value, y_value",
+    [
+        (np.random.randint(100, size=(5, x)), np.random.randint(10, size=(x, 1)))
+        for x in range(10)
+    ],
+)
+def test_mul_shared_tensors(x_value, y_value, connected_node):
+    x = th.tensor(x_value)
+    y = th.tensor(y_value)
+
+    result = x.matmul(y)
+
+    nodes = list(connected_node.values())
+
+    bob = nodes[0]
+    alice = nodes[1]
+    james = nodes[2]
+
+    x_s = x.share(bob, alice, crypto_provider=james)
+    y_s = y.share(bob, alice, crypto_provider=james)
+
+    result_s = x_s.matmul(y_s)
+    assert result_s.get().tolist() == result.tolist()

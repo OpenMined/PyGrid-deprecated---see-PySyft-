@@ -84,7 +84,37 @@ def init_nodes(node_infos):
         p.daemon = True
         p.start()
     time.sleep(5)
-    yield
+
+
+@pytest.fixture(scope="function")
+def connected_node(hook):
+    from . import IDS, PORTS
+    import grid as gr
+
+    nodes = {}
+    for (node_id, port) in zip(IDS, PORTS):
+        node = gr.WebsocketGridClient(
+            hook, "http://localhost:" + port + "/", id=node_id
+        )
+        node.connect()
+        nodes[node_id] = node
+
+    yield nodes
+
+    for node in nodes:
+        nodes[node].disconnect()
+
+
+@pytest.fixture(scope="function")
+def grid_network():
+    import grid as gr
+    from . import GATEWAY_URL
+
+    my_grid = gr.GridNetwork(GATEWAY_URL)
+
+    yield my_grid
+
+    my_grid.disconnect_nodes()
 
 
 @pytest.fixture(scope="session", autouse=True)
