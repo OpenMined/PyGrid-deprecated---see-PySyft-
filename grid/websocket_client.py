@@ -45,7 +45,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         self.uri = addr
         self.response_from_client = None
         self.wait_for_client_event = False
-        
+
         # Creates the connection with the server
         self.__sio = socketio.Client()
         super().__init__(hook, id, data, is_client_worker, log_msgs, verbose)
