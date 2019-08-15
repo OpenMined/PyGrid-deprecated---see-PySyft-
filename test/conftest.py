@@ -73,7 +73,7 @@ def init_nodes(node_infos):
                 {"node-id": node_id, "node-address": "http://localhost:" + port + "/"}
             ),
         )
-        socketio.async_mode = None
+        socketio.async_mode = 'threading'
         app = ws_create_app(debug=False)
         socketio.run(app, host="0.0.0.0", port=port)
 

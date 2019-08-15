@@ -30,7 +30,6 @@ def test_connect_nodes(n_times, connected_node):
                         connected_node[node].connect_grid_node(
                             connected_node[n].uri, connected_node[n].id
                         )
-                        time.sleep(0.2)
     except:
         unittest.TestCase.fail("test_connect_nodes : Exception raised!")
 

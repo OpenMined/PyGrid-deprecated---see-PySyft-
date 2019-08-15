@@ -45,7 +45,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         self.uri = addr
         self.response_from_client = None
         self.wait_for_client_event = False
-
+        
         # Creates the connection with the server
         self.__sio = socketio.Client()
         super().__init__(hook, id, data, is_client_worker, log_msgs, verbose)
@@ -89,7 +89,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         self.wait_for_client_event = True
         # Wait until the server gets back with a result or an ACK
         while self.wait_for_client_event:
-            continue
+            self.__sio.sleep()
 
         # Return the result
         if self.response_from_client == "ACK":
@@ -99,6 +99,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
 
     def connect_grid_node(self, addr=str, id=str):
         self.__sio.emit("/connect-node", {"uri": addr, "id": id})
+        self.__sio.sleep(0.5)
 
     def search(self, *query):
         # Prepare a message requesting the websocket server to search among its objects
