@@ -18,18 +18,16 @@ def test_connect_nodes(test_input, expected, connected_node):
     assert connected_node[test_input].id == expected
 
 
-@pytest.mark.parametrize("n_times", range(5))
 def test_connect_nodes(n_times, connected_node):
     try:
-        for _ in range(n_times):
-            for node in connected_node:
-                for n in connected_node:
-                    if n == node:
-                        continue
-                    else:
-                        connected_node[node].connect_grid_node(
-                            connected_node[n].uri, connected_node[n].id
-                        )
+        for node in connected_node:
+            for n in connected_node:
+                if n == node:
+                    continue
+                else:
+                    connected_node[node].connect_grid_node(
+                        connected_node[n].uri, connected_node[n].id
+                    )
     except:
         unittest.TestCase.fail("test_connect_nodes : Exception raised!")
 
