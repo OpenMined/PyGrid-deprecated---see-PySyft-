@@ -1,5 +1,6 @@
 import binascii
 import time
+import requests
 from typing import List
 from typing import Union
 
@@ -9,16 +10,17 @@ import syft as sy
 from syft.frameworks.torch.tensors.interpreters import AbstractTensor
 from syft.workers import BaseWorker
 
+from grid.client import GridClient
 
-class WebsocketGridClient(BaseWorker):
-    """ Websocket Grid Client """
+
+class WebsocketGridClient(GridClient):
+    """ Websocket Grid Client. """
 
     def __init__(
         self,
         hook,
         addr: str,
         id: Union[int, str] = 0,
-        is_client_worker: bool = False,
         log_msgs: bool = False,
         verbose: bool = False,
         data: List[Union[torch.Tensor, AbstractTensor]] = None,
@@ -46,7 +48,9 @@ class WebsocketGridClient(BaseWorker):
 
         # Creates the connection with the server
         self.__sio = socketio.Client()
-        super().__init__(hook, id, data, is_client_worker, log_msgs, verbose)
+        super().__init__(
+            addr=addr, hook=hook, id=id, data=data, log_msgs=log_msgs, verbose=verbose
+        )
 
         @self.__sio.on("/identity/")
         def check_identity(msg):
@@ -98,3 +102,11 @@ class WebsocketGridClient(BaseWorker):
 
     def disconnect(self):
         self.__sio.disconnect()
+
+    def serve_model(self, model, model_name, N: int = 1):
+        serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
+        return self._send_post(
+            "serve-model",
+            data={"model": serialized_model, "model_name": model_name},
+            N=N,
+        )
