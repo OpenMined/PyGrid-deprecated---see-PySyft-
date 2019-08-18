@@ -10,35 +10,6 @@ from . import PORTS, IDS, GATEWAY_URL
 hook = sy.TorchHook(th)
 
 
-@pytest.mark.parametrize("node_id", IDS)
-def test_connected_nodes(node_id, grid_network):
-    response = json.loads(requests.get(GATEWAY_URL + "/connected-nodes").content)
-    assert node_id in response["grid-nodes"]
-
-
-"""
-@pytest.mark.parametrize("n, node_id", [tup for tup in enumerate(IDS)])
-def test_grid_search(n, node_id, connected_node, grid_network):
-    x = (
-        th.tensor([1, 2, 3, 4, 5])
-        .tag(("#" + node_id), "#sample")
-        .describe(node_id + " - #sample")
-    )
-    x_s = x.send(connected_node[node_id])
-    x_s.child.garbage_collect_data = False
-
-    result_1 = grid_network.search("#" + node_id)
-    assert len(result_1) == 1
-
-    result2 = grid_network.search("#" + node_id, "#sample")
-    assert len(result2) == 1
-
-    result3 = grid_network.search("#sample")
-    assert len(result3) == n + 1
-
-"""
-
-
 class GridAPITest(unittest.TestCase):
     def setUp(self):
         self.my_grid = gr.GridNetwork(GATEWAY_URL)
