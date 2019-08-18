@@ -18,7 +18,7 @@ def test_connect_nodes(test_input, expected, connected_node):
     assert connected_node[test_input].id == expected
 
 
-def test_connect_nodes(n_times, connected_node):
+def test_connect_nodes(connected_node):
     try:
         for node in connected_node:
             for n in connected_node:
