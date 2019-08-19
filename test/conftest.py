@@ -53,9 +53,12 @@ def init_gateway():
 
     # Init Grid Gateway
     p = Process(target=setUpGateway, args=("8080",))
-    p.daemon = True
     p.start()
     time.sleep(5)
+    
+    yield
+
+    p.terminate()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -77,13 +80,20 @@ def init_nodes(node_infos):
         app = ws_create_app(debug=False)
         socketio.run(app, host="0.0.0.0", port=port)
 
+    jobs = []
     # Init Grid Nodes
     for (node_id, port) in node_infos:
         config = (node_id, port)
         p = Process(target=setUpNode, args=(port, node_id))
-        p.daemon = True
         p.start()
+        jobs.append(p)
     time.sleep(5)
+    
+    yield
+
+    for job in jobs:
+        job.terminate()
+
 
 
 @pytest.fixture(scope="function")
