@@ -1,5 +1,5 @@
 """
-This file exists to provide one common place for all http requests
+This file exists to provide one common place for all grid node http requests.
 """
 import binascii
 import json
@@ -13,6 +13,7 @@ from . import main
 from . import hook
 
 import torch
+
 
 models = {}
 
@@ -85,3 +86,21 @@ def serve_model():
 def index():
     """Index page."""
     return render_template("index.html")
+
+
+@main.route("/search", methods=["POST"])
+def search_dataset_tags():
+    body = json.loads(request.data)
+
+    # Invalid body
+    if "query" not in body:
+        return Response("", status=400, mimetype="application/json")
+
+    # Search for desired datasets that belong to this node
+    results = hook.local_worker.search(*body["query"])
+
+    body_response = {"content": False}
+    if len(results):
+        body_response["content"] = True
+
+    return Response(json.dumps(body_response), status=200, mimetype="application/json")
