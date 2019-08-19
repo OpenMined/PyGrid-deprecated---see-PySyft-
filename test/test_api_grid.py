@@ -5,7 +5,7 @@ import unittest
 import json
 import syft as sy
 import torch as th
-from . import PORTS, IDS, GATEWAY_URL
+from test import PORTS, IDS, GATEWAY_URL
 
 hook = sy.TorchHook(th)
 

@@ -13,6 +13,12 @@ from pg_app import create_app
 
 import syft
 from syft import TorchHook
+from test import IDS, PORTS, GATEWAY_URL
+import time
+import requests
+import json
+import os
+import grid as gr
 
 
 @pytest.fixture()
@@ -33,18 +39,12 @@ def start_proc():  # pragma: no cover
 
 @pytest.fixture(scope="session", autouse=True)
 def node_infos():
-    from . import IDS, PORTS
-
     return zip(IDS, PORTS)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def init_gateway():
-    import time
-
     def setUpGateway(port):
-        import os
-
         os.environ["SECRET_KEY"] = "Secretkeyhere"
         from gateway.app import create_app
 
@@ -53,16 +53,16 @@ def init_gateway():
 
     # Init Grid Gateway
     p = Process(target=setUpGateway, args=("8080",))
-    p.daemon = True
     p.start()
     time.sleep(5)
+
+    yield
+
+    p.terminate()
 
 
 @pytest.fixture(scope="session", autouse=True)
 def init_nodes(node_infos):
-    import time, requests, json
-    from . import GATEWAY_URL
-
     def setUpNode(port, node_id):
         from app.websocket.app import create_app as ws_create_app
         from app.websocket.app import socketio
@@ -77,39 +77,41 @@ def init_nodes(node_infos):
         app = ws_create_app(debug=False)
         socketio.run(app, host="0.0.0.0", port=port)
 
+    jobs = []
     # Init Grid Nodes
     for (node_id, port) in node_infos:
         config = (node_id, port)
         p = Process(target=setUpNode, args=(port, node_id))
-        p.daemon = True
         p.start()
+        jobs.append(p)
     time.sleep(5)
+
+    yield
+
+    for job in jobs:
+        job.terminate()
 
 
 @pytest.fixture(scope="function")
 def connected_node(hook):
-    from . import IDS, PORTS
-    import grid as gr
-
     nodes = {}
     for (node_id, port) in zip(IDS, PORTS):
         node = gr.WebsocketGridClient(
             hook, "http://localhost:" + port + "/", id=node_id
         )
         node.connect()
+        time.sleep(0.1)
         nodes[node_id] = node
 
     yield nodes
 
     for node in nodes:
         nodes[node].disconnect()
+        time.sleep(0.1)
 
 
 @pytest.fixture(scope="function")
 def grid_network():
-    import grid as gr
-    from . import GATEWAY_URL
-
     my_grid = gr.GridNetwork(GATEWAY_URL)
 
     yield my_grid

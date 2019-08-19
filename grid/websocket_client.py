@@ -59,12 +59,10 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         def on_client_result(args):
             if log_msgs:
                 print("Receiving result from client {}".format(args))
-
             try:
                 # The server broadcasted the results from another client
                 self.response_from_client = binascii.unhexlify(args[2:-1])
             except:
-                print(args)
                 raise Exception(args)
 
             # Tell the wait_for_client_event to clear up and continue execution
@@ -97,9 +95,9 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
             return sy.serde.serialize(b"")
         return self.response_from_client
 
-    def connect_grid_node(self, addr=str, id=str):
+    def connect_grid_node(self, addr: str, id: str, sleep_time=0.5):
         self.__sio.emit("/connect-node", {"uri": addr, "id": id})
-        self.__sio.sleep(0.5)
+        self.__sio.sleep(sleep_time)
 
     def search(self, *query):
         # Prepare a message requesting the websocket server to search among its objects

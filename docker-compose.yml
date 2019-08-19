@@ -4,6 +4,7 @@ services:
         image: gateway:latest
         environment:
                 - PORT=8080
+                - SECRET_KEY=ineedtoputasecrethere
         network_mode: "host"
     bob:
         image: node:latest

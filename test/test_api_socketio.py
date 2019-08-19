@@ -4,9 +4,10 @@ import syft as sy
 import torch as th
 import time
 import pytest
-from . import PORTS, IDS
+from test import PORTS, IDS
 import numpy as np
 from random import randint, sample
+import time
 
 hook = sy.TorchHook(th)
 
@@ -33,40 +34,43 @@ def test_connect_nodes(connected_node):
 
 
 @pytest.mark.parametrize(
-    "node_id, tensor", list(map(lambda x: (x, np.random.rand(3, 2)), IDS))
+    "node_id, tensor,time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), 0.5), IDS)),
 )
-def test_send_tensor(node_id, tensor, connected_node):
+def test_send_tensor(node_id, tensor, time_interval, connected_node):
     x = th.tensor(tensor)
     x_s = x.send(connected_node[node_id])
 
     assert x_s.location.id == node_id
     assert x_s.get().tolist() == x.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, tensor,tag",
+    "node_id, tensor,tag, time_interval",
     list(
         map(
-            lambda x, y: (x, np.random.rand(3, 2), y),
+            lambda x, y: (x, np.random.rand(3, 2), y, 0.5),
             IDS,
             ["#first", "#second", "#third"],
         )
     ),
 )
-def test_send_tag_tensor(node_id, tensor, tag, connected_node):
+def test_send_tag_tensor(node_id, tensor, tag, time_interval, connected_node):
     x = th.tensor(tensor).tag(tag).describe(tag + " description")
 
     x_s = x.send(connected_node[node_id])
     x_s.child.garbage_collect_data = False
 
     assert x_s.description == (tag + " description")
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, tensor, dest",
-    list(map(lambda x, y: (x, np.random.rand(3, 2), y), IDS, IDS[::-1])),
+    "node_id, tensor, dest,time_interval",
+    list(map(lambda x, y: (x, np.random.rand(3, 2), y, 0.5), IDS, IDS[::-1])),
 )
-def test_move_tensor(node_id, tensor, dest, connected_node):
+def test_move_tensor(node_id, tensor, dest, time_interval, connected_node):
     x = th.tensor(tensor)
     x_s = x.send(connected_node[node_id])
     assert x_s.location.id == node_id
@@ -74,13 +78,14 @@ def test_move_tensor(node_id, tensor, dest, connected_node):
     if node_id != dest:
         x1_s = x_s.move(connected_node[dest])
         assert x1_s.location.id == dest
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, x_value, y_value",
-    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+    "node_id, x_value, y_value,time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2), 0.5), IDS)),
 )
-def test_add_remote_tensors(node_id, x_value, y_value, connected_node):
+def test_add_remote_tensors(node_id, x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
     result = x + y
@@ -90,13 +95,14 @@ def test_add_remote_tensors(node_id, x_value, y_value, connected_node):
 
     result_s = x_s + y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, x_value, y_value",
-    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+    "node_id, x_value, y_value, time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2), 0.5), IDS)),
 )
-def test_sub_remote_tensors(node_id, x_value, y_value, connected_node):
+def test_sub_remote_tensors(node_id, x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
     result = x - y
@@ -106,13 +112,14 @@ def test_sub_remote_tensors(node_id, x_value, y_value, connected_node):
 
     result_s = x_s - y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, x_value, y_value",
-    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+    "node_id, x_value, y_value, time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2), 0.5), IDS)),
 )
-def test_mul_remote_tensors(node_id, x_value, y_value, connected_node):
+def test_mul_remote_tensors(node_id, x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
     result = x * y
@@ -122,13 +129,14 @@ def test_mul_remote_tensors(node_id, x_value, y_value, connected_node):
 
     result_s = x_s * y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, x_value, y_value",
-    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2)), IDS)),
+    "node_id, x_value, y_value, time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), np.random.rand(3, 2), 0.5), IDS)),
 )
-def test_div_remote_tensors(node_id, x_value, y_value, connected_node):
+def test_div_remote_tensors(node_id, x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
     result = x / y
@@ -138,19 +146,21 @@ def test_div_remote_tensors(node_id, x_value, y_value, connected_node):
 
     result_s = x_s / y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "node_id, x_value, y_value",
-    list(map(lambda x: (x, np.random.rand(3, 2), randint(0, 10)), IDS)),
+    "node_id, x_value, y_value, time_interval",
+    list(map(lambda x: (x, np.random.rand(3, 2), randint(0, 10), 0.5), IDS)),
 )
-def test_exp_remote_tensor(node_id, x_value, y_value, connected_node):
+def test_exp_remote_tensor(node_id, x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     result = x ** y_value
 
     x_s = x.send(connected_node[node_id])
     result_s = x_s ** y_value
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize("node_id", IDS)
@@ -162,10 +172,13 @@ def test_share_tensors(node_id, connected_node):
 
 
 @pytest.mark.parametrize(
-    "x_value, y_value",
-    [(sample(range(i + 1), i + 1), sample(range(i + 1), i + 1)) for i in range(10)],
+    "x_value, y_value, time_interval",
+    [
+        (sample(range(i + 1), i + 1), sample(range(i + 1), i + 1), 0.5)
+        for i in range(10)
+    ],
 )
-def test_add_shared_tensors(x_value, y_value, connected_node):
+def test_add_shared_tensors(x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
     result = x + y
@@ -175,13 +188,17 @@ def test_add_shared_tensors(x_value, y_value, connected_node):
 
     result_s = x_s + y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "x_value, y_value",
-    [(sample(range(i + 1), i + 1), sample(range(i + 1), i + 1)) for i in range(10)],
+    "x_value, y_value, time_interval",
+    [
+        (sample(range(i + 1), i + 1), sample(range(i + 1), i + 1), 0.5)
+        for i in range(10)
+    ],
 )
-def test_sub_shared_tensors(x_value, y_value, connected_node):
+def test_sub_shared_tensors(x_value, y_value, time_interval, connected_node):
     x = th.tensor([1, 2, 3, 4])
     y = th.tensor([5, 6, 7, 8])
     result = x - y
@@ -191,16 +208,17 @@ def test_sub_shared_tensors(x_value, y_value, connected_node):
 
     result_s = x_s - y_s
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
 
 
 @pytest.mark.parametrize(
-    "x_value, y_value",
+    "x_value, y_value,time_interval",
     [
-        (np.random.randint(100, size=(5, x)), np.random.randint(10, size=(x, 1)))
+        (np.random.randint(100, size=(5, x)), np.random.randint(10, size=(x, 1)), 0.5)
         for x in range(10)
     ],
 )
-def test_mul_shared_tensors(x_value, y_value, connected_node):
+def test_mul_shared_tensors(x_value, y_value, time_interval, connected_node):
     x = th.tensor(x_value)
     y = th.tensor(y_value)
 
@@ -217,3 +235,4 @@ def test_mul_shared_tensors(x_value, y_value, connected_node):
 
     result_s = x_s.matmul(y_s)
     assert result_s.get().tolist() == result.tolist()
+    time.sleep(time_interval)
