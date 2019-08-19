@@ -99,6 +99,7 @@ def init_nodes(node_infos):
 def connected_node(hook):
     from . import IDS, PORTS
     import grid as gr
+    import time
 
     nodes = {}
     for (node_id, port) in zip(IDS, PORTS):
@@ -106,12 +107,14 @@ def connected_node(hook):
             hook, "http://localhost:" + port + "/", id=node_id
         )
         node.connect()
+        time.sleep(0.1)
         nodes[node_id] = node
 
     yield nodes
 
     for node in nodes:
         nodes[node].disconnect()
+        time.sleep(0.1)
 
 
 @pytest.fixture(scope="function")
