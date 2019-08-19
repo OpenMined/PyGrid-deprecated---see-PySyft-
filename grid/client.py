@@ -30,24 +30,29 @@ class GridClient(BaseWorker):
     def _send_msg(self, message: bin, location: BaseWorker) -> bin:
         raise NotImplementedError
 
-    def _send_post(self, route, data, N: int = 10):
-        url = os.path.join(self.addr, "{}/".format(route))
-        r = requests.post(url, data=data)
+    def _send_http_request(self, route, data, request, N: int = 10):
+        url = os.path.join(self.addr, "{}".format(route))
+        r = request(url, data=data)
         response = r.text
         # Try to request the message `N` times.
-        for _ in range(N - 1):
+        for _ in range(N):
             try:
                 response = binascii.unhexlify(response[2:-1])
+                return response
             except:
                 if self.verbose:
                     print(response)
                 response = None
-                continue
-
-            r = requests.post(url, data=data)
-            response = r.text
+                r = request(url, data=data)
+                response = r.text
 
         return response
+
+    def _send_post(self, route, data, N: int = 10):
+        return self._send_http_request(route, data, requests.post, N=N)
+
+    def _send_get(self, route, data, N: int = 10):
+        return self._send_http_request(route, data, requests.get, N=N)
 
     def _recv_msg(self, message: bin, N: int = 10) -> bin:
         message = str(binascii.hexlify(message))
