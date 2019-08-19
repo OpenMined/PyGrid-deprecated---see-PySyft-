@@ -27,16 +27,25 @@ def is_this_an_opengrid_node():
     return "OpenGrid"
 
 
-@main.route("/models/<model_name>", methods=["GET"])
-def post(model_name):
-    if model_name not in models:
+@main.route("/models/", methods=["GET"])
+def list_models():
+    return Response(
+        json.dumps({"models": list(models.keys())}),
+        status=202,
+        mimetype="application/json",
+    )
+
+
+@main.route("/models/<model_id>", methods=["GET"])
+def model_inference(model_id):
+    if model_id not in models:
         return Response(
-            json.dumps({"UnknownModel": "Unknown model {}".format(model_name)}),
+            json.dumps({"UnknownModel": "Unknown model {}".format(model_id)}),
             status=404,
             mimetype="application/json",
         )
 
-    model = models[model_name]
+    model = models[model_id]
     serialized_data = request.form["data"].encode("ISO-8859-1")
     data = sy.serde.deserialize(serialized_data)
 
@@ -49,12 +58,23 @@ def post(model_name):
 @main.route("/serve-model/", methods=["POST"])
 def serve_model():
     serialized_model = request.form["model"].encode("ISO-8859-1")
-    model_name = request.form["model_name"]
+    model_id = request.form["model_id"]
 
     deserialized_model = sy.serde.deserialize(serialized_model)
 
     # TODO store this in a local database
-    models[model_name] = deserialized_model
+    if model_id in models:
+        return Response(
+            json.dumps(
+                {
+                    "Error": "Model ID should be unique. There is already a model being hosted with this id."
+                }
+            ),
+            status=404,
+            mimetype="application/json",
+        )
+
+    models[model_id] = deserialized_model
 
     return Response(
         json.dumps({"success": True}), status=200, mimetype="application/json"
