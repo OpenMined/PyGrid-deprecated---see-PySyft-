@@ -55,7 +55,7 @@ def init_gateway():
     p = Process(target=setUpGateway, args=("8080",))
     p.start()
     time.sleep(5)
-    
+
     yield
 
     p.terminate()
@@ -88,12 +88,11 @@ def init_nodes(node_infos):
         p.start()
         jobs.append(p)
     time.sleep(5)
-    
+
     yield
 
     for job in jobs:
         job.terminate()
-
 
 
 @pytest.fixture(scope="function")
