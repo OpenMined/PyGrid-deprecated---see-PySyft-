@@ -2,8 +2,10 @@
 This file exists to provide one common place for all http requests
 """
 import binascii
+import json
 
 from flask import render_template
+from flask import Response
 from flask import request
 import syft as sy
 
@@ -35,8 +37,9 @@ def serve_model():
     # TODO store this in a local database
     models[model_name] = deserialized_model
 
-    # TODO return success message
-    return "success"
+    return Response(
+        json.dumps({"success": True}), status=200, mimetype="application/json"
+    )
 
 
 @main.route("/", methods=["GET"])
