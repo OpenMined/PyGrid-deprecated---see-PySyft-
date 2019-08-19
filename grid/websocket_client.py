@@ -1,4 +1,5 @@
 import binascii
+import json
 import time
 import requests
 from typing import List
@@ -106,7 +107,17 @@ class WebsocketGridClient(GridClient):
     def serve_model(self, model, model_name, N: int = 1):
         serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
         return self._send_post(
-            "serve-model",
+            "serve-model/",
             data={"model": serialized_model, "model_name": model_name},
             N=N,
+        )
+
+    def run_inference(self, model_name, data, N: int = 1):
+        serialized_data = sy.serde.serialize(data)
+        return json.loads(
+            self._send_get(
+                "models/{}".format(model_name),
+                data={"data": serialized_data.decode("ISO-8859-1")},
+                N=N,
+            )
         )
