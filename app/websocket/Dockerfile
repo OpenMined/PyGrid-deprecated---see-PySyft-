@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM python:3.7-slim
 RUN apt-get update
 RUN apt-get install -y git python3-pip
 COPY ./requirements.txt /app/requirements.txt
