@@ -1,8 +1,11 @@
+import binascii
+import json
+import os
+import requests
+
+
 import torch as th
 import syft as sy
-import binascii
-import requests
-import os
 from syft.workers import BaseWorker
 
 from grid import utils as gr_utils
@@ -32,7 +35,7 @@ class GridClient(BaseWorker):
 
     def _send_http_request(self, route, data, request, N: int = 10):
         url = os.path.join(self.addr, "{}".format(route))
-        r = request(url, data=data)
+        r = request(url, data=data) if data else request(url)
         response = r.text
         # Try to request the message `N` times.
         for _ in range(N):
@@ -43,15 +46,15 @@ class GridClient(BaseWorker):
                 if self.verbose:
                     print(response)
                 response = None
-                r = request(url, data=data)
+                r = request(url, data=data) if data else request(url)
                 response = r.text
 
         return response
 
-    def _send_post(self, route, data, N: int = 10):
+    def _send_post(self, route, data=None, N: int = 10):
         return self._send_http_request(route, data, requests.post, N=N)
 
-    def _send_get(self, route, data, N: int = 10):
+    def _send_get(self, route, data=None, N: int = 10):
         return self._send_http_request(route, data, requests.get, N=N)
 
     def _recv_msg(self, message: bin, N: int = 10) -> bin:
@@ -63,3 +66,24 @@ class GridClient(BaseWorker):
         gr_utils.exec_os_cmd("heroku destroy " + grid_name + " --confirm " + grid_name)
         if self.verbose:
             print("Destroyed node: " + str(grid_name))
+
+    @property
+    def models(self, N: int = 1):
+        models = json.loads(self._send_get("models/", N=N))["models"]
+        return models
+
+    def serve_model(self, model, model_id, N: int = 1):
+        serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
+        return self._send_post(
+            "serve-model/", data={"model": serialized_model, "model_id": model_id}, N=N
+        )
+
+    def run_inference(self, model_id, data, N: int = 1):
+        serialized_data = sy.serde.serialize(data)
+        return json.loads(
+            self._send_get(
+                "models/{}".format(model_id),
+                data={"data": serialized_data.decode("ISO-8859-1")},
+                N=N,
+            )
+        )
