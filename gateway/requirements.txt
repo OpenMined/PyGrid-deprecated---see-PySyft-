@@ -10,3 +10,4 @@ Jinja2==2.10.1
 MarkupSafe==1.1.1
 gevent==1.4.0
 Werkzeug==0.15.2
+requests
