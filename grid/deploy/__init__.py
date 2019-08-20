@@ -1,2 +1,2 @@
 from grid.deploy.component import BaseDeployment
-from grid.deploy.node import NodeDeployment
+from grid.deploy.heroku_node import HerokuNodeDeployment

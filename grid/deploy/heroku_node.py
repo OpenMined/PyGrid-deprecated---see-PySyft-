@@ -5,8 +5,8 @@ import sys
 import os
 
 
-class NodeDeployment(BaseDeployment):
-    """ An abstraction of grid node deployment process, the purpose of this class is set all configuration needed to deploy grid node application in different platforms."""
+class HerokuNodeDeployment(BaseDeployment):
+    """ An abstraction of heroku grid node deployment process, the purpose of this class is set all configuration needed to deploy grid node application in heroku platform."""
 
     def __init__(
         self,
@@ -36,7 +36,7 @@ class NodeDeployment(BaseDeployment):
 
         super().__init__(env_vars, verbose)
 
-    def deploy_on_heroku(self):
+    def deploy(self):
         """ Method to deploy Grid Node app on heroku platform. """
         if self.grid_name == None:
             raise RuntimeError("Grid name was not specified!")
@@ -170,7 +170,7 @@ class NodeDeployment(BaseDeployment):
 
         if self.verbose:
             sys.stdout.write("\tChecking to see if heroku is logged in...")
-        res = gr_utils.exec_os_cmd("heroku create app")
+        res = gr_utils.execute_command("heroku create app")
         if res == "Enter your Heroku credentials:\n":
             raise Exception(
                 "You are not logged in to Heroku. Run 'heroku login'"

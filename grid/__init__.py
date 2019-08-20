@@ -14,7 +14,7 @@ __all__ = ["workers"]
 
 def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
     assert len(commands) == len(logs)
-    gr_utils.exec_os_cmd("mkdir " + tmp_dir)
+    gr_utils.execute_command("mkdir " + tmp_dir)
 
     outputs = list()
 
@@ -25,14 +25,14 @@ def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
             print(logs[i] + "...")
 
         cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
-        o = gr_utils.exec_os_cmd(cmd)
+        o = gr_utils.execute_command(cmd)
         outputs.append(str(o))
 
         if verbose:
             print("\t" + str(o).replace("\n", "\n\t"))
 
     if cleanup:
-        gr_utils.exec_os_cmd("rm -rf " + tmp_dir)
+        gr_utils.executes_command("rm -rf " + tmp_dir)
 
     return outputs
 
@@ -42,7 +42,7 @@ def check_dependency(
 ):
     if verbose:
         sys.stdout.write("\tChecking for " + str(lib) + " dependency...")
-    o = gr_utils.exec_os_cmd(lib)
+    o = gr_utils.execute_command(lib)
     if check not in o:
         raise Exception(error_msg)
     if verbose:
@@ -95,7 +95,7 @@ def launch_on_heroku(
 
         if verbose:
             sys.stdout.write("\tChecking to see if heroku is logged in...")
-        res = gr_utils.exec_os_cmd("heroku create app")
+        res = gr_utils.execute_command("heroku create app")
         if res == "Enter your Heroku credentials:\n":
             raise Exception(
                 "You are not logged in to Heroku. Run 'heroku login'"

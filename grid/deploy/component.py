@@ -14,21 +14,17 @@ class BaseDeployment(ABC):
         Args:
             env_vars: Environment vars used to configure component
             verbose: Used to define level of verbosity
-            logs: list of logs used in deploy process
-            commands: list of commands used in deploy process
+            logs: List of logs used in deploy process
+            commands: List of commands used in deploy process
         """
         self.env_vars = env_vars
         self.verbose = verbose
         self.logs = list()
         self.commands = list()
 
-    def deploy_on_heroku(self):
-        """ Method used to deploy component on heroku platform. """
-        raise RuntimeError("Heroku deployment not specified!")
-
-    def deploy_on_container(self):
-        """ Method used to deploy component using docker containers. """
-        raise RuntimeError("Container deployment not specified!")
+    def deploy(self):
+        """ Method used to deploy component."""
+        raise NotImplementedError("Deployment not specified!")
 
     def _check_dependency(
         self,
@@ -37,27 +33,27 @@ class BaseDeployment(ABC):
         error_msg="Error: please install git.",
         verbose=False,
     ):
-        """ This method checks if the environment have a specific dependency.
+        """ This method checks if the environment has a specific dependency.
             Args:
-                dependency_lib : libs that will be verified.
-                check: specific string to check if app was installed.
+                dependency_lib : Libs that will be verified.
+                check: Specific string to check if app was installed.
                 error_msg: If not installed, raise an Exception with this.
                 verbose: Used to define level of verbosity.
             Raises:
-                Exception: if not installed, raise a standard Exception
+                RuntimeError: If not installed, raise a RuntimeError Exception.
         """
         if verbose:
             sys.stdout.write("\tChecking for " + str(lib) + " dependency...")
-        o = gr_utils.exec_os_cmd(lib)
+        o = gr_utils.execute_command(lib)
         if check not in o:
-            raise Exception(error_msg)
+            raise RuntimeError(error_msg)
         if verbose:
             print("DONE!")
 
     def _execute(self, cmd):
         """ Execute a specific bash command and return the result.
             Args:
-                cmd: specific bash command.
+                cmd: Specific bash command.
             Raises:
                 subprocess_exception: Raises an specific subprocess exception
         """
@@ -74,16 +70,16 @@ class BaseDeployment(ABC):
     ):
         """ Run sequentially all commands and logs stored in our list of commands/logs.
             Args:
-                commands: list of commands.
-                logs: list of logs.
-                tmp_dir: directory used execute these commands.
-                cleanup: flag to choose if tmp_dir will be maintained.
+                commands: List of commands.
+                logs: List of logs.
+                tmp_dir: Directory used execute these commands.
+                cleanup: Flag to choose if tmp_dir will be maintained.
                 verbose: Used to define level of verbosity.
             Returns:
                 outputs: Output message for each command.
         """
         assert len(commands) == len(logs)
-        gr_utils.exec_os_cmd("mkdir " + tmp_dir)
+        gr_utils.execute_command("mkdir " + tmp_dir)
 
         outputs = list()
 
@@ -94,13 +90,13 @@ class BaseDeployment(ABC):
                 print(logs[i] + "...")
 
             cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
-            o = gr_utils.exec_os_cmd(cmd)
+            o = gr_utils.execute_command(cmd)
             outputs.append(str(o))
 
             if verbose:
                 print("\t" + str(o).replace("\n", "\n\t"))
 
         if cleanup:
-            gr_utils.exec_os_cmd("rm -rf " + tmp_dir)
+            gr_utils.execute_command("rm -rf " + tmp_dir)
 
         return outputs
