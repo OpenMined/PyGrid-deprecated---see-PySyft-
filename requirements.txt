@@ -7,7 +7,7 @@ pre-commit
 pytest
 python-socketio>=4.0.3
 requests
-syft
+git+git://github.com/OpenMined/PySyft@dev
 websocket_client
 websockets>=7.0
 eventlet==0.25.0
