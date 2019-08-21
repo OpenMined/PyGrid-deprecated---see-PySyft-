@@ -91,7 +91,7 @@ class BaseDeployment(ABC):
 
             cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
             output = gr_utils.execute_command(cmd)
-            outputs.append(str(ouput))
+            outputs.append(str(output))
 
             if verbose:
                 print("\t" + str(output).replace("\n", "\n\t"))
