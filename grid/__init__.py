@@ -25,7 +25,7 @@ def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
             print(logs[i] + "...")
 
         cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
-        o = gr_utils.execute_command(cmd)
+        output = gr_utils.execute_command(cmd)
         outputs.append(str(o))
 
         if verbose:
@@ -42,7 +42,7 @@ def check_dependency(
 ):
     if verbose:
         sys.stdout.write("\tChecking for " + str(lib) + " dependency...")
-    o = gr_utils.execute_command(lib)
+    output = gr_utils.execute_command(lib)
     if check not in o:
         raise Exception(error_msg)
     if verbose:
