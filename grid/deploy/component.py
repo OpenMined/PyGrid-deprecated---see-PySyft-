@@ -91,10 +91,10 @@ class BaseDeployment(ABC):
 
             cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
             output = gr_utils.execute_command(cmd)
-            outputs.append(str(o))
+            outputs.append(str(ouput))
 
             if verbose:
-                print("\t" + str(o).replace("\n", "\n\t"))
+                print("\t" + str(output).replace("\n", "\n\t"))
 
         if cleanup:
             gr_utils.execute_command("rm -rf " + tmp_dir)

@@ -26,10 +26,10 @@ def run_commands_in(commands, logs, tmp_dir="tmp", cleanup=True, verbose=False):
 
         cmd = "cd " + str(tmp_dir) + "; " + commands[i] + "; cd ..;"
         output = gr_utils.execute_command(cmd)
-        outputs.append(str(o))
+        outputs.append(str(output))
 
         if verbose:
-            print("\t" + str(o).replace("\n", "\n\t"))
+            print("\t" + str(output).replace("\n", "\n\t"))
 
     if cleanup:
         gr_utils.executes_command("rm -rf " + tmp_dir)
@@ -43,7 +43,7 @@ def check_dependency(
     if verbose:
         sys.stdout.write("\tChecking for " + str(lib) + " dependency...")
     output = gr_utils.execute_command(lib)
-    if check not in o:
+    if check not in output:
         raise Exception(error_msg)
     if verbose:
         print("DONE!")
