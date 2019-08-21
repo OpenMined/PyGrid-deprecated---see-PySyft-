@@ -45,7 +45,7 @@ class BaseDeployment(ABC):
         if verbose:
             sys.stdout.write("\tChecking for " + str(lib) + " dependency...")
         output = gr_utils.execute_command(lib)
-        if check not in ouput:
+        if check not in output:
             raise RuntimeError(error_msg)
         if verbose:
             print("DONE!")
