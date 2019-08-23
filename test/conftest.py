@@ -74,7 +74,9 @@ def init_nodes(node_infos):
             ),
         )
         socketio.async_mode = "threading"
-        app = ws_create_app(debug=False)
+        app = ws_create_app(
+            debug=False, tst_config={"SQLALCHEMY_DATABASE_URI": "sqlite:///testsss.db"}
+        )
         socketio.run(app, host="0.0.0.0", port=port)
 
     jobs = []

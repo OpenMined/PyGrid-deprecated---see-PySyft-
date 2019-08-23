@@ -19,8 +19,7 @@ def set_database_config(app, test_config=None, verbose=False):
         )
 
     else:
-        # load the test config if passed in
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/test.db"
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_config["SQLALCHEMY_DATABASE_URI"]
         app.config["TESTING"] = True
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["VERBOSE"] = verbose
@@ -28,7 +27,7 @@ def set_database_config(app, test_config=None, verbose=False):
     return app
 
 
-def create_app(debug=False):
+def create_app(debug=False, tst_config=None):
     """Create flask socket-io application."""
     global db
     app = Flask(__name__)
@@ -41,7 +40,7 @@ def create_app(debug=False):
     CORS(app)
 
     # Set SQLAlchemy configs
-    app = set_database_config(app, test_config=True)
+    app = set_database_config(app, test_config=tst_config)
     s = app.app_context().push()
     db.create_all()
     socketio.init_app(app)

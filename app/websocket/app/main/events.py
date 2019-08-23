@@ -6,6 +6,7 @@ from flask import session
 from flask_socketio import emit
 from .. import socketio
 from . import hook
+from app.db_module.utils import recover_objects, snapshot
 
 import grid as gr
 import binascii
@@ -15,14 +16,6 @@ import json
 @socketio.on("connect")
 def on_connect():
     emit("/connect-response", json.dumps({"status": "connected"}))
-
-
-@socketio.on("/set-grid-id")
-def set_grid_name(msg):
-    """ Set Grid node ID. """
-    me = hook.local_worker
-    me.id = msg["id"]
-    me.is_client_worker = False
 
 
 @socketio.on("/connect-node")
@@ -42,6 +35,8 @@ def cmd(message):
     """ Forward pysyft command to hook virtual worker. """
     try:
         worker = hook.local_worker
+        if len(worker.current_objects()) == 0:
+            recover_objects(hook)
 
         # Decode Message
         encoded_message = message["message"]
@@ -50,6 +45,8 @@ def cmd(message):
         # Process and encode response
         decoded_response = worker._recv_msg(decoded_message)
         encoded_response = str(binascii.hexlify(decoded_response))
+
+        snapshot(worker)
 
         emit("/cmd-response", encoded_response)
     except Exception as e:

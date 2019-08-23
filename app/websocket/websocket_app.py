@@ -17,7 +17,9 @@ node_address = os.environ.get("ADDRESS", None)
 port = os.environ.get("PORT", None)
 
 
-app = create_app(debug=False)
+app = create_app(
+    debug=False, tst_config={"SQLALCHEMY_DATABASE_URI": "sqlite:///testsss.db"}
+)
 
 
 def check_args():
