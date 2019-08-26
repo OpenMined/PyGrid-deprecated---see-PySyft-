@@ -6,7 +6,11 @@ last_snapshot_keys = set()
 
 
 def snapshot(worker):
-    """ Persist workers to our persistence layer """
+    """ Take a snapshot of worker's current state. 
+    
+        Args:
+            worker: Worker with objects that will be stored.
+    """
     global last_snapshot_keys
     current_keys = set(worker._objects.keys())
     new_keys = current_keys - last_snapshot_keys
@@ -22,7 +26,13 @@ def snapshot(worker):
 
 
 def recover_objects(hook):
-    """ Find or create a worker by public_id """
+    """ Find or create a new worker.
+        
+        Args:
+            hook : Global hook.
+        Returns:
+            worker : Virtual worker (filled by stored objects) that will replace hook.local_worker.
+    """
     worker = hook.local_worker
     worker_mdl = WorkerMDL.query.filter_by(id=worker.id).first()
     if worker_mdl:
