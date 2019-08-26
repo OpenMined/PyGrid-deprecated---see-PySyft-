@@ -34,6 +34,7 @@ def create_app(debug=False, tst_config=None):
 
     from .main import main as main_blueprint
     from .main import db
+
     global db
 
     app.register_blueprint(main_blueprint)

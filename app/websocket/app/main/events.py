@@ -17,6 +17,7 @@ import json
 def on_connect():
     emit("/connect-response", json.dumps({"status": "connected"}))
 
+
 @socketio.on("/set-grid-id")
 def set_grid_name(msg):
     """ Set Grid node ID. """
