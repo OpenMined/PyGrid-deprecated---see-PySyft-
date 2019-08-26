@@ -10,3 +10,4 @@ hook = sy.TorchHook(th)
 main = Blueprint("main", __name__)
 
 from . import routes, events
+from .db_module.models import db

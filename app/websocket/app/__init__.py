@@ -4,7 +4,6 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
-from .db_module.models import db
 
 socketio = SocketIO(async_mode="eventlet")
 
@@ -29,12 +28,13 @@ def set_database_config(app, test_config=None, verbose=False):
 
 def create_app(debug=False, tst_config=None):
     """Create flask socket-io application."""
-    global db
     app = Flask(__name__)
     app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
     from .main import main as main_blueprint
+    from .main import db
+    global db
 
     app.register_blueprint(main_blueprint)
     CORS(app)
