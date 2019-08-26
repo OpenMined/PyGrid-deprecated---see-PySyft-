@@ -110,6 +110,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
     def connect(self):
         if self.__sio.eio.state != "connected":
             self.__sio.connect(self.uri)
+            self.__sio.emit("/set-grid-id", {"id": self.id})
 
     def disconnect(self):
         self.__sio.disconnect()

@@ -6,7 +6,7 @@ from flask import session
 from flask_socketio import emit
 from .. import socketio
 from . import hook
-from app.db_module.utils import recover_objects, snapshot
+from .db_module.utils import recover_objects, snapshot
 
 import grid as gr
 import binascii
@@ -16,6 +16,13 @@ import json
 @socketio.on("connect")
 def on_connect():
     emit("/connect-response", json.dumps({"status": "connected"}))
+
+@socketio.on("/set-grid-id")
+def set_grid_name(msg):
+    """ Set Grid node ID. """
+    me = hook.local_worker
+    me.id = msg["id"]
+    me.is_client_worker = False
 
 
 @socketio.on("/connect-node")
