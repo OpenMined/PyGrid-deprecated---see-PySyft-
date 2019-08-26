@@ -6,7 +6,7 @@ from flask import session
 from flask_socketio import emit
 from .. import socketio
 from . import hook
-from .db_module.utils import recover_objects, snapshot
+from .persistence.utils import recover_objects, snapshot
 
 import grid as gr
 import binascii
