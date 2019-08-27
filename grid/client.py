@@ -33,14 +33,17 @@ class GridClient(BaseWorker):
     def _send_msg(self, message: bin, location: BaseWorker) -> bin:
         raise NotImplementedError
 
-    def _send_http_request(self, route, data, request, N: int = 10):
+    def _send_http_request(
+        self, route, data, request, N: int = 10, unhexlify: bool = True
+    ):
         url = os.path.join(self.addr, "{}".format(route))
         r = request(url, data=data) if data else request(url)
         response = r.text
         # Try to request the message `N` times.
         for _ in range(N):
             try:
-                response = binascii.unhexlify(response[2:-1])
+                if unhexlify:
+                    response = binascii.unhexlify(response[2:-1])
                 return response
             except:
                 if self.verbose:
@@ -51,11 +54,15 @@ class GridClient(BaseWorker):
 
         return response
 
-    def _send_post(self, route, data=None, N: int = 10):
-        return self._send_http_request(route, data, requests.post, N=N)
+    def _send_post(self, route, data=None, N: int = 10, unhexlify: bool = True):
+        return self._send_http_request(
+            route, data, requests.post, N=N, unhexlify=unhexlify
+        )
 
-    def _send_get(self, route, data=None, N: int = 10):
-        return self._send_http_request(route, data, requests.get, N=N)
+    def _send_get(self, route, data=None, N: int = 10, unhexlify: bool = True):
+        return self._send_http_request(
+            route, data, requests.get, N=N, unhexlify=unhexlify
+        )
 
     def _recv_msg(self, message: bin, N: int = 10) -> bin:
         message = str(binascii.hexlify(message))
@@ -74,10 +81,12 @@ class GridClient(BaseWorker):
         models = json.loads(self._send_get("models/", N=N))["models"]
         return models
 
-    def serve_model(self, model, model_id, N: int = 1):
+    def serve_model(self, model, model_id):
         serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
         return self._send_post(
-            "serve-model/", data={"model": serialized_model, "model_id": model_id}, N=N
+            "serve-model/",
+            data={"model": serialized_model, "model_id": model_id},
+            unhexlify=False,
         )
 
     def run_inference(self, model_id, data, N: int = 1):
