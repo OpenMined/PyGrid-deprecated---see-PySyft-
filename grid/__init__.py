@@ -65,7 +65,7 @@ def launch_on_heroku(
     verbose=True,
     check_deps=True,
     dev_user: str = "OpenMined",
-    branch: str="dev",
+    branch: str = "dev",
 ):
     """Launches a node as a heroku application. User needs to be logged in to heroku prior to calling this function.
 
@@ -208,9 +208,7 @@ def launch_on_heroku(
             "git clone -b {} https://github.com/{}/Grid".format(branch, dev_user)
         )
     else:
-        commands.append(
-            "git clone -b dev https://github.com/{}/Grid".format(dev_user)
-        )
+        commands.append("git clone -b dev https://github.com/{}/Grid".format(dev_user))
         logs.append("Checking out dev version...")
         commands.append("git checkout origin/dev")
 

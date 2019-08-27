@@ -1,6 +1,7 @@
 """Utility functions."""
 import os
 
+
 def execute_command(command):
     """Executes the given command using the os inherent shell.
 
