@@ -67,23 +67,18 @@ def launch_on_heroku(
     dev_user: str = "OpenMined",
     branch: str="dev",
 ):
-    """
-        Launches a node as a heroku application. User needs to be logged in to heroku prior to calling this function.
+    """Launches a node as a heroku application. User needs to be logged in to heroku prior to calling this function.
 
-        Parameters
-        ----------
-        grid_name: str
-            The name of the node / Heroku application.
-        app_type: str
-            Type of node being deployed to heroku. Defaults to "pg_rest_api".
-        verbose : bool
-            Specifies logging level. Set true for more logs. Default to True.
-        check_deps : bool
-            Checks before deployment for local git, heroku and pip installations. Defaults to True.
-        dev_user : str
-            Github username of the user/ organization whose Grid repo will be used. Leave undefined to use 'OpenMined' repo.
-        branch : str
-            The default branch to use from the Grid repo of the defined dev_user. Leave undefined to use 'dev' branch.
+        Args:
+            grid_name (str): The name of the node / Heroku application.
+            app_type (str): Type of node being deployed to heroku. Defaults to "pg_rest_api".
+            verbose (bool): Specifies logging level. Set true for more logs. Default to True.
+            check_deps (bool): Checks before deployment for local git, heroku and pip installations. Defaults to True.
+            dev_user (str): Github username of the user/ organization whose Grid repo will be used. Leave undefined to use 'OpenMined' repo.
+            branch (str): The default branch to use from the Grid repo of the defined dev_user. Leave undefined to use 'dev' branch.
+        Returns:
+            str: heroku application address (url)
+
     """
     app_addr = "https://" + str(grid_name) + ".herokuapp.com"
     if check_deps:
