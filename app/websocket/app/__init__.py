@@ -34,8 +34,14 @@ def set_database_config(app, test_config=None, verbose=False):
             )
     else:
         app.config["SQLALCHEMY_DATABASE_URI"] = test_config["SQLALCHEMY_DATABASE_URI"]
-        app.config["TESTING"] = True
-        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+        app.config["TESTING"] = (
+            test_config["TESTING"] if test_config.get("TESTING") else True
+        )
+        app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = (
+            test_config["SQLALCHEMY_TRACK_MODIFICATIONS"]
+            if test_config.get("SQLALCHEMY_TRACK_MODIFICATIONS")
+            else False
+        )
     app.config["VERBOSE"] = verbose
     db.init_app(app)
     return app

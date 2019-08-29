@@ -43,7 +43,7 @@ def cmd(message):
     """ Forward pysyft command to hook virtual worker. """
     try:
         worker = hook.local_worker
-        if len(worker.current_objects()) == 0:
+        if not len(worker.current_objects()):
             recover_objects(hook)
 
         # Decode Message

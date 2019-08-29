@@ -34,7 +34,7 @@ class WorkerObject(db.Model):
     __tablename__ = "worker_objects"
 
     id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(64), index=True, unique=True)
+    description = db.Column(db.String(64), index=True)
     data = db.Column(db.LargeBinary(128))
     worker_id = db.Column(db.String(64), db.ForeignKey("workers.id"))
 

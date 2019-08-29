@@ -13,8 +13,14 @@ def snapshot(worker):
     """
     global last_snapshot_keys
     current_keys = set(worker._objects.keys())
-    new_keys = current_keys - last_snapshot_keys
 
+    # Delete objects from database
+    deleted_keys = last_snapshot_keys - current_keys
+    for obj_key in deleted_keys:
+        db.session.query(WorkerObject).filter_by(id=obj_key).delete()
+
+    # Add new objects from database
+    new_keys = current_keys - last_snapshot_keys
     objects = [
         WorkerObject(worker_id=worker.id, object=worker._objects[key], id=key)
         for key in new_keys
