@@ -2,7 +2,15 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
 
-socketio = SocketIO(async_mode="eventlet")
+# TODO: define a reasonable ping interval
+# and ping timeout
+PING_INTERVAL = 10000000
+PING_TIMEOUT = 5000
+
+
+socketio = SocketIO(
+    async_mode="eventlet", ping_interval=PING_INTERVAL, ping_timeout=PING_TIMEOUT
+)
 
 
 def create_app(debug=False):
