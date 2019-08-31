@@ -81,6 +81,11 @@ class GridClient(BaseWorker):
         models = json.loads(self._send_get("models/", N=N))["models"]
         return models
 
+    def delete_model(self, model_id):
+        return self._send_post(
+            "delete_model/", data={"model_id": model_id}, unhexlify=False
+        )
+
     def serve_model(self, model, model_id):
         serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
         return self._send_post(

@@ -11,11 +11,12 @@ import syft as sy
 
 from . import main
 from . import hook
-
-import torch
+from . import model_manager as mm
 
 
 models = {}
+
+# TODO(@quisher): Need to document the API using swagger for python "flasgger"
 
 
 @main.route("/identity/")
@@ -28,10 +29,28 @@ def is_this_an_opengrid_node():
     return "OpenGrid"
 
 
+@main.route("/delete_model/", methods=["POST"])
+def delete_model():
+    model_id = request.form["model_id"]
+    print(model_id)
+    result = mm.delete_model(model_id)
+    if result is True:
+        return Response(
+            json.dumps({"status": "success"}), status=200, mimetype="application/json"
+        )
+    else:
+        return Response(
+            json.dumps({"status": "failure, file not found"}),
+            status=404,
+            mimetype="application/json",
+        )
+
+
 @main.route("/models/", methods=["GET"])
-def list_models():
+def models_list():
+    """Generates a list of models currently saved at the worker"""
     return Response(
-        json.dumps({"models": list(models.keys())}),
+        json.dumps({"models": mm.models_list()}),
         status=202,
         mimetype="application/json",
     )
@@ -39,21 +58,28 @@ def list_models():
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
-    if model_id not in models:
+
+    model = mm.get_model_with_id(model_id)
+    # check if model exists. Else return a unknown model response.
+    if model is None:
         return Response(
-            json.dumps({"UnknownModel": "Unknown model {}".format(model_id)}),
+            json.dumps({"UnknownModel": "No model found with id: {}".format(model_id)}),
             status=404,
             mimetype="application/json",
         )
+    else:
+        # deserialize the model from binary so we may use it.
+        model = sy.serde.deserialize(model)
+        # serializing the data from GET request
+        serialized_data = request.form["data"].encode("ISO-8859-1")
+        data = sy.serde.deserialize(serialized_data)
 
-    model = models[model_id]
-    serialized_data = request.form["data"].encode("ISO-8859-1")
-    data = sy.serde.deserialize(serialized_data)
-
-    response = model(data).detach().numpy().tolist()
-    return Response(
-        json.dumps({"prediction": response}), status=200, mimetype="application/json"
-    )
+        response = model(data).detach().numpy().tolist()
+        return Response(
+            json.dumps({"prediction": response}),
+            status=200,
+            mimetype="application/json",
+        )
 
 
 @main.route("/serve-model/", methods=["POST"])
@@ -61,25 +87,21 @@ def serve_model():
     serialized_model = request.form["model"].encode("ISO-8859-1")
     model_id = request.form["model_id"]
 
-    deserialized_model = sy.serde.deserialize(serialized_model)
-
-    # TODO store this in a local database
-    if model_id in models:
+    # save the model for later usage
+    saving = mm.save_model_for_serving(serialized_model, model_id)
+    if saving:
         return Response(
-            json.dumps(
-                {
-                    "Error": "Model ID should be unique. There is already a model being hosted with this id."
-                }
-            ),
-            status=404,
+            json.dumps({"success": "Model deployed with id: {}".format(model_id)}),
+            status=200,
             mimetype="application/json",
         )
-
-    models[model_id] = deserialized_model
-
-    return Response(
-        json.dumps({"success": True}), status=200, mimetype="application/json"
-    )
+    else:
+        return Response(
+            json.dumps({"failure": "Either model exists, or some other issue occured"}),
+            status=500,
+            mimetype="application/json",
+        )
+    return
 
 
 @main.route("/", methods=["GET"])
