@@ -11,7 +11,7 @@ def execute_command(command):
     return os.popen(command).read()
 
 
-def connect_all_nodes(nodes, sleep_time: float = 0.5):
+def connect_all_nodes(nodes, sleep_time: float = 1.0):
     """Connect all nodes to each other.
 
     Args:
