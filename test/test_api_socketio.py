@@ -19,16 +19,9 @@ def test_connect_nodes(test_input, expected, connected_node):
     assert connected_node[test_input].id == expected
 
 
-def test_connect_nodes(connected_node):
+def test_connect_all_nodes(connected_node):
     try:
-        for node in connected_node:
-            for n in connected_node:
-                if n == node:
-                    continue
-                else:
-                    connected_node[node].connect_grid_node(
-                        connected_node[n].uri, connected_node[n].id
-                    )
+        gr.connect_all_nodes(connected_node)
     except:
         unittest.TestCase.fail("test_connect_nodes : Exception raised!")
 
