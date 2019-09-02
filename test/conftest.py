@@ -13,11 +13,10 @@ from pg_app import create_app
 
 import syft
 from syft import TorchHook
-from test import IDS, PORTS, GATEWAY_URL
+from test import IDS, PORTS, GATEWAY_URL, GATEWAY_PORT
 import time
 import requests
 import json
-import os
 import grid as gr
 
 
@@ -49,10 +48,10 @@ def init_gateway():
         from gateway.app import create_app
 
         app = create_app(debug=False)
-        app.run(host="0.0.0.0", port="8080")
+        app.run(host="0.0.0.0", port=GATEWAY_PORT)
 
     # Init Grid Gateway
-    p = Process(target=setUpGateway, args=("8080",))
+    p = Process(target=setUpGateway, args=(GATEWAY_PORT,))
     p.start()
     time.sleep(5)
 
@@ -63,10 +62,13 @@ def init_gateway():
 
 @pytest.fixture(scope="session", autouse=True)
 def init_nodes(node_infos):
+    BASEDIR = os.path.dirname(os.path.dirname(__file__))
+
     def setUpNode(port, node_id):
         from app.websocket.app import create_app as ws_create_app
         from app.websocket.app import socketio
 
+        db_path = "sqlite:///" + BASEDIR + "/database" + node_id + ".db"
         requests.post(
             GATEWAY_URL + "/join",
             data=json.dumps(
@@ -74,7 +76,9 @@ def init_nodes(node_infos):
             ),
         )
         socketio.async_mode = "threading"
-        app = ws_create_app(debug=False)
+        app = ws_create_app(
+            debug=False, tst_config={"SQLALCHEMY_DATABASE_URI": db_path}
+        )
         socketio.run(app, host="0.0.0.0", port=port)
 
     jobs = []
