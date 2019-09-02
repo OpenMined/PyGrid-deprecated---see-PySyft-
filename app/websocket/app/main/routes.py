@@ -97,7 +97,9 @@ def serve_model():
         )
     else:
         return Response(
-            json.dumps({"failure": "Either model exists, or some other issue occured"}),
+            json.dumps(
+                {"failure": "Either model already exists, or some other issue occured"}
+            ),
             status=500,
             mimetype="application/json",
         )

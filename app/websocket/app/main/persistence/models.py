@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects import postgresql as psg
 
 db = SQLAlchemy()
 import syft as sy
@@ -19,6 +20,20 @@ class Worker(db.Model):
 
     def __repr__(self):
         return f"<Worker {self.id}>"
+
+
+class SyftModel(db.Model):
+    """ Database table that represents a network created via torch etc.
+    
+        Collumns:
+            id (primary key) : Network id, (UNIQUE).
+            model : Tensor objects stored to represent a model (blob).
+    """
+
+    __tablename__ = "syft_model"
+
+    id = db.Column(db.String(64), primary_key=True)
+    model = db.Column(psg.BYTEA)
 
 
 class WorkerObject(db.Model):

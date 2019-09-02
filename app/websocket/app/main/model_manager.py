@@ -3,6 +3,8 @@ import syft as sy
 import pickle
 import os
 
+from .persistence.models import db, SyftModel
+
 
 def models_list():
     """Returns a list of currently excisting models
@@ -12,10 +14,16 @@ def models_list():
 
     """
 
-    files = os.listdir(os.curdir + "/models/")  # files and directories
-    # removing the .pickle file extension
-    files = [f.replace(".pickle", "") for f in files]
-    return files
+    try:
+        result = db.session.query(SyftModel.id).all()
+        model_names = []
+        for model in result:
+            model_names.append(model.id)
+        return model_names
+    except Exception as e:
+        print(e)
+        # probably no model found with the model_id specified
+        return None
 
 
 def save_model_for_serving(serialized_model: bytes, model_id: str):
@@ -29,20 +37,14 @@ def save_model_for_serving(serialized_model: bytes, model_id: str):
         True for success, False otherwise.
 
     """
-
-    # check if model already exists. If yes then return false
-    if check_if_model_exists(model_id):
+    try:
+        result = db.session.add(SyftModel(id=model_id, model=serialized_model))
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(e)
+        # if model already exists return false
         return False
-
-    # saving the model to a file. Will only work if server has write access
-    with open("models/" + model_id + ".pickle", "wb") as handle:
-        try:
-            pickle.dump(serialized_model, handle)
-        except Exception as e:
-            print("Exception in save_model_for_serving {}".format(e))
-            return False
-
-    return True
 
 
 def get_model_with_id(model_id: str):
@@ -55,19 +57,15 @@ def get_model_with_id(model_id: str):
         A model object, if found, else returns none
 
     """
-    # load the file using pickle
+    # load model from db.
     try:
-        with open("models/" + model_id + ".pickle", "rb") as f:
-            try:
-                model = pickle.load(f)
-                return model
-            except:
-                return None
+        result = db.session.query(SyftModel).get(model_id)
+        print("model id: " + result.id)
+        return result.model
     except Exception as e:
-        print("Exception in get_model_with_id {}".format(e))
+        print(e)
+        # probably no model found with the model_id specified
         return None
-
-    return None
 
 
 def delete_model(model_id: str):
@@ -81,10 +79,14 @@ def delete_model(model_id: str):
 
     """
 
-    if check_if_model_exists(model_id):
-        os.remove("models/" + model_id + ".pickle")
+    try:
+        result = db.session.query(SyftModel).get(model_id)
+        db.session.delete(result)
+        db.session.commit()
         return True
-    else:
+    except Exception as e:
+        print(e)
+        # probably no model found with the model_id specified
         return False
 
 
@@ -99,8 +101,11 @@ def check_if_model_exists(model_id):
 
     """
 
-    models = models_list()
-    if any(model_id == f for f in models):
+    try:
+        result = db.session.query(SyftModel).get(model_id)
+        print("model id: " + result.id)
         return True
-    else:
+    except Exception as e:
+        print(e)
+        # probably no model found with the model_id specified
         return False
