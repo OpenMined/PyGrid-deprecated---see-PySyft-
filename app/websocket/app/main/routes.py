@@ -76,7 +76,7 @@ def serve_model():
         return Response(
             json.dumps(
                 {
-                    "Error": "Model ID should be unique. There is already a model being hosted with this id."
+                    "error": "Model ID should be unique. There is already a model being hosted with this id."
                 }
             ),
             status=404,
