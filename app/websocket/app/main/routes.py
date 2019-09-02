@@ -50,7 +50,15 @@ def model_inference(model_id):
     serialized_data = request.form["data"].encode("ISO-8859-1")
     data = sy.serde.deserialize(serialized_data)
 
+    # If we're using a Plan we need to register the object
+    # to the local worker in order to execute it
+    sy.hook.local_worker.register_obj(data)
+
     response = model(data).detach().numpy().tolist()
+
+    # We can now remove data from the objects
+    del data
+
     return Response(
         json.dumps({"prediction": response}), status=200, mimetype="application/json"
     )

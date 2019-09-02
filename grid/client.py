@@ -82,7 +82,16 @@ class GridClient(BaseWorker):
         return models
 
     def serve_model(self, model, model_id):
-        serialized_model = sy.serde.serialize(model).decode("ISO-8859-1")
+        # If the model is a Plan we send the model
+        # and host the plan version created after
+        # the send operation
+        if isinstance(model, sy.Plan):
+            _ = model.send(self)
+            res_model = model.ptr_plans[self.id]
+        else:
+            res_model = model
+
+        serialized_model = sy.serde.serialize(res_model).decode("ISO-8859-1")
         return self._send_post(
             "serve-model/",
             data={"model": serialized_model, "model_id": model_id},
