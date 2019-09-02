@@ -12,8 +12,6 @@ import syft as sy
 from . import main
 from . import hook
 
-import torch
-
 
 models = {}
 
@@ -47,7 +45,8 @@ def model_inference(model_id):
         )
 
     model = models[model_id]
-    serialized_data = request.form["data"].encode("ISO-8859-1")
+    encoding = request.form["encoding"]
+    serialized_data = request.form["data"].encode(encoding)
     data = sy.serde.deserialize(serialized_data)
 
     # If we're using a Plan we need to register the object
@@ -66,7 +65,8 @@ def model_inference(model_id):
 
 @main.route("/serve-model/", methods=["POST"])
 def serve_model():
-    serialized_model = request.form["model"].encode("ISO-8859-1")
+    encoding = request.form["encoding"]
+    serialized_model = request.form["model"].encode(encoding)
     model_id = request.form["model_id"]
 
     deserialized_model = sy.serde.deserialize(serialized_model)

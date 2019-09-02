@@ -24,6 +24,9 @@ class GridClient(BaseWorker):
         )
         self.addr = addr
         self._verify_identity()
+        # We use ISO encoding for some serialization/deserializations
+        # due to non-binary characters.
+        self._encoding = "ISO-8859-1"
 
     def _verify_identity(self):
         r = requests.get(self.addr + "/identity/")
@@ -91,10 +94,14 @@ class GridClient(BaseWorker):
         else:
             res_model = model
 
-        serialized_model = sy.serde.serialize(res_model).decode("ISO-8859-1")
+        serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
         return self._send_post(
             "serve-model/",
-            data={"model": serialized_model, "model_id": model_id},
+            data={
+                "model": serialized_model,
+                "model_id": model_id,
+                "encoding": self._encoding,
+            },
             unhexlify=False,
         )
 
@@ -103,7 +110,10 @@ class GridClient(BaseWorker):
         return json.loads(
             self._send_get(
                 "models/{}".format(model_id),
-                data={"data": serialized_data.decode("ISO-8859-1")},
+                data={
+                    "data": serialized_data.decode(self._encoding),
+                    "encoding": self._encoding,
+                },
                 N=N,
             )
         )
