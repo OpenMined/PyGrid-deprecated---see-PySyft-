@@ -96,6 +96,21 @@ def index():
     return render_template("index.html")
 
 
+@main.route("/dataset-tags", methods=["GET"])
+def get_available_tags():
+    """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains. """
+    available_tags = list()
+    objs = hook.local_worker._objects
+
+    for key, obj in objs.items():
+        available_tags.extend(list(obj.tags))
+    available_tags = set(available_tags)
+
+    return Response(
+        json.dumps(list(available_tags)), status=200, mimetype="application/json"
+    )
+
+
 @main.route("/search", methods=["POST"])
 def search_dataset_tags():
     body = json.loads(request.data)
