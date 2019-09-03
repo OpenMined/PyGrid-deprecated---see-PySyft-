@@ -21,9 +21,12 @@ class GridAPITest(unittest.TestCase):
         nodes = {}
 
         for (node_id, port) in zip(IDS, PORTS):
-            node = gr.WebsocketGridClient(
-                hook, "http://localhost:" + port + "/", id=node_id
-            )
+            if node_id not in sy.hook.local_worker._known_workers:
+                node = gr.WebsocketGridClient(
+                    hook, "http://localhost:" + port + "/", id=node_id
+                )
+            else:
+                node = sy.hook.local_worker._known_workers[node_id]
             node.connect()
             nodes[node_id] = node
 
@@ -38,6 +41,30 @@ class GridAPITest(unittest.TestCase):
         self.assertEqual(len(response["grid-nodes"]), len(IDS))
         for node_id in IDS:
             self.assertTrue(node_id in response["grid-nodes"])
+
+    def test_grid_host_jit_model(self):
+        toy_model = th.nn.Linear(2, 5)
+        data = th.zeros((5, 2))
+        traced_model = th.jit.trace(toy_model, data)
+
+        self.my_grid.host_model(traced_model, "test")
+        assert 1 == len(self.my_grid.query_model("test"))
+
+    def test_grid_query_model(self):
+        nodes = self.connect_nodes()
+
+        toy_model = th.nn.Linear(2, 5)
+        data = th.zeros((5, 2))
+        traced_model = th.jit.trace(toy_model, data)
+
+        alice, bob, james = nodes["alice"], nodes["bob"], nodes["james"]
+
+        # Different versions of same model stored in different workers
+        alice.serve_model(traced_model, model_id="test1")
+        bob.serve_model(traced_model, model_id="test1")
+        james.serve_model(traced_model, model_id="test1")
+        assert len(nodes.keys()) == len(self.my_grid.query_model("test1"))
+        assert 0 == len(self.my_grid.query_model("empty"))
 
     def test_grid_search(self):
         nodes = self.connect_nodes()
