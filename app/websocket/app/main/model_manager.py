@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 model_cache = dict()
 
+
 def cache_get_model(model_id: str):
     """Checks the cache for a model. If model not found, returns None.
     
@@ -26,6 +27,7 @@ def cache_get_model(model_id: str):
 
     return None
 
+
 def cache_save_model(serialized_model: bytes, model_id: str):
     """Saves the model to cache. Will fail if a model with same id already exists.
 
@@ -42,6 +44,7 @@ def cache_save_model(serialized_model: bytes, model_id: str):
         return True
     else:
         return False
+
 
 def cache_del_model(model_id: str):
     """Deletes the given model_id. If it fails (model not present) it returns False.
@@ -129,7 +132,7 @@ def get_model_with_id(model_id: str):
     try:
         db.session.remove()
         result = db.session.query(SyftModel).get(model_id)
-        
+
         if result is None:
             # no model found
             return None
