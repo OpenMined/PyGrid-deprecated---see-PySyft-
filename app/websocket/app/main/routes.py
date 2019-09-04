@@ -14,9 +14,6 @@ from . import hook
 from . import model_manager as mm
 
 
-# TODO(@quisher): Need to document the API using swagger for python "flasgger"
-
-
 @main.route("/identity/")
 def is_this_an_opengrid_node():
     """This exists because in the automation scripts which deploy nodes,
@@ -31,7 +28,7 @@ def is_this_an_opengrid_node():
 def delete_model():
     model_id = request.form["model_id"]
     result = mm.delete_model(model_id)
-    if result is True:
+    if result:
         return Response(
             json.dumps({"status": "success"}), status=200, mimetype="application/json"
         )
