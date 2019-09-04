@@ -32,7 +32,6 @@ def is_this_an_opengrid_node():
 @main.route("/delete_model/", methods=["POST"])
 def delete_model():
     model_id = request.form["model_id"]
-    print(model_id)
     result = mm.delete_model(model_id)
     if result is True:
         return Response(
@@ -58,7 +57,7 @@ def models_list():
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
-
+    
     model = mm.get_model_with_id(model_id)
     # check if model exists. Else return a unknown model response.
     if model is None:
@@ -74,30 +73,19 @@ def model_inference(model_id):
         serialized_data = request.form["data"].encode("ISO-8859-1")
         data = sy.serde.deserialize(serialized_data)
 
+        # If we're using a Plan we need to register the object
+        # to the local worker in order to execute it
+        sy.hook.local_worker.register_obj(data)
+
         response = model(data).detach().numpy().tolist()
+
+        # We can now remove data from the objects
+        del data
         return Response(
             json.dumps({"prediction": response}),
             status=200,
             mimetype="application/json",
         )
-
-    model = models[model_id]
-    encoding = request.form["encoding"]
-    serialized_data = request.form["data"].encode(encoding)
-    data = sy.serde.deserialize(serialized_data)
-
-    # If we're using a Plan we need to register the object
-    # to the local worker in order to execute it
-    sy.hook.local_worker.register_obj(data)
-
-    response = model(data).detach().numpy().tolist()
-
-    # We can now remove data from the objects
-    del data
-
-    return Response(
-        json.dumps({"prediction": response}), status=200, mimetype="application/json"
-    )
 
 
 @main.route("/serve-model/", methods=["POST"])
