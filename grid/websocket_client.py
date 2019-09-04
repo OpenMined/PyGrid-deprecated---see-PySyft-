@@ -97,8 +97,8 @@ class WebsocketGridClient(GridClient, FederatedClient):
             return sy.serde.serialize(b"")
         return self.response_from_client
 
-    def connect_grid_node(self, addr: str, id: str, sleep_time=0.5):
-        self.__sio.emit("/connect-node", {"uri": addr, "id": id})
+    def connect_grid_node(self, worker, sleep_time=0.5):
+        self.__sio.emit("/connect-node", {"uri": worker.uri, "id": worker.id})
         self.__sio.sleep(sleep_time)
 
     def search(self, *query):
