@@ -14,8 +14,6 @@ from . import hook
 from . import model_manager as mm
 
 
-models = {}
-
 # TODO(@quisher): Need to document the API using swagger for python "flasgger"
 
 
@@ -57,7 +55,7 @@ def models_list():
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
-    
+
     model = mm.get_model_with_id(model_id)
     # check if model exists. Else return a unknown model response.
     if model is None:
