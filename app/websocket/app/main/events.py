@@ -43,8 +43,13 @@ def cmd(message):
     """ Forward pysyft command to hook virtual worker. """
     try:
         worker = hook.local_worker
-        if not len(worker.current_objects()):
-            recover_objects(hook)
+        # mari-linhares: I've commented these lines
+        # due to issues storing plans on the database.
+        # Maybe there are too many bytes being stored
+        # but more exploration is needed.
+        # TODO: uncomment these lines
+        # if not len(worker.current_objects()):
+        #     recover_objects(hook)
 
         # Decode Message
         encoded_message = message["message"]
@@ -54,7 +59,7 @@ def cmd(message):
         decoded_response = worker._recv_msg(decoded_message)
         encoded_response = str(binascii.hexlify(decoded_response))
 
-        snapshot(worker)
+        # snapshot(worker)
 
         emit("/cmd-response", encoded_response)
     except Exception as e:

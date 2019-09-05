@@ -107,6 +107,32 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         response = self._recv_msg(serialized_message)
         return sy.serde.deserialize(response)
 
+    def get_obj_copy(self, obj_id):
+        message = sy.Message(MSGTYPE.GET_OBJ_COPY, obj_id)
+        serialized_message = sy.serde.serialize(message)
+        response = self._recv_msg(serialized_message)
+        return sy.serde.deserialize(response)
+
+    def fetch_plan(self, plan_id):
+        message = sy.Message(MSGTYPE.FETCH_PLAN, plan_id)
+        serialized_message = sy.serde.serialize(message)
+        response = self._recv_msg(serialized_message)
+        plan = sy.serde.deserialize(response)
+
+        if plan._last_sent_ids:
+            state_ids = []
+            for state_id in plan._last_sent_ids:
+                state_ids.append(
+                    self.get_obj_copy(state_id)
+                    .send(sy.hook.local_worker, garbage_collect_data=False)
+                    .id_at_location
+                )
+            plan.replace_ids(plan._last_sent_ids, state_ids)
+            plan.state_ids = state_ids
+        plan.replace_worker_ids(self.id, sy.hook.local_worker.id)
+
+        return plan
+
     def connect(self):
         if self.__sio.eio.state != "connected":
             self.__sio.connect(self.uri)
