@@ -47,16 +47,13 @@ class GridNetwork(object):
         """
         # Perform a request to choose model's host
         response = requests.get(self.gateway_url + "/choose-model-host")
-        host = json.loads(response.content)
+        hosts = json.loads(response.content)
 
-        # Get address and id of worker
-        host_address = host.get("address", None)
-        host_id = host.get("id", None)
-
-        # Host model
-        host_worker = self.__connect_with_node(host_id, host_address)
-        host_worker.serve_model(model, model_id=model_id)
-        host_worker.disconnect()
+        for host_id, host_address in hosts:
+            # Host model
+            host_worker = self.__connect_with_node(host_id, host_address)
+            host_worker.serve_model(model, model_id=model_id)
+            host_worker.disconnect()
 
     def query_model(self, model_id):
         """ This method will search for a specific model registered on grid network, if found,
