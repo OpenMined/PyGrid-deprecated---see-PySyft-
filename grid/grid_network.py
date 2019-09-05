@@ -70,11 +70,12 @@ class GridNetwork(object):
         response = requests.post(self.gateway_url + "/search-model", data=body)
 
         match_nodes = json.loads(response.content)
-        workers = list()
-        for node_id, node_url in match_nodes:
+        if len(match_nodes):
+            node_id, node_url = match_nodes[0]  # Get the first node
             worker = self.__connect_with_node(node_id, node_url)
-            workers.append(worker)
-        return workers
+        else:
+            worker = None
+        return worker
 
     def __connect_with_node(self, node_id, node_url):
         if node_id not in sy.hook.local_worker._known_workers:
