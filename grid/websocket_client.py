@@ -122,11 +122,10 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         if plan._last_sent_ids:
             state_ids = []
             for state_id in plan._last_sent_ids:
-                state_ids.append(
-                    self.get_obj_copy(state_id)
-                    .send(sy.hook.local_worker, garbage_collect_data=False)
-                    .id_at_location
-                )
+                ptr = self.get_obj_copy(state_id)
+                ptr.owner = sy.hook.local_worker
+                sy.hook.local_worker._objects[ptr.id] = ptr
+                state_ids.append(ptr.id)
             plan.replace_ids(plan._last_sent_ids, state_ids)
             plan.state_ids = state_ids
         plan.replace_worker_ids(self.id, sy.hook.local_worker.id)
