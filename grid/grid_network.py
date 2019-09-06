@@ -39,11 +39,10 @@ class GridNetwork(object):
         return tensor_set
 
     def host_model(self, model, model_id):
-        """ This method will choose one of grid nodes registered in the grid network to host
-            host a plain text model.
+        """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
                 model : Model to be hosted.
-                model_id : ID of model.
+                model_id : Model's ID.
         """
         # Perform a request to choose model's host
         response = requests.get(self.gateway_url + "/choose-model-host")
@@ -57,10 +56,10 @@ class GridNetwork(object):
 
     def query_model(self, model_id):
         """ This method will search for a specific model registered on grid network, if found,
-            It will return all grid nodes that cointains the desired model.
+            It will return all grid nodes that contains the desired model.
             Args:
-                model_id : Model's ID to be searched.
-                data : Data used to do inference.
+                model_id : Model's ID.
+                data : Data used to run inference.
             Returns:
                 workers : List of workers that contains the desired model.
         """

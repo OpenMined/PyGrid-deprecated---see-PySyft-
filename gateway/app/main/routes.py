@@ -2,7 +2,7 @@
     All Gateway routes (REST API).
 """
 
-from flask import render_template, Response, request
+from flask import render_template, Response, request, current_app
 from . import main
 import json
 import random
@@ -12,7 +12,6 @@ import requests
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
-n_replica = os.getenv("REPLICAS", None)
 
 
 @main.route("/", methods=["GET"])
@@ -59,10 +58,11 @@ def choose_model_host():
     """ Used to choose some grid node to host a model.
         PS: Currently we perform this randomly.
     """
-    if n_replica:
-        hosts = random.sample(list(grid_nodes.keys()), n_replica)
-    else:
-        hosts = random.sample(list(grid_nodes.keys()), 1)
+    n_replica = current_app.config["N_REPLICA"]
+    if not n_replica:
+        n_replica = 1
+
+    hosts = random.sample(list(grid_nodes.keys()), n_replica)
     hosts_info = [(host, grid_nodes[host]) for host in hosts]
     return Response(json.dumps(hosts_info), status=200, mimetype="application/json")
 
@@ -80,7 +80,7 @@ def search_model():
     for node in grid_nodes:
         try:
             response = requests.get(grid_nodes[node] + "/models/").content
-        except:
+        except ConnectionError:
             continue
         response = json.loads(response)
         if body["model_id"] in response.get("models", []):
@@ -93,15 +93,14 @@ def search_model():
 @main.route("/search-available-models", methods=["GET"])
 def available_models():
     """ Get all available models on the grid network. Can be useful to know what models our grid network have. """
-    models = list()
+    models = set()
     for node in grid_nodes:
         try:
             response = requests.get(grid_nodes[node] + "/models/").content
-        except:
+        except ConnectionError:
             continue
         response = json.loads(response)
-        models.extend(response.get("models", []))
-    models = set(models)
+        models.update(set(response.get("models", [])))
 
     # Return a list[ "model_id" ]  with all grid nodes
     return Response(json.dumps(list(models)), status=200, mimetype="application/json")
@@ -110,15 +109,14 @@ def available_models():
 @main.route("/search-available-tags", methods=["GET"])
 def available_tags():
     """ Returns all available tags stored on grid nodes. Can be useful to know what dataset our grid network have. """
-    tags = list()
+    tags = set()
     for node in grid_nodes:
         try:
             response = requests.get(grid_nodes[node] + "/dataset-tags").content
-        except:
+        except ConnectionError:
             continue
         response = json.loads(response)
-        tags.extend(response)
-    tags = set(tags)
+        tags.update(set(response))
 
     # Return a list[ "#tags" ]  with all grid nodes
     return Response(json.dumps(list(tags)), status=200, mimetype="application/json")
@@ -140,7 +138,7 @@ def search_dataset_tags():
             response = requests.post(
                 grid_nodes[node] + "/search", data=json.dumps({"query": body["query"]})
             ).content
-        except:
+        except ConnectionError:
             continue
         response = json.loads(response)
         # If contains
