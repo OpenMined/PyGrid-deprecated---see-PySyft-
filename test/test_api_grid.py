@@ -6,6 +6,7 @@ import json
 import syft as sy
 import torch as th
 from test import PORTS, IDS, GATEWAY_URL
+import torch.nn.functional as F
 
 hook = sy.TorchHook(th)
 
@@ -50,6 +51,33 @@ class GridAPITest(unittest.TestCase):
         self.my_grid.host_model(traced_model, "test")
         assert None != self.my_grid.query_model("test")
         assert None == self.my_grid.query_model("unregistered-model")
+
+    def test_host_plan_model(self):
+        class Net(sy.Plan):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.fc1 = th.nn.Linear(2, 1)
+                self.bias = th.tensor([1000.0])
+                self.state += ["fc1", "bias"]
+
+            def forward(self, x):
+                x = self.fc1(x)
+                return F.log_softmax(x, dim=0) + self.bias
+
+        model = Net()
+        model.build(th.tensor([1.0, 2]))
+
+        self.my_grid.host_model(model, model_id="plan-model")
+
+        # Call one time
+        worker = self.my_grid.query_model("plan-model")
+        prediction = worker.run_inference(model_id="plan-model", data=th.tensor([1.0, 2]))["prediction"]
+        assert th.tensor(prediction) == th.tensor([1000.0])
+
+        # Call one more time
+        prediction = worker.run_inference(model_id="plan-model", data=th.tensor([1.0, 2]))["prediction"]
+        assert th.tensor(prediction) == th.tensor([1000.0])
+
 
     def test_grid_search(self):
         nodes = self.connect_nodes()
