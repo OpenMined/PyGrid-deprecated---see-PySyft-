@@ -5,6 +5,7 @@ from typing import Union
 import torch
 
 import syft as sy
+from syft import messaging
 from syft.generic.tensor import AbstractTensor
 from syft.workers import BaseWorker
 from syft.federated import FederatedClient
@@ -107,29 +108,30 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         response = self._recv_msg(serialized_message)
         return sy.serde.deserialize(response)
 
-    def get_obj_copy(self, obj_id):
-        message = sy.Message(MSGTYPE.GET_OBJ_COPY, obj_id)
+    def get_ptr(self, obj_id):
+        message = messaging.PlanCommandMessage((obj_id,), "get_ptr")
         serialized_message = sy.serde.serialize(message)
         response = self._recv_msg(serialized_message)
         return sy.serde.deserialize(response)
 
     def fetch_plan(self, plan_id):
-        message = sy.Message(MSGTYPE.FETCH_PLAN, plan_id)
+        message = messaging.PlanCommandMessage((plan_id,), "fetch_plan")
         serialized_message = sy.serde.serialize(message)
+        # Send the message and return the deserialized response.
         response = self._recv_msg(serialized_message)
         plan = sy.serde.deserialize(response)
 
-        if plan._last_sent_ids:
+        if plan._state_ids_sent:
             state_ids = []
-            for state_id in plan._last_sent_ids:
-                ptr = self.get_obj_copy(state_id)
+            for state_id in plan._state_ids_sent:
+                ptr = self.get_ptr(state_id)
                 ptr.owner = sy.hook.local_worker
                 sy.hook.local_worker._objects[ptr.id] = ptr
                 state_ids.append(ptr.id)
-            plan.replace_ids(plan._last_sent_ids, state_ids)
+            plan.replace_ids(plan._state_ids_sent, state_ids)
             plan.state_ids = state_ids
-        plan.replace_worker_ids(self.id, sy.hook.local_worker.id)
 
+        plan.replace_worker_ids(self.id, sy.hook.local_worker.id)
         return plan
 
     def connect(self):
