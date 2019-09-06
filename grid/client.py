@@ -84,10 +84,51 @@ class GridClient(BaseWorker):
         models = json.loads(self._send_get("models/", N=N))["models"]
         return models
 
-    def serve_model(self, model, model_id):
+    def get_private_model(self, model_id, workers, crypto_provider):
+        # TODO: check if we support more than 2 workers
+        if len(workers) != 2:
+            raise ValueError("You need to provide exactly 2 workers.")
+
+        # Fetch plan
+        fetched_plan = self.fetch_plan(model_id)
+
+        new_state_ids = []
+        for state_id in fetched_plan.state_ids:
+            a_sh = (
+                sy.hook.local_worker._objects[state_id]
+                .fix_prec()
+                .share(*workers, crypto_provider=crypto_provider)
+                .get()
+            )
+            # TODO: this should be stored automatically
+            sy.hook.local_worker._objects[a_sh.id] = a_sh
+            new_state_ids.append(a_sh.id)
+
+        fetched_plan.replace_ids(fetched_plan.state_ids, new_state_ids)
+        fetched_plan.state_ids = new_state_ids
+
+        return fetched_plan
+
+    def host_model(self, model: sy.Plan):
+        """Hosts the model locally.
+
+        A wrapper for the send operation.
+
+        This method is used when a user wants to save the model on the worker,
+        but does not intend to serve it using a Rest API due to privacy reasons.
+        """
+        return model.send(self)
+
+    def serve_model(self, model, model_id=None):
         # If the model is a Plan we send the model
         # and host the plan version created after
         # the send operation
+        if model_id is None:
+            if isinstance(model, sy.Plan):
+                model_id = model.id
+            else:
+                raise ValueError("Model id argument is mandatory for jit models.")
+
         if isinstance(model, sy.Plan):
             _ = model.send(self)
             res_model = model.ptr_plans[self.id]
