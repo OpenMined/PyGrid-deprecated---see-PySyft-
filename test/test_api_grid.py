@@ -59,21 +59,26 @@ class GridAPITest(unittest.TestCase):
         model.build(th.tensor([1.0, 2]))
         model_ids = ["first_model", "second_model", "third_model"]
 
-        for i in range(1, len(model_ids) + 1):
-            self.my_grid.host_model(model, model_id=model_ids[i - 1])
-            models = json.loads(
-                requests.get(GATEWAY_URL + "/search-available-models").content
-            )
-            assert model_ids[i - 1] in model_ids
+        # Register models
+        for model_id in model_ids:
+            self.my_grid.serve_model(model, model_id=model_id)
+
+        # Get available models
+        models = json.loads(
+            requests.get(GATEWAY_URL + "/search-available-models").content
+        )
+
+        for model_id in model_ids:
+            assert model_id in models
 
     def test_grid_host_query_jit_model(self):
         toy_model = th.nn.Linear(2, 5)
         data = th.zeros((5, 2))
         traced_model = th.jit.trace(toy_model, data)
 
-        self.my_grid.host_model(traced_model, "test")
-        assert None != self.my_grid.query_model("test")
-        assert None == self.my_grid.query_model("unregistered-model")
+        self.my_grid.serve_model(traced_model, "test")
+        assert self.my_grid.query_model("test")
+        assert self.my_grid.query_model("unregistered-model") is None
 
     def test_dataset_tags_overview(self):
         nodes = self.connect_nodes()
@@ -87,15 +92,15 @@ class GridAPITest(unittest.TestCase):
 
         tensors = [x, y, z]
         workers = [alice, bob, james]
-        for i in range(1, 4):
-            tensors[i - 1].send(workers[i - 1])
+        for i in range(len(workers)):
+            tensors[i].send(workers[i])
             tags = json.loads(
                 requests.get(GATEWAY_URL + "/search-available-tags").content
             )
 
-            assert i == len(tags)
+            assert i + 1 == len(tags)
 
-            tensor_tags = list(tensors[i - 1].tags)
+            tensor_tags = list(tensors[i].tags)
             for tag in tensor_tags:
                 assert tag in tags
 
@@ -114,7 +119,7 @@ class GridAPITest(unittest.TestCase):
         model = Net()
         model.build(th.tensor([1.0, 2]))
 
-        self.my_grid.host_model(model, model_id="plan-model")
+        self.my_grid.serve_model(model, model_id="plan-model")
 
         # Call one time
         inference = self.my_grid.run_inference(
