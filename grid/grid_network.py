@@ -39,7 +39,7 @@ class GridNetwork(object):
             tensor_set.append(worker.search(*query))
         return tensor_set
 
-    def host_model(self, model, model_id):
+    def serve_model(self, model, model_id):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
                 model : Model to be hosted.
