@@ -28,42 +28,28 @@ def is_this_an_opengrid_node():
 def delete_model():
     model_id = request.form["model_id"]
     result = mm.delete_model(model_id)
-    if result:
-        return Response(
-            json.dumps({"status": "success"}), status=200, mimetype="application/json"
-        )
+    if result["success"]:
+        return Response(json.dumps(result), status=200, mimetype="application/json")
     else:
-        return Response(
-            json.dumps({"status": "failure, file not found"}),
-            status=404,
-            mimetype="application/json",
-        )
+        return Response(json.dumps(result), status=404, mimetype="application/json")
 
 
 @main.route("/models/", methods=["GET"])
-def models_list():
+def list_models():
     """Generates a list of models currently saved at the worker"""
     return Response(
-        json.dumps({"models": mm.models_list()}),
-        status=202,
-        mimetype="application/json",
+        json.dumps(mm.list_models()), status=200, mimetype="application/json"
     )
 
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
 
-    model = mm.get_model_with_id(model_id)
+    response = mm.get_model_with_id(model_id)
     # check if model exists. Else return a unknown model response.
-    if model is None:
-        return Response(
-            json.dumps({"UnknownModel": "No model found with id: {}".format(model_id)}),
-            status=404,
-            mimetype="application/json",
-        )
-    else:
+    if response["success"]:
         # deserialize the model from binary so we may use it.
-        model = sy.serde.deserialize(model)
+        model = sy.serde.deserialize(response["model"])
         # serializing the data from GET request
         serialized_data = request.form["data"].encode("ISO-8859-1")
         data = sy.serde.deserialize(serialized_data)
@@ -72,15 +58,17 @@ def model_inference(model_id):
         # to the local worker in order to execute it
         sy.hook.local_worker.register_obj(data)
 
-        response = model(data).detach().numpy().tolist()
+        predictions = model(data).detach().numpy().tolist()
 
         # We can now remove data from the objects
         del data
         return Response(
-            json.dumps({"prediction": response}),
+            json.dumps({"success": True, "prediction": predictions}),
             status=200,
             mimetype="application/json",
         )
+    else:
+        return Response(json.dumps(response), status=404, mimetype="application/json")
 
 
 @main.route("/serve-model/", methods=["POST"])
@@ -90,24 +78,11 @@ def serve_model():
     model_id = request.form["model_id"]
 
     # save the model for later usage
-    saving = mm.save_model_for_serving(serialized_model, model_id)
-    if saving:
-        return Response(
-            json.dumps({"success": "Model deployed with id: {}".format(model_id)}),
-            status=200,
-            mimetype="application/json",
-        )
+    response = mm.save_model(serialized_model, model_id)
+    if response["success"]:
+        return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
-        return Response(
-            json.dumps(
-                {
-                    "error": "Model ID should be unique. There is already a model being hosted with this id."
-                }
-            ),
-            status=500,
-            mimetype="application/json",
-        )
-    return
+        return Response(json.dumps(response), status=500, mimetype="application/json")
 
 
 @main.route("/", methods=["GET"])

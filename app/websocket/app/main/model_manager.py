@@ -3,104 +3,112 @@ import syft as sy
 import pickle
 import os
 
-from .persistence.models import db, SyftModel
+from .persistence.models import db, MLModel
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
 model_cache = dict()
 
 
-def cache_get_model(model_id: str):
+def clear_cache():
+    """Clears the cache.
+
+    """
+    model_cache = dict()
+
+
+def is_model_in_cache(model_id: str):
+    """Checks if the given model_id is present in cache.
+    
+    Args:
+        model_id (str): Unique id representing the model. 
+
+    Returns:
+        True is present, else False.
+
+    """
+
+    return model_id in model_cache
+
+
+def get_model_from_cache(model_id: str):
     """Checks the cache for a model. If model not found, returns None.
     
     Args:
         model_id (str): Unique id representing the model. 
 
     Returns:
-        A model encoded in ("ISO-8859-1"), else returns None.
+        An encoded model, else returns None.
 
     """
-    model_ids = model_cache.keys()
-    if model_id in model_ids:
-        # model found
-        return model_cache[model_id]
 
-    return None
+    return model_cache.get(model_id)
 
 
-def cache_save_model(serialized_model: bytes, model_id: str):
+def save_model_to_cache(serialized_model: bytes, model_id: str):
     """Saves the model to cache. Will fail if a model with same id already exists.
 
     Args:
-        serialized_model (bytes): The model object to be saved. encoded in ("ISO-8859-1").
+        serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
 
-    Returns:
-        True for success, False otherwise.
-
     """
-    if cache_get_model(model_id) is None:
-        model_cache[model_id] = serialized_model
-        return True
+    if is_model_in_cache(model_id):
+        return
     else:
-        return False
+        model_cache[model_id] = serialized_model
 
 
-def cache_del_model(model_id: str):
-    """Deletes the given model_id. If it fails (model not present) it returns False.
+def remove_model_from_cache(model_id: str):
+    """Deletes the given model_id from cache.
     
     Args:
         model_id (str): Unique id representing the model. 
 
-    Returns:
-        True is deleted, false otherwise.
-
     """
-    if cache_get_model(model_id) is None:
-        return False
-    else:
+    if is_model_in_cache(model_id):
         del model_cache[model_id]
 
 
-def models_list():
+def list_models():
     """Returns a list of currently existing models. Will always fetch from db.
 
     Returns:
-        A list object, containig model_id of all the models.
+        A dict with structure: {"success": Bool, "models":[model list]}.
+        On error returns dict: {"success": Bool, "error": error message}. 
 
     """
+    print(model_cache.keys())
     try:
-        result = db.session.query(SyftModel.id).all()
-        model_names = []
-        for model in result:
-            model_names.append(model.id)
-        return model_names
+        result = db.session.query(MLModel.id).all()
+        model_ids = [model.id for model in result]
+        return {"success": True, "models": model_ids}
     except SQLAlchemyError as e:
-        # probably no model found with the model_id specified
-        return None
+        return {"success": False, "error": str(e)}
 
 
-def save_model_for_serving(serialized_model: bytes, model_id: str):
+def save_model(serialized_model: bytes, model_id: str):
     """Saves the model for later usage. 
 
     Args:
-        serialized_model (bytes): The model object to be saved. encoded in ("ISO-8859-1").
+        serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
 
     Returns:
-        True for success, False otherwise.
+        A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
+        On error returns dict: {"success": Bool, "error": error message}. 
 
     """
-    if cache_get_model(model_id) != None:
+    if is_model_in_cache(model_id):
         # Model already exists
-        return False
+        return {"success": False, "error": "Model Exists"}
     try:
         db.session.remove()
-        result = db.session.add(SyftModel(id=model_id, model=serialized_model))
+        result = db.session.add(MLModel(id=model_id, model=serialized_model))
         db.session.commit()
         # also save a copy in cache
-        cache_save_model(serialized_model, model_id)
-        return True
+        save_model_to_cache(serialized_model, model_id)
+        return {"success": True, "message": "Model Saved: " + model_id}
     except (SQLAlchemyError, IntegrityError) as e:
         if type(e) is IntegrityError:
             # The model is already present within the db.
@@ -108,41 +116,39 @@ def save_model_for_serving(serialized_model: bytes, model_id: str):
             db_model = get_model_with_id(model_id)
             if db_model != None:
                 # to handle any db errors while fetching
-                cache_save_model(db_model, model_id)
-            return False
+                save_model_to_cache(db_model, model_id)
+            return {"success": False, "error": str(e)}
         else:
-            # Some other error occured within db
-            return False
+            return {"success": False, "error": str(e)}
 
 
 def get_model_with_id(model_id: str):
-    """Returns a model with model id.
+    """Returns a model with given model id.
 
     Args:
         model_id (str): The unique identifier associated with the model.
 
     Returns:
-        A model object, if found, else returns none.
+        A dict with structure: {"success": Bool, "model": serialized model object}.
+        On error returns dict: {"success": Bool, "error": error message }. 
 
     """
     # load model from db.
-    if cache_get_model(model_id) != None:
+    if is_model_in_cache(model_id):
         # Model already exists
-        return cache_get_model(model_id)
+        return {"success": True, "model": get_model_from_cache(model_id)}
     try:
         db.session.remove()
-        result = db.session.query(SyftModel).get(model_id)
+        result = db.session.query(MLModel).get(model_id)
 
-        if result is None:
-            # no model found
-            return None
-
-        # save model to cache
-        cache_save_model(result.model, model_id)
-        return result.model
+        if result:
+            # save model to cache
+            save_model_to_cache(result.model, model_id)
+            return {"success": True, "model": result.model}
+        else:
+            return {"success": False, "error": "Model not found"}
     except SQLAlchemyError as e:
-        # probably no model found with the model_id specified
-        return None
+        return {"success": False, "error": str(e)}
 
 
 def delete_model(model_id: str):
@@ -152,21 +158,22 @@ def delete_model(model_id: str):
         model_id (str): The unique identifier associated with the model.
 
     Returns:
-        True is model was deleted successfully.
+        A dict with structure: {"success": Bool, "message": "Model Deleted: {model_id}"}.
+        On error returns dict: {"success": Bool, "error": {error message}}. 
 
     """
 
     try:
         # first del from cache
-        cache_del_model(model_id)
+        remove_model_from_cache(model_id)
         # then del from db
-        result = db.session.query(SyftModel).get(model_id)
+        result = db.session.query(MLModel).get(model_id)
         db.session.delete(result)
         db.session.commit()
-        return True
+        return {"success": True, "message": "Model Deleted: " + model_id}
     except SQLAlchemyError as e:
         # probably no model found in db.
-        return False
+        return {"success": False, "error": str(e)}
 
 
 def check_if_model_exists(model_id: str):
@@ -181,7 +188,7 @@ def check_if_model_exists(model_id: str):
     """
 
     try:
-        result = db.session.query(SyftModel).get(model_id)
+        result = db.session.query(MLModel).get(model_id)
         return True
     except SQLAlchemyError as e:
         # probably no model found with the model_id specified

@@ -22,15 +22,15 @@ class Worker(db.Model):
         return f"<Worker {self.id}>"
 
 
-class SyftModel(db.Model):
+class MLModel(db.Model):
     """ Database table that represents a network created via torch etc.
     
         Collumns:
             id (primary key) : Network id, (UNIQUE).
-            model : Tensor objects stored to represent a model (blob).
+            model : Tensor objects stored to represent a model (BYTEA).
     """
 
-    __tablename__ = "syft_model"
+    __tablename__ = "ml_model"
 
     id = db.Column(db.String(64), primary_key=True)
     model = db.Column(psg.BYTEA)
