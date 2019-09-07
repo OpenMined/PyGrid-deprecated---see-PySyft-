@@ -117,17 +117,16 @@ class GridAPITest(unittest.TestCase):
         self.my_grid.host_model(model, model_id="plan-model")
 
         # Call one time
-        worker = self.my_grid.query_model("plan-model")
-        prediction = worker.run_inference(
-            model_id="plan-model", data=th.tensor([1.0, 2])
-        )["prediction"]
-        assert th.tensor(prediction) == th.tensor([1000.0])
+        inference = self.my_grid.run_inference(
+            model_id="plan-model", dataset=th.tensor([1.0, 2])
+        )
+        assert inference == th.tensor([1000.0])
 
         # Call one more time
-        prediction = worker.run_inference(
-            model_id="plan-model", data=th.tensor([1.0, 2])
-        )["prediction"]
-        assert th.tensor(prediction) == th.tensor([1000.0])
+        inference = self.my_grid.run_inference(
+            model_id="plan-model", dataset=th.tensor([1.0, 2])
+        )
+        assert inference == th.tensor([1000.0])
 
     def test_grid_search(self):
         nodes = self.connect_nodes()

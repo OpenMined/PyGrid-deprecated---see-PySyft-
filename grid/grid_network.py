@@ -2,6 +2,7 @@ import requests
 import json
 import syft as sy
 from grid.websocket_client import WebsocketGridClient
+import torch
 
 
 class GridNetwork(object):
@@ -53,6 +54,20 @@ class GridNetwork(object):
             host_worker = self.__connect_with_node(host_id, host_address)
             host_worker.serve_model(model, model_id=model_id)
             host_worker.disconnect()
+
+    def run_inference(self, model_id, dataset):
+        """ This method will search for a specific model registered on grid network, if found,
+            It will run inference.
+            Args:
+                model_id : Model's ID.
+                dataset : Data used to run inference.
+            Returns:
+                inference : result of data inference
+        """
+        worker = self.query_model(model_id)
+        response = worker.run_inference(model_id=model_id, data=dataset)
+        worker.disconnect()
+        return torch.tensor(response["prediction"])
 
     def query_model(self, model_id):
         """ This method will search for a specific model registered on grid network, if found,
