@@ -43,6 +43,29 @@ class GridAPITest(unittest.TestCase):
         for node_id in IDS:
             self.assertTrue(node_id in response["grid-nodes"])
 
+    def test_model_ids_overview(self):
+        class Net(sy.Plan):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.fc1 = th.nn.Linear(2, 1)
+                self.bias = th.tensor([1000.0])
+                self.state += ["fc1", "bias"]
+
+            def forward(self, x):
+                x = self.fc1(x)
+                return F.log_softmax(x, dim=0) + self.bias
+
+        model = Net()
+        model.build(th.tensor([1.0, 2]))
+        model_ids = ["first_model", "second_model", "third_model"]
+
+        for i in range(1, len(model_ids) + 1):
+            self.my_grid.host_model(model, model_id=model_ids[i - 1])
+            models = json.loads(
+                requests.get(GATEWAY_URL + "/search-available-models").content
+            )
+            assert model_ids[i - 1] in model_ids
+
     def test_grid_host_query_jit_model(self):
         toy_model = th.nn.Linear(2, 5)
         data = th.zeros((5, 2))
@@ -51,6 +74,30 @@ class GridAPITest(unittest.TestCase):
         self.my_grid.host_model(traced_model, "test")
         assert None != self.my_grid.query_model("test")
         assert None == self.my_grid.query_model("unregistered-model")
+
+    def test_dataset_tags_overview(self):
+        nodes = self.connect_nodes()
+        alice, bob, james = nodes["alice"], nodes["bob"], nodes["james"]
+
+        x = th.tensor([1, 2, 3, 4, 5]).tag("#first-tensor")
+        y = th.tensor([1, 2, 3, 4, 5]).tag("#second-tensor")
+        z = th.tensor([4, 5, 9]).tag(
+            "#generic-tag", "#first-tensor", "#second-tensor"
+        )  # repeat tags
+
+        tensors = [x, y, z]
+        workers = [alice, bob, james]
+        for i in range(1, 4):
+            tensors[i - 1].send(workers[i - 1])
+            tags = json.loads(
+                requests.get(GATEWAY_URL + "/search-available-tags").content
+            )
+
+            assert i == len(tags)
+
+            tensor_tags = list(tensors[i - 1].tags)
+            for tag in tensor_tags:
+                assert tag in tags
 
     def test_host_plan_model(self):
         class Net(sy.Plan):

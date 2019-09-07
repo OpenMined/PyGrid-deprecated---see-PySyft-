@@ -103,7 +103,8 @@ def get_available_tags():
     objs = hook.local_worker._objects
 
     for key, obj in objs.items():
-        available_tags.update(set(obj.tags))
+        if obj.tags:
+            available_tags.update(set(obj.tags))
 
     return Response(
         json.dumps(list(available_tags)), status=200, mimetype="application/json"
