@@ -7,11 +7,11 @@ import json
 from flask import render_template
 from flask import Response
 from flask import request
+
 import syft as sy
 
 from . import main
 from . import hook
-
 
 models = {}
 
@@ -53,7 +53,11 @@ def model_inference(model_id):
     # to the local worker in order to execute it
     sy.hook.local_worker.register_obj(data)
 
-    response = model(data).detach().numpy().tolist()
+    response = model(data)
+    if isinstance(response, tuple):
+        response = response[0].detach().numpy().tolist()
+    else:
+        response = response.detach().numpy().tolist()
 
     # We can now remove data from the objects
     del data
@@ -66,8 +70,14 @@ def model_inference(model_id):
 @main.route("/serve-model/", methods=["POST"])
 def serve_model():
     encoding = request.form["encoding"]
-    serialized_model = request.form["model"].encode(encoding)
     model_id = request.form["model_id"]
+
+    if request.files:
+        serialized_model = request.files["model"].read().decode("utf-8")
+    else:
+        serialized_model = request.form["model"]
+
+    serialized_model = serialized_model.encode(encoding)
 
     deserialized_model = sy.serde.deserialize(serialized_model)
 
@@ -84,7 +94,6 @@ def serve_model():
         )
 
     models[model_id] = deserialized_model
-
     return Response(
         json.dumps({"success": True}), status=200, mimetype="application/json"
     )
