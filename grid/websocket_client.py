@@ -111,30 +111,48 @@ class WebsocketGridClient(GridClient, FederatedClient):
         response = self._recv_msg(serialized_message)
         return sy.serde.deserialize(response)
 
-    def get_ptr(self, obj_id):
+    def get_ptr(self, obj_id, ptr_owner):
+        # Send message to get the pointer from the remote
+        # worker
         message = messaging.PlanCommandMessage((obj_id,), "get_ptr")
         serialized_message = sy.serde.serialize(message)
         response = self._recv_msg(serialized_message)
-        return sy.serde.deserialize(response)
+        ptr = sy.serde.deserialize(response)
+        # Register pointer
+        ptr.owner = ptr_owner
+        ptr_owner.register_obj(ptr)
+        return ptr
 
-    def fetch_plan(self, plan_id):
+    # TODO: this assignature is incompatible with PySyft.
+    # We should have a single signature or add documentation describing
+    # why this is the case.
+    def fetch_plan(
+        self, plan_id: Union[str, int], model_owner: BaseWorker
+    ) -> "Plan":  # noqa: F821
+        """Fetchs a copy of a the plan with the given `plan_id` from the worker registry.
+
+        This method is executed for local execution.
+
+        Args:
+            plan_id: A string indicating the plan id.
+
+        Returns:
+            A plan if a plan with the given `plan_id` exists. Returns None otherwise.
+        """
         message = messaging.PlanCommandMessage((plan_id,), "fetch_plan")
         serialized_message = sy.serde.serialize(message)
         # Send the message and return the deserialized response.
         response = self._recv_msg(serialized_message)
         plan = sy.serde.deserialize(response)
-
         if plan.state_ids:
             state_ids = []
             for state_id in plan.state_ids:
-                ptr = self.get_ptr(state_id)
-                ptr.owner = sy.hook.local_worker
-                sy.hook.local_worker._objects[ptr.id] = ptr
+                ptr = self.get_ptr(state_id, model_owner)
                 state_ids.append(ptr.id)
             plan.replace_ids(plan.state_ids, state_ids)
             plan.state_ids = state_ids
 
-        plan.replace_worker_ids(self.id, sy.hook.local_worker.id)
+        plan.replace_worker_ids(self.id, model_owner.id)
         return plan
 
     def connect(self):
