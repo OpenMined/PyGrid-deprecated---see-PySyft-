@@ -25,7 +25,7 @@ class GridClient(BaseWorker):
         self.addr = addr
         self._verify_identity()
         # We use ISO encoding for some serialization/deserializations
-        # due to non-binary characters.
+        # due to non-ascii characters.
         self._encoding = "ISO-8859-1"
 
     def _verify_identity(self):
