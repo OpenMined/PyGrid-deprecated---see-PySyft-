@@ -53,6 +53,8 @@ def model_inference(model_id):
     # to the local worker in order to execute it
     sy.hook.local_worker.register_obj(data)
 
+    # Some models returns tuples (GPT-2 / BERT / ...)
+    # To avoid errors on detach method, we check the type of inference's result
     response = model(data)
     if isinstance(response, tuple):
         response = response[0].detach().numpy().tolist()
@@ -73,8 +75,10 @@ def serve_model():
     model_id = request.form["model_id"]
 
     if request.files:
+        # If model is large, receive it by a stream channel
         serialized_model = request.files["model"].read().decode("utf-8")
     else:
+        # If model is small, receive it by a standard json
         serialized_model = request.form["model"]
 
     serialized_model = serialized_model.encode(encoding)

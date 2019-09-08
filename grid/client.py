@@ -60,9 +60,15 @@ class GridClient(BaseWorker):
 
         return response
 
-    def _send_streaming_post(
-        self, route, data=None, N: int = 10, unhexlify: bool = True
-    ):
+    def _send_streaming_post(self, route, data=None):
+        """ Used to send large models / datasets using stream channel.
+            
+            Args:
+                route : Service endpoint
+                data : tensors / models to be uploaded.
+            Return:
+                response : response from server
+        """
         # Build URL path
         url = os.path.join(self.addr, "{}".format(route))
 
@@ -120,7 +126,6 @@ class GridClient(BaseWorker):
                     "encoding": self._encoding,
                     "model_id": model_id,
                 },
-                unhexlify=False,
             )
         else:
             return self._send_post(
