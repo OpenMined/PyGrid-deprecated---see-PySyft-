@@ -78,7 +78,7 @@ def list_models():
         On error returns dict: {"success": Bool, "error": error message}. 
 
     """
-    print(model_cache.keys())
+
     try:
         result = db.session.query(MLModel.id).all()
         model_ids = [model.id for model in result]
