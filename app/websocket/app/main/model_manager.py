@@ -46,16 +46,14 @@ def get_model_from_cache(model_id: str):
 
 
 def save_model_to_cache(serialized_model: bytes, model_id: str):
-    """Saves the model to cache. Will fail if a model with same id already exists.
+    """Saves the model to cache. Nothing happens if a model with the same id already exists.
 
     Args:
         serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
 
     """
-    if is_model_in_cache(model_id):
-        return
-    else:
+    if not is_model_in_cache(model_id):
         model_cache[model_id] = serialized_model
 
 
@@ -71,7 +69,7 @@ def remove_model_from_cache(model_id: str):
 
 
 def list_models():
-    """Returns a list of currently existing models. Will always fetch from db.
+    """Returns a dict of currently existing models. Will always fetch from db.
 
     Returns:
         A dict with structure: {"success": Bool, "models":[model list]}.
@@ -101,14 +99,14 @@ def save_model(serialized_model: bytes, model_id: str):
     """
     if is_model_in_cache(model_id):
         # Model already exists
-        return {"success": False, "error": "Model Exists"}
+        return {"success": False, "error": "Model with id: {} already eixsts.".format(model_id)}
     try:
         db.session.remove()
         result = db.session.add(MLModel(id=model_id, model=serialized_model))
         db.session.commit()
         # also save a copy in cache
         save_model_to_cache(serialized_model, model_id)
-        return {"success": True, "message": "Model Saved: " + model_id}
+        return {"success": True, "message": "Model saved with id: " + model_id}
     except (SQLAlchemyError, IntegrityError) as e:
         if type(e) is IntegrityError:
             # The model is already present within the db.
@@ -188,8 +186,10 @@ def check_if_model_exists(model_id: str):
     """
 
     try:
-        result = db.session.query(MLModel).get(model_id)
-        return True
+        if db.session.query(MLModel).get(model_id) != None:
+            return True
+        else:
+            return False
     except SQLAlchemyError as e:
         # probably no model found with the model_id specified
         return False

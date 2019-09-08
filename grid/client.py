@@ -81,7 +81,6 @@ class GridClient(BaseWorker):
 
     @property
     def models(self, N: int = 1):
-        # models = json.loads(self._send_get("models/", N=N))["models"]
         return json.loads(self._send_get("models/", N=N))
 
     def delete_model(self, model_id):
