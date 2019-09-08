@@ -84,42 +84,65 @@ class GridClient(BaseWorker):
         models = json.loads(self._send_get("models/", N=N))["models"]
         return models
 
-    def get_private_model(self, model_id, workers, crypto_provider):
+    def get_private_model(
+        self, model_owner, location, model_id, workers, crypto_provider
+    ):
+        """Get a model copy and share the state weights using SMPC.
+
+        Args:
+            model_owner: A syft worker, usually the local worker.
+            location: The worker that hosts the model.
+            model_id: The model id.
+            workers: Workers used to hold the SMPC shares.
+            crypto_provider: SMPC crypto provider.
+
+        Returns:
+            A copy of the plan originally at location ready to be executed
+            with SMPC.
+        """
+
         # TODO: check if we support more than 2 workers
         if len(workers) != 2:
             raise ValueError("You need to provide exactly 2 workers.")
 
         # Fetch plan
-        fetched_plan = self.fetch_plan(model_id)
+        fetched_plan = location.fetch_plan(model_id, model_owner)
 
+        # Share state ids using SMPC
         new_state_ids = []
         for state_id in fetched_plan.state_ids:
             a_sh = (
-                sy.hook.local_worker._objects[state_id]
+                model_owner.get_obj(state_id)
                 .fix_prec()
                 .share(*workers, crypto_provider=crypto_provider)
                 .get()
             )
-            # TODO: this should be stored automatically
-            sy.hook.local_worker._objects[a_sh.id] = a_sh
+            model_owner.register_obj(a_sh)
             new_state_ids.append(a_sh.id)
 
+        # Replace state ids to the ones using SMPC
         fetched_plan.replace_ids(fetched_plan.state_ids, new_state_ids)
         fetched_plan.state_ids = new_state_ids
 
         return fetched_plan
 
-    def host_model(self, model: sy.Plan):
-        """Hosts the model locally.
+    def serve_model(self, model, model_id=None, is_private_model=False):
+        """Hosts the model and optionally serve it using a Rest API.
 
-        A wrapper for the send operation.
+        Args:
+            model: A jit model or Syft Plan.
+            model_id: An integer or string representing the model id used to retrieve the model
+                later on using the Rest API. If this is not provided and the model is a Plan
+                we use model.id, if the model is a jit model we raise an exception.
+            is_private_model: A boolean indicating if the model is private or not. If the model
+                is private the user does not intend to serve it using a Rest API due to privacy reasons.
 
-        This method is used when a user wants to save the model on the worker,
-        but does not intend to serve it using a Rest API due to privacy reasons.
+        Returns:
+            None if is_private_model is True, otherwise it returns a json object representing a Rest API response.
+
+        Raises:
+            ValueError: if model_id is not provided and model is a jit model (does not have an id attribute).
         """
-        return model.send(self)
-
-    def serve_model(self, model, model_id=None):
         # If the model is a Plan we send the model
         # and host the plan version created after
         # the send operation
@@ -130,21 +153,24 @@ class GridClient(BaseWorker):
                 raise ValueError("Model id argument is mandatory for jit models.")
 
         if isinstance(model, sy.Plan):
-            _ = model.send(self)
+            model.send(self)
             res_model = model.ptr_plans[self.id]
         else:
             res_model = model
 
-        serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
-        return self._send_post(
-            "serve-model/",
-            data={
-                "model": serialized_model,
-                "model_id": model_id,
-                "encoding": self._encoding,
-            },
-            unhexlify=False,
-        )
+        if is_private_model:
+            return None
+        else:
+            serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+            return self._send_post(
+                "serve-model/",
+                data={
+                    "model": serialized_model,
+                    "model_id": model_id,
+                    "encoding": self._encoding,
+                },
+                unhexlify=False,
+            )
 
     def run_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
