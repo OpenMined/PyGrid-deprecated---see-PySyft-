@@ -11,9 +11,8 @@ model_cache = dict()
 
 
 def clear_cache():
-    """Clears the cache.
-
-    """
+    """Clears the cache."""
+    global model_cache
     model_cache = dict()
 
 
@@ -25,9 +24,7 @@ def is_model_in_cache(model_id: str):
 
     Returns:
         True is present, else False.
-
     """
-
     return model_id in model_cache
 
 
@@ -39,9 +36,7 @@ def get_model_from_cache(model_id: str):
 
     Returns:
         An encoded model, else returns None.
-
     """
-
     return model_cache.get(model_id)
 
 
@@ -51,7 +46,6 @@ def save_model_to_cache(serialized_model: bytes, model_id: str):
     Args:
         serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
-
     """
     if not is_model_in_cache(model_id):
         model_cache[model_id] = serialized_model
@@ -62,7 +56,6 @@ def remove_model_from_cache(model_id: str):
 
     Args:
         model_id (str): Unique id representing the model.
-
     """
     if is_model_in_cache(model_id):
         del model_cache[model_id]
@@ -74,7 +67,6 @@ def list_models():
     Returns:
         A dict with structure: {"success": Bool, "models":[model list]}.
         On error returns dict: {"success": Bool, "error": error message}.
-
     """
 
     try:
@@ -95,7 +87,6 @@ def save_model(serialized_model: bytes, model_id: str):
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
         On error returns dict: {"success": Bool, "error": error message}.
-
     """
     if is_model_in_cache(model_id):
         # Model already exists
@@ -105,9 +96,9 @@ def save_model(serialized_model: bytes, model_id: str):
         }
     try:
         db.session.remove()
-        result = db.session.add(TorchModel(id=model_id, model=serialized_model))
+        db.session.add(TorchModel(id=model_id, model=serialized_model))
         db.session.commit()
-        # also save a copy in cache
+        # Also save a copy in cache
         save_model_to_cache(serialized_model, model_id)
         return {"success": True, "message": "Model saved with id: " + model_id}
     except (SQLAlchemyError, IntegrityError) as e:
@@ -115,12 +106,9 @@ def save_model(serialized_model: bytes, model_id: str):
             # The model is already present within the db.
             # But missing from cache. Fetch the model and save to cache.
             db_model = get_model_with_id(model_id)
-            if db_model != None:
-                # to handle any db errors while fetching
+            if db_model:
                 save_model_to_cache(db_model, model_id)
-            return {"success": False, "error": str(e)}
-        else:
-            return {"success": False, "error": str(e)}
+        return {"success": False, "error": str(e)}
 
 
 def get_model_with_id(model_id: str):
@@ -132,9 +120,7 @@ def get_model_with_id(model_id: str):
     Returns:
         A dict with structure: {"success": Bool, "model": serialized model object}.
         On error returns dict: {"success": Bool, "error": error message }.
-
     """
-    # load model from db.
     if is_model_in_cache(model_id):
         # Model already exists
         return {"success": True, "model": get_model_from_cache(model_id)}
@@ -143,7 +129,6 @@ def get_model_with_id(model_id: str):
         result = db.session.query(TorchModel).get(model_id)
 
         if result:
-            # save model to cache
             save_model_to_cache(result.model, model_id)
             return {"success": True, "model": result.model}
         else:
@@ -161,13 +146,11 @@ def delete_model(model_id: str):
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Deleted: {model_id}"}.
         On error returns dict: {"success": Bool, "error": {error message}}.
-
     """
-
     try:
-        # first del from cache
+        # First del from cache
         remove_model_from_cache(model_id)
-        # then del from db
+        # Then del from db
         result = db.session.query(TorchModel).get(model_id)
         db.session.delete(result)
         db.session.commit()
@@ -185,14 +168,9 @@ def check_if_model_exists(model_id: str):
 
     Returns:
         True if model is present, else false.
-
     """
-
     try:
-        if db.session.query(TorchModel).get(model_id) != None:
-            return True
-        else:
-            return False
-    except SQLAlchemyError as e:
-        # probably no model found with the model_id specified
+        return db.session.query(TorchModel).get(model_id) is not None
+    except SQLAlchemyError:
+        # Probably no model found with the model_id specified
         return False
