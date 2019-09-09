@@ -1,6 +1,9 @@
 from .models import Worker as WorkerMDL
-from .models import WorkerObject
+from .models import WorkerObject, TorchTensor
 from .models import db
+
+import torch
+from syft.messaging.plan import Plan
 
 
 # Cache keys already saved in database.
@@ -24,10 +27,17 @@ def snapshot(worker):
 
     # Add new objects from database
     new_keys = current_keys - last_snapshot_keys
-    objects = [
-        WorkerObject(worker_id=worker.id, object=worker._objects[key], id=key)
-        for key in new_keys
-    ]
+
+    objects = []
+    for key in new_keys:
+        obj = worker.get_obj(key)
+        # TODO: deal with parameters in the future
+        if isinstance(obj, Plan) or isinstance(obj, torch.nn.Parameter):
+            continue
+        else:
+            objects.append(
+                WorkerObject(worker_id=worker.id, object=worker._objects[key], id=key)
+            )
 
     db.session.add_all(objects)
     db.session.commit()
