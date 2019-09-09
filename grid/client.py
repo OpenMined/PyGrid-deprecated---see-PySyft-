@@ -107,8 +107,10 @@ class GridClient(BaseWorker):
         return json.loads(self._send_get("models/", N=N))
 
     def delete_model(self, model_id):
-        return self._send_post(
-            "delete_model/", data={"model_id": model_id}, unhexlify=False
+        return json.loads(
+            self._send_post(
+                "delete_model/", data={"model_id": model_id}, unhexlify=False
+            )
         )
 
     def serve_model(self, model, model_id):
