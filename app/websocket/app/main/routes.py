@@ -13,6 +13,7 @@ import syft as sy
 from . import main
 from . import hook
 from . import model_manager as mm
+from .local_worker_utils import register_obj
 
 
 @main.route("/identity/")
@@ -49,7 +50,8 @@ def model_inference(model_id):
     # check if model exists. Else return a unknown model response.
     if response["success"]:
         # deserialize the model from binary so we may use it.
-        model = sy.serde.deserialize(response["model"])
+        model = response["model"]
+
         # serializing the data from GET request
         # TODO: use more general encoding variable
         serialized_data = request.form["data"].encode("ISO-8859-1")
@@ -57,7 +59,7 @@ def model_inference(model_id):
 
         # If we're using a Plan we need to register the object
         # to the local worker in order to execute it
-        sy.hook.local_worker.register_obj(data)
+        register_obj(data)
 
         # Some models returns tuples (GPT-2 / BERT / ...)
         # To avoid errors on detach method, we check the type of inference's result
@@ -71,7 +73,7 @@ def model_inference(model_id):
 
         # We can now remove data from the objects
         del data
-        
+
         return Response(
             json.dumps({"success": True, "prediction": predictions}),
             status=200,
@@ -85,16 +87,16 @@ def model_inference(model_id):
 def serve_model():
     encoding = request.form["encoding"]
     model_id = request.form["model_id"]
-    
+
     if request.files:
         # If model is large, receive it by a stream channel
         serialized_model = request.files["model"].read().decode("utf-8")
     else:
         # If model is small, receive it by a standard json
         serialized_model = request.form["model"]
-        
+
     serialized_model = serialized_model.encode(encoding)
-    
+
     # save the model for later usage
     response = mm.save_model(serialized_model, model_id)
     if response["success"]:
