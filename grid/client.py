@@ -166,6 +166,12 @@ class GridClient(BaseWorker):
         Raises:
             ValueError: if model_id is not provided and model is a jit model (does not have an id attribute).
         """
+
+        # If model is private just send the nodel and return None
+        if is_private_model:
+            model.send(self)
+            return None
+
         # If the model is a Plan we send the model
         # and host the plan version created after
         # the send operation
@@ -181,33 +187,26 @@ class GridClient(BaseWorker):
         else:
             res_model = model
 
-        if is_private_model:
-            return None
+        serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+        if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
+            return self._send_streaming_post(
+                "serve-model/",
+                data={
+                    "model": (model_id, serialized_model, "application/octet-stream"),
+                    "encoding": self._encoding,
+                    "model_id": model_id,
+                },
+            )
         else:
-            serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
-            if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
-                return self._send_streaming_post(
-                    "serve-model/",
-                    data={
-                        "model": (
-                            model_id,
-                            serialized_model,
-                            "application/octet-stream",
-                        ),
-                        "encoding": self._encoding,
-                        "model_id": model_id,
-                    },
-                )
-            else:
-                return self._send_post(
-                    "serve-model/",
-                    data={
-                        "model": serialized_model,
-                        "model_id": model_id,
-                        "encoding": self._encoding,
-                    },
-                    unhexlify=False,
-                )
+            return self._send_post(
+                "serve-model/",
+                data={
+                    "model": serialized_model,
+                    "model_id": model_id,
+                    "encoding": self._encoding,
+                },
+                unhexlify=False,
+            )
 
     def run_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
