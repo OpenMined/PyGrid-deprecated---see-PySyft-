@@ -2,12 +2,15 @@ from .models import Worker as WorkerMDL
 from .models import WorkerObject
 from .models import db
 
+
+# Cache keys already saved in database.
+# Used to make snapshot more efficient.
 last_snapshot_keys = set()
 
 
 def snapshot(worker):
-    """ Take a snapshot of worker's current state. 
-    
+    """ Take a snapshot of worker's current state.
+
         Args:
             worker: Worker with objects that will be stored.
     """
@@ -26,14 +29,14 @@ def snapshot(worker):
         for key in new_keys
     ]
 
-    result = db.session.add_all(objects)
+    db.session.add_all(objects)
     db.session.commit()
     last_snapshot_keys = current_keys
 
 
 def recover_objects(hook):
     """ Find or create a new worker.
-        
+
         Args:
             hook : Global hook.
         Returns:

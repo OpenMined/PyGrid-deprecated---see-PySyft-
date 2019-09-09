@@ -12,8 +12,8 @@ import syft as sy
 
 from . import main
 from . import hook
-
-models = {}
+from . import model_manager as mm
+from .local_worker_utils import register_obj
 
 
 @main.route("/identity/")
@@ -26,47 +26,58 @@ def is_this_an_opengrid_node():
     return "OpenGrid"
 
 
+@main.route("/delete_model/", methods=["POST"])
+def delete_model():
+    model_id = request.form["model_id"]
+    result = mm.delete_model(model_id)
+    if result["success"]:
+        return Response(json.dumps(result), status=200, mimetype="application/json")
+    else:
+        return Response(json.dumps(result), status=404, mimetype="application/json")
+
+
 @main.route("/models/", methods=["GET"])
 def list_models():
+    """Generates a list of models currently saved at the worker"""
     return Response(
-        json.dumps({"models": list(models.keys())}),
-        status=202,
-        mimetype="application/json",
+        json.dumps(mm.list_models()), status=200, mimetype="application/json"
     )
 
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
-    if model_id not in models:
+    response = mm.get_model_with_id(model_id)
+    # check if model exists. Else return a unknown model response.
+    if response["success"]:
+        model = response["model"]
+
+        # serializing the data from GET request
+        encoding = request.form["encoding"]
+        serialized_data = request.form["data"].encode(encoding)
+        data = sy.serde.deserialize(serialized_data)
+
+        # If we're using a Plan we need to register the object
+        # to the local worker in order to execute it
+        register_obj(data)
+
+        # Some models returns tuples (GPT-2 / BERT / ...)
+        # To avoid errors on detach method, we check the type of inference's result
+        model_output = model(data)
+        if isinstance(model_output, tuple):
+            predictions = model_output[0].detach().numpy().tolist()
+        else:
+            predictions = model_output.detach().numpy().tolist()
+
+        # We can now remove data from the objects
+        del data
+
         return Response(
-            json.dumps({"UnknownModel": "Unknown model {}".format(model_id)}),
-            status=404,
+            json.dumps({"success": True, "prediction": predictions}),
+            status=200,
             mimetype="application/json",
         )
-
-    model = models[model_id]
-    encoding = request.form["encoding"]
-    serialized_data = request.form["data"].encode(encoding)
-    data = sy.serde.deserialize(serialized_data)
-
-    # If we're using a Plan we need to register the object
-    # to the local worker in order to execute it
-    sy.hook.local_worker.register_obj(data)
-
-    # Some models returns tuples (GPT-2 / BERT / ...)
-    # To avoid errors on detach method, we check the type of inference's result
-    response = model(data)
-    if isinstance(response, tuple):
-        response = response[0].detach().numpy().tolist()
     else:
-        response = response.detach().numpy().tolist()
-
-    # We can now remove data from the objects
-    del data
-
-    return Response(
-        json.dumps({"prediction": response}), status=200, mimetype="application/json"
-    )
+        return Response(json.dumps(response), status=404, mimetype="application/json")
 
 
 @main.route("/serve-model/", methods=["POST"])
@@ -83,24 +94,12 @@ def serve_model():
 
     serialized_model = serialized_model.encode(encoding)
 
-    deserialized_model = sy.serde.deserialize(serialized_model)
-
-    # TODO store this in a local database
-    if model_id in models:
-        return Response(
-            json.dumps(
-                {
-                    "error": "Model ID should be unique. There is already a model being hosted with this id."
-                }
-            ),
-            status=404,
-            mimetype="application/json",
-        )
-
-    models[model_id] = deserialized_model
-    return Response(
-        json.dumps({"success": True}), status=200, mimetype="application/json"
-    )
+    # save the model for later usage
+    response = mm.save_model(serialized_model, model_id)
+    if response["success"]:
+        return Response(json.dumps(response), status=200, mimetype="application/json")
+    else:
+        return Response(json.dumps(response), status=500, mimetype="application/json")
 
 
 @main.route("/", methods=["GET"])

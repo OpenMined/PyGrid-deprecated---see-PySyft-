@@ -78,7 +78,7 @@ class GridClient(BaseWorker):
         headers = {"Prefer": "respond-async", "Content-Type": form.content_type}
         resp = session.post(url, headers=headers, data=form)
         session.close()
-        return json.loads(resp.content)
+        return resp.content
 
     def _send_post(self, route, data=None, N: int = 10, unhexlify: bool = True):
         return self._send_http_request(
@@ -104,8 +104,14 @@ class GridClient(BaseWorker):
 
     @property
     def models(self, N: int = 1):
-        models = json.loads(self._send_get("models/", N=N))["models"]
-        return models
+        return json.loads(self._send_get("models/", N=N))
+
+    def delete_model(self, model_id):
+        return json.loads(
+            self._send_post(
+                "delete_model/", data={"model_id": model_id}, unhexlify=False
+            )
+        )
 
     def get_private_model(
         self, model_owner, location, model_id, workers, crypto_provider
@@ -188,24 +194,33 @@ class GridClient(BaseWorker):
             res_model = model
 
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+
         if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
-            return self._send_streaming_post(
-                "serve-model/",
-                data={
-                    "model": (model_id, serialized_model, "application/octet-stream"),
-                    "encoding": self._encoding,
-                    "model_id": model_id,
-                },
+            return json.loads(
+                self._send_streaming_post(
+                    "serve-model/",
+                    data={
+                        "model": (
+                            model_id,
+                            serialized_model,
+                            "application/octet-stream",
+                        ),
+                        "encoding": self._encoding,
+                        "model_id": model_id,
+                    },
+                )
             )
         else:
-            return self._send_post(
-                "serve-model/",
-                data={
-                    "model": serialized_model,
-                    "model_id": model_id,
-                    "encoding": self._encoding,
-                },
-                unhexlify=False,
+            return json.loads(
+                self._send_post(
+                    "serve-model/",
+                    data={
+                        "model": serialized_model,
+                        "model_id": model_id,
+                        "encoding": self._encoding,
+                    },
+                    unhexlify=False,
+                )
             )
 
     def run_inference(self, model_id, data, N: int = 1):
