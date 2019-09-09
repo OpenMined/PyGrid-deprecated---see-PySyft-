@@ -78,7 +78,7 @@ class GridClient(BaseWorker):
         headers = {"Prefer": "respond-async", "Content-Type": form.content_type}
         resp = session.post(url, headers=headers, data=form)
         session.close()
-        return json.loads(resp.content)
+        return resp.content
 
     def _send_post(self, route, data=None, N: int = 10, unhexlify: bool = True):
         return self._send_http_request(

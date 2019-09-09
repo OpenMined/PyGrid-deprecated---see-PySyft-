@@ -49,7 +49,6 @@ def model_inference(model_id):
     response = mm.get_model_with_id(model_id)
     # check if model exists. Else return a unknown model response.
     if response["success"]:
-        # deserialize the model from binary so we may use it.
         model = response["model"]
 
         # serializing the data from GET request
@@ -63,13 +62,11 @@ def model_inference(model_id):
 
         # Some models returns tuples (GPT-2 / BERT / ...)
         # To avoid errors on detach method, we check the type of inference's result
-        response = model(data)
-        if isinstance(response, tuple):
-            response = response[0].detach().numpy().tolist()
+        model_output = model(data)
+        if isinstance(model_output, tuple):
+            predictions = model_output[0].detach().numpy().tolist()
         else:
-            response = response.detach().numpy().tolist()
-
-        predictions = model(data).detach().numpy().tolist()
+            predictions = model_output.detach().numpy().tolist()
 
         # We can now remove data from the objects
         del data
