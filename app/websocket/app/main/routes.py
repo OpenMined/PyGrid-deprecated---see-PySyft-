@@ -7,6 +7,7 @@ import json
 from flask import render_template
 from flask import Response
 from flask import request
+
 import syft as sy
 
 from . import main
@@ -44,13 +45,13 @@ def list_models():
 
 @main.route("/models/<model_id>", methods=["GET"])
 def model_inference(model_id):
-
     response = mm.get_model_with_id(model_id)
     # check if model exists. Else return a unknown model response.
     if response["success"]:
         # deserialize the model from binary so we may use it.
         model = sy.serde.deserialize(response["model"])
         # serializing the data from GET request
+        # TODO: use more general encoding variable
         serialized_data = request.form["data"].encode("ISO-8859-1")
         data = sy.serde.deserialize(serialized_data)
 
@@ -58,10 +59,19 @@ def model_inference(model_id):
         # to the local worker in order to execute it
         sy.hook.local_worker.register_obj(data)
 
+        # Some models returns tuples (GPT-2 / BERT / ...)
+        # To avoid errors on detach method, we check the type of inference's result
+        response = model(data)
+        if isinstance(response, tuple):
+            response = response[0].detach().numpy().tolist()
+        else:
+            response = response.detach().numpy().tolist()
+
         predictions = model(data).detach().numpy().tolist()
 
         # We can now remove data from the objects
         del data
+        
         return Response(
             json.dumps({"success": True, "prediction": predictions}),
             status=200,
@@ -74,9 +84,17 @@ def model_inference(model_id):
 @main.route("/serve-model/", methods=["POST"])
 def serve_model():
     encoding = request.form["encoding"]
-    serialized_model = request.form["model"].encode(encoding)
     model_id = request.form["model_id"]
-
+    
+    if request.files:
+        # If model is large, receive it by a stream channel
+        serialized_model = request.files["model"].read().decode("utf-8")
+    else:
+        # If model is small, receive it by a standard json
+        serialized_model = request.form["model"]
+        
+    serialized_model = serialized_model.encode(encoding)
+    
     # save the model for later usage
     response = mm.save_model(serialized_model, model_id)
     if response["success"]:
