@@ -123,18 +123,18 @@ class WebsocketGridClient(GridClient, FederatedClient):
         ptr_owner.register_obj(ptr)
         return ptr
 
-    # TODO: this assignature is incompatible with PySyft.
-    # We should have a single signature or add documentation describing
-    # why this is the case.
-    def fetch_plan(
-        self, plan_id: Union[str, int], model_owner: BaseWorker
+    def fetch_plan_reference(
+        self, plan_id: Union[str, int], plan_owner: BaseWorker
     ) -> "Plan":  # noqa: F821
         """Fetchs a copy of a the plan with the given `plan_id` from the worker registry.
 
-        This method is executed for local execution.
+        This method is used for local execution and is called on the plan location.
+        Differently from `fetch_plan` this method does not get the states but actually
+        gets a pointer to the states stored in the plan location.
 
         Args:
             plan_id: A string indicating the plan id.
+            plan_owner: Where the plan reference should be sent.
 
         Returns:
             A plan if a plan with the given `plan_id` exists. Returns None otherwise.
@@ -147,12 +147,12 @@ class WebsocketGridClient(GridClient, FederatedClient):
         if plan.state_ids:
             state_ids = []
             for state_id in plan.state_ids:
-                ptr = self.get_ptr(state_id, model_owner)
+                ptr = self.get_ptr(state_id, plan_owner)
                 state_ids.append(ptr.id)
             plan.replace_ids(plan.state_ids, state_ids)
             plan.state_ids = state_ids
 
-        plan.replace_worker_ids(self.id, model_owner.id)
+        plan.replace_worker_ids(self.id, plan_owner.id)
         return plan
 
     def connect(self):

@@ -105,8 +105,8 @@ class GridClient(BaseWorker):
         if len(workers) != 2:
             raise ValueError("You need to provide exactly 2 workers.")
 
-        # Fetch plan
-        fetched_plan = location.fetch_plan(model_id, model_owner)
+        # Fetch plan reference
+        fetched_plan = location.fetch_plan_reference(model_id, model_owner)
 
         # Share state ids using SMPC
         new_state_ids = []
