@@ -9,6 +9,7 @@ from syft.generic.tensor import AbstractTensor
 from syft.workers.base import BaseWorker
 from syft.federated.federated_client import FederatedClient
 from syft.codes import MSGTYPE
+from syft.messaging.message import Message
 
 from grid.client import GridClient
 
@@ -103,7 +104,7 @@ class WebsocketGridClient(GridClient, FederatedClient):
 
     def search(self, *query):
         # Prepare a message requesting the websocket server to search among its objects
-        message = sy.messaging.Message(MSGTYPE.SEARCH, query)
+        message = Message(MSGTYPE.SEARCH, query)
         serialized_message = sy.serde.serialize(message)
 
         # Send the message and return the deserialized response.
