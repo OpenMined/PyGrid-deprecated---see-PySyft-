@@ -3,8 +3,12 @@ import syft as sy
 import pickle
 import os
 
-from .persistence.models import db, TorchModel
+
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+import torch as th
+
+from .persistence.models import db, TorchModel, TorchTensor
+from .local_worker_utils import get_obj, register_obj
 
 
 model_cache = dict()
@@ -40,15 +44,19 @@ def get_model_from_cache(model_id: str):
     return model_cache.get(model_id)
 
 
-def save_model_to_cache(serialized_model: bytes, model_id: str):
+def save_model_to_cache(model, model_id: str, serialized: bool = True):
     """Saves the model to cache. Nothing happens if a model with the same id already exists.
 
     Args:
-        serialized_model (bytes): The model object to be saved.
+        model: The model object to be saved.
         model_id (str): The unique identifier associated with the model.
+        serialized: If the model is serialized or not. If it is this method
+            deserializes it.
     """
     if not is_model_in_cache(model_id):
-        model_cache[model_id] = serialized_model
+        if serialized:
+            model = sy.serde.deserialize(model)
+        model_cache[model_id] = model
 
 
 def remove_model_from_cache(model_id: str):
@@ -77,6 +85,22 @@ def list_models():
         return {"success": False, "error": str(e)}
 
 
+def _save_model_in_db(serialized_model: bytes, model_id: str):
+    db.session.remove()
+    db.session.add(TorchModel(id=model_id, model=serialized_model))
+    db.session.commit()
+
+
+def _save_states_in_db(model):
+    tensors = []
+    for state_id in model.state_ids:
+        tensor = get_obj(state_id)
+        tensors.append(TorchTensor(id=state_id, object=tensor.data))
+
+    db.session.add_all(tensors)
+    db.session.commit()
+
+
 def save_model(serialized_model: bytes, model_id: str):
     """Saves the model for later usage.
 
@@ -95,11 +119,18 @@ def save_model(serialized_model: bytes, model_id: str):
             "error": "Model with id: {} already eixsts.".format(model_id),
         }
     try:
-        db.session.remove()
-        db.session.add(TorchModel(id=model_id, model=serialized_model))
-        db.session.commit()
+        # Saves a copy in the database
+        _save_model_in_db(serialized_model, model_id)
+
         # Also save a copy in cache
-        save_model_to_cache(serialized_model, model_id)
+        model = sy.serde.deserialize(serialized_model)
+        save_model_to_cache(model, model_id, serialized=False)
+
+        # If the model is a Plan we also need to store
+        # the state tensors
+        if isinstance(model, sy.Plan):
+            _save_states_in_db(model)
+
         return {"success": True, "message": "Model saved with id: " + model_id}
     except (SQLAlchemyError, IntegrityError) as e:
         if type(e) is IntegrityError:
@@ -109,6 +140,18 @@ def save_model(serialized_model: bytes, model_id: str):
             if db_model:
                 save_model_to_cache(db_model, model_id)
         return {"success": False, "error": str(e)}
+
+
+def _get_model_from_db(model_id: str):
+    db.session.remove()
+    result = db.session.query(TorchModel).get(model_id)
+    return result
+
+
+def _retrieve_state(model):
+    for state_id in model.state_ids:
+        result = db.session.query(TorchTensor).get(state_id)
+        register_obj(result.object, state_id)
 
 
 def get_model_with_id(model_id: str):
@@ -125,12 +168,19 @@ def get_model_with_id(model_id: str):
         # Model already exists
         return {"success": True, "model": get_model_from_cache(model_id)}
     try:
-        db.session.remove()
-        result = db.session.query(TorchModel).get(model_id)
 
+        result = _get_model_from_db(model_id)
         if result:
-            save_model_to_cache(result.model, model_id)
-            return {"success": True, "model": result.model}
+            model = sy.serde.deserialize(result.model)
+
+            # If the model is a Plan we also need to retrieve
+            # the state tensors
+            if isinstance(model, sy.Plan):
+                _retrieve_state(model)
+
+            # Save model in cache
+            save_model_to_cache(model, model_id, serialized=False)
+            return {"success": True, "model": model}
         else:
             return {"success": False, "error": "Model not found"}
     except SQLAlchemyError as e:
@@ -158,19 +208,3 @@ def delete_model(model_id: str):
     except SQLAlchemyError as e:
         # probably no model found in db.
         return {"success": False, "error": str(e)}
-
-
-def check_if_model_exists(model_id: str):
-    """Checks whether the given model_id is saved or not.
-
-    Args:
-        model_id (str): The unique identifier associated with the model.
-
-    Returns:
-        True if model is present, else false.
-    """
-    try:
-        return db.session.query(TorchModel).get(model_id) is not None
-    except SQLAlchemyError:
-        # Probably no model found with the model_id specified
-        return False
