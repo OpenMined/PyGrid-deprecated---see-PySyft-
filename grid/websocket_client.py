@@ -5,10 +5,10 @@ from typing import Union
 import torch
 
 import syft as sy
-from syft import messaging
+from syft.messaging.message import Message, PlanCommandMessage
 from syft.generic.tensor import AbstractTensor
-from syft.workers import BaseWorker
-from syft.federated import FederatedClient
+from syft.workers.base import BaseWorker
+from syft.federated.federated_client import FederatedClient
 from syft.codes import MSGTYPE
 
 from grid.client import GridClient
@@ -104,7 +104,7 @@ class WebsocketGridClient(GridClient, FederatedClient):
 
     def search(self, *query):
         # Prepare a message requesting the websocket server to search among its objects
-        message = sy.Message(MSGTYPE.SEARCH, query)
+        message = Message(MSGTYPE.SEARCH, query)
         serialized_message = sy.serde.serialize(message)
 
         # Send the message and return the deserialized response.
@@ -114,7 +114,7 @@ class WebsocketGridClient(GridClient, FederatedClient):
     def get_ptr(self, obj_id, ptr_owner):
         # Send message to get the pointer from the remote
         # worker
-        message = messaging.PlanCommandMessage((obj_id,), "get_ptr")
+        message = PlanCommandMessage((obj_id,), "get_ptr")
         serialized_message = sy.serde.serialize(message)
         response = self._recv_msg(serialized_message)
         ptr = sy.serde.deserialize(response)
@@ -139,7 +139,7 @@ class WebsocketGridClient(GridClient, FederatedClient):
         Returns:
             A plan if a plan with the given `plan_id` exists. Returns None otherwise.
         """
-        message = messaging.PlanCommandMessage((plan_id,), "fetch_plan")
+        message = PlanCommandMessage((plan_id,), "fetch_plan")
         serialized_message = sy.serde.serialize(message)
         # Send the message and return the deserialized response.
         response = self._recv_msg(serialized_message)

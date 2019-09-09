@@ -6,7 +6,7 @@ import requests
 
 import torch as th
 import syft as sy
-from syft.workers import BaseWorker
+from syft.workers.base import BaseWorker
 
 from grid import utils as gr_utils
 
