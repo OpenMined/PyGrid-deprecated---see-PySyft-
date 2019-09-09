@@ -3,7 +3,7 @@ import syft as sy
 import pickle
 import os
 
-from .persistence.models import db, MLModel
+from .persistence.models import db, TorchModel
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
@@ -19,9 +19,9 @@ def clear_cache():
 
 def is_model_in_cache(model_id: str):
     """Checks if the given model_id is present in cache.
-    
+
     Args:
-        model_id (str): Unique id representing the model. 
+        model_id (str): Unique id representing the model.
 
     Returns:
         True is present, else False.
@@ -33,9 +33,9 @@ def is_model_in_cache(model_id: str):
 
 def get_model_from_cache(model_id: str):
     """Checks the cache for a model. If model not found, returns None.
-    
+
     Args:
-        model_id (str): Unique id representing the model. 
+        model_id (str): Unique id representing the model.
 
     Returns:
         An encoded model, else returns None.
@@ -59,9 +59,9 @@ def save_model_to_cache(serialized_model: bytes, model_id: str):
 
 def remove_model_from_cache(model_id: str):
     """Deletes the given model_id from cache.
-    
+
     Args:
-        model_id (str): Unique id representing the model. 
+        model_id (str): Unique id representing the model.
 
     """
     if is_model_in_cache(model_id):
@@ -73,12 +73,12 @@ def list_models():
 
     Returns:
         A dict with structure: {"success": Bool, "models":[model list]}.
-        On error returns dict: {"success": Bool, "error": error message}. 
+        On error returns dict: {"success": Bool, "error": error message}.
 
     """
 
     try:
-        result = db.session.query(MLModel.id).all()
+        result = db.session.query(TorchModel.id).all()
         model_ids = [model.id for model in result]
         return {"success": True, "models": model_ids}
     except SQLAlchemyError as e:
@@ -86,7 +86,7 @@ def list_models():
 
 
 def save_model(serialized_model: bytes, model_id: str):
-    """Saves the model for later usage. 
+    """Saves the model for later usage.
 
     Args:
         serialized_model (bytes): The model object to be saved.
@@ -94,15 +94,18 @@ def save_model(serialized_model: bytes, model_id: str):
 
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
-        On error returns dict: {"success": Bool, "error": error message}. 
+        On error returns dict: {"success": Bool, "error": error message}.
 
     """
     if is_model_in_cache(model_id):
         # Model already exists
-        return {"success": False, "error": "Model with id: {} already eixsts.".format(model_id)}
+        return {
+            "success": False,
+            "error": "Model with id: {} already eixsts.".format(model_id),
+        }
     try:
         db.session.remove()
-        result = db.session.add(MLModel(id=model_id, model=serialized_model))
+        result = db.session.add(TorchModel(id=model_id, model=serialized_model))
         db.session.commit()
         # also save a copy in cache
         save_model_to_cache(serialized_model, model_id)
@@ -128,7 +131,7 @@ def get_model_with_id(model_id: str):
 
     Returns:
         A dict with structure: {"success": Bool, "model": serialized model object}.
-        On error returns dict: {"success": Bool, "error": error message }. 
+        On error returns dict: {"success": Bool, "error": error message }.
 
     """
     # load model from db.
@@ -137,7 +140,7 @@ def get_model_with_id(model_id: str):
         return {"success": True, "model": get_model_from_cache(model_id)}
     try:
         db.session.remove()
-        result = db.session.query(MLModel).get(model_id)
+        result = db.session.query(TorchModel).get(model_id)
 
         if result:
             # save model to cache
@@ -157,7 +160,7 @@ def delete_model(model_id: str):
 
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Deleted: {model_id}"}.
-        On error returns dict: {"success": Bool, "error": {error message}}. 
+        On error returns dict: {"success": Bool, "error": {error message}}.
 
     """
 
@@ -165,7 +168,7 @@ def delete_model(model_id: str):
         # first del from cache
         remove_model_from_cache(model_id)
         # then del from db
-        result = db.session.query(MLModel).get(model_id)
+        result = db.session.query(TorchModel).get(model_id)
         db.session.delete(result)
         db.session.commit()
         return {"success": True, "message": "Model Deleted: " + model_id}
@@ -186,7 +189,7 @@ def check_if_model_exists(model_id: str):
     """
 
     try:
-        if db.session.query(MLModel).get(model_id) != None:
+        if db.session.query(TorchModel).get(model_id) != None:
             return True
         else:
             return False

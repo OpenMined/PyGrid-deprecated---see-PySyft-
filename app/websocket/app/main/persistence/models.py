@@ -21,12 +21,12 @@ class Worker(db.Model):
         return f"<Worker {self.id}>"
 
 
-class MLModel(db.Model):
-    """ Database table that represents a network created via torch etc.
+class TorchModel(db.Model):
+    """ Database table that stores torch models.
 
         Collumns:
-            id (primary key) : Network id, (UNIQUE).
-            model : Tensor objects stored to represent a model.
+            id (primary key) : Model id, (UNIQUE).
+            model : Serialized model.
     """
 
     __tablename__ = "ml_model"
