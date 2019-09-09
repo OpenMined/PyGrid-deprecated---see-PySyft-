@@ -6,8 +6,8 @@ import torch
 
 import syft as sy
 from syft.generic.tensor import AbstractTensor
-from syft.workers import BaseWorker
-from syft.federated import FederatedClient
+from syft.workers.base import BaseWorker
+from syft.federated.federated_client import FederatedClient
 from syft.codes import MSGTYPE
 
 from grid.client import GridClient
