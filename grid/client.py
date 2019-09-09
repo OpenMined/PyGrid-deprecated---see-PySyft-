@@ -62,7 +62,7 @@ class GridClient(BaseWorker):
 
     def _send_streaming_post(self, route, data=None):
         """ Used to send large models / datasets using stream channel.
-            
+
             Args:
                 route : Service endpoint
                 data : tensors / models to be uploaded.
@@ -122,24 +122,33 @@ class GridClient(BaseWorker):
             res_model = model
 
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+
         if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
-            return self._send_streaming_post(
-                "serve-model/",
-                data={
-                    "model": (model_id, serialized_model, "application/octet-stream"),
-                    "encoding": self._encoding,
-                    "model_id": model_id,
-                },
+            return json.loads(
+                self._send_streaming_post(
+                    "serve-model/",
+                    data={
+                        "model": (
+                            model_id,
+                            serialized_model,
+                            "application/octet-stream",
+                        ),
+                        "encoding": self._encoding,
+                        "model_id": model_id,
+                    },
+                )
             )
         else:
-            return self._send_post(
-                "serve-model/",
-                data={
-                    "model": serialized_model,
-                    "model_id": model_id,
-                    "encoding": self._encoding,
-                },
-                unhexlify=False,
+            return json.loads(
+                self._send_post(
+                    "serve-model/",
+                    data={
+                        "model": serialized_model,
+                        "model_id": model_id,
+                        "encoding": self._encoding,
+                    },
+                    unhexlify=False,
+                )
             )
 
     def run_inference(self, model_id, data, N: int = 1):
