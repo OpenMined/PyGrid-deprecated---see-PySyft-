@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects import postgresql as psg
 
 db = SQLAlchemy()
 import syft as sy
@@ -7,7 +6,7 @@ import syft as sy
 
 class Worker(db.Model):
     """ Database table that represents workers.
-    
+
         Collumns:
             id (primary key) : Worker id, used to recover stored workers (UNIQUE).
             worker_objects : Tensor objects stored.
@@ -24,16 +23,16 @@ class Worker(db.Model):
 
 class MLModel(db.Model):
     """ Database table that represents a network created via torch etc.
-    
+
         Collumns:
             id (primary key) : Network id, (UNIQUE).
-            model : Tensor objects stored to represent a model (BYTEA).
+            model : Tensor objects stored to represent a model.
     """
 
     __tablename__ = "ml_model"
 
     id = db.Column(db.String(64), primary_key=True)
-    model = db.Column(psg.BYTEA)
+    model = db.Column(db.LargeBinary(128))
 
 
 class WorkerObject(db.Model):
