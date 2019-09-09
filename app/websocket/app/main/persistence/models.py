@@ -65,3 +65,23 @@ class WorkerObject(db.Model):
 
     def __repr__(self):
         return f"<Tensor {self.id}>"
+
+
+class TorchTensor(db.Model):
+    """Database table that stores torch tensors."""
+
+    __tablename__ = "torch_tensors"
+
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.LargeBinary(128))
+
+    @property
+    def object(self):
+        return sy.serde.deserialize(self.data)
+
+    @object.setter
+    def object(self, value):
+        self.data = sy.serde.serialize(value)
+
+    def __repr__(self):
+        return f"<Tensor {self.id}>"
