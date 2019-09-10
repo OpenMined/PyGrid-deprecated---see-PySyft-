@@ -112,50 +112,6 @@ class WebsocketGridClient(GridClient, FederatedClient):
         response = self._recv_msg(serialized_message)
         return sy.serde.deserialize(response)
 
-    def get_ptr(self, obj_id, ptr_owner):
-        # Send message to get the pointer from the remote
-        # worker
-        message = PlanCommandMessage((obj_id,), "get_ptr")
-        serialized_message = sy.serde.serialize(message)
-        response = self._recv_msg(serialized_message)
-        ptr = sy.serde.deserialize(response)
-        # Register pointer
-        ptr.owner = ptr_owner
-        ptr_owner.register_obj(ptr)
-        return ptr
-
-    def fetch_plan_reference(
-        self, plan_id: Union[str, int], plan_owner: BaseWorker
-    ) -> "Plan":  # noqa: F821
-        """Fetchs a copy of a the plan with the given `plan_id` from the worker registry.
-
-        This method is used for local execution and is called on the plan location.
-        Differently from `fetch_plan` this method does not get the states but actually
-        gets a pointer to the states stored in the plan location.
-
-        Args:
-            plan_id: A string indicating the plan id.
-            plan_owner: Where the plan reference should be sent.
-
-        Returns:
-            A plan if a plan with the given `plan_id` exists. Returns None otherwise.
-        """
-        message = PlanCommandMessage((plan_id,), "fetch_plan")
-        serialized_message = sy.serde.serialize(message)
-        # Send the message and return the deserialized response.
-        response = self._recv_msg(serialized_message)
-        plan = sy.serde.deserialize(response)
-        if plan.state_ids:
-            state_ids = []
-            for state_id in plan.state_ids:
-                ptr = self.get_ptr(state_id, plan_owner)
-                state_ids.append(ptr.id)
-            plan.replace_ids(plan.state_ids, state_ids)
-            plan.state_ids = state_ids
-
-        plan.replace_worker_ids(self.id, plan_owner.id)
-        return plan
-
     def connect(self):
         if self.__sio.eio.state != "connected":
             self.__sio.connect(self.uri)
