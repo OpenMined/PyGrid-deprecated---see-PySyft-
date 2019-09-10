@@ -1,9 +1,10 @@
 from .models import Worker as WorkerMDL
-from .models import WorkerObject, TorchTensor
+from .models import WorkerObject, TorchModel
 from .models import db
 
 import torch
 from syft.messaging.plan import Plan
+import syft as sy
 
 
 # Cache keys already saved in database.
@@ -28,20 +29,50 @@ def snapshot(worker):
     # Add new objects from database
     new_keys = current_keys - last_snapshot_keys
 
-    objects = []
+    objects, models = [], []
     for key in new_keys:
         obj = worker.get_obj(key)
-        # TODO: deal with parameters in the future
-        if isinstance(obj, Plan) or isinstance(obj, torch.nn.Parameter):
+
+        if isinstance(obj, Plan):
+            models.append(TorchModel(id=key, model=sy.serde.serialize(obj)))
             continue
-        else:
-            objects.append(
-                WorkerObject(worker_id=worker.id, object=worker._objects[key], id=key)
-            )
+
+        if isinstance(obj, torch.nn.Parameter):
+            obj = obj.data.wrap()
+
+        objects.append(WorkerObject(worker_id=worker.id, object=obj, id=key))
 
     db.session.add_all(objects)
+    db.session.add_all(models)
     db.session.commit()
     last_snapshot_keys = current_keys
+
+
+def _recover_objects(worker):
+    worker_mdl = WorkerMDL.query.filter_by(id=worker.id).first()
+    if worker_mdl:
+        global last_snapshot_keys
+
+        # Recover objects
+        objs = db.session.query(WorkerObject).filter_by(worker_id=worker.id).all()
+        obj_dict = {}
+        for obj in objs:
+            obj_dict[obj.id] = obj.object
+
+        # Recover models
+        models = TorchModel.query.all()
+        for result in models:
+            model = sy.serde.deserialize(result.model)
+            obj_dict[result.id] = model
+
+        worker._objects = obj_dict
+        last_snapshot_keys = set(obj_dict.keys())
+    else:
+        worker_mdl = WorkerMDL(id=worker.id)
+        db.session.add(worker_mdl)
+        db.session.commit()
+
+    return worker
 
 
 def recover_objects(hook):
@@ -50,20 +81,7 @@ def recover_objects(hook):
         Args:
             hook : Global hook.
         Returns:
-            worker : Virtual worker (filled by stored objects) that will replace hook.local_worker.
+            Virtual worker (filled by stored objects) that will replace hook.local_worker.
     """
-    worker = hook.local_worker
-    worker_mdl = WorkerMDL.query.filter_by(id=worker.id).first()
-    if worker_mdl:
-        global last_snapshot_keys
-        objs = db.session.query(WorkerObject).filter_by(worker_id=worker.id).all()
-        obj_dict = {}
-        for obj in objs:
-            obj_dict[obj.id] = obj.object
-        worker._objects = obj_dict
-        last_snapshot_keys = set(obj_dict.keys())
-    else:
-        worker_mdl = WorkerMDL(id=worker.id)
-        db.session.add(worker_mdl)
-        db.session.commit()
-    return worker
+    local_worker = hook.local_worker
+    return _recover_objects(local_worker)
