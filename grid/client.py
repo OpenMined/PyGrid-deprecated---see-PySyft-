@@ -113,48 +113,6 @@ class GridClient(BaseWorker):
             )
         )
 
-    def get_private_model(
-        self, model_owner, location, model_id, workers, crypto_provider
-    ):
-        """Get a model copy and share the state weights using SMPC.
-
-        Args:
-            model_owner: A syft worker, usually the local worker.
-            location: The worker that hosts the model.
-            model_id: The model id.
-            workers: Workers used to hold the SMPC shares.
-            crypto_provider: SMPC crypto provider.
-
-        Returns:
-            A copy of the plan originally at location ready to be executed
-            with SMPC.
-        """
-
-        # TODO: check if we support more than 2 workers
-        if len(workers) != 2:
-            raise ValueError("You need to provide exactly 2 workers.")
-
-        # Fetch plan reference
-        fetched_plan = location.fetch_plan_reference(model_id, model_owner)
-
-        # Share state ids using SMPC
-        new_state_ids = []
-        for state_id in fetched_plan.state_ids:
-            a_sh = (
-                model_owner.get_obj(state_id)
-                .fix_prec()
-                .share(*workers, crypto_provider=crypto_provider)
-                .get()
-            )
-            model_owner.register_obj(a_sh)
-            new_state_ids.append(a_sh.id)
-
-        # Replace state ids to the ones using SMPC
-        fetched_plan.replace_ids(fetched_plan.state_ids, new_state_ids)
-        fetched_plan.state_ids = new_state_ids
-
-        return fetched_plan
-
     def serve_model(self, model, model_id=None, is_private_model=False):
         """Hosts the model and optionally serve it using a Rest API.
 
