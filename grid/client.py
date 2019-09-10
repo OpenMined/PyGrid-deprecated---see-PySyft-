@@ -136,15 +136,15 @@ class GridClient(BaseWorker):
             model.send(self)
             return None
 
-        # If the model is a Plan we send the model
-        # and host the plan version created after
-        # the send operation
         if model_id is None:
             if isinstance(model, sy.Plan):
                 model_id = model.id
             else:
                 raise ValueError("Model id argument is mandatory for jit models.")
 
+        # If the model is a Plan we send the model
+        # and host the plan version created after
+        # the send operation
         if isinstance(model, sy.Plan):
             model.send(self)
             res_model = model.ptr_plans[self.id]
