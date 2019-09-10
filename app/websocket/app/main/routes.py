@@ -9,6 +9,9 @@ import os
 from flask import render_template
 from flask import Response
 from flask import request, send_from_directory
+from .. import login_manager
+
+from flask_login import login_required
 
 import syft as sy
 from requests_toolbelt import MultipartEncoder

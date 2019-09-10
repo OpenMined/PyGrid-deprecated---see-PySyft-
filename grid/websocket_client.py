@@ -13,6 +13,7 @@ from syft.codes import MSGTYPE
 from syft.messaging.message import Message
 
 from grid.client import GridClient
+from grid.auth.config import read_authentication_configs
 
 
 class WebsocketGridClient(GridClient, FederatedClient):
@@ -72,6 +73,11 @@ class WebsocketGridClient(GridClient, FederatedClient):
             # Tell the wait_for_client_event to clear up and continue execution
             self.wait_for_client_event = False
 
+        @self.__sio.on("/auth")
+        def check_auth(msg):
+            self.response_from_client = "ERROR"
+            self.wait_for_client_event = False
+
         @self.__sio.on("/connect-node-response")
         def connect_node(msg):
             if self.verbose:
@@ -97,6 +103,9 @@ class WebsocketGridClient(GridClient, FederatedClient):
         if self.response_from_client == "ACK":
             # Empty result for the serialiser to continue
             return sy.serde.serialize(b"")
+        if self.response_from_client == "ERROR":
+            raise PermissionError("Unauthorized : Please use your credentials")
+
         return self.response_from_client
 
     def connect_grid_node(self, worker, sleep_time=0.5):
@@ -116,6 +125,10 @@ class WebsocketGridClient(GridClient, FederatedClient):
         if self.__sio.eio.state != "connected":
             self.__sio.connect(self.uri)
             self.__sio.emit("/set-grid-id", {"id": self.id})
+
+    def authenticate(self):
+        cred = read_authentication_configs()[0]
+        self.__sio.emit("/authentication", cred.json())
 
     def disconnect(self):
         self.__sio.disconnect()

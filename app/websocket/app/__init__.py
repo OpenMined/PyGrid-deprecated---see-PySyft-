@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
@@ -17,6 +18,19 @@ monkey_patch()  # Turn every blocking module used by this app as much as asynchr
 socketio = SocketIO(
     async_mode="eventlet", ping_interval=PING_INTERVAL, ping_timeout=PING_TIMEOUT
 )
+login_manager = LoginManager()
+
+
+def set_auth_configs(app):
+    ''' Set configs to use flask session manager
+    
+        Args:
+            app: Flask application
+        Returns:
+            app: Flask application
+    '''
+    login_manager.init_app(app)
+    return app
 
 
 def set_database_config(app, test_config=None, verbose=False):
@@ -72,8 +86,12 @@ def create_app(debug=False, test_config=None):
     app.register_blueprint(main_blueprint)
     CORS(app)
 
+    # Set Authentication configs
+    app = set_auth_configs(app)
+    
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)
+    
     s = app.app_context().push()
     db.create_all()
     socketio.init_app(app)
