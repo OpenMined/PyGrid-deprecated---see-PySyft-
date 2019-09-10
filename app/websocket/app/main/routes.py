@@ -11,9 +11,9 @@ from flask import request
 import syft as sy
 
 from . import main
-from . import hook
+from . import local_worker
 from . import model_manager as mm
-from .local_worker_utils import register_obj
+from .local_worker_utils import register_obj, get_objs
 
 
 @main.route("/identity/")
@@ -112,9 +112,9 @@ def index():
 def get_available_tags():
     """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains. """
     available_tags = set()
-    objs = hook.local_worker._objects
+    objs = get_objs()
 
-    for key, obj in objs.items():
+    for obj in objs.values():
         if obj.tags:
             available_tags.update(set(obj.tags))
 
@@ -132,7 +132,7 @@ def search_dataset_tags():
         return Response("", status=400, mimetype="application/json")
 
     # Search for desired datasets that belong to this node
-    results = hook.local_worker.search(*body["query"])
+    results = local_worker.search(*body["query"])
 
     body_response = {"content": False}
     if len(results):

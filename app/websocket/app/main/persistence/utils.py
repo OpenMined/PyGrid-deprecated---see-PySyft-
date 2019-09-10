@@ -48,7 +48,14 @@ def snapshot(worker):
     last_snapshot_keys = current_keys
 
 
-def _recover_objects(worker):
+def recover_objects(worker):
+    """ Find or create a new worker.
+
+        Args:
+            worker: Local worker.
+        Returns:
+            Virtual worker filled by stored objects.
+    """
     worker_mdl = WorkerMDL.query.filter_by(id=worker.id).first()
     if worker_mdl:
         global last_snapshot_keys
@@ -73,15 +80,3 @@ def _recover_objects(worker):
         db.session.commit()
 
     return worker
-
-
-def recover_objects(hook):
-    """ Find or create a new worker.
-
-        Args:
-            hook : Global hook.
-        Returns:
-            Virtual worker (filled by stored objects) that will replace hook.local_worker.
-    """
-    local_worker = hook.local_worker
-    return _recover_objects(local_worker)

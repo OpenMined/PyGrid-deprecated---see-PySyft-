@@ -1,8 +1,4 @@
-"""General utilities.
-
-Functions that are used in different files many times.
-
-"""
+"""Local worker utilities."""
 
 from . import local_worker
 
@@ -24,3 +20,8 @@ def register_obj(obj, obj_id=None):
 def get_obj(obj_id):
     """Get object from local worker."""
     return local_worker.get_obj(obj_id)
+
+
+def get_objs():
+    """Get all objects from local worker."""
+    return local_worker._objects
