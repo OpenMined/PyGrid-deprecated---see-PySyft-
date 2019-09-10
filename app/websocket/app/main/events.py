@@ -4,7 +4,9 @@ This file exists to provide one common place for all websocket events.
 
 from flask import session
 from flask_socketio import emit
-from .. import socketio
+from .. import socketio, login_manager
+from flask_login import login_user
+from .authentication import authenticated_only, login_user, session_repository
 from . import hook
 from .persistence.utils import recover_objects, snapshot
 
@@ -36,6 +38,20 @@ def connect_node(msg):
             emit("/connect-node-response", "Succefully connected!")
     except Exception as e:
         emit("/connect-node-response", str(e))
+
+
+@socketio.on("/authentication")
+def authentication(msg):
+    """ Aunthenticate websocket session """
+    try:
+        user = session_repository.authenticate(msg)
+        if user:
+            login_user(user)
+            emit("/authentication-response", json.dumps({"status": True}))
+        else:
+            emit("/authentication-response", json.dumps({"status": False}))
+    except Exception as e:
+        return emit("/autentication-response", json.dumps({"error": str(e)}))
 
 
 @socketio.on("/cmd")

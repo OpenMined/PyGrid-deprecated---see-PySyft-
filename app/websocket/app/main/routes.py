@@ -7,6 +7,9 @@ import json
 from flask import render_template
 from flask import Response
 from flask import request
+from .. import login_manager
+
+from flask_login import login_required
 
 import syft as sy
 
