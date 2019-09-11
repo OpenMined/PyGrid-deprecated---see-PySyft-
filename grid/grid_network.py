@@ -7,7 +7,7 @@ import torch
 
 class GridNetwork(object):
     """  The purpose of the Grid Network class is to control the entire communication flow by abstracting operational steps.
-    
+
         Attributes:
             - gateway_url : network address to which you want to connect.
             - connected_grid_nodes : Grid nodes that are connected to the application.
@@ -18,7 +18,7 @@ class GridNetwork(object):
 
     def search(self, *query):
         """ Search a set of tags across the grid network.
-            
+
             Arguments:
                 query : A set of dataset tags.
             Returns:
@@ -39,11 +39,19 @@ class GridNetwork(object):
             tensor_set.append(worker.search(*query))
         return tensor_set
 
-    def serve_model(self, model, model_id):
+    def serve_model(
+        self,
+        model,
+        model_id,
+        allow_run_inference: bool = False,
+        allow_model_copy: bool = False,
+    ):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
-                model : Model to be hosted.
-                model_id : Model's ID.
+                model: Model to be hosted.
+                model_id: Model's ID.
+                allow_run_inference: Allow workers to run inference in this model.
+                allow_model_copy: Allow workers to copy the model and run it locally.
         """
         # Perform a request to choose model's host
         response = requests.get(self.gateway_url + "/choose-model-host")
@@ -52,7 +60,12 @@ class GridNetwork(object):
         for host_id, host_address in hosts:
             # Host model
             host_worker = self.__connect_with_node(host_id, host_address)
-            host_worker.serve_model(model, model_id=model_id)
+            host_worker.serve_model(
+                model,
+                model_id=model_id,
+                allow_model_copy=allow_model_copy,
+                allow_run_inference=allow_run_inference,
+            )
             host_worker.disconnect()
 
     def run_inference(self, model_id, dataset):

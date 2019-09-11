@@ -33,7 +33,7 @@ def test_host_plan_model(connected_node):
 
     nodes = list(connected_node.values())
     bob = nodes[0]
-    bob.serve_model(model, model_id="1")
+    bob.serve_model(model, model_id="1", allow_run_inference=True)
 
     # Call one time
     prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
@@ -89,7 +89,7 @@ def test_host_jit_model(connected_node):
 
     nodes = list(connected_node.values())
     bob = nodes[0]
-    bob.serve_model(trace_model, model_id="1")
+    bob.serve_model(trace_model, model_id="1", allow_run_inference=True)
 
     # Call one time
     prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
