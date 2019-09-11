@@ -1,10 +1,10 @@
-import syft as sy
-
+import collections
 import pickle
 import os
 
 
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+import syft as sy
 import torch as th
 
 from .persistence.models import db, TorchModel, TorchTensor
@@ -13,6 +13,12 @@ from .local_worker_utils import get_obj, register_obj
 
 # Store models in memory
 model_cache = dict()
+
+# Local model abstraction
+ModelTuple = collections.namedtuple(
+    "ModelTuple", ["model_obj", "allow_model_copy", "allow_run_inference"]
+)
+
 
 # ============== Cache related functions =================
 
@@ -47,7 +53,13 @@ def _get_model_from_cache(model_id: str):
     return model_cache.get(model_id)
 
 
-def _save_model_to_cache(model, model_id: str, serialized: bool = True):
+def _save_model_to_cache(
+    model,
+    model_id: str,
+    allow_model_copy: bool,
+    allow_run_inference: bool,
+    serialized: bool = True,
+):
     """Saves the model to cache. Nothing happens if a model with the same id already exists.
 
     Args:
@@ -59,7 +71,11 @@ def _save_model_to_cache(model, model_id: str, serialized: bool = True):
     if not _is_model_in_cache(model_id):
         if serialized:
             model = sy.serde.deserialize(model)
-        model_cache[model_id] = model
+        model_cache[model_id] = ModelTuple(
+            model_obj=model,
+            allow_model_copy=allow_model_copy,
+            allow_run_inference=allow_run_inference,
+        )
 
 
 def _remove_model_from_cache(model_id: str):
@@ -75,9 +91,21 @@ def _remove_model_from_cache(model_id: str):
 # ============== DB related functions =================
 
 
-def _save_model_in_db(serialized_model: bytes, model_id: str):
+def _save_model_in_db(
+    serialized_model: bytes,
+    model_id: str,
+    allow_model_copy: bool,
+    allow_run_inference: bool,
+):
     db.session.remove()
-    db.session.add(TorchModel(id=model_id, model=serialized_model))
+    db.session.add(
+        TorchModel(
+            id=model_id,
+            model=serialized_model,
+            allow_model_copy=allow_model_copy,
+            allow_run_inference=allow_run_inference,
+        )
+    )
     db.session.commit()
 
 
@@ -129,12 +157,19 @@ def list_models():
         return {"success": False, "error": str(e)}
 
 
-def save_model(serialized_model: bytes, model_id: str):
+def save_model(
+    serialized_model: bytes,
+    model_id: str,
+    allow_model_copy: bool,
+    allow_run_inference: bool,
+):
     """Saves the model for later usage.
 
     Args:
         serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
+        allow_model_copy (bool): If the model can be copied by a worker.
+        allow_run_inference (bool): If a worker can run inference in the given model.
 
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
@@ -148,11 +183,15 @@ def save_model(serialized_model: bytes, model_id: str):
         }
     try:
         # Saves a copy in the database
-        _save_model_in_db(serialized_model, model_id)
+        _save_model_in_db(
+            serialized_model, model_id, allow_model_copy, allow_run_inference
+        )
 
         # Also save a copy in cache
         model = sy.serde.deserialize(serialized_model)
-        _save_model_to_cache(model, model_id, serialized=False)
+        _save_model_to_cache(
+            model, model_id, allow_model_copy, allow_run_inference, serialized=False
+        )
 
         # If the model is a Plan we also need to store
         # the state tensors
@@ -163,10 +202,8 @@ def save_model(serialized_model: bytes, model_id: str):
     except (SQLAlchemyError, IntegrityError) as e:
         if type(e) is IntegrityError:
             # The model is already present within the db.
-            # But missing from cache. Fetch the model and save to cache.
-            db_model = get_model_with_id(model_id)
-            if db_model:
-                _save_model_to_cache(db_model, model_id)
+            # But missing from cache. Try to fetch the model and save to cache.
+            return get_model_with_id(model_id)
         return {"success": False, "error": str(e)}
 
 
@@ -182,9 +219,16 @@ def get_model_with_id(model_id: str):
     """
     if _is_model_in_cache(model_id):
         # Model already exists
-        return {"success": True, "model": _get_model_from_cache(model_id)}
+        cache_model = _get_model_from_cache(model_id)
+        if cache_model.allow_run_inference:
+            return {"success": True, "model": cache_model.model_obj}
+        else:
+            return {
+                "success": False,
+                "not_allowed": True,
+                "error": "You're not allowed to run inference in this model.",
+            }
     try:
-
         result = _get_model_from_db(model_id)
         if result:
             model = sy.serde.deserialize(result.model)
@@ -195,8 +239,22 @@ def get_model_with_id(model_id: str):
                 _retrieve_state_from_db(model)
 
             # Save model in cache
-            _save_model_to_cache(model, model_id, serialized=False)
-            return {"success": True, "model": model}
+            _save_model_to_cache(
+                model,
+                model_id,
+                result.allow_model_copy,
+                result.allow_run_inference,
+                serialized=False,
+            )
+            if result.allow_run_inference:
+                return {"success": True, "model": model}
+            else:
+                return {
+                    "success": False,
+                    "not_allowed": True,
+                    "error": "You're not allowed to run inference in this model.",
+                }
+
         else:
             return {"success": False, "error": "Model not found"}
     except SQLAlchemyError as e:

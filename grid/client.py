@@ -113,7 +113,13 @@ class GridClient(BaseWorker):
             )
         )
 
-    def serve_model(self, model, model_id=None, is_private_model=False):
+    def serve_model(
+        self,
+        model,
+        model_id: str = None,
+        allow_model_copy: bool = False,
+        allow_run_inference: bool = False,
+    ):
         """Hosts the model and optionally serve it using a Rest API.
 
         Args:
@@ -121,21 +127,15 @@ class GridClient(BaseWorker):
             model_id: An integer or string representing the model id used to retrieve the model
                 later on using the Rest API. If this is not provided and the model is a Plan
                 we use model.id, if the model is a jit model we raise an exception.
-            is_private_model: A boolean indicating if the model is private or not. If the model
-                is private the user does not intend to serve it using a Rest API due to privacy reasons.
+            allow_model_copy: If other workers should to be able to fetch a copy of this model to run it locally set this to True.
+            allow_run_inference: If other workers should to be able to run inference using this model through a Rest API interface set this True.
 
         Returns:
-            None if is_private_model is True, otherwise it returns a json object representing a Rest API response.
+            A json object representing a Rest API response.
 
         Raises:
-            ValueError: if model_id is not provided and model is a jit model (does not have an id attribute).
+            ValueError: if model_id is not provided and model is a jit model (aka does not have an id attribute).
         """
-
-        # If model is private just send the nodel and return None
-        if is_private_model:
-            model.send(self)
-            return None
-
         if model_id is None:
             if isinstance(model, sy.Plan):
                 model_id = model.id
@@ -165,6 +165,8 @@ class GridClient(BaseWorker):
                         ),
                         "encoding": self._encoding,
                         "model_id": model_id,
+                        "allow_model_copy": allow_model_copy,
+                        "allow_run_inference": allow_run_inference,
                     },
                 )
             )
@@ -174,8 +176,10 @@ class GridClient(BaseWorker):
                     "serve-model/",
                     data={
                         "model": serialized_model,
-                        "model_id": model_id,
                         "encoding": self._encoding,
+                        "model_id": model_id,
+                        "allow_model_copy": allow_model_copy,
+                        "allow_run_inference": allow_run_inference,
                     },
                     unhexlify=False,
                 )

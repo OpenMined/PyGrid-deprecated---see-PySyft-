@@ -77,13 +77,19 @@ def model_inference(model_id):
             mimetype="application/json",
         )
     else:
-        return Response(json.dumps(response), status=404, mimetype="application/json")
+        return Response(
+            json.dumps(response),
+            status=403 if "not_allowed" in response else 404,
+            mimetype="application/json",
+        )
 
 
 @main.route("/serve-model/", methods=["POST"])
 def serve_model():
     encoding = request.form["encoding"]
     model_id = request.form["model_id"]
+    allow_model_copy = request.form["allow_model_copy"] == "True"
+    allow_run_inference = request.form["allow_run_inference"] == "True"
 
     if request.files:
         # If model is large, receive it by a stream channel
@@ -92,10 +98,13 @@ def serve_model():
         # If model is small, receive it by a standard json
         serialized_model = request.form["model"]
 
+    # Encode the model accordingly
     serialized_model = serialized_model.encode(encoding)
 
     # save the model for later usage
-    response = mm.save_model(serialized_model, model_id)
+    response = mm.save_model(
+        serialized_model, model_id, allow_model_copy, allow_run_inference
+    )
     if response["success"]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
