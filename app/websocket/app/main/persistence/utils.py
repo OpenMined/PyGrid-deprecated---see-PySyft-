@@ -33,14 +33,20 @@ def snapshot(worker):
     for key in new_keys:
         obj = worker.get_obj(key)
 
+        # If obj is a Plan we save in the database as a model
         if isinstance(obj, Plan):
             models.append(TorchModel(id=key, model=sy.serde.serialize(obj)))
+        # If obj is Jit we ignore it
+        elif isinstance(obj, torch.jit.ScriptModule):
             continue
-
-        if isinstance(obj, torch.nn.Parameter):
+        # If obj is a parameter we wrap the data and store it in the database
+        # as an object
+        elif isinstance(obj, torch.nn.Parameter):
             obj = obj.data.wrap()
-
-        objects.append(WorkerObject(worker_id=worker.id, object=obj, id=key))
+            objects.append(WorkerObject(worker_id=worker.id, object=obj, id=key))
+        # Otherwise we just store the object in the database
+        else:
+            objects.append(WorkerObject(worker_id=worker.id, object=obj, id=key))
 
     db.session.add_all(objects)
     db.session.add_all(models)
