@@ -129,6 +129,37 @@ def test_delete_model(connected_node):
     assert not bob.delete_model("test_delete_model")["success"]
 
 
+def test_host_encrypted_model(connected_node):
+    class Net(sy.Plan):
+        def __init__(self):
+            super(Net, self).__init__()
+            self.fc1 = th.nn.Linear(2, 1)
+            self.bias = th.tensor([1000.0])
+            self.state += ["fc1", "bias"]
+
+        def forward(self, x):
+            x = self.fc1(x)
+            return F.log_softmax(x, dim=1) + self.bias
+
+    model = Net()
+    model.build(th.tensor([1.0, 2]))
+
+    nodes = list(connected_node.values())
+    bob, alice, james, dan = nodes[:4]
+
+    # Send plan
+    model.fix_precision().share(bob, james, crypto_provider=dan).send(alice)
+
+    # Fetch plan
+    fetched_plan = model.owner.fetch_plan(model.id, alice, copy=True)
+
+    # Share data
+    x_sh = th.tensor([1.0, 2]).fix_precision().share(bob, james, crypto_provider=dan)
+
+    # Run inference
+    assert fetched_plan(x_sh).get().float_prec() == th.tensor([1000.0])
+
+
 @pytest.mark.parametrize(
     "test_input, expected", [(node_id, node_id) for node_id in IDS]
 )
