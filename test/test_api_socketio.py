@@ -130,34 +130,45 @@ def test_delete_model(connected_node):
 
 
 def test_host_encrypted_model(connected_node):
+    sy.hook.local_worker.is_client_worker = False
+
     class Net(sy.Plan):
         def __init__(self):
             super(Net, self).__init__()
-            self.fc1 = th.nn.Linear(2, 1)
-            self.bias = th.tensor([1000.0])
-            self.state += ["fc1", "bias"]
+            self.fc1 = th.nn.Linear(1, 1)
+            self.state += ["fc1"]
 
         def forward(self, x):
-            x = self.fc1(x)
-            return F.log_softmax(x, dim=1) + self.bias
+            return self.fc1(x)
 
-    model = Net()
-    model.build(th.tensor([1.0, 2]))
+    plan = Net()
+    plan.build(th.tensor([1.0]))
 
     nodes = list(connected_node.values())
+
+    gr.connect_all_nodes(nodes)
+
     bob, alice, james, dan = nodes[:4]
 
     # Send plan
-    model.fix_precision().share(bob, james, crypto_provider=dan).send(alice)
+    plan.fix_precision().share(bob, james, crypto_provider=dan).send(alice)
 
     # Fetch plan
-    fetched_plan = model.owner.fetch_plan(model.id, alice, copy=True)
+    fetched_plan = plan.owner.fetch_plan(plan.id, alice, copy=True)
 
     # Share data
-    x_sh = th.tensor([1.0, 2]).fix_precision().share(bob, james, crypto_provider=dan)
+    x = th.tensor([1.0])
+    x_sh = x.fix_precision().share(bob, james, crypto_provider=dan)
 
-    # Run inference
-    assert fetched_plan(x_sh).get().float_prec() == th.tensor([1000.0])
+    # Execute the fetch plan
+    decrypted = fetched_plan(x_sh).get().float_prec()
+
+    # Compare with local plan
+    plan.get().get().float_precision()
+    expected = plan(x)
+    assert th.all(decrypted - expected.detach() < 1e-2)
+
+    sy.hook.local_worker.is_client_worker = True
 
 
 @pytest.mark.parametrize(
