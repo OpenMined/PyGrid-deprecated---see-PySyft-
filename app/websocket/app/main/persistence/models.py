@@ -33,6 +33,8 @@ class TorchModel(db.Model):
 
     id = db.Column(db.String(64), primary_key=True)
     model = db.Column(db.LargeBinary(128))
+    allow_model_copy = db.Column(db.Boolean, default=False)
+    allow_run_inference = db.Column(db.Boolean, default=False)
 
 
 class WorkerObject(db.Model):
