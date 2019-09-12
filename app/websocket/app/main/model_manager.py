@@ -261,6 +261,63 @@ def get_model_with_id(model_id: str):
         return {"success": False, "error": str(e)}
 
 
+def get_serialized_model_with_id(model_id: str):
+    """Returns a serialized_model with given model id.
+
+    Args:
+        model_id (str): The unique identifier associated with the model.
+
+    Returns:
+        A dict with structure: {"success": Bool, "model": serialized model object}.
+        On error returns dict: {"success": Bool, "error": error message }.
+    """
+    if _is_model_in_cache(model_id):
+        # Model already exists
+        cache_model = _get_model_from_cache(model_id)
+        if cache_model.allow_model_copy:
+            return {
+                "success": True,
+                "serialized_model": sy.serde.serialize(cache_model.model_obj),
+            }
+        else:
+            return {
+                "success": False,
+                "not_allowed": True,
+                "error": "You're not allowed to get a copy of this model.",
+            }
+    try:
+        result = _get_model_from_db(model_id)
+        if result:
+            model = sy.serde.deserialize(result.model)
+
+            # If the model is a Plan we also need to retrieve
+            # the state tensors
+            if isinstance(model, sy.Plan):
+                _retrieve_state_from_db(model)
+
+            # Save model in cache
+            _save_model_to_cache(
+                model,
+                model_id,
+                result.allow_model_copy,
+                result.allow_run_inference,
+                serialized=False,
+            )
+
+            if result.allow_model_copy:
+                return {"success": True, "serialized_model": result.model}
+            else:
+                return {
+                    "success": False,
+                    "not_allowed": True,
+                    "error": "You're not allowed to get a copy of this model.",
+                }
+        else:
+            return {"success": False, "error": "Model not found"}
+    except SQLAlchemyError as e:
+        return {"success": False, "error": str(e)}
+
+
 def delete_model(model_id: str):
     """Deletes the given model id. If it is present.
 
@@ -280,3 +337,17 @@ def delete_model(model_id: str):
     except SQLAlchemyError as e:
         # probably no model found in db.
         return {"success": False, "error": str(e)}
+
+
+def is_model_copy_allowed(model_id: str):
+    """Used to check a worker is allowed to run `get_model_copy` in the model with this id."""
+    result = _get_model_from_db(model_id)
+    if result is None:
+        return {"success": False, "error": "Model not found"}
+    elif result.allow_model_copy:
+        return {"success": True}
+    else:
+        return {
+            "success": False,
+            "error": "You're not allowed to get a copy of this model.",
+        }
