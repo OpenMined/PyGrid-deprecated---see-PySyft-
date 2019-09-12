@@ -4,7 +4,7 @@ import pytest
 from random import randint, sample
 
 import grid as gr
-import syft as sy
+from grid import syft as sy
 import torch as th
 import torch.nn.functional as F
 import numpy as np
@@ -186,14 +186,14 @@ def test_run_encrypted_model(connected_node):
     bob, alice, james = nodes[:3]
 
     # Send plan
-    plan.fix_precision().share(bob, james, crypto_provider=alice)
+    plan.encrypt(bob, james, crypto_provider=alice)
 
     # Share data
     x = th.tensor([1.0])
-    x_sh = x.fix_precision().share(bob, james, crypto_provider=alice)
+    x_sh = x.encrypt(bob, james, crypto_provider=alice)
 
     # Execute the plan
-    decrypted = plan(x_sh).get().float_prec()
+    decrypted = plan(x_sh).request_decryption()
 
     # Compare with local plan
     plan.get().float_precision()
