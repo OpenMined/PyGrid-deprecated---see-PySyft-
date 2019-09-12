@@ -43,6 +43,30 @@ class GridAPITest(unittest.TestCase):
         for node_id in IDS:
             self.assertTrue(node_id in response["grid-nodes"])
 
+    def test_host_inference_encrypted_model(self):
+        hook.local_worker.is_client_worker = False
+
+        # Build Model
+        class Net(sy.Plan):
+            def __init__(self):
+                super(Net, self).__init__(id="convnet")
+                self.fc1 = th.nn.Linear(2, 1)
+                self.bias = th.tensor([1000.0])
+                self.state += ["fc1", "bias"]
+
+            def forward(self, x):
+                x = self.fc1(x)
+                return x
+
+        model = Net()
+        model.build(th.tensor([1.0, 2]))
+
+        self.my_grid.serve_model(model, encrypted=True)
+
+        assert th.tensor([1000.0]) == self.my_grid.inference(
+            model_id="convnet", dataset=th.tensor([1.0, 2]), encrypted=True
+        )
+
     def test_model_ids_overview(self):
         class Net(sy.Plan):
             def __init__(self):
