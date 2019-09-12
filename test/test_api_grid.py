@@ -106,7 +106,7 @@ class GridAPITest(unittest.TestCase):
         data = th.zeros((5, 2))
         traced_model = th.jit.trace(toy_model, data)
 
-        self.my_grid.serve_model(traced_model, "test")
+        self.my_grid.serve_model(traced_model, "test", allow_remote_inference=True)
         assert self.my_grid.query_model("test")
         assert self.my_grid.query_model("unregistered-model") is None
 
@@ -149,16 +149,18 @@ class GridAPITest(unittest.TestCase):
         model = Net()
         model.build(th.tensor([1.0, 2]))
 
-        self.my_grid.serve_model(model, model_id="plan-model")
+        self.my_grid.serve_model(
+            model, model_id="plan-model", allow_remote_inference=True
+        )
 
         # Call one time
-        inference = self.my_grid.run_inference(
+        inference = self.my_grid.run_remote_inference(
             model_id="plan-model", data=th.tensor([1.0, 2])
         )
         assert inference == th.tensor([1000.0])
 
         # Call one more time
-        inference = self.my_grid.run_inference(
+        inference = self.my_grid.run_remote_inference(
             model_id="plan-model", data=th.tensor([1.0, 2])
         )
         assert inference == th.tensor([1000.0])
