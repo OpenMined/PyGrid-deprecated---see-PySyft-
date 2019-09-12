@@ -335,6 +335,10 @@ def delete_model(model_id: str):
         A dict with structure: {"success": Bool, "message": "Model Deleted: {model_id}"}.
         On error returns dict: {"success": Bool, "error": {error message}}.
     """
+
+    if not _get_model_from_db(model_id):
+        return {"success": False, "error": MODEL_NOT_FOUND_MSG}
+
     try:
         # First del from cache
         _remove_model_from_cache(model_id)
@@ -343,7 +347,10 @@ def delete_model(model_id: str):
         return {"success": True, "message": MODEL_DELETED_MSG}
     except SQLAlchemyError as e:
         # probably no model found in db.
-        return {"success": False, "error": str(e)}
+        return {
+            "success": False,
+            "error": "Something went wrong while deleting the object, check if the object is listed at worker.models.",
+        }
 
 
 def is_model_copy_allowed(model_id: str):
