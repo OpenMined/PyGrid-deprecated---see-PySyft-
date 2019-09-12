@@ -39,9 +39,9 @@ class GridClient(BaseWorker):
     def _send_msg(self, message: bin, location: BaseWorker) -> bin:
         raise NotImplementedError
 
-    def _return_bool_result(self, result):
+    def _return_bool_result(self, result, return_key=None):
         if result["success"]:
-            return result["prediction"]
+            return result[return_key] if return_key is not None else True
         elif result["error"]:
             raise RuntimeError(result["error"])
         else:
@@ -313,4 +313,4 @@ class GridClient(BaseWorker):
             )
         )
 
-        return self._return_bool_result(result)
+        return self._return_bool_result(result, return_key="prediction")
