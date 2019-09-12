@@ -88,7 +88,7 @@ def choose_model_host():
 
 
 @main.route("/search-encrypted-model", methods=["POST"])
-def choose_encrypted_model():
+def search_encrypted_model():
     """ Search for an encrypted plan model on the grid network, if found,
         returns host id, host address and SMPC workers infos.
     """

@@ -6,6 +6,9 @@ from grid.utils import connect_all_nodes
 import torch
 
 
+SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
+
+
 class GridNetwork(object):
     """  The purpose of the Grid Network class is to control the entire communication flow by abstracting operational steps.
     
@@ -53,15 +56,15 @@ class GridNetwork(object):
             self._serve_non_encrypted_model(model, model_id)
 
     def _serve_encrypted_model(self, model):
-        # Model need to be a plan
+        # Model needs to be a plan
         if isinstance(model, sy.Plan):
             response = requests.get(self.gateway_url + "/choose-encrypted-model-host")
             hosts = json.loads(response.content)
             if (
-                len(hosts) and len(hosts) % 4 == 0
+                len(hosts) and len(hosts) % SMPC_HOST_CHUNK == 0
             ):  # Minimum workers chunk to share and host a model (3 to SMPC operations, 1 to host)
                 smpc_initial_interval = 0
-                for i in range(0, len(hosts), 4):
+                for i in range(0, len(hosts), SMPC_HOST_CHUNK):
                     # Connect with host worker
                     host = self.__connect_with_node(*hosts[i])
 
@@ -77,7 +80,7 @@ class GridNetwork(object):
                         *hosts[smpc_end_interval]
                     )
 
-                    # # Connect nodes to each other
+                    # Connect nodes to each other
                     model_nodes = smpc_workers + [crypto_provider, host]
                     connect_all_nodes(model_nodes)
 
@@ -91,12 +94,12 @@ class GridNetwork(object):
                     for node in model_nodes:
                         node.disconnect()
                     smpc_initial_interval = i  # Initial index of next chunk
-            # If host's length % 4 != 0 or length == 0
+            # If host's length % SMPC_HOST_CHUNK != 0 or length == 0
             else:
                 raise RuntimeError("Not enough workers to host an encrypted model!")
         # If model isn't a plan
         else:
-            raise RuntimeError("Model need to be a plan to be encrypted!")
+            raise RuntimeError("Model needs to be a plan to be encrypted!")
 
     def _serve_non_encrypted_model(self, model, model_id):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
