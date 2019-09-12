@@ -2,7 +2,7 @@ import binascii
 import json
 import os
 import requests
-from requests_toolbelt.multipart import encoder
+from requests_toolbelt.multipart import encoder, decoder
 import sys
 
 import torch as th
@@ -40,11 +40,31 @@ class GridClient(BaseWorker):
         raise NotImplementedError
 
     def _send_http_request(
-        self, route, data, request, N: int = 10, unhexlify: bool = True
+        self,
+        route,
+        data,
+        request,
+        N: int = 10,
+        unhexlify: bool = True,
+        return_response_text: bool = True,
     ):
+        """Helper function for sending http request to talk to app.
+
+        Args:
+            route: App route.
+            data: Data to be sent in the request.
+            request: Request type (GET, POST, PUT, ...).
+            N: Number of tries in case of fail. Default is 10.
+            unhexlify: A boolean indicating if we should try to run unhexlify on the response or not.
+            return_response_text: If True return response.text, return raw response otherwise.
+        Returns:
+            If return_response_text is True return response.text, return raw response otherwise.
+        """
         url = os.path.join(self.addr, "{}".format(route))
         r = request(url, data=data) if data else request(url)
-        response = r.text
+        r.encoding = self._encoding
+        response = r.text if return_response_text else r
+
         # Try to request the message `N` times.
         for _ in range(N):
             try:
@@ -80,15 +100,11 @@ class GridClient(BaseWorker):
         session.close()
         return resp.content
 
-    def _send_post(self, route, data=None, N: int = 10, unhexlify: bool = True):
-        return self._send_http_request(
-            route, data, requests.post, N=N, unhexlify=unhexlify
-        )
+    def _send_post(self, route, data=None, **kwargs):
+        return self._send_http_request(route, data, requests.post, **kwargs)
 
-    def _send_get(self, route, data=None, N: int = 10, unhexlify: bool = True):
-        return self._send_http_request(
-            route, data, requests.get, N=N, unhexlify=unhexlify
-        )
+    def _send_get(self, route, data=None, **kwargs):
+        return self._send_http_request(route, data, requests.get, **kwargs)
 
     def _recv_msg(self, message: bin, N: int = 10) -> bin:
         message = str(binascii.hexlify(message))
@@ -112,6 +128,50 @@ class GridClient(BaseWorker):
                 "delete_model/", data={"model_id": model_id}, unhexlify=False
             )
         )
+
+    def get_model_copy(self, model_id: str):
+        """Gets a copy of a model to run locally."""
+
+        def _is_large_model(result):
+            return "multipart/form-data" in result.headers["Content-Type"]
+
+        # Check if we can get a copy of this model
+        result = json.loads(
+            self._send_get("is_model_copy_allowed/{}".format(model_id), unhexlify=False)
+        )
+        if not result["success"]:
+            raise RuntimeError(result["error"])
+
+        try:
+            # If the model is a plan we can just call fetch
+            return sy.hook.local_worker.fetch_plan(model_id, self, copy=True)
+        except AttributeError:
+            result = self._send_get(
+                "get_model/{}".format(model_id),
+                unhexlify=False,
+                return_response_text=False,
+            )
+            if result:
+                if _is_large_model(result):
+                    # If model is large, receive it by a stream channel
+                    multipart_data = decoder.MultipartDecoder.from_response(result)
+                    model_bytes = b"".join(
+                        [part.content for part in multipart_data.parts]
+                    )
+                    serialized_model = model_bytes.decode("utf-8").encode(
+                        self._encoding
+                    )
+                else:
+                    # If model is small, receive it by a standard json
+                    result = json.loads(result.text)
+                    serialized_model = result["serialized_model"].encode(self._encoding)
+
+                model = sy.serde.deserialize(serialized_model)
+                return model
+            else:
+                raise RuntimeError(
+                    "There was a problem while getting the model, check the server logs for more information."
+                )
 
     def serve_model(
         self,
@@ -146,6 +206,9 @@ class GridClient(BaseWorker):
         # and host the plan version created after
         # the send operation
         if isinstance(model, sy.Plan):
+            # We need to use the same id in the model
+            # as in the POST request.
+            model.id = model_id
             model.send(self)
             res_model = model.ptr_plans[self.id]
         else:
@@ -165,8 +228,8 @@ class GridClient(BaseWorker):
                         ),
                         "encoding": self._encoding,
                         "model_id": model_id,
-                        "allow_model_copy": allow_model_copy,
-                        "allow_run_inference": allow_run_inference,
+                        "allow_model_copy": str(allow_model_copy),
+                        "allow_run_inference": str(allow_run_inference),
                     },
                 )
             )
