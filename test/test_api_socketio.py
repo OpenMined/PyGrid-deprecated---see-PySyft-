@@ -97,7 +97,8 @@ def test_host_models_with_the_same_key(connected_node):
     assert bob.serve_model(model, model_id="2")
 
     # Error when using the same id twice
-    assert not bob.serve_model(model, model_id="2")
+    with pytest.raises(RuntimeError):
+        bob.serve_model(model, model_id="2")
 
 
 @pytest.mark.skipif(
