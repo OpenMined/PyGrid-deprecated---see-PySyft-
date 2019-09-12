@@ -94,10 +94,10 @@ def test_host_models_with_the_same_key(connected_node):
     bob = nodes[0]
 
     # Serve model
-    assert bob.serve_model(model, model_id="2")["success"]
+    assert bob.serve_model(model, model_id="2")
 
     # Error when using the same id twice
-    assert not bob.serve_model(model, model_id="2")["success"]
+    assert not bob.serve_model(model, model_id="2")
 
 
 @pytest.mark.skipif(
@@ -150,14 +150,15 @@ def test_delete_model(connected_node):
     bob = nodes[0]
 
     # Serve model
-    assert bob.serve_model(model, model_id="test_delete_model")["success"]
+    assert bob.serve_model(model, model_id="test_delete_model")
 
     # Delete model
-    assert bob.delete_model("test_delete_model")["success"]
-    assert "test_delete_model" not in bob.models["models"]
+    assert bob.delete_model("test_delete_model")
+    assert "test_delete_model" not in bob.models
 
     # Error when deleting again
-    assert not bob.delete_model("test_delete_model")["success"]
+    with pytest.raises(RuntimeError):
+        bob.delete_model("test_delete_model")
 
 
 def test_run_encrypted_model(connected_node):
