@@ -177,7 +177,7 @@ class GridClient(BaseWorker):
         self,
         model,
         model_id: str = None,
-        allow_model_copy: bool = False,
+        allow_get_model_copy: bool = False,
         allow_run_inference: bool = False,
     ):
         """Hosts the model and optionally serve it using a Rest API.
@@ -187,7 +187,7 @@ class GridClient(BaseWorker):
             model_id: An integer or string representing the model id used to retrieve the model
                 later on using the Rest API. If this is not provided and the model is a Plan
                 we use model.id, if the model is a jit model we raise an exception.
-            allow_model_copy: If other workers should to be able to fetch a copy of this model to run it locally set this to True.
+            allow_get_model_copy: If other workers should to be able to fetch a copy of this model to run it locally set this to True.
             allow_run_inference: If other workers should to be able to run inference using this model through a Rest API interface set this True.
 
         Returns:
@@ -228,7 +228,7 @@ class GridClient(BaseWorker):
                         ),
                         "encoding": self._encoding,
                         "model_id": model_id,
-                        "allow_model_copy": str(allow_model_copy),
+                        "allow_get_model_copy": str(allow_get_model_copy),
                         "allow_run_inference": str(allow_run_inference),
                     },
                 )
@@ -241,7 +241,7 @@ class GridClient(BaseWorker):
                         "model": serialized_model,
                         "encoding": self._encoding,
                         "model_id": model_id,
-                        "allow_model_copy": allow_model_copy,
+                        "allow_get_model_copy": allow_get_model_copy,
                         "allow_run_inference": allow_run_inference,
                     },
                     unhexlify=False,

@@ -44,14 +44,14 @@ class GridNetwork(object):
         model,
         model_id,
         allow_run_inference: bool = False,
-        allow_model_copy: bool = False,
+        allow_get_model_copy: bool = False,
     ):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
                 model: Model to be hosted.
                 model_id: Model's ID.
                 allow_run_inference: Allow workers to run inference in this model.
-                allow_model_copy: Allow workers to copy the model and run it locally.
+                allow_get_model_copy: Allow workers to copy the model and run it locally.
         """
         # Perform a request to choose model's host
         response = requests.get(self.gateway_url + "/choose-model-host")
@@ -63,7 +63,7 @@ class GridNetwork(object):
             host_worker.serve_model(
                 model,
                 model_id=model_id,
-                allow_model_copy=allow_model_copy,
+                allow_get_model_copy=allow_get_model_copy,
                 allow_run_inference=allow_run_inference,
             )
             host_worker.disconnect()
