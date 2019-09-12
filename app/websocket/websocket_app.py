@@ -32,8 +32,8 @@ parser.add_argument(
 parser.add_argument(
     "--host",
     type=str,
-    help="Grid node host, e.g. --host=0.0.0.0. Default is os.environ.get('GRID_WS_HOST','0.0.0.0').",
-    default=os.environ.get("GRID_WS_HOST", "0.0.0.0"),
+    help="Grid node host, e.g. --host=http://0.0.0.0. Default is os.environ.get('GRID_WS_HOST','http://0.0.0.0').",
+    default=os.environ.get("GRID_WS_HOST", "http://0.0.0.0"),
 )
 
 parser.add_argument(
@@ -62,17 +62,13 @@ else:
     app = create_app(debug=False)
 
 
-if __name__ == "__main__":
-    # If using a Gateway URL start the connection
-    if args.gateway_url is not None:
-        requests.post(
-            os.path.join(args.gateway_url, "join"),
-            data=json.dumps(
-                {
-                    "node-id": args.id,
-                    "node-address": "http://{}:{}".format(args.host, args.port),
-                }
-            ),
-        )
+# If using a Gateway URL start the connection
+if args.gateway_url is not None:
+    requests.post(
+        os.path.join(args.gateway_url, "join"),
+        data=json.dumps(
+            {"node-id": args.id, "node-address": "{}:{}".format(args.host, args.port)}
+        ),
+    )
 
-    socketio.run(app, host=args.host, port=args.port)
+socketio.run(app, host=args.host, port=args.port)
