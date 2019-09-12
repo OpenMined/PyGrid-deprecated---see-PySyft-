@@ -23,7 +23,7 @@ def encrypt(self, worker_1, worker_2, crypto_provider):
     return self.fix_prec().share(worker_1, worker_2, crypto_provider=crypto_provider)
 
 
-syft.frameworks.torch.tensors.interpreters.native.TorchTensor.encrypt = encrypt
+syft.generic.tensor.AbstractTensor.encrypt = encrypt
 syft.messaging.plan.Plan.encrypt = encrypt
 
 
