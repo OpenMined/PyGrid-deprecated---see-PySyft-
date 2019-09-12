@@ -140,8 +140,8 @@ class GridClient(BaseWorker):
         )
         return self._return_bool_result(result)
 
-    def download(self, model_id: str):
-        """Gets a copy of a model to run locally."""
+    def download_model(self, model_id: str):
+        """Downloads a model to run it  locally."""
 
         def _is_large_model(result):
             return "multipart/form-data" in result.headers["Content-Type"]

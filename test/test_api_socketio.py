@@ -44,7 +44,7 @@ def test_host_plan_not_allowed_to_run_ops(connected_node):
         bob.run_remote_inference(model_id="not_allowed", data=th.tensor([1.0, 2]))
 
     with pytest.raises(RuntimeError):
-        bob.download(model_id="not_allowed")
+        bob.download_model(model_id="not_allowed")
 
 
 def test_host_plan_model(connected_node):
