@@ -33,11 +33,11 @@ def snapshot(worker):
     for key in new_keys:
         obj = worker.get_obj(key)
 
-        # If obj is a Plan or a TorchScriptModule we ignore it
-        # We only store these objects when explictly told so
-        # using a RestAPI.
+        # If obj is an instance of Plan or TorchScriptModul we ignore it
+        # We only store these objects when explictly sent using the Rest API.
         if isinstance(obj, (Plan, torch.jit.ScriptModule)):
             continue
+
         # If obj is a parameter we wrap the data and store it in the database
         # as an object
         elif isinstance(obj, torch.nn.Parameter):
