@@ -140,7 +140,7 @@ class GridClient(BaseWorker):
         )
         return self._return_bool_result(result)
 
-    def get_model_copy(self, model_id: str):
+    def download(self, model_id: str):
         """Gets a copy of a model to run locally."""
 
         def _is_large_model(result):
@@ -189,8 +189,8 @@ class GridClient(BaseWorker):
         self,
         serialized_model: bytes,
         model_id: str,
-        allow_get_model_copy: bool,
-        allow_run_inference: bool,
+        allow_download: bool,
+        allow_remote_inference: bool,
     ):
         if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
             return json.loads(
@@ -204,8 +204,8 @@ class GridClient(BaseWorker):
                         ),
                         "encoding": self._encoding,
                         "model_id": model_id,
-                        "allow_get_model_copy": str(allow_get_model_copy),
-                        "allow_run_inference": str(allow_run_inference),
+                        "allow_download": str(allow_download),
+                        "allow_remote_inference": str(allow_remote_inference),
                     },
                 )
             )
@@ -217,8 +217,8 @@ class GridClient(BaseWorker):
                         "model": serialized_model,
                         "encoding": self._encoding,
                         "model_id": model_id,
-                        "allow_get_model_copy": allow_get_model_copy,
-                        "allow_run_inference": allow_run_inference,
+                        "allow_download": allow_download,
+                        "allow_remote_inference": allow_remote_inference,
                     },
                     unhexlify=False,
                 )
@@ -244,8 +244,8 @@ class GridClient(BaseWorker):
         result = self._send_serve_model_post(
             serialized_model,
             res_model.id,
-            allow_get_model_copy=True,
-            allow_run_inference=False,
+            allow_download=True,
+            allow_remote_inference=False,
         )
         return self._return_bool_result(result)
 
@@ -253,8 +253,8 @@ class GridClient(BaseWorker):
         self,
         model,
         model_id: str = None,
-        allow_get_model_copy: bool = False,
-        allow_run_inference: bool = False,
+        allow_download: bool = False,
+        allow_remote_inference: bool = False,
     ):
         """Hosts the model and optionally serve it using a Rest API.
 
@@ -263,8 +263,8 @@ class GridClient(BaseWorker):
             model_id: An integer or string representing the model id used to retrieve the model
                 later on using the Rest API. If this is not provided and the model is a Plan
                 we use model.id, if the model is a jit model we raise an exception.
-            allow_get_model_copy: If other workers should be able to fetch a copy of this model to run it locally set this to True.
-            allow_run_inference: If other workers should be able to run inference using this model through a Rest API interface set this True.
+            allow_download: If other workers should be able to fetch a copy of this model to run it locally set this to True.
+            allow_remote_inference: If other workers should be able to run inference using this model through a Rest API interface set this True.
 
         Returns:
             True if model was served sucessfully, raises a RunTimeError otherwise.
@@ -294,13 +294,13 @@ class GridClient(BaseWorker):
         # Send post
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
         result = self._send_serve_model_post(
-            serialized_model, model_id, allow_get_model_copy, allow_run_inference
+            serialized_model, model_id, allow_download, allow_remote_inference
         )
 
         # Return result
         return self._return_bool_result(result)
 
-    def run_inference(self, model_id, data, N: int = 1):
+    def run_remote_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
         result = json.loads(
             self._send_get(

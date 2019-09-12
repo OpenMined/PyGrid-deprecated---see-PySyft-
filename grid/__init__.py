@@ -17,7 +17,7 @@ from grid.utils import connect_all_nodes
 __all__ = ["workers", "connect_all_nodes", "syft"]
 
 
-# ======= Providing a Friendly API on top of Syft ===============
+# ======= Providing a friendly API on top of Syft ===============
 def encrypt(self, worker_1, worker_2, crypto_provider):
     """tensor.fix_prec().share()"""
     return self.fix_prec().share(worker_1, worker_2, crypto_provider=crypto_provider)

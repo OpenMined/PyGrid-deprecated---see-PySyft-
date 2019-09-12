@@ -43,15 +43,15 @@ class GridNetwork(object):
         self,
         model,
         model_id,
-        allow_run_inference: bool = False,
-        allow_get_model_copy: bool = False,
+        allow_remote_inference: bool = False,
+        allow_download: bool = False,
     ):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
                 model: Model to be hosted.
                 model_id: Model's ID.
-                allow_run_inference: Allow workers to run inference in this model.
-                allow_get_model_copy: Allow workers to copy the model and run it locally.
+                allow_remote_inference: Allow workers to run inference in this model.
+                allow_download: Allow workers to copy the model and run it locally.
         """
         # Perform a request to choose model's host
         response = requests.get(self.gateway_url + "/choose-model-host")
@@ -63,12 +63,12 @@ class GridNetwork(object):
             host_worker.serve_model(
                 model,
                 model_id=model_id,
-                allow_get_model_copy=allow_get_model_copy,
-                allow_run_inference=allow_run_inference,
+                allow_download=allow_download,
+                allow_remote_inference=allow_remote_inference,
             )
             host_worker.disconnect()
 
-    def run_inference(self, model_id, dataset):
+    def run_remote_inference(self, model_id, dataset):
         """ This method will search for a specific model registered on grid network, if found,
             It will run inference.
             Args:
@@ -78,7 +78,7 @@ class GridNetwork(object):
                 inference : result of data inference
         """
         worker = self.query_model(model_id)
-        response = worker.run_inference(model_id=model_id, data=dataset)
+        response = worker.run_remote_inference(model_id=model_id, data=dataset)
         worker.disconnect()
         return torch.tensor(response)
 

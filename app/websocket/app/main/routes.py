@@ -126,8 +126,8 @@ def model_inference(model_id):
 def serve_model():
     encoding = request.form["encoding"]
     model_id = request.form["model_id"]
-    allow_get_model_copy = request.form["allow_get_model_copy"] == "True"
-    allow_run_inference = request.form["allow_run_inference"] == "True"
+    allow_download = request.form["allow_download"] == "True"
+    allow_remote_inference = request.form["allow_remote_inference"] == "True"
 
     if request.files:
         # If model is large, receive it by a stream channel
@@ -141,7 +141,7 @@ def serve_model():
 
     # save the model for later usage
     response = mm.save_model(
-        serialized_model, model_id, allow_get_model_copy, allow_run_inference
+        serialized_model, model_id, allow_download, allow_remote_inference
     )
     if response["success"]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
