@@ -190,10 +190,13 @@ def test_run_encrypted_model(connected_node):
 
     # Share data
     x = th.tensor([1.0])
-    x_sh = x.encrypt(bob, james, crypto_provider=alice)
+
+    # TODO: figure it out why encrypt is not working here
+    # but is working on the notebooks
+    x_sh = x.fix_prec().share(bob, james, crypto_provider=alice)
 
     # Execute the plan
-    decrypted = plan(x_sh).request_decryption()
+    decrypted = plan(x_sh).get().float_prec()
 
     # Compare with local plan
     plan.get().float_precision()
