@@ -176,7 +176,7 @@ def save_model(
         serialized_model (bytes): The model object to be saved.
         model_id (str): The unique identifier associated with the model.
         allow_get_model_copy (bool): If the model can be copied by a worker.
-        allow_run_inference (bool): If a worker can run inference in the given model.
+        allow_run_inference (bool): If a worker can run inference on the given model.
 
     Returns:
         A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
@@ -345,7 +345,7 @@ def delete_model(model_id: str):
         # Then del from db
         _remove_model_from_db(model_id)
         return {"success": True, "message": MODEL_DELETED_MSG}
-    except SQLAlchemyError as e:
+    except SQLAlchemyError:
         # probably no model found in db.
         return {
             "success": False,
