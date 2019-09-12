@@ -16,6 +16,37 @@ from test import conftest
 hook = sy.TorchHook(th)
 
 
+def test_host_plan_not_allowed_to_run_ops(connected_node):
+    class Net(sy.Plan):
+        def __init__(self):
+            super(Net, self).__init__()
+            self.fc1 = th.nn.Linear(2, 1)
+            self.bias = th.tensor([1000.0])
+            self.state += ["fc1", "bias"]
+
+        def forward(self, x):
+            x = self.fc1(x)
+            return F.log_softmax(x, dim=0) + self.bias
+
+    model = Net()
+    model.build(th.tensor([1.0, 2]))
+
+    nodes = list(connected_node.values())
+    bob = nodes[0]
+    bob.serve_model(
+        model,
+        model_id="not_allowed",
+        allow_run_inference=False,
+        allow_get_model_copy=False,
+    )
+
+    with pytest.raises(RuntimeError):
+        bob.run_inference(model_id="not_allowed", data=th.tensor([1.0, 2]))
+
+    with pytest.raises(RuntimeError):
+        bob.get_model_copy(model_id="not_allowed")
+
+
 def test_host_plan_model(connected_node):
     class Net(sy.Plan):
         def __init__(self):
@@ -36,11 +67,11 @@ def test_host_plan_model(connected_node):
     bob.serve_model(model, model_id="1", allow_run_inference=True)
 
     # Call one time
-    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
+    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
     # Call one more time
-    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
+    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
 
@@ -92,11 +123,11 @@ def test_host_jit_model(connected_node):
     bob.serve_model(trace_model, model_id="1", allow_run_inference=True)
 
     # Call one time
-    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
+    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
     # Call one more time
-    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))["prediction"]
+    prediction = bob.run_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
 

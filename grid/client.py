@@ -282,7 +282,7 @@ class GridClient(BaseWorker):
 
     def run_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
-        return json.loads(
+        result = json.loads(
             self._send_get(
                 "models/{}".format(model_id),
                 data={
@@ -292,3 +292,12 @@ class GridClient(BaseWorker):
                 N=N,
             )
         )
+
+        if result["success"]:
+            return result["prediction"]
+        elif result["error"]:
+            raise RuntimeError(result["error"])
+        else:
+            raise RuntimeError(
+                "Something went wrong, check the server logs for more information."
+            )
