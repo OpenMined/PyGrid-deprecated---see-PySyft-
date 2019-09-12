@@ -39,6 +39,16 @@ class GridClient(BaseWorker):
     def _send_msg(self, message: bin, location: BaseWorker) -> bin:
         raise NotImplementedError
 
+    def _return_bool_result(self, result):
+        if result["success"]:
+            return result["prediction"]
+        elif result["error"]:
+            raise RuntimeError(result["error"])
+        else:
+            raise RuntimeError(
+                "Something went wrong, check the server logs for more information."
+            )
+
     def _send_http_request(
         self,
         route,
@@ -120,14 +130,15 @@ class GridClient(BaseWorker):
 
     @property
     def models(self, N: int = 1):
-        return json.loads(self._send_get("models/", N=N))
+        return json.loads(self._send_get("models/", N=N))["models"]
 
     def delete_model(self, model_id):
-        return json.loads(
+        result = json.loads(
             self._send_post(
                 "delete_model/", data={"model_id": model_id}, unhexlify=False
             )
         )
+        return self._return_bool_result(result)
 
     def get_model_copy(self, model_id: str):
         """Gets a copy of a model to run locally."""
@@ -220,6 +231,9 @@ class GridClient(BaseWorker):
 
         Args:
             encrypted_model: A pĺan already shared with workers using SMPC.
+
+        Returns:
+            True if model was served successfully, raises a RunTimeError otherwise.
         """
         # Send the model
         encrypted_model.send(self)
@@ -227,12 +241,13 @@ class GridClient(BaseWorker):
 
         # Serve the model so we can have a copy saved in the database
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
-        return self._send_serve_model_post(
+        result = self._send_serve_model_post(
             serialized_model,
             res_model.id,
             allow_get_model_copy=True,
             allow_run_inference=False,
         )
+        return self._return_bool_result(result)
 
     def serve_model(
         self,
@@ -252,10 +267,11 @@ class GridClient(BaseWorker):
             allow_run_inference: If other workers should be able to run inference using this model through a Rest API interface set this True.
 
         Returns:
-            A json object representing a Rest API response.
+            True if model was served sucessfully, raises a RunTimeError otherwise.
 
         Raises:
             ValueError: if model_id is not provided and model is a jit model (aka does not have an id attribute).
+            RunTimeError: if there was a problem during model serving.
         """
         if model_id is None:
             if isinstance(model, sy.Plan):
@@ -275,10 +291,14 @@ class GridClient(BaseWorker):
         else:
             res_model = model
 
+        # Send post
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
-        return self._send_serve_model_post(
+        result = self._send_serve_model_post(
             serialized_model, model_id, allow_get_model_copy, allow_run_inference
         )
+
+        # Return result
+        return self._return_bool_result(result)
 
     def run_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
@@ -293,11 +313,4 @@ class GridClient(BaseWorker):
             )
         )
 
-        if result["success"]:
-            return result["prediction"]
-        elif result["error"]:
-            raise RuntimeError(result["error"])
-        else:
-            raise RuntimeError(
-                "Something went wrong, check the server logs for more information."
-            )
+        return self._return_bool_result(result)
