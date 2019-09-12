@@ -43,7 +43,6 @@ class GridNetwork(object):
             tensor_set.append(worker.search(*query))
         return tensor_set
 
-
     def serve_encrypted_model(self, model):
         """ This method wiil choose some grid nodes at grid network to host an encrypted model.
 
@@ -97,7 +96,6 @@ class GridNetwork(object):
         else:
             raise RuntimeError("Model needs to be a plan to be encrypted!")
 
- 
     def serve_model(
         self,
         model,
@@ -200,7 +198,6 @@ class GridNetwork(object):
             return torch.tensor(response)
         else:
             raise RuntimeError("Model not found on Grid Network!")
-
 
     def query_model(self, model_id):
         """ This method will search for a specific model registered on grid network, if found,
