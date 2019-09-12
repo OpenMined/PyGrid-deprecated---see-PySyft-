@@ -11,6 +11,8 @@ from .persistence.models import db, TorchModel, TorchTensor
 from .local_worker_utils import get_obj, register_obj
 
 
+# ============= Global variables ========================
+
 # Store models in memory
 model_cache = dict()
 
@@ -19,6 +21,11 @@ ModelTuple = collections.namedtuple(
     "ModelTuple", ["model_obj", "allow_model_copy", "allow_run_inference"]
 )
 
+# Error messages
+MODEL_DELETED_MSG = "Model deleted with success!"
+MODEL_NOT_FOUND_MSG = "Model not found."
+NOT_ALLOWED_TO_RUN_INFERENCE_MSG = "You're not allowed to run inference on this model."
+NOT_ALLOWED_TO_GET_THIS_MODEL_MSG = "You're not allowed to get a copy of this model."
 
 # ============== Cache related functions =================
 
@@ -226,7 +233,7 @@ def get_model_with_id(model_id: str):
             return {
                 "success": False,
                 "not_allowed": True,
-                "error": "You're not allowed to run inference in this model.",
+                "error": NOT_ALLOWED_TO_RUN_INFERENCE_MSG,
             }
     try:
         result = _get_model_from_db(model_id)
@@ -252,11 +259,11 @@ def get_model_with_id(model_id: str):
                 return {
                     "success": False,
                     "not_allowed": True,
-                    "error": "You're not allowed to run inference in this model.",
+                    "error": NOT_ALLOWED_TO_RUN_INFERENCE_MSG,
                 }
 
         else:
-            return {"success": False, "error": "Model not found"}
+            return {"success": False, "error": MODEL_NOT_FOUND_MSG}
     except SQLAlchemyError as e:
         return {"success": False, "error": str(e)}
 
@@ -283,7 +290,7 @@ def get_serialized_model_with_id(model_id: str):
             return {
                 "success": False,
                 "not_allowed": True,
-                "error": "You're not allowed to get a copy of this model.",
+                "error": NOT_ALLOWED_TO_GET_THIS_MODEL_MSG,
             }
     try:
         result = _get_model_from_db(model_id)
@@ -310,10 +317,10 @@ def get_serialized_model_with_id(model_id: str):
                 return {
                     "success": False,
                     "not_allowed": True,
-                    "error": "You're not allowed to get a copy of this model.",
+                    "error": NOT_ALLOWED_TO_GET_THIS_MODEL_MSG,
                 }
         else:
-            return {"success": False, "error": "Model not found"}
+            return {"success": False, "error": MODEL_NOT_FOUND_MSG}
     except SQLAlchemyError as e:
         return {"success": False, "error": str(e)}
 
@@ -333,7 +340,7 @@ def delete_model(model_id: str):
         _remove_model_from_cache(model_id)
         # Then del from db
         _remove_model_from_db(model_id)
-        return {"success": True, "message": "Model Deleted: " + model_id}
+        return {"success": True, "message": MODEL_DELETED_MSG}
     except SQLAlchemyError as e:
         # probably no model found in db.
         return {"success": False, "error": str(e)}
@@ -343,11 +350,8 @@ def is_model_copy_allowed(model_id: str):
     """Used to check a worker is allowed to run `get_model_copy` in the model with this id."""
     result = _get_model_from_db(model_id)
     if result is None:
-        return {"success": False, "error": "Model not found"}
+        return {"success": False, "error": MODEL_NOT_FOUND_MSG}
     elif result.allow_model_copy:
         return {"success": True}
     else:
-        return {
-            "success": False,
-            "error": "You're not allowed to get a copy of this model.",
-        }
+        return {"success": False, "error": NOT_ALLOWED_TO_GET_THIS_MODEL_MSG}
