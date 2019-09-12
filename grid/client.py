@@ -139,6 +139,7 @@ class GridClient(BaseWorker):
         result = json.loads(
             self._send_get("is_model_copy_allowed/{}".format(model_id), unhexlify=False)
         )
+
         if not result["success"]:
             raise RuntimeError(result["error"])
 
@@ -172,6 +173,66 @@ class GridClient(BaseWorker):
                 raise RuntimeError(
                     "There was a problem while getting the model, check the server logs for more information."
                 )
+
+    def _send_serve_model_post(
+        self,
+        serialized_model: bytes,
+        model_id: str,
+        allow_get_model_copy: bool,
+        allow_run_inference: bool,
+    ):
+        if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
+            return json.loads(
+                self._send_streaming_post(
+                    "serve-model/",
+                    data={
+                        "model": (
+                            model_id,
+                            serialized_model,
+                            "application/octet-stream",
+                        ),
+                        "encoding": self._encoding,
+                        "model_id": model_id,
+                        "allow_get_model_copy": str(allow_get_model_copy),
+                        "allow_run_inference": str(allow_run_inference),
+                    },
+                )
+            )
+        else:
+            return json.loads(
+                self._send_post(
+                    "serve-model/",
+                    data={
+                        "model": serialized_model,
+                        "encoding": self._encoding,
+                        "model_id": model_id,
+                        "allow_get_model_copy": allow_get_model_copy,
+                        "allow_run_inference": allow_run_inference,
+                    },
+                    unhexlify=False,
+                )
+            )
+
+    def serve_encrypted_model(self, encrypted_model: sy.messaging.plan.Plan):
+        """Serve a model in a encrypted fashion using SMPC.
+
+        A wrapper for sending the model. The worker is responsible for sharing the model using SMPC.
+
+        Args:
+            encrypted_model: A pĺan already shared with workers using SMPC.
+        """
+        # Send the model
+        encrypted_model.send(self)
+        res_model = encrypted_model.ptr_plans[self.id]
+
+        # Serve the model so we can have a copy saved in the database
+        serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+        return self._send_serve_model_post(
+            serialized_model,
+            res_model.id,
+            allow_get_model_copy=True,
+            allow_run_inference=False,
+        )
 
     def serve_model(
         self,
@@ -215,38 +276,9 @@ class GridClient(BaseWorker):
             res_model = model
 
         serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
-
-        if sys.getsizeof(serialized_model) >= MODEL_LIMIT_SIZE:
-            return json.loads(
-                self._send_streaming_post(
-                    "serve-model/",
-                    data={
-                        "model": (
-                            model_id,
-                            serialized_model,
-                            "application/octet-stream",
-                        ),
-                        "encoding": self._encoding,
-                        "model_id": model_id,
-                        "allow_get_model_copy": str(allow_get_model_copy),
-                        "allow_run_inference": str(allow_run_inference),
-                    },
-                )
-            )
-        else:
-            return json.loads(
-                self._send_post(
-                    "serve-model/",
-                    data={
-                        "model": serialized_model,
-                        "encoding": self._encoding,
-                        "model_id": model_id,
-                        "allow_get_model_copy": allow_get_model_copy,
-                        "allow_run_inference": allow_run_inference,
-                    },
-                    unhexlify=False,
-                )
-            )
+        return self._send_serve_model_post(
+            serialized_model, model_id, allow_get_model_copy, allow_run_inference
+        )
 
     def run_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
