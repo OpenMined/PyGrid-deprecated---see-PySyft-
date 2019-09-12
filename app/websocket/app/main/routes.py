@@ -142,7 +142,7 @@ def search_encrypted_models():
         # Search model_id on node objects
         model = local_worker._objects.get(body.get("model_id"))
 
-        # If founded model is a plan
+        # If found model is a plan
         if isinstance(model, sy.Plan):
 
             workers = set()
