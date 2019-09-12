@@ -80,7 +80,7 @@ class GridNetwork(object):
         worker = self.query_model(model_id)
         response = worker.run_inference(model_id=model_id, data=dataset)
         worker.disconnect()
-        return torch.tensor(response["prediction"])
+        return torch.tensor(response)
 
     def query_model(self, model_id):
         """ This method will search for a specific model registered on grid network, if found,
