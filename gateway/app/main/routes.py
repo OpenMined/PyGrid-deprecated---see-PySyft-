@@ -13,7 +13,7 @@ import requests
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
 
-SMPC_HOST_CHUNK = 4  # 3 SMPC's Workers 1 to Host the model
+SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
 
 
 @main.route("/", methods=["GET"])

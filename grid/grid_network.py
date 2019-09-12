@@ -43,19 +43,15 @@ class GridNetwork(object):
             tensor_set.append(worker.search(*query))
         return tensor_set
 
-    def serve_model(self, model, model_id=None, encrypted=False):
-        """ This method will one/more grid node(s) to host an encrypted or decrypted model.
-            Args:
-                model : Model to be hosted.
-                model_id : Model's ID.
-                encrypted: Boolean flag to perform SMPC host.
-        """
-        if encrypted:
-            self._serve_encrypted_model(model)
-        else:
-            self._serve_non_encrypted_model(model, model_id)
+    def serve_encrypted_model(self, model):
+        """ This method wiil choose some grid nodes at grid network to host an encrypted model.
 
-    def _serve_encrypted_model(self, model):
+            Args:
+                model: Model to be hosted.
+            Raise:
+                RuntimeError : If grid network doesn't have enough workers to host an encrypted model.
+        
+        """
         # Model needs to be a plan
         if isinstance(model, sy.Plan):
             response = requests.get(self.gateway_url + "/choose-encrypted-model-host")
@@ -63,14 +59,10 @@ class GridNetwork(object):
             if (
                 len(hosts) and len(hosts) % SMPC_HOST_CHUNK == 0
             ):  # Minimum workers chunk to share and host a model (3 to SMPC operations, 1 to host)
-                smpc_initial_interval = 0
                 for i in range(0, len(hosts), SMPC_HOST_CHUNK):
-                    # Connect with host worker
-                    host = self.__connect_with_node(*hosts[i])
-
                     # Connect with SMPC Workers
-                    smpc_end_interval = i - 1
-                    smpc_workers_info = hosts[smpc_initial_interval:smpc_end_interval]
+                    smpc_end_interval = i + 2
+                    smpc_workers_info = hosts[i:smpc_end_interval]
                     smpc_workers = []
                     for worker in smpc_workers_info:
                         smpc_workers.append(self.__connect_with_node(*worker))
@@ -79,6 +71,9 @@ class GridNetwork(object):
                     crypto_provider = self.__connect_with_node(
                         *hosts[smpc_end_interval]
                     )
+
+                    # Connect with host worker
+                    host = self.__connect_with_node(*hosts[smpc_end_interval + 1])
 
                     # Connect nodes to each other
                     model_nodes = smpc_workers + [crypto_provider, host]
@@ -101,7 +96,7 @@ class GridNetwork(object):
         else:
             raise RuntimeError("Model needs to be a plan to be encrypted!")
 
-    def _serve_non_encrypted_model(self, model, model_id):
+    def serve_model(self, model, model_id):
         """ This method will choose one of grid nodes registered in the grid network to host a plain text model.
             Args:
                 model : Model to be hosted.
@@ -117,32 +112,12 @@ class GridNetwork(object):
             host_worker.serve_model(model, model_id=model_id)
             host_worker.disconnect()
 
-    def run_inference(self, model_id, dataset, encrypted=False, copy=True):
-        """
-            Run data inference with plain text / encrypted data.
-
-            Args:
-                model_id: Model's ID.
-                dataset: Dataset to be inferred.
-                encrypted: Boolean flag to choose encrypted model.
-                copy: Boolean flag to perform encrypted inference without lose plan.
-            Returns:
-                Tensor: Inference's result.
-        """
-        # Encrypted Models
-        if encrypted:
-            result = self._run_encrypted_inference(model_id, dataset, copy=copy)
-        # Non Encrypted Models
-        else:
-            result = self._run_non_encrypted_inference(model_id, dataset)
-        return result
-
-    def _run_encrypted_inference(self, model_id, dataset, copy=True):
+    def run_encrypted_inference(self, model_id, data, copy=True):
         """ Search for an encrypted model and perform inference.
             
             Args:
                 model_id: Model's ID.
-                dataset: Dataset to be shared/inferred.
+                data: Dataset to be shared/inferred.
                 copy: Boolean flag to perform encrypted inference without lose plan.
             Returns:
                 Tensor: Inference's result.
@@ -181,7 +156,7 @@ class GridNetwork(object):
             )
 
             # Share your dataset to same SMPC Workers
-            shared_dataset = dataset.fix_precision().share(
+            shared_data = data.fix_precision().share(
                 *workers, crypto_provider=crypto_node
             )
 
@@ -189,11 +164,11 @@ class GridNetwork(object):
             fetched_plan = sy.hook.local_worker.fetch_plan(
                 model_id, host_node, copy=copy
             )
-            return fetched_plan(shared_dataset).get().float_prec()
+            return fetched_plan(shared_data).get().float_prec()
         else:
             raise RuntimeError("Model not found on Grid Network!")
 
-    def _run_non_encrypted_inference(self, model_id, dataset):
+    def run_inference(self, model_id, data):
         """ This method will search for a specific model registered on grid network, if found,
             It will run inference.
             Args:
@@ -204,7 +179,7 @@ class GridNetwork(object):
         """
         worker = self.query_model(model_id)
         if worker:
-            response = worker.run_inference(model_id=model_id, data=dataset)
+            response = worker.run_inference(model_id=model_id, data=data)
             worker.disconnect()
             return torch.tensor(response["prediction"])
         else:

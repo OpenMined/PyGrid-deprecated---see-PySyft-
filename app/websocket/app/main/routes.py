@@ -130,7 +130,7 @@ def search_encrypted_models():
     """
     try:
         body = json.loads(request.data)
-    except:
+    except json.decoder.JSONDecodeError:
         return Response(
             json.dumps({"error": "Invalid payload format"}),
             status=400,
