@@ -63,7 +63,7 @@ class GridAPITest(unittest.TestCase):
 
         self.my_grid.serve_model(model, encrypted=True)
 
-        assert th.tensor([1000.0]) == self.my_grid.inference(
+        assert th.tensor([1000.0]) == self.my_grid.run_inference(
             model_id="convnet", dataset=th.tensor([1.0, 2]), encrypted=True
         )
 
