@@ -55,8 +55,6 @@ parser.set_defaults(use_test_config=False)
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    # We need to have the app variable outside the main
-    # to run on Heroku
     if args.start_local_db:
         db_path = "sqlite:///database{}.db".format(args.id)
         app = create_app(debug=False, test_config={"SQLALCHEMY_DATABASE_URI": db_path})
