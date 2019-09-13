@@ -39,3 +39,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = create_app(debug=True, n_replica=args.num_replicas)
     app.run(host=args.host, port=args.port)
+else:
+    num_replicas = os.environ.get("N_REPLICAS", None)
+    app = create_app(debug=True, n_replica=num_replicas)
