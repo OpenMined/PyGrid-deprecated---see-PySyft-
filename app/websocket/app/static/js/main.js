@@ -8,7 +8,7 @@ axios.baseUrl = baseUrl
 
 async function get_identity_from_server(){
   try{
-    const response = await axios.get('/models/');
+    const response = await axios.get('/identity/');
       return Promise.resolve(response)
     } catch (error) {
       console.error(error);
@@ -18,7 +18,7 @@ async function get_identity_from_server(){
 
 async function get_models_from_server(){
   try{
-    const response = await axios.get('/identity/');
+    const response = await axios.get('/models/');
       return Promise.resolve(response)
     } catch (error) {
       console.error(error);
@@ -28,28 +28,41 @@ async function get_models_from_server(){
 
 // Vue
 function set_online_status(status){
-  var online_status = new Vue({ 
-    el: '#online_status',
-    delimiters : ['[[', ']]'],
-    data: {
-        status: status
-    }
-  });
+  online_status.status = status
 }
 
 function set_name_of_node(name){
-  var name_of_node = new Vue({ 
-    el: '#name_of_node',
-    delimiters : ['[[', ']]'],
-    data: {
-        name: name
-    }
-  });
+  name_of_node.name = name
 }
 
 function set_models_in_table(models){
-  
+  models_list.models = models
 }
+
+// VUE OBJECT BINDING:
+var models_list = new Vue({
+  el: '#m-for-models-list',
+  delimiters : ['[[', ']]'],
+  data: {
+    models: ["Hello","12"]
+  }
+})
+
+var name_of_node = new Vue({ 
+  el: '#name_of_node',
+  delimiters : ['[[', ']]'],
+  data: {
+      name: ""
+  }
+});
+
+var online_status = new Vue({ 
+  el: '#online_status',
+  delimiters : ['[[', ']]'],
+  data: {
+      status: ""
+  }
+});
 
 // MAIN LOGIC
 async function update_server_status(){
@@ -67,11 +80,14 @@ async function update_server_status(){
 
 async function update_models_list(){
   var response = await get_models_from_server()
-  console.log(response)
+  set_models_in_table(response["data"]["models"])
 }
 
-update_server_status()
-update_models_list()
+async function sync_with_server(){
+  console.log("syncing with server")
+  await update_server_status()
+  await update_models_list()
+  setTimeout(sync_with_server, 5000)
+}
 
-// JS based styling hacks
-
+sync_with_server()

@@ -20,8 +20,8 @@
             <div class="uk-section uk-padding-remove-vertical">
                 
                 <div class="uk-flex uk-flex-center uk-padding-medium">
-                    <img width="50" height="50" alt="Grid Icon" uk-img="/static/images/grid-white.01b839c4.svg" uk-svg>
-                    <h2 class="uk-align-middle" style="color: white"> Grid Node </h2>
+                    <img class="uk-flex-first" width="50" height="50" alt="Grid Icon" uk-img="/static/images/grid-white.01b839c4.svg" uk-svg>
+                    <h2 class="uk-position-top-center" style="color: white"> Grid Node </h2>
                 </div>
                 
                 <!-- General Info -->
@@ -41,7 +41,13 @@
                 <div id="bottom-cards" class="uk-flex uk-flex-center uk-width-1-3 uk-padding-large uk-position-bottom-center" style="height: 600px">
                         <div class="uk-card uk-card-default uk-card-body uk-width-large round-corners">
                             <h3 class="uk-card-title">Models Hosted</h3>
-                            <p></p>
+                            <p>
+                                <ul id="m-for-models-list" class="demo">
+                                    <li v-for="model in models">
+                                      [[ model ]]
+                                    </li>
+                                </ul>
+                            </p>
                         </div>
                         <div class="uk-card uk-card-default uk-card-body uk-width-large uk-margin-left round-corners">
                             <h3 class="uk-card-title">Tensors Hosted</h3>
