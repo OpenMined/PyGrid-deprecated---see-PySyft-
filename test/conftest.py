@@ -48,7 +48,7 @@ def init_gateway():
         os.environ["SECRET_KEY"] = "Secretkeyhere"
         from gateway.app import create_app
 
-        db_path = "sqlite:///" + BASEDIR  + "/databaseGateway.db"
+        db_path = "sqlite:///" + BASEDIR + "/databaseGateway.db"
         app = create_app(
             debug=False, n_replica=1, test_config={"SQLALCHEMY_DATABASE_URI": db_path}
         )
