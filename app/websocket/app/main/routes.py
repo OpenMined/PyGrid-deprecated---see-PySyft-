@@ -4,10 +4,11 @@ This file exists to provide one common place for all grid node http requests.
 import binascii
 import json
 import sys
+import os
 
 from flask import render_template
 from flask import Response
-from flask import request
+from flask import request, send_from_directory
 
 import syft as sy
 from requests_toolbelt import MultipartEncoder
@@ -22,6 +23,25 @@ from .local_worker_utils import register_obj, get_objs
 # worker
 MODEL_LIMIT_SIZE = (1024 ** 2) * 100  # 100MB
 
+# ======= WEB ROUTES ======
+@main.route('/favicon.ico')
+def favicon():
+    print(os.path.join(main.root_path, 'static'))
+    return send_from_directory(os.path.join(main.root_path, 'static'),
+                          'favicon.ico',mimetype='image/vnd.microsoft.icon')
+
+@main.route('/test')
+def test_route():
+    return "hello"
+
+@main.route("/", methods=["GET"])
+def index():
+    """Index page."""
+    return render_template("index.html")
+
+# ======= WEB ROUTES END ======
+
+# ======= REST API =======
 
 @main.route("/identity/")
 def is_this_an_opengrid_node():
@@ -149,12 +169,6 @@ def serve_model():
         return Response(json.dumps(response), status=500, mimetype="application/json")
 
 
-@main.route("/", methods=["GET"])
-def index():
-    """Index page."""
-    return render_template("index.html")
-
-
 @main.route("/dataset-tags", methods=["GET"])
 def get_available_tags():
     """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains. """
@@ -247,3 +261,5 @@ def search_dataset_tags():
         body_response["content"] = True
 
     return Response(json.dumps(body_response), status=200, mimetype="application/json")
+
+# ======= REST API END =======
