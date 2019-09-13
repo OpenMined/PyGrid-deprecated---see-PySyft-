@@ -4,6 +4,11 @@
 In these series of tutorials we'll show all the different ways to serve and query models on Grid.
 
 
+## Prerequisites
+
+Make sure to check it out the tutorials on the example folder, they show how to setup grid workers locally and on heroku.
+
+
 ## Notebooks structure
 
 We define the notebooks structure accordingly to potential use cases:
