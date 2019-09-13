@@ -87,7 +87,7 @@ else:
     # If using a Gateway URL start the connection
     if gateway_url:
         requests.post(
-            os.path.join(args.gateway_url, "join"),
+            os.path.join(gateway_url, "join"),
             data=json.dumps(
                 {"node-id": node_id, "node-address": "{}".format(node_address)}
             ),
