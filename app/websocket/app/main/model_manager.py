@@ -130,6 +130,7 @@ def _save_states_in_db(model):
 def _get_all_workers_in_db():
     return db.session.query(Worker).all()
 
+
 def _get_all_models_in_db():
     return db.session.query(TorchModel).all()
 
@@ -152,6 +153,7 @@ def _remove_model_from_db(model_id):
 
 # ================ Public functions ====================
 
+
 def list_workers():
     """Returns a dict of currently existing workers. Will always fetch from db.
 
@@ -166,7 +168,8 @@ def list_workers():
     except SQLAlchemyError as e:
         return {"success": False, "error": str(e)}
 
-def list_models(detailed_list: bool=False):
+
+def list_models(detailed_list: bool = False):
     """Returns a dict of currently existing models. Will always fetch from db.
 
     Args:
@@ -181,9 +184,11 @@ def list_models(detailed_list: bool=False):
         if detailed_list is True:
             models = [model.__dict__ for model in result]
             for model in models:
-                model['model_size'] = "{}KB".format(sys.getsizeof(model['model'])/1000)
-                model.pop('model')
-                model.pop('_sa_instance_state')
+                model["model_size"] = "{}KB".format(
+                    sys.getsizeof(model["model"]) / 1000
+                )
+                model.pop("model")
+                model.pop("_sa_instance_state")
             return {"success": True, "models": models}
         else:
             model_ids = [model.id for model in result]
