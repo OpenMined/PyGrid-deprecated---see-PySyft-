@@ -24,9 +24,10 @@ from .local_worker_utils import register_obj, get_objs
 MODEL_LIMIT_SIZE = (1024 ** 2) * 100  # 100MB
 
 # ======= WEB ROUTES ======
+# TOOD: Must verify if cores block these calls or not. Should be protected by cors.
+
 @main.route('/favicon.ico')
 def favicon():
-    print(os.path.join(main.root_path, 'static'))
     return send_from_directory(os.path.join(main.root_path, 'static'),
                           'favicon.ico',mimetype='image/vnd.microsoft.icon')
 
@@ -38,6 +39,19 @@ def test_route():
 def index():
     """Index page."""
     return render_template("index.html")
+
+@main.route("/detailed_models_list/")
+def list_models_with_details():
+    """Generates a detailed list of models currently saved at the worker"""
+    return Response(
+        json.dumps(mm.list_models(detailed_list=True)), status=200, mimetype="application/json"
+    )
+
+@main.route("/workers/")
+def list_workers():
+    return Response(
+        json.dumps(mm.list_workers()), status=200, mimetype="application/json"
+    )
 
 # ======= WEB ROUTES END ======
 
