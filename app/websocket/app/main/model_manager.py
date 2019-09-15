@@ -187,6 +187,8 @@ def list_models(detailed_list: bool = False):
                 model["model_size"] = "{}KB".format(
                     sys.getsizeof(model["model"]) / 1000
                 )
+                # removing the model object and sqlalchemy instance state. 
+                # to return clean dict with relevant model info only.
                 model.pop("model")
                 model.pop("_sa_instance_state")
             return {"success": True, "models": models}
