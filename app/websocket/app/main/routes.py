@@ -24,7 +24,7 @@ from .local_worker_utils import register_obj, get_objs
 MODEL_LIMIT_SIZE = (1024 ** 2) * 100  # 100MB
 
 # ======= WEB ROUTES ======
-# TOOD: Must verify if cores block these calls or not. Should be protected by cors.
+# TODO: Must verify if cores block these calls or not. Should be protected by cors.
 
 
 @main.route("/favicon.ico")
@@ -34,11 +34,6 @@ def favicon():
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
-
-
-@main.route("/test")
-def test_route():
-    return "hello"
 
 
 @main.route("/", methods=["GET"])
