@@ -91,7 +91,7 @@ def create_app(debug=False, test_config=None):
 
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)
-
+    
     s = app.app_context().push()
     db.create_all()
     socketio.init_app(app)

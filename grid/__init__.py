@@ -15,6 +15,7 @@ from grid.grid_network import GridNetwork
 from grid.utils import connect_all_nodes
 from grid.auth import auth_credentials as credentials
 
+
 __all__ = ["workers", "connect_all_nodes", "syft"]
 
 
@@ -39,6 +40,10 @@ syft.frameworks.torch.tensors.interpreters.native.TorchTensor.request_decryption
 
 
 # =============== Heroku related functions =======================
+
+
+def load_auth_credentials(directory=None, folder=None):
+    auth.config.read_authentication_configs(directory, folder)
 
 
 def load_auth_credentials(directory=None, folder=None):
