@@ -22,13 +22,13 @@ login_manager = LoginManager()
 
 
 def set_auth_configs(app):
-    ''' Set configs to use flask session manager
+    """ Set configs to use flask session manager
     
         Args:
             app: Flask application
         Returns:
             app: Flask application
-    '''
+    """
     login_manager.init_app(app)
     return app
 
@@ -88,10 +88,10 @@ def create_app(debug=False, test_config=None):
 
     # Set Authentication configs
     app = set_auth_configs(app)
-    
+
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)
-    
+
     s = app.app_context().push()
     db.create_all()
     socketio.init_app(app)
