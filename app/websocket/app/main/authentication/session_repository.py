@@ -12,10 +12,10 @@ class SessionsRepository:
 
     def save_session(self, user, key):
         self.users[key] = user
-        self.users_id_dict[user.id] = self.users[user.username]
+        self.users_id_dict[user.id] = self.users[user.username()]
 
     # Verify if already exists some user with these credentials
-    def get_session(self):
+    def get_session(self, username):
         return self.users.get(username)
 
     # Recover user session by session id
@@ -38,4 +38,4 @@ class SessionsRepository:
             for auth_type in AUTH_MODELS:
                 if isinstance(cred, auth_type):
                     session = UserSession(cred)
-                    self.save_session(session, session.username)
+                    self.save_session(session, session.username())

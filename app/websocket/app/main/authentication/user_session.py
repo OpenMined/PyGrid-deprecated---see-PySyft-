@@ -13,7 +13,6 @@ class UserSession(UserMixin):
     def get_id(self):
         return self.id
 
-    @property
     def username(self):
         return self.obj.username
 
