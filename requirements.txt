@@ -15,4 +15,5 @@ requests-toolbelt==0.9.1
 flask_sqlalchemy
 flask_migrate
 flask_testing
+flask_login
 flask_cors
