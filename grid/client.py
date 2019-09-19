@@ -304,7 +304,7 @@ class GridClient(BaseWorker):
     def run_remote_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data)
         result = json.loads(
-            self._send_get(
+            self._send_post(
                 "models/{}".format(model_id),
                 data={
                     "data": serialized_data.decode(self._encoding),

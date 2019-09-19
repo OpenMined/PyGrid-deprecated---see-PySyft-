@@ -142,7 +142,7 @@ def get_model(model_id):
             )
 
 
-@main.route("/models/<model_id>", methods=["GET"])
+@main.route("/models/<model_id>", methods=["POST"])
 @cross_origin()
 def model_inference(model_id):
     response = mm.get_model_with_id(model_id)
