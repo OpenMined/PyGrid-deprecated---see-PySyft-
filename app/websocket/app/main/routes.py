@@ -208,7 +208,7 @@ def serve_model():
     if response["success"]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
-        return Response(json.dumps(response), status=500, mimetype="application/json")
+        return Response(json.dumps(response), status=409, mimetype="application/json")
 
 
 @main.route("/dataset-tags", methods=["GET"])
