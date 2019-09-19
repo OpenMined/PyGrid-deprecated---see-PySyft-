@@ -141,7 +141,7 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 #### Request Body:
 ```json
 {       
-        "encoding": "encode_type"
+        "encoding": "encode_type",
         "data":  "serialized_and_decoded_data"
 }
 ```
@@ -213,10 +213,10 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ```
 
 ## Search dataset / tensor
-**URL** : `/search`
-**Description** : Check if grid node have the desired dataset tags (AND)
-**Method** : `POST`
-**Content-Type** : application/json
+**URL** : `/search`  
+**Description** : Check if grid node have the desired dataset tags.  
+**Method** : `POST`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 
@@ -235,7 +235,7 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ```
 
 #### Status Code: 200 OK
-```
+``` json
 {
     "content": "Boolean"
 }
