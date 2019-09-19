@@ -4,10 +4,10 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Upload Models
 
-**URL** : `/serve-model`
-**Description** : Used to save a model (jit/plan).
-**Method** : `POST`
-**Content-Type** : multipart/form-data || application/json
+**URL** : `/serve-model`  
+**Description** : Used to save a model (jit/plan).  
+**Method** : `POST`  
+**Content-Type** : multipart/form-data || application/json  
 **Auth required** : NO (can be changed)
 
 #### Request Body:
@@ -15,15 +15,15 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 {       
         "encoding": "encode_type",
         "model_id": "modeid",
-        "allow_download": Boolean,
-        "allow_remote_inference": Boolean,
+        "allow_download": "Boolean",
+        "allow_remote_inference": "Boolean",
         "model": "serialized_and_decoded_model"
 }
 ```
 #### Status Code: 200 OK
 ```json
 {
-    "success": True,
+    "success": "Boolean",
     "message": "Model saved with id: <model_id>"
 }
 ```
@@ -36,10 +36,10 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ```
 ## Delete Model
 
-**URL** : `/delete-model`
-**Description** : Used to delete models by their ids (jit/plan).
-**Method** : `POST`
-**Content-Type** : application/json
+**URL** : `/delete-model`  
+**Description** : Used to delete models by their ids (jit/plan).  
+**Method** : `POST`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 #### Request Body
 ``` json
@@ -51,7 +51,7 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 #### Status Code: 200 OK
 ``` json
 {
-    "success": True,
+    "success": "Boolean",
     "message": "Model deleted with success!"
 }
 ```
@@ -65,53 +65,54 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## List registered models
 
-**URL** : `/models`
-**Description**: Used to get a list of stored models, return model's ids.
+**URL** : `/models`  
+**Description**: Used to get a list of stored models, return model's ids.  
 **Method** : `GET`  
-**Content-Type** : application/json
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)  
 
 ##### Status Code: 200 OK
 ```json
 {
-	"success": Boolean,
+	"success": "Boolean",
 	"models": [ "modelid1", "modelid2" ] 
 }
 ```
 
 ## Check Models permissions
 
-**URL** : `/is_model_copy_allowed/<model_id>`
-**Description**: Used to check if some model can be copied/downloaded.
-**Method** : `GET` 
-**Content-Type** : application/json
+**URL** : `/is_model_copy_allowed/<model_id>`  
+**Description**: Used to check if some model can be copied/downloaded.  
+**Method** : `GET`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
 ```json
 {   
-        "success": True
+        "success": "True"
 }
 ```
 
 ##### Status Code: 200 OK
 ``` json
 {
-	"success": False,
+	"success": "False",
 	"error": "You're not allowed to download this model."
 }
 ```
 
 ## Download Model
 
-**URL** : `/get_model/<model_id>`
-**Description** : Used to download a specific model.
-**Method** : `GET`
+**URL** : `/get_model/<model_id>`  
+**Description** : Used to download a specific model.  
+**Method** : `GET`  
 **Auth required** : NO (can be changed)
+
 ##### Status Code: 200 OK
 ```json
 {       
-        "serialized_model":  b'serialized_and_decoded_model'
+        "serialized_model":  "serialized_and_decoded_model"
 }
 ```
 
@@ -131,42 +132,42 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Run Data Inferences
 
-**URL** : `/model/<model_id>`
-**Description** : Used to run data inferences at some model. Returns inference's results.
-**Method** : `POST`
+**URL** : `/model/<model_id>`  
+**Description** : Used to run data inferences at some model. Returns inference's results.  
+**Method** : `POST`  
 **Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 #### Request Body:
 ```json
 {       
-        "encoding": "ISO-8859-1"    // encode type used to decode data
-        "data":  "serialized_and_decoded_data" // Tensor
+        "encoding": "encode_type"
+        "data":  "serialized_and_decoded_data"
 }
 ```
 
 #### Status Code: 200 OK
 ```json
 {       
-        "status":  Boolean,
-        "prediction" : "serialized_and_decoded_inferece" // Tensor
+        "status":  "Boolean",
+        "prediction": "serialized_and_decoded_inferece"
 }
 ```
 
 #### Status Code: 403 Forbidden
 ```json
 {       
-        "status":  Boolean,
+        "status":  "Boolean",
         "error" : "You're not allowed to run inference on this model."
 }
 ```
 
 ## Search SMPC Models
 
-**URL** : `/search-encrypted-models`
-**Description** : Search smpc model by id, if found, returns worker's addresses.
-**Method** : `POST`
-**Content-Type** : application/json
+**URL** : `/search-encrypted-models`  
+**Description** : Search smpc model by id, if found, returns worker's addresses.  
+**Method** : `POST`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 #### Request Body
@@ -200,10 +201,10 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Dataset Tags
 
-**URL** : `/dataset-tags`
-**Description** : Get all dataset tags stored in this node.
-**Method** : `GET`
-**Content-Type** : application/json
+**URL** : `/dataset-tags`  
+**Description** : Get all dataset tags stored in this node.  
+**Method** : `GET`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 #### Status Code: 200 OK
@@ -236,6 +237,6 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 #### Status Code: 200 OK
 ```
 {
-    "content": Boolean
+    "content": "Boolean"
 }
 ```
