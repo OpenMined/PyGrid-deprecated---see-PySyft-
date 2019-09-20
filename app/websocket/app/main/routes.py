@@ -246,7 +246,7 @@ def search_encrypted_models():
 
                 # Get a list of tuples (worker_id, worker_address)
                 worker_urls = map(
-                    lambda x: (x, local_worker._known_workers.get(x).uri),
+                    lambda x: (x, local_worker._known_workers.get(x).addr),
                     obj.child.keys(),
                 )
                 workers.update(set(worker_urls))
@@ -255,7 +255,7 @@ def search_encrypted_models():
                 if obj.crypto_provider:
                     crypto_provider = [
                         obj.crypto_provider.id,
-                        local_worker._known_workers.get(obj.crypto_provider.id).uri,
+                        local_worker._known_workers.get(obj.crypto_provider.id).addr,
                     ]
 
             response = {
