@@ -18,6 +18,9 @@ from syft.federated.federated_client import FederatedClient
 from syft.codes import MSGTYPE
 from syft.messaging.message import Message
 
+from grid import utils as gr_utils
+
+
 MODEL_LIMIT_SIZE = (1024 ** 2) * 100  # 100MB
 
 
@@ -55,10 +58,11 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         self.wait_for_client_event = False
         self._encoding = "ISO-8859-1"
 
-
         # Creates the connection with the server
         self.__sio = socketio.Client()
-        super().__init__( hook=hook, id=id, data=data, log_msgs=log_msgs, verbose=verbose)
+        super().__init__(
+            hook=hook, id=id, data=data, log_msgs=log_msgs, verbose=verbose
+        )
 
         @self.__sio.on("/cmd-response")
         def on_client_result(args):
@@ -171,7 +175,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
                 response = r.text
 
         return response
-    
+
     def _send_streaming_post(self, route, data=None):
         """ Used to send large models / datasets using stream channel.
 
@@ -192,7 +196,6 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
         session.close()
         return resp.content
 
-
     def _send_post(self, route, data=None, **kwargs):
         return self._send_http_request(route, data, requests.post, **kwargs)
 
@@ -210,7 +213,6 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
     @property
     def models(self, N: int = 1):
         return json.loads(self._send_get("models/", N=N))["models"]
-
 
     def delete_model(self, model_id):
         result = json.loads(
@@ -303,7 +305,6 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
                     unhexlify=False,
                 )
             )
-
 
     def serve_encrypted_model(self, encrypted_model: sy.messaging.plan.Plan):
         """Serve a model in a encrypted fashion using SMPC.
