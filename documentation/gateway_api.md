@@ -41,7 +41,7 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ## Connected grid nodes
 
 **URL** : `/connected-nodes`  
-**Description** : Returns a list with connected grid nodes.  
+**Description** : Return a list with connected grid nodes.  
 **Method** : `GET`     
 **Auth required** : NO (can be changed)
 
@@ -55,8 +55,8 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ## Choose nodes to host encrypted models
 
 **URL** : `/choose-encrypted-model-host`  
-**Description**: Returns a list of tuples of available nodes to host encrypted model.  
-**Method** : `GET`
+**Description**: Return a list of tuples of available nodes to host encrypted model.  
+**Method** : `GET`  
 **Auth required** : NO (can be changed)  
 
 ##### Status Code: 200 OK
@@ -67,8 +67,8 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ## Choose host to non-encrypted model
 
 **URL** : `/choose-model-host`  
-**Description**: Returns a list of tuples of available nodes to host non-encrypted model.  
-**Method** : `GET` 
+**Description**: Return a list of tuples of available nodes to host non-encrypted model.  
+**Method** : `GET`  
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
@@ -79,9 +79,9 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 ## Search encrypted model
 
 **URL** : `/search-encrypted-model`  
-**Description** : Search encrypted model on grid network. 
-**Method** : `POST`
-**Content-Type** : application/json 
+**Description** : Search encrypted model on grid network.  
+**Method** : `POST`  
+**Content-Type** : application/json  
 **Auth required** : NO (can be changed)
 
 #### Request Body
@@ -111,9 +111,9 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Search Model
 **URL** : `/search-model`  
-**Description** : Search non-encrypted model on grid network. 
-**Method** : `POST`
-**Content-Type** : application/json 
+**Description** : Search non-encrypted model on grid network.  
+**Method** : `POST`  
+**Content-Type** : application/json   
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
@@ -135,8 +135,8 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Search available models
 **URL** : `/search-available-models`  
-**Description** : Get available models on the grid network. 
-**Method** : `GET`
+**Description** : Get available models on the grid network.  
+**Method** : `GET`  
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
@@ -146,8 +146,8 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Search available tags
 **URL** : `/search-available-tags`  
-**Description** : Get all available tensor tags on the grid network. 
-**Method** : `GET`
+**Description** : Get all available tensor tags on the grid network.  
+**Method** : `GET`  
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
@@ -158,8 +158,8 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 
 ## Search Tags
 **URL** : `/search`  
-**Description** : Get all available tensor tags on the grid network. 
-**Method** : `POST`
+**Description** : Search specific tags on grid network.   
+**Method** : `POST`  
 **Auth required** : NO (can be changed)
 
 ##### Status Code: 200 OK
