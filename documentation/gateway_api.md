@@ -160,7 +160,16 @@ All HTTP/HTTPS endpoints will be detailed in this document.
 **URL** : `/search`  
 **Description** : Search specific tags on grid network.   
 **Method** : `POST`  
+**Content-Type** : application/json
 **Auth required** : NO (can be changed)
+
+#### Request Body
+```json
+{
+    "query" : ["#tensor_tag1", "#tensor-tag2", "#tensor-tag3"]
+}
+```
+
 
 ##### Status Code: 200 OK
 ```json
