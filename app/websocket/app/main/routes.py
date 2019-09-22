@@ -114,7 +114,7 @@ def get_model(model_id):
     # If not Allowed
     check = mm.is_model_copy_allowed(model_id)
     response = {}
-    if not check["status"]:  # If not allowed
+    if not check["success"]:  # If not allowed
         if check["error"] == mm.MODEL_NOT_FOUND_MSG:
             status_code = 404  # Not Found
             response["error"] = mm.Model_NOT_FOUND_MSG
