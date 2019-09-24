@@ -22,7 +22,7 @@ $ pip install -r requirements.txt
 $ python setup.py install
 ```
 
-### Common Installatoin Issues:
+### Common Installation Issues:
 - On macOS, you might get ```ld: library not found for -lssl```. It happens when openssl is missing. Kindly install openSSL, add it to you path and try again. You can also fix the issue by installing the appropriate Xcode Command line tools from [here](https://developer.apple.com/download/more/).
 
 ## Getting started
