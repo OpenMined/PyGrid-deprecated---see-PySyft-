@@ -2,10 +2,15 @@ import syft as sy
 import json
 
 from . import hook, local_worker, ws
-from .event_routes import get_node_id, connect_grid_nodes
+from .event_routes import get_node_id, connect_grid_nodes, socket_ping, syft_command
 from .persistence.utils import recover_objects, snapshot
 
-routes = {"get-id": get_node_id, "connect-node": connect_grid_nodes}
+routes = {
+    "get-id": get_node_id,
+    "connect-node": connect_grid_nodes,
+    "syft-command": syft_command,
+    "socket-ping": socket_ping,
+}
 
 
 def route_requests(message):

@@ -11,7 +11,7 @@ from syft import WebsocketClientWorker
 from syft.federated.federated_client import FederatedClient
 from syft.generic.tensor import AbstractTensor
 
-monkey.patch_all()
+# monkey.patch_all()
 import numpy as np
 
 

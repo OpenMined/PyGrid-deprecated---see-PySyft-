@@ -4,16 +4,11 @@ from flask import Blueprint, current_app
 
 
 hook = sy.TorchHook(th)
-local_worker = hook.local_worker
-local_worker.verbose = True
-local_worker.is_client_worker = False
+local_worker = sy.VirtualWorker(hook, auto_add=False)
+
 
 html = Blueprint(r"html", __name__)
 ws = Blueprint(r"ws", __name__)
-
-
-def set_node_id(id):
-    local_worker.id = id
 
 
 from . import events, routes

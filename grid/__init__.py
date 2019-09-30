@@ -6,6 +6,7 @@ import os
 
 import syft
 
+from grid.workers.grid_node import GridNode
 from grid.websocket_client import WebsocketGridClient
 from grid import utils as gr_utils
 from grid import deploy

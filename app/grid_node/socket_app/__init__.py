@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import os
 
-from .main import html, set_node_id, ws, db
+from .main import html, ws, db
 
 
 def set_database_config(app, test_config=None, verbose=False):
@@ -48,7 +48,9 @@ def set_database_config(app, test_config=None, verbose=False):
 def create_app(debug=False, id="me", test_config=None):
     app = Flask(__name__)
     sockets = Sockets(app)
-    set_node_id(id)
+    # set_node_id(id)
+    main.local_worker.id = id
+    main.hook.local_worker._known_workers[id] = main.local_worker
     app.register_blueprint(html, url_prefix=r"/")
     sockets.register_blueprint(ws, url_prefix=r"/")
 
