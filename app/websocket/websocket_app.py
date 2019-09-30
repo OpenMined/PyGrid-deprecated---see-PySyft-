@@ -10,6 +10,7 @@ import sys
 import argparse
 
 from app import create_app, socketio
+from app.main import hook, local_worker
 
 
 parser = argparse.ArgumentParser(description="Run Grid Node application.")
@@ -71,6 +72,7 @@ if __name__ == "__main__":
             os.path.join(args.gateway_url, "join"),
             data=json.dumps({"node-id": args.id, "node-address": node_address}),
         )
+    local_worker.id = args.id
     socketio.run(app, host=args.host, port=args.port)
 else:
     ## DEPLOYMENT MODE (we use gunicorn's eventlet worker to perform load balancing)
