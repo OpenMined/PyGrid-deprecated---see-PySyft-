@@ -16,3 +16,5 @@ flask_sqlalchemy
 flask_migrate
 flask_testing
 flask_cors
+gevent
+gevent-websocket
