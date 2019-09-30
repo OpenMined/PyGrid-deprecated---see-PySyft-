@@ -55,6 +55,7 @@ class GridNode(WebsocketClientWorker, FederatedClient):
             data,
         )
         self.id = self.get_node_id()
+        self._encoding = "ISO-8859-1"
 
     @property
     def url(self):
@@ -86,6 +87,67 @@ class GridNode(WebsocketClientWorker, FederatedClient):
         self.ws.send_binary(message)
         response = self.ws.recv()
         return response
+
+    def serve_model(
+        self,
+        model,
+        model_id: str = None,
+        allow_download: bool = False,
+        allow_remote_inference: bool = False,
+    ):
+        if model_id is None:
+            if isinstance(model, sy.Plan):
+                model_id = model.id
+            else:
+                raise ValueError("Model id argument is mandatory for jit models.")
+
+        # If the model is a Plan we send the model
+        # and host the plan version created after
+        # the send operation
+        if isinstance(model, sy.Plan):
+            # We need to use the same id in the model
+            # as in the POST request.
+            model.id = model_id
+            model.send(self)
+            res_model = model.ptr_plans[self.id]
+        else:
+            res_model = model
+
+        # Send post
+        serialized_model = sy.serde.serialize(res_model).decode(self._encoding)
+
+        self.ws.send(
+            json.dumps(
+                {
+                    "type": "host-model",
+                    "encoding": self._encoding,
+                    "model_id": model_id,
+                    "allow_download": str(allow_download),
+                    "allow_remote_inference": str(allow_remote_inference),
+                    "model": serialized_model,
+                }
+            )
+        )
+        response = json.loads(self.ws.recv())
+        if response["success"]:
+            return True
+        else:
+            raise RuntimeError(response["error"])
+
+    def run_remote_inference(self, model_id, data, N: int = 1):
+        serialized_data = sy.serde.serialize(data).decode(self._encoding)
+        payload = {
+            "type": "run-inference",
+            "model_id": model_id,
+            "data": serialized_data,
+            "encoding": self._encoding,
+        }
+        self.ws.send(json.dumps(payload))
+        response = json.loads(self.ws.recv())
+        if response["success"]:
+            return torch.tensor(response["prediction"])
+        else:
+            raise RuntimeError(response["error"])
 
     def __str__(self):
         return "<GridNode id: " + self.id + "#objects: " + str(len(self._objects)) + ">"
