@@ -16,11 +16,14 @@ import json
 @socketio.on("/set-grid-id")
 def set_grid_name(msg):
     """ Set Grid node ID. """
-    if local_worker.id != msg["id"]:
-        # Can I send back some kind of error to the client here?
-        pass
-    else:
-        local_worker.is_client_worker = False
+    local_worker.id = msg["id"]
+    local_worker.is_client_worker = False
+
+
+@socketio.on("/get-grid-id")
+def get_grid_name():
+    """ Get Grid node ID. """
+    return local_worker.id
 
 
 @socketio.on("/connect-node")

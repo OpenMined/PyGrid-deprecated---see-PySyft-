@@ -73,6 +73,7 @@ if __name__ == "__main__":
             data=json.dumps({"node-id": args.id, "node-address": node_address}),
         )
     local_worker.id = args.id
+    local_worker.is_client_worker = False
     socketio.run(app, host=args.host, port=args.port)
 else:
     ## DEPLOYMENT MODE (we use gunicorn's eventlet worker to perform load balancing)
