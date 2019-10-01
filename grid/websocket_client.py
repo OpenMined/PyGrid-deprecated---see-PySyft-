@@ -115,7 +115,8 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
     def connect(self):
         if self.__sio.eio.state != "connected":
 
-            def callback(grid_id):
+            def check_grid_id(grid_id):
+                """ Closes the connection if the worker's id is different from the app one. """
                 if grid_id != self.id:
                     print(
                         "Wrong id! Please use same id as the one used to create the app."
@@ -123,7 +124,7 @@ class WebsocketGridClient(BaseWorker, FederatedClient):
                     self.__sio.disconnect()
 
             self.__sio.connect(self.addr)
-            self.__sio.emit("/get-grid-id", callback=callback)
+            self.__sio.emit("/get-grid-id", callback=check_grid_id)
 
     def disconnect(self):
         self.__sio.disconnect()
