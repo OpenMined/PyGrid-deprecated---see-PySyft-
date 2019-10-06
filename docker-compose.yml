@@ -36,7 +36,7 @@ services:
         environment:
                 - GRID_NETWORK_URL=http://localhost:8080
                 - ID=Bill
-                - ADDRESS=http://locahost:3002/
+                - ADDRESS=http://localhost:3002/
                 - DATABASE_URL=sqlite:///databaseBill.db
                 - PORT=3002
         depends_on:
