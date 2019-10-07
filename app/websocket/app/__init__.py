@@ -2,14 +2,22 @@ from flask import Flask
 from flask_sockets import Sockets
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_login import LoginManager
 import os
 
-from .main import html, ws, db, hook, local_worker
+login_manager = LoginManager()
 
-# TODO: define a reasonable ping interval
-# and ping timeout
-PING_INTERVAL = 10000000
-PING_TIMEOUT = 5000
+
+def set_auth_configs(app):
+    """ Set configs to use flask session manager
+
+        Args:
+            app: Flask application
+        Returns:
+            app: Flask application
+    """
+    login_manager.init_app(app)
+    return app
 
 
 def set_database_config(app, test_config=None, verbose=False):
@@ -57,6 +65,9 @@ def create_app(node_id, debug=False, test_config=None):
     app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
+    from .main import html, ws, db, hook, local_worker
+
+    global db
     sockets = Sockets(app)
 
     # set_node_id(id)
@@ -65,6 +76,9 @@ def create_app(node_id, debug=False, test_config=None):
 
     app.register_blueprint(html, url_prefix=r"/")
     sockets.register_blueprint(ws, url_prefix=r"/")
+
+    # Set Authentication configs
+    app = set_auth_configs(app)
 
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)

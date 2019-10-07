@@ -5,7 +5,7 @@ import torch as th
 
 # Global variables must be initialized here.
 hook = sy.TorchHook(th)
-local_worker = hook.local_worker
+local_worker = sy.VirtualWorker(hook, auto_add=False)
 hook.local_worker.is_client_worker = False
 
 html = Blueprint(r"html", __name__)

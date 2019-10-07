@@ -6,8 +6,6 @@ from . import hook, local_worker, ws
 
 from .event_routes import *
 
-from .persistence.utils import recover_objects, snapshot
-
 import json
 
 routes = {
@@ -20,11 +18,14 @@ routes = {
     "delete-model": delete_model,
     "list-models": get_models,
     "download-model": download_model,
+    "authentication": authentication,
 }
 
 
 def route_requests(message):
     global routes
+    if isinstance(message, bytearray):
+        return forward_binary_message(message)
     try:
         message = json.loads(message)
         return routes[message["type"]](message)
@@ -40,18 +41,8 @@ def socket_api(socket):
         if not message:
             continue
         else:
-            if isinstance(message, bytearray):
-                # Forward syft commands to syft worker
-
-                # Load previous database tensors
-                if not local_worker._objects:
-                    recover_objects(local_worker)
-
-                decoded_response = local_worker._recv_msg(message)
-
-                # Save local worker state at database
-                snapshot(local_worker)
-
-                socket.send(decoded_response, binary=True)
+            response = route_requests(message)
+            if isinstance(response, bytearray):
+                socket.send(response, binary=True)
             else:
-                socket.send(route_requests(message))
+                socket.send(response)

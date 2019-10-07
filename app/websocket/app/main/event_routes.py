@@ -4,6 +4,9 @@ import syft as sy
 import torch as th
 from . import model_manager as mm
 from .local_worker_utils import register_obj, get_objs
+from .persistence.utils import recover_objects, snapshot
+from .auth import authenticated_only, session_repository
+from flask_login import login_user, current_user
 from grid import WebsocketGridClient
 import sys
 
@@ -16,14 +19,39 @@ def get_node_id(message):
     return json.dumps({"id": local_worker.id})
 
 
+def authentication(message):
+    user = session_repository.authenticate(message)
+    if user:
+        login_user(user)
+        return json.dumps({"success": "True"})
+    else:
+        return json.dumps({"success": "False"})
+
+
 def connect_grid_nodes(message):
     if message["id"] not in local_worker._known_workers:
         worker = WebsocketGridClient(hook, address=message["address"], id=message["id"])
     return json.dumps({"status": "Succesfully connected."})
 
 
+@authenticated_only
 def socket_ping(message):
     return json.dumps({"alive": "True"})
+
+
+def forward_binary_message(message):
+    # Forward syft commands to syft worker
+
+    # Load previous database tensors
+    if not local_worker._objects:
+        recover_objects(local_worker)
+
+    decoded_response = local_worker._recv_msg(message)
+
+    # Save local worker state at database
+    snapshot(local_worker)
+
+    return decoded_response
 
 
 def syft_command(message):
