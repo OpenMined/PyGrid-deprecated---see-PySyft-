@@ -47,6 +47,7 @@ def test_host_plan_not_allowed_to_run_ops(connected_node):
         bob.download_model(model_id="not_allowed")
 
 
+@pytest.mark.skip
 def test_host_plan_model(connected_node):
     class Net(sy.Plan):
         def __init__(self):

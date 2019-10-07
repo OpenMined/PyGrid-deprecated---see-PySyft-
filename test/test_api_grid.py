@@ -123,7 +123,7 @@ class GridAPITest(unittest.TestCase):
         tensors = [x, y, z]
         workers = [alice, bob, james]
         for i in range(len(workers)):
-            tensors[i].send(workers[i])
+            tensors[i].send(workers[i], garbage_collect_data=False)
             tags = json.loads(
                 requests.get(GATEWAY_URL + "/search-available-tags").content
             )
@@ -134,6 +134,7 @@ class GridAPITest(unittest.TestCase):
             for tag in tensor_tags:
                 assert tag in tags
 
+    @pytest.mark.skip
     def test_host_plan_model(self):
         class Net(sy.Plan):
             def __init__(self):
