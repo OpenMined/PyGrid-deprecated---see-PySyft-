@@ -8,7 +8,6 @@ class SessionsRepository:
     def __init__(self):
         self.users = dict()
         self.users_id_dict = dict()
-        self.__load_preset_credentials()
 
     def save_session(self, user, key):
         self.users[key] = user
