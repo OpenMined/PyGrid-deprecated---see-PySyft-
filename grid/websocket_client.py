@@ -22,7 +22,7 @@ from syft.codes import MSGTYPE
 from syft.messaging.message import Message
 
 from grid import utils as gr_utils
-
+from grid.auth import search_credential
 
 MODEL_LIMIT_SIZE = (1024 ** 2) * 64  # 64MB
 
@@ -88,12 +88,25 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     def get_node_id(self):
         message = {"type": "get-id"}
-        self.ws.send(json.dumps(message))
-        response = json.loads(self.ws.recv())
-        return response["id"]
+        response = self._forward_json_to_websocket_server_worker(message)
+        return response.get("id", None)
 
     def connect_nodes(self, node):
         message = {"type": "connect-node", "address": node.address, "id": node.id}
+        return self._forward_json_to_websocket_server_worker(message)
+
+    def authenticate(self, user):
+        cred = search_credential(user)
+        if cred:
+            cred_dict = cred.json()
+            cred_dict["type"] = "authentication"
+            response = self._forward_json_to_websocket_server_worker(cred_dict)
+            if response["success"]:
+                return True
+        else:
+            raise RuntimeError("Invalid user.")
+
+    def _forward_json_to_websocket_server_worker(self, message: dict) -> dict:
         self.ws.send(json.dumps(message))
         return json.loads(self.ws.recv())
 
@@ -123,6 +136,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             # as in the POST request.
             model.id = model_id
             model.send(self)
+            model.ptr_plans[self.id].garbage_collect_data = False
             res_model = model.ptr_plans[self.id]
         else:
             res_model = model
@@ -132,19 +146,15 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
         # If the model is smaller than a chunk size
         if sys.getsizeof(serialized_model) <= self._chunk_size:
-            self.ws.send(
-                json.dumps(
-                    {
-                        "type": "host-model",
-                        "encoding": self._encoding,
-                        "model_id": model_id,
-                        "allow_download": str(allow_download),
-                        "allow_remote_inference": str(allow_remote_inference),
-                        "model": serialized_model.decode(self._encoding),
-                    }
-                )
-            )
-            response = json.loads(self.ws.recv())
+            message = {
+                "type": "host-model",
+                "encoding": self._encoding,
+                "model_id": model_id,
+                "allow_download": str(allow_download),
+                "allow_remote_inference": str(allow_remote_inference),
+                "model": serialized_model.decode(self._encoding),
+            }
+            response = self._forward_json_to_websocket_server_worker(message)
             if response["success"]:
                 return True
             else:
@@ -178,14 +188,13 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     def run_remote_inference(self, model_id, data, N: int = 1):
         serialized_data = sy.serde.serialize(data).decode(self._encoding)
-        payload = {
+        message = {
             "type": "run-inference",
             "model_id": model_id,
             "data": serialized_data,
             "encoding": self._encoding,
         }
-        self.ws.send(json.dumps(payload))
-        response = json.loads(self.ws.recv())
+        response = self._forward_json_to_websocket_server_worker(message)
         if response["success"]:
             return torch.tensor(response["prediction"])
         else:
@@ -281,14 +290,13 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     @property
     def models(self, N: int = 1):
-        self.ws.send(json.dumps({"type": "list-models"}))
-        response = json.loads(self.ws.recv())
+        message = {"type": "list-models"}
+        response = self._forward_json_to_websocket_server_worker(message)
         return response["models"]
 
     def delete_model(self, model_id):
         message = {"type": "delete-model", "model_id": model_id}
-        self.ws.send(json.dumps(message))
-        response = json.loads(self.ws.recv())
+        response = self._forward_json_to_websocket_server_worker(message)
         return self._return_bool_result(response)
 
     def download_model(self, model_id: str):
@@ -312,8 +320,8 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             return sy.hook.local_worker.fetch_plan(model_id, self, copy=True)
         except AttributeError:
             # Try download model by websocket channel
-            self.ws.send(json.dumps({"type": "download-model", "model_id": model_id}))
-            response = json.loads(self.ws.recv())
+            message = {"type": "download-model", "model_id": model_id}
+            response = self._forward_json_to_websocket_server_worker(message)
 
             # If we can download model (small models) by sockets
             if response.get("serialized_model", None):
