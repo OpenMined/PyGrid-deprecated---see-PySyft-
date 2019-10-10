@@ -47,7 +47,18 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             hook : a normal TorchHook object
             address : the address this client connects to
             id : the unique id of the worker (string or int)
-            log_msgs : whether or not all messages should be
+            auth : An optional dict parameter give authentication credentials,
+                to perform authentication process during node connection process.
+                If not defined, we'll work with a public grid node version, otherwise,
+                we'll work with a private version of the same grid node.
+            is_client_worker : An optional boolean parameter to indicate
+                whether this worker is associated with an end user client. If
+                so, it assumes that the client will maintain control over when
+                variables are instantiated or deleted as opposed to handling
+                tensor/variable/model lifecycle internally. Set to True if this
+                object is not where the objects will be stored, but is instead
+                a pointer to a worker that eists elsewhere.
+                log_msgs : whether or not all messages should be
                 saved locally for later inspection.
             verbose : a verbose option - will print all messages
                 sent/received to stdout
@@ -55,7 +66,11 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                 initialized with (such as datasets)
         """
         self.address = address
+
+        # Parse address string to get scheme, host and port
         self.secure, self.host, self.port = self.parse_address(address)
+
+        # Initialize WebsocketClientWorker / Federated Client
         super().__init__(
             hook,
             self.host,
@@ -67,10 +82,15 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             verbose,
             data,
         )
+
+        # Update Node reference using node's Id given by the remote grid node
         self._update_node_reference(self.get_node_id())
         self.credentials = None
+
+        # If auth mode enabled, perform authentication
         if auth:
             self.authenticate(auth)
+
         self._encoding = "ISO-8859-1"
         self._chunk_size = chunk_size
 
@@ -85,51 +105,96 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         else:
             return self.address
 
-    def _update_node_reference(self, new_id):
+    def _update_node_reference(self, new_id: str):
+        """ Update worker references changing node id references at hook structure.
+            
+            Args:
+                new_id (String) : New worker ID.
+        """
         del self.hook.local_worker._known_workers[self.id]
         self.id = new_id
         self.hook.local_worker._known_workers[new_id] = self
 
-    def parse_address(self, address):
+    def parse_address(self, address: str):
+        """ Parse Address string to define secure flag and split into host and port.
+            
+            Args:
+                address (String) : Adress of remote worker.
+        """
         url = urlparse(address)
         secure = True if url.scheme == "wss" else False
         return (secure, url.hostname, url.port)
 
     def get_node_id(self):
+        """ Get Node ID from remote node worker
+            
+            Returns:
+                node_id (String) : node id used by remote worker.
+        """
         message = {"type": "get-id"}
         response = self._forward_json_to_websocket_server_worker(message)
         return response.get("id", None)
 
     def connect_nodes(self, node):
+        """ Connect two remote workers between each other.
+            If this node is authenticated, use the same credentials to authenticate the candidate node.
+            
+            Args:
+                node (WebsocketGridClient) : Node that will be connected with this remote worker.
+            Returns:
+                node_response (Dict) : node response.
+        """
         message = {"type": "connect-node", "address": node.address, "id": node.id}
         if node.credentials:
             message["auth"] = node.credentials
         return self._forward_json_to_websocket_server_worker(message)
 
     def authenticate(self, user):
+        """ Perform Authentication Process using credentials grid credentials.
+            Grid credentials can be loaded calling the function gr.load_auth_credentials().
+
+            Args:
+                user : String containing the username of a loaded credential or a credential's dict.
+        """
         cred_dict = None
+        # If user is a string
         if isinstance(user, str):
             cred = search_credential(user)
             cred_dict = cred.json()
+        # If user is a dict structure
         elif isinstance(user, dict):
             cred_dict = user
+
         if cred_dict:
+            # Prepare a authentication request to remote grid node
             cred_dict["type"] = "authentication"
             response = self._forward_json_to_websocket_server_worker(cred_dict)
-            if response["success"]:
-                self._update_node_reference(response["node_id"])
+            # If succeeded, update node's reference and update client's credential.
+            node_id = self._return_bool_result(response, "node_id")
+            if node_id:
+                self._update_node_reference(node_id)
                 self.credentials = cred_dict
-                return True
-            else:
-                raise RuntimeError("Invalid credentials.")
         else:
             raise RuntimeError("Invalid user.")
 
     def _forward_json_to_websocket_server_worker(self, message: dict) -> dict:
+        """ Prepare/send a JSON message to a remote grid node and receive the response.
+            
+            Args:
+                message (Dict) : message payload.
+            Returns:
+                node_response (Dict) : response payload.
+        """
         self.ws.send(json.dumps(message))
         return json.loads(self.ws.recv())
 
     def _forward_to_websocket_server_worker(self, message: bin) -> bin:
+        """ Prepare/send a binary message to a remote grid node and receive the response.
+            Args:
+                message (bytes) : message payload.
+            Returns:
+                node_response (bytes) : response payload.
+        """
         self.ws.send_binary(message)
         response = self.ws.recv()
         return response
@@ -141,6 +206,21 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         allow_download: bool = False,
         allow_remote_inference: bool = False,
     ):
+        """ Hosts the model and optionally serve it using a Socket / Rest API.
+            
+            Args:
+                model: A jit model or Syft Plan.
+                model_id: An integer or string representing the model id used to retrieve the model
+                    later on using the Rest API. If this is not provided and the model is a Plan
+                    we use model.id, if the model is a jit model we raise an exception.
+                allow_download: If other workers should be able to fetch a copy of this model to run it locally set this to True.
+                allow_remote_inference: If other workers should be able to run inference using this model through a Rest API interface set this True.
+            Returns:
+                True if model was served sucessfully, raises a RunTimeError otherwise.
+            Raises:
+                ValueError: if model_id is not provided and model is a jit model (aka does not have an id attribute).
+                RunTimeError: if there was a problem during model serving.
+        """
         if model_id is None:
             if isinstance(model, sy.Plan):
                 model_id = model.id
@@ -174,10 +254,6 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                 "model": serialized_model.decode(self._encoding),
             }
             response = self._forward_json_to_websocket_server_worker(message)
-            if response["success"]:
-                return True
-            else:
-                raise RuntimeError(response["error"])
         else:
             # HUGE Models
             # TODO: Replace to websocket protocol
@@ -197,15 +273,19 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                     },
                 )
             )
-            return self._return_bool_result(response)
-
-    def _generate_model_chunks(self, serialized_model):
-        return [
-            serialized_model[i : i + self._chunk_size]
-            for i in range(0, len(serialized_model), self._chunk_size)
-        ]
+        return self._return_bool_result(response)
 
     def run_remote_inference(self, model_id, data, N: int = 1):
+        """ Run a dataset inference using a remote model.
+            
+            Args:
+                model_id (String) : Model ID.
+                data (Tensor) : dataset to be inferred.
+            Returns:
+                inference (Tensor) : Inference result
+            Raises:
+                RuntimeError : If an unexpected behavior happen, It will forward the error message.
+        """
         serialized_data = sy.serde.serialize(data).decode(self._encoding)
         message = {
             "type": "run-inference",
@@ -214,12 +294,16 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             "encoding": self._encoding,
         }
         response = self._forward_json_to_websocket_server_worker(message)
-        if response["success"]:
-            return torch.tensor(response["prediction"])
-        else:
-            raise RuntimeError(response["error"])
+        return self._return_bool_result(response, "prediction")
 
     def search(self, *query):
+        """ Search datasets references using their tags (AND Operation).
+
+            Args:
+                query: Set of dataset tags.
+            Returns:
+                match_datasets (List) : List of tensors with result datasets.
+        """
         # Prepare a message requesting the websocket server to search among its objects
         message = Message(MSGTYPE.SEARCH, query)
         serialized_message = sy.serde.serialize(message)
@@ -249,15 +333,15 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
     ):
         """Helper function for sending http request to talk to app.
 
-        Args:
-            route: App route.
-            data: Data to be sent in the request.
-            request: Request type (GET, POST, PUT, ...).
-            N: Number of tries in case of fail. Default is 10.
-            unhexlify: A boolean indicating if we should try to run unhexlify on the response or not.
-            return_response_text: If True return response.text, return raw response otherwise.
-        Returns:
-            If return_response_text is True return response.text, return raw response otherwise.
+            Args:
+                route: App route.
+                data: Data to be sent in the request.
+                request: Request type (GET, POST, PUT, ...).
+                N: Number of tries in case of fail. Default is 10.
+                unhexlify: A boolean indicating if we should try to run unhexlify on the response or not.
+                return_response_text: If True return response.text, return raw response otherwise.
+            Returns:
+                If return_response_text is True return response.text, return raw response otherwise.
         """
         url = (
             f"https://{self.host}:{self.port}"
@@ -290,7 +374,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             Args:
                 route : Service endpoint
                 data : tensors / models to be uploaded.
-            Return:
+            Returns:
                 response : response from server
         """
         # Build URL path
@@ -309,17 +393,35 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     @property
     def models(self, N: int = 1):
+        """ Get models stored at remote grid node.
+            
+            Returns:
+                models (List) : List of models stored in this grid node.
+        """
         message = {"type": "list-models"}
         response = self._forward_json_to_websocket_server_worker(message)
         return response["models"]
 
-    def delete_model(self, model_id):
+    def delete_model(self, model_id: str):
+        """ Delete a model previously registered.
+            
+            Args:
+                model_id (String) : ID of the model that will be deleted.
+        """
         message = {"type": "delete-model", "model_id": model_id}
         response = self._forward_json_to_websocket_server_worker(message)
         return self._return_bool_result(response)
 
     def download_model(self, model_id: str):
-        """Downloads a model to run it  locally."""
+        """ Download a model to run it locally.
+        
+            Args:
+                model_id (String) : ID of the model that will be downloaded.
+            Returns:
+                model : Desired model.
+            Raises:
+                If an unexpected behavior happen, It will forward the error message.
+        """
 
         def _is_large_model(result):
             return "multipart/form-data" in result.headers["Content-Type"]
@@ -380,13 +482,13 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
     def serve_encrypted_model(self, encrypted_model: sy.messaging.plan.Plan):
         """Serve a model in a encrypted fashion using SMPC.
 
-        A wrapper for sending the model. The worker is responsible for sharing the model using SMPC.
+            A wrapper for sending the model. The worker is responsible for sharing the model using SMPC.
 
-        Args:
-            encrypted_model: A pĺan already shared with workers using SMPC.
+            Args:
+                encrypted_model: A pĺan already shared with workers using SMPC.
 
-        Returns:
-            True if model was served successfully, raises a RunTimeError otherwise.
+            Returns:
+                True if model was served successfully, raises a RunTimeError otherwise.
         """
         # Send the model
         encrypted_model.send(self)

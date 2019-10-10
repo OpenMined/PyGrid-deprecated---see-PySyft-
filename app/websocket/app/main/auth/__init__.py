@@ -1,14 +1,13 @@
-from .. import local_worker
-from flask_login import LoginManager, current_user
-import functools
-from .user_session import UserSession
 import json
+import functools
+from flask_login import LoginManager, current_user
+from .. import local_worker
 
+from .user_session import UserSession
+from .session_repository import SessionsRepository
+from .. import local_worker
 
 SESSION_TYPES = [UserSession]
-from .session_repository import SessionsRepository
-
-
 session_repository = None
 login_manager = LoginManager()
 

@@ -1,7 +1,6 @@
-from .user_session import UserSession
 from grid.auth.config import read_authentication_configs
 from grid.auth import AUTH_MODELS
-from . import SESSION_TYPES
+from .user_session import UserSession
 
 
 class SessionsRepository:
@@ -22,15 +21,11 @@ class SessionsRepository:
         return self.users_id_dict.get(sessionid)
 
     def authenticate(self, payload):
-        authenticated = False
         key = payload.get("user")
         session_object = self.users.get(key)
         if session_object:
-            for session_type in SESSION_TYPES:
-                if session_object.authenticate(payload):
-                    authenticated = True
-        if authenticated:
-            return session_object
+            if session_object.authenticate(payload):
+                return session_object
 
     def __load_preset_credentials(self):
         for cred in read_authentication_configs():

@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 import syft as sy
-from .. import hook, local_worker
 import uuid
+from .. import hook, local_worker
 
 
 class UserSession(UserMixin):

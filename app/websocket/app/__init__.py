@@ -45,7 +45,7 @@ def set_database_config(app, test_config=None, verbose=False):
 
 
 def create_app(node_id, debug=False, test_config=None):
-    """Create flask socket-io application."""
+    """Create flask socket application."""
     app = Flask(__name__)
     app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
@@ -60,6 +60,7 @@ def create_app(node_id, debug=False, test_config=None):
     local_worker.id = node_id
     hook.local_worker._known_workers[node_id] = local_worker
 
+    # Register app blueprints
     app.register_blueprint(html, url_prefix=r"/")
     sockets.register_blueprint(ws, url_prefix=r"/")
 

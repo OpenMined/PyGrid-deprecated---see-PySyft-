@@ -16,10 +16,12 @@ MODEL_LIMIT_SIZE = (1024 ** 2) * 64  # 64MB
 
 
 def get_node_id(message):
+    """ Returns node id. """
     return json.dumps({"id": local_worker.id})
 
 
 def authentication(message):
+    """ Perform user authentication. """
     user = get_session().authenticate(message)
     if user:
         login_user(user)
@@ -29,6 +31,7 @@ def authentication(message):
 
 
 def connect_grid_nodes(message):
+    """ Connect remote grid nodes between each other. """
     if message["id"] not in local_worker._known_workers:
         worker = WebsocketGridClient(
             hook, address=message["address"], id=message["id"], auth=message.get("auth")
@@ -43,15 +46,16 @@ def socket_ping(message):
 
 @authenticated_only
 def forward_binary_message(message):
-    # Forward syft commands to syft worker
+    """ Forward binary syft messages to user's workers """
 
-    # Load previous database tensors
+    # If worker is empty, load previous database tensors
     if not current_user.worker._objects:
         recover_objects(current_user.worker)
 
+    # Process message
     decoded_response = current_user.worker._recv_msg(message)
 
-    # Save local worker state at database
+    # Save worker state at database
     snapshot(current_user.worker)
 
     return decoded_response
@@ -64,6 +68,7 @@ def syft_command(message):
 
 
 def host_model(message):
+    """ Save/Store a model into database."""
     encoding = message["encoding"]
     model_id = message["model_id"]
     allow_download = message["allow_download"] == "True"
@@ -82,16 +87,19 @@ def host_model(message):
 
 
 def delete_model(message):
+    """ Delete a model previously stored at database. """
     model_id = message["model_id"]
     result = mm.delete_model(model_id)
     return json.dumps(result)
 
 
 def get_models(message):
+    """ Get a list of stored mdoels. """
     return json.dumps(mm.list_models())
 
 
 def download_model(message):
+    """ Download a specifc model. """
     model_id = message["model_id"]
 
     # If not Allowed
@@ -122,6 +130,7 @@ def download_model(message):
 
 
 def run_inference(message):
+    """ Run dataset inference with a specifc model stored in this node. """
     response = mm.get_model_with_id(message["model_id"])
     if response["success"]:
         model = response["model"]
