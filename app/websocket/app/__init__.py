@@ -2,22 +2,7 @@ from flask import Flask
 from flask_sockets import Sockets
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_login import LoginManager
 import os
-
-login_manager = LoginManager()
-
-
-def set_auth_configs(app):
-    """ Set configs to use flask session manager
-
-        Args:
-            app: Flask application
-        Returns:
-            app: Flask application
-    """
-    login_manager.init_app(app)
-    return app
 
 
 def set_database_config(app, test_config=None, verbose=False):
@@ -66,6 +51,7 @@ def create_app(node_id, debug=False, test_config=None):
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
     from .main import html, ws, db, hook, local_worker
+    from .main import auth
 
     global db
     sockets = Sockets(app)
@@ -78,7 +64,7 @@ def create_app(node_id, debug=False, test_config=None):
     sockets.register_blueprint(ws, url_prefix=r"/")
 
     # Set Authentication configs
-    app = set_auth_configs(app)
+    app = auth.set_auth_configs(app)
 
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)

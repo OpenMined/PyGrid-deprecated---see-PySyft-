@@ -7,3 +7,6 @@ class BaseAuthentication(ABC):
 
     def parse(self):
         raise NotImplementedError("Parse not specified!")
+
+    def json(self):
+        raise NotImplementedError("JSON not specified!")

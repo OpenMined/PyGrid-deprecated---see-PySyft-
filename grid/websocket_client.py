@@ -35,6 +35,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         hook,
         address,
         id: Union[int, str] = 0,
+        auth: dict = None,
         is_client_worker: bool = False,
         log_msgs: bool = False,
         verbose: bool = False,
@@ -66,7 +67,10 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             verbose,
             data,
         )
-        self.id = self.get_node_id()
+        self._update_node_reference(self.get_node_id())
+        self.credentials = None
+        if auth:
+            self.authenticate(auth)
         self._encoding = "ISO-8859-1"
         self._chunk_size = chunk_size
 
@@ -81,6 +85,11 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         else:
             return self.address
 
+    def _update_node_reference(self, new_id):
+        del self.hook.local_worker._known_workers[self.id]
+        self.id = new_id
+        self.hook.local_worker._known_workers[new_id] = self
+
     def parse_address(self, address):
         url = urlparse(address)
         secure = True if url.scheme == "wss" else False
@@ -93,16 +102,26 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     def connect_nodes(self, node):
         message = {"type": "connect-node", "address": node.address, "id": node.id}
+        if node.credentials:
+            message["auth"] = node.credentials
         return self._forward_json_to_websocket_server_worker(message)
 
     def authenticate(self, user):
-        cred = search_credential(user)
-        if cred:
+        cred_dict = None
+        if isinstance(user, str):
+            cred = search_credential(user)
             cred_dict = cred.json()
+        elif isinstance(user, dict):
+            cred_dict = user
+        if cred_dict:
             cred_dict["type"] = "authentication"
             response = self._forward_json_to_websocket_server_worker(cred_dict)
             if response["success"]:
+                self._update_node_reference(response["node_id"])
+                self.credentials = cred_dict
                 return True
+            else:
+                raise RuntimeError("Invalid credentials.")
         else:
             raise RuntimeError("Invalid user.")
 
@@ -382,3 +401,6 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             allow_remote_inference=False,
         )
         return result
+
+    def __str__(self):
+        return "Grid Worker < id: " + self.id + " >"

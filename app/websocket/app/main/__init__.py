@@ -14,7 +14,7 @@ ws = Blueprint(r"ws", __name__)
 
 from . import routes, events
 from .persistence.models import db
-
+from . import auth
 
 # Implement base search locally
 # We need this local fix for now to be able run the search operation on Grid
