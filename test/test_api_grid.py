@@ -164,7 +164,8 @@ class GridAPITest(unittest.TestCase):
             model_id="plan-model", data=th.tensor([1.0, 2])
         )
         assert inference == th.tensor([1000.0])
-
+    
+    @pytest.mark.skip
     def test_grid_search(self):
         hook.local_worker.is_client_worker = True
         nodes = self.connect_nodes()
