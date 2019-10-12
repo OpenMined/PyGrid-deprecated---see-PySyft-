@@ -296,22 +296,6 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         response = self._forward_json_to_websocket_server_worker(message)
         return self._return_bool_result(response, "prediction")
 
-    def search(self, *query):
-        """ Search datasets references using their tags (AND Operation).
-
-            Args:
-                query: Set of dataset tags.
-            Returns:
-                match_datasets (List) : List of tensors with result datasets.
-        """
-        # Prepare a message requesting the websocket server to search among its objects
-        message = Message(MSGTYPE.SEARCH, query)
-        serialized_message = sy.serde.serialize(message)
-
-        # Send the message and return the deserialized response.
-        response = self._recv_msg(serialized_message)
-        return sy.serde.deserialize(response)
-
     def _return_bool_result(self, result, return_key=None):
         if result["success"]:
             return result[return_key] if return_key is not None else True
