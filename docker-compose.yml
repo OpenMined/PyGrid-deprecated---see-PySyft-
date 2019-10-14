@@ -3,16 +3,14 @@ services:
     gateway:
         image: gateway:latest
         environment:
-                - PORT=8080
+                - PORT=5000
                 - SECRET_KEY=ineedtoputasecrethere
-                - DATABASE_URL=sqlite:///databaseGateway.db
-        ports:
-                - "8080:8080"
+                - DATABASE_URL=sqlite:///databasegateway.db
         network_mode: "host"
     bob:
         image: node:latest
         environment:
-                - GRID_NETWORK_URL=http://localhost:8080
+                - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Bob
                 - ADDRESS=http://localhost:3000/
                 - DATABASE_URL=sqlite:///databaseBob.db
@@ -23,7 +21,7 @@ services:
     alice:
         image: node:latest
         environment:
-                - GRID_NETWORK_URL=http://localhost:8080
+                - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Alice
                 - ADDRESS=http://localhost:3001/
                 - DATABASE_URL=sqlite:///databaseAlice.db
@@ -34,7 +32,7 @@ services:
     bill:
         image: node:latest
         environment:
-                - GRID_NETWORK_URL=http://localhost:8080
+                - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Bill
                 - ADDRESS=http://localhost:3002/
                 - DATABASE_URL=sqlite:///databaseBill.db
