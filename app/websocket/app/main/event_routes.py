@@ -2,9 +2,9 @@ import json
 from . import local_worker, hook
 import syft as sy
 import torch as th
-from . import model_manager as mm
 from .local_worker_utils import register_obj, get_objs
 from .persistence.utils import recover_objects, snapshot
+from .persistence import model_manager as mm
 from .auth import authenticated_only, get_session
 from flask_login import login_user, current_user
 from grid import WebsocketGridClient
@@ -27,7 +27,7 @@ def authentication(message):
         login_user(user)
         return json.dumps({"success": "True", "node_id": user.worker.id})
     else:
-        return json.dumps({"success": "False"})
+        return json.dumps({"error": "Invalid username/password!"})
 
 
 def connect_grid_nodes(message):

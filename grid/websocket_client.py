@@ -297,9 +297,9 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         return self._return_bool_result(response, "prediction")
 
     def _return_bool_result(self, result, return_key=None):
-        if result["success"]:
+        if result.get("success"):
             return result[return_key] if return_key is not None else True
-        elif result["error"]:
+        elif result.get("error"):
             raise RuntimeError(result["error"])
         else:
             raise RuntimeError(
