@@ -8,8 +8,8 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 import syft as sy
 import torch as th
 
-from .persistence.models import db, TorchModel, TorchTensor, Worker
-from .local_worker_utils import get_obj, register_obj
+from .models import db, TorchModel, TorchTensor, Worker
+from ..local_worker_utils import get_obj, register_obj
 
 
 # ============= Global variables ========================
