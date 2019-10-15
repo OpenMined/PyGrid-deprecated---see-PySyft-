@@ -11,11 +11,12 @@ from flask import Response
 from flask import request, send_from_directory
 
 import syft as sy
+from grid import WebsocketGridClient
 from requests_toolbelt import MultipartEncoder
 from flask_cors import cross_origin
 
 from . import html, local_worker
-from . import model_manager as mm
+from .persistence import model_manager as mm
 from .local_worker_utils import register_obj, get_objs
 
 
@@ -53,9 +54,13 @@ def list_models_with_details():
 
 @html.route("/workers/")
 def list_workers():
-    return Response(
-        json.dumps(mm.list_workers()), status=200, mimetype="application/json"
+    connected_workers = filter(
+        lambda x: isinstance(x, WebsocketGridClient),
+        local_worker._known_workers.values(),
     )
+    ids = map(lambda x: x.id, connected_workers)
+    response_body = {"success": True, "workers": list(ids)}
+    return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
 
 # ======= WEB ROUTES END ======
