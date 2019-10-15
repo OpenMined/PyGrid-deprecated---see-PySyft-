@@ -5,7 +5,6 @@ from .. import local_worker
 
 from .user_session import UserSession
 from .session_repository import SessionsRepository
-from .. import local_worker
 
 SESSION_TYPES = [UserSession]
 session_repository = None

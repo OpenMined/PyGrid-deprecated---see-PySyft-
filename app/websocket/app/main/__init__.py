@@ -15,9 +15,3 @@ ws = Blueprint(r"ws", __name__)
 from . import routes, events
 from .persistence.models import db
 from . import auth
-
-# Implement base search locally
-# We need this local fix for now to be able run the search operation on Grid
-# TODO: remove this after this issue is fixed https://github.com/OpenMined/PySyft/issues/2609
-
-from syft.generic.frameworks.types import FrameworkTensor
