@@ -10,7 +10,8 @@ def create_standard_auth(path):
     # Create a new credential
     username = input("Username: ")
     password = getpass.getpass("Password:")
-    credentials = json.dumps({"username": username, "password": password})
+    first_user = {"username": username, "password": password}
+    credentials = json.dumps({"credentials": [first_user]})
 
     # Save at BASE_DIR/BASE_FOLDER/UserAuthentication.FILENAME (JSON format)
     file_path = os.path.join(path, UserAuthentication.FILENAME)
