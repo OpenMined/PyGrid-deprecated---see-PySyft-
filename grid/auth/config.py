@@ -6,12 +6,12 @@ import getpass
 import json
 
 
-def create_standard_auth(path):
+def create_auth(path):
     # Create a new credential
     username = input("Username: ")
     password = getpass.getpass("Password:")
     first_user = {"username": username, "password": password}
-    credentials = json.dumps({"credentials": [first_user]})
+    credentials = json.dumps({"credential": [first_user]})
 
     # Save at BASE_DIR/BASE_FOLDER/UserAuthentication.FILENAME (JSON format)
     file_path = os.path.join(path, UserAuthentication.FILENAME)
@@ -42,7 +42,7 @@ def read_authentication_configs(directory=None, folder=None):
     # If auth_credentials is empty
     if not len(auth_credentials):
         # Create new one
-        auth_credentials.append(create_standard_auth(path))
+        auth_credentials.append(create_auth(path))
     return auth_credentials
 
 
