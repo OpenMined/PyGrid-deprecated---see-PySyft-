@@ -242,7 +242,7 @@ def search_dataset_tags():
         return Response("", status=400, mimetype="application/json")
 
     # Search for desired datasets that belong to this node
-    results = local_worker.search(*body["query"])
+    results = local_worker.search(body["query"])
 
     body_response = {"content": False}
     if len(results):
