@@ -6,7 +6,15 @@ import getpass
 import json
 
 
-def create_auth(path):
+def register_new_credentials(path):
+    """ We use this function to create a new credential if we don't find any credential during
+        load_credentials function.
+
+        Args:
+            path (str) : .openmined credentials path
+        Returns:
+            UserAuthentication : A Instance of our new credential.
+    """
     # Create a new credential
     username = input("Username: ")
     password = getpass.getpass("Password:")
@@ -23,6 +31,15 @@ def create_auth(path):
 
 
 def read_authentication_configs(directory=None, folder=None):
+    """ Search for a path and folder used to store user credentials
+        
+        Args:
+            directory (str) : System path (can usually be /home/<user>).
+            folder (str) : folder name used to store PyGrid credentials.
+
+        Returns:
+            List : List of credentials instances.
+    """
     dir_path = directory if directory else BASE_DIR
     folder_name = folder if folder else BASE_FOLDER
 
@@ -42,11 +59,18 @@ def read_authentication_configs(directory=None, folder=None):
     # If auth_credentials is empty
     if not len(auth_credentials):
         # Create new one
-        auth_credentials.append(create_auth(path))
+        auth_credentials.append(register_new_credentials(path))
     return auth_credentials
 
 
 def search_credential(user):
+    """ Search for a specific credential instance.
+        
+        Args:
+            user : key used to identify some credential.
+        Returns:
+            BaseAuthentication : Credential's instance.
+    """
     for cred in auth_credentials:
         if cred.username == user:
             return cred

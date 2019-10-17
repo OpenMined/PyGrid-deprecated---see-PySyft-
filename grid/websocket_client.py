@@ -151,7 +151,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
     def authenticate(self, user):
         """ Perform Authentication Process using credentials grid credentials.
-            Grid credentials can be loaded calling the function gr.load_auth_credentials().
+            Grid credentials can be loaded calling the function gr.load_credentials().
 
             Args:
                 user : String containing the username of a loaded credential or a credential's dict.
