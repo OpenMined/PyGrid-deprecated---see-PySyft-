@@ -24,6 +24,6 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 ## Checklist:
 
-- [] I did follow the [contribution guidelines](https://github.com/OpenMined/PySyft/blob/master/CONTRIBUTING.md)
+- [ ] I did follow the [contribution guidelines](https://github.com/OpenMined/PySyft/blob/master/CONTRIBUTING.md)
 - [ ] New Unit tests added
 - [ ] Unit tests pass locally with my changes
