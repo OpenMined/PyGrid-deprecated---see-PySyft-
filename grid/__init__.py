@@ -41,7 +41,7 @@ syft.frameworks.torch.tensors.interpreters.native.TorchTensor.request_decryption
 # =============== Heroku related functions =======================
 
 
-def load_auth_credentials(directory=None, folder=None):
+def load_credentials(directory=None, folder=None):
     auth.config.read_authentication_configs(directory, folder)
 
 
