@@ -2,7 +2,6 @@ import json
 from . import local_worker, hook
 import syft as sy
 import torch as th
-from .local_worker_utils import register_obj, get_objs
 from .persistence.utils import recover_objects, snapshot
 from .persistence import model_manager as mm
 from .auth import authenticated_only, get_session
@@ -142,7 +141,7 @@ def run_inference(message):
 
         # If we're using a Plan we need to register the object
         # to the local worker in order to execute it
-        register_obj(data)
+        local_worker._objects[data.id] = data
 
         # Some models returns tuples (GPT-2 / BERT / ...)
         # To avoid errors on detach method, we check the type of inference's result

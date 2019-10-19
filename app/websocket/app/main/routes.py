@@ -17,7 +17,6 @@ from flask_cors import cross_origin
 
 from . import html, local_worker
 from .persistence import model_manager as mm
-from .local_worker_utils import register_obj, get_objs
 
 
 # Suport for sending big models over the wire back to a
@@ -159,7 +158,7 @@ def serve_model():
 def get_available_tags():
     """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains. """
     available_tags = set()
-    objs = get_objs()
+    objs = local_worker._objects
 
     for obj in objs.values():
         if obj.tags:
