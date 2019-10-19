@@ -16,3 +16,5 @@ class RESPONSE_MSG(object):
     NODE_ID = "id"
     INFERENCE_RESULT = "prediction"
     MODELS = "models"
+    ERROR = "error"
+    SUCCESS = "success"
