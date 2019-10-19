@@ -14,14 +14,25 @@ import sys
 MODEL_LIMIT_SIZE = (1024 ** 2) * 64  # 64MB
 
 
-def get_node_id(message):
-    """ Returns node id. """
+def get_node_id(message: dict) -> str:
+    """ Returns node id. 
+        
+        Returns:
+            response (str) : Response message containing node id.
+    """
     return json.dumps({"id": local_worker.id})
 
 
-def authentication(message):
-    """ Perform user authentication. """
+def authentication(message: dict) -> str:
+    """ Receive user credentials and performs user authentication. 
+        
+        Args:
+            message (dict) : Dict data structure containing user credentials.
+        Returns:
+            response (str) : Authentication response message.
+    """
     user = get_session().authenticate(message)
+    # If it was authenticated
     if user:
         login_user(user)
         return json.dumps({"success": "True", "node_id": user.worker.id})
@@ -29,8 +40,14 @@ def authentication(message):
         return json.dumps({"error": "Invalid username/password!"})
 
 
-def connect_grid_nodes(message):
-    """ Connect remote grid nodes between each other. """
+def connect_grid_nodes(message: dict) -> str:
+    """ Connect remote grid nodes between each other. 
+        
+        Args:
+            message (dict) :  Dict data structure containing node_id, node address and user credentials(optional).
+        Returns:
+            response (str) : response message.
+    """
     if message["id"] not in local_worker._known_workers:
         worker = WebsocketGridClient(
             hook, address=message["address"], id=message["id"], auth=message.get("auth")
@@ -39,13 +56,20 @@ def connect_grid_nodes(message):
 
 
 @authenticated_only
-def socket_ping(message):
+def socket_ping(message: dict) -> str:
+    """ Ping request to check node's health state. """
     return json.dumps({"alive": "True"})
 
 
 @authenticated_only
-def forward_binary_message(message):
-    """ Forward binary syft messages to user's workers """
+def forward_binary_message(message: bin) -> bin:
+    """ Forward binary syft messages to user's workers.
+    
+        Args:
+            message (bin) : PySyft binary message.
+        Returns:
+            response (bin) : PySyft binary response.
+    """
 
     # If worker is empty, load previous database tensors
     if not current_user.worker._objects:
@@ -60,14 +84,28 @@ def forward_binary_message(message):
     return decoded_response
 
 
-def syft_command(message):
+@authenticated_only
+def syft_command(message: dict) -> str:
+    """ Forward JSON syft messages to user's workers.
+    
+        Args:
+            message (dict) : Dictionary data structure containing PySyft message.
+        Returns:
+            response (str) : node response.
+    """
     response = local_worker._message_router[message["msg_type"]](message["content"])
     payload = sy.serde.serialize(response, force_no_serialization=True)
     return json.dumps({"type": "command-response", "response": payload})
 
 
-def host_model(message):
-    """ Save/Store a model into database."""
+def host_model(message: dict) -> str:
+    """ Save/Store a model into database.
+    
+        Args:
+            message (dict) : Dict containing a serialized model and model's metadata.
+        Response:
+            response (str) : Node's response.
+    """
     encoding = message["encoding"]
     model_id = message["model_id"]
     allow_download = message["allow_download"] == "True"
@@ -85,20 +123,36 @@ def host_model(message):
     return json.dumps(response)
 
 
-def delete_model(message):
-    """ Delete a model previously stored at database. """
+def delete_model(message: dict) -> str:
+    """ Delete a model previously stored at database.
+        
+        Args:
+            message (dict) : Model's id.
+        Returns:
+            response (str) : Node's response.
+    """
     model_id = message["model_id"]
     result = mm.delete_model(model_id)
     return json.dumps(result)
 
 
-def get_models(message):
-    """ Get a list of stored mdoels. """
+def get_models(message: dict) -> str:
+    """ Get a list of stored models.
+        
+        Returns:
+            response (str) : List of models stored at this node.
+    """
     return json.dumps(mm.list_models())
 
 
-def download_model(message):
-    """ Download a specifc model. """
+def download_model(message: dict) -> str:
+    """ Download a specific model stored at this node.
+        
+        Args:
+            message (dict) : Model's id.
+        Returns:
+            response (str) : Node's response with serialized model.
+    """
     model_id = message["model_id"]
 
     # If not Allowed
@@ -128,8 +182,14 @@ def download_model(message):
             return json.dumps(response)
 
 
-def run_inference(message):
-    """ Run dataset inference with a specifc model stored in this node. """
+def run_inference(message: dict) -> str:
+    """ Run dataset inference with a specifc model stored in this node.
+        
+        Args:
+            message (dict) : Serialized dataset, model id and dataset's metadata.
+        Returns:
+            response (str) : Model's inference.
+    """
     response = mm.get_model_with_id(message["model_id"])
     if response["success"]:
         model = response["model"]

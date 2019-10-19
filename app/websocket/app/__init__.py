@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sockets import Sockets
 
+
 def create_app(node_id, debug=False, test_config=None):
     """ Create / Configure flask socket application instance.
         
@@ -15,7 +16,7 @@ def create_app(node_id, debug=False, test_config=None):
     app.debug = debug
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
-    from .main import html, ws, db, hook, local_worker,auth
+    from .main import html, ws, db, hook, local_worker, auth
     from .main.persistence.utils import set_database_config
 
     global db

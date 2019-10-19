@@ -43,7 +43,11 @@ def index():
 
 @html.route("/detailed_models_list/")
 def list_models_with_details():
-    """Generates a detailed list of models currently saved at the worker"""
+    """ Generates a detailed list of models currently saved at the worker 
+        
+        Returns:
+            Response : List of models (and their properties) stored at this node.
+    """
     return Response(
         json.dumps(mm.list_models(detailed_list=True)),
         status=200,
@@ -53,6 +57,11 @@ def list_models_with_details():
 
 @html.route("/workers/")
 def list_workers():
+    """ Generates a list of remote nodes directly connected to this node.
+    
+        Returns:
+            Response : List of node's ids.
+    """
     connected_workers = filter(
         lambda x: isinstance(x, WebsocketGridClient),
         local_worker._known_workers.values(),
@@ -70,7 +79,11 @@ def list_workers():
 @html.route("/models/", methods=["GET"])
 @cross_origin()
 def list_models():
-    """Generates a list of models currently saved at the worker"""
+    """Generates a list of models currently saved at the worker
+       
+       Returns:
+            Response : List of model's ids stored at this node.
+    """
     return Response(
         json.dumps(mm.list_models()), status=200, mimetype="application/json"
     )
@@ -79,7 +92,13 @@ def list_models():
 @html.route("/is_model_copy_allowed/<model_id>", methods=["GET"])
 @cross_origin()
 def is_model_copy_allowed(model_id):
-    """Generates a list of models currently saved at the worker"""
+    """ Check if the desired model is available to download. 
+        
+        Args:
+            model_id (str) : model's id.
+        Returns:
+            Response : Model manager JSON response.
+    """
     return Response(
         json.dumps(mm.is_model_copy_allowed(model_id)),
         status=200,
@@ -91,7 +110,13 @@ def is_model_copy_allowed(model_id):
 @html.route("/get_model/<model_id>", methods=["GET"])
 @cross_origin()
 def get_model(model_id):
-    """ Try to download a specific model if allowed. """
+    """ Try to download a specific model if allowed.
+        
+        Args:
+            model_id (str) : model's id.
+        Returns:
+            Response : If allowed, returns serialized model.
+    """
 
     # If not Allowed
     check = mm.is_model_copy_allowed(model_id)
@@ -156,7 +181,11 @@ def serve_model():
 @html.route("/dataset-tags", methods=["GET"])
 @cross_origin()
 def get_available_tags():
-    """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains. """
+    """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains.
+    
+        Returns:
+            Response : List of dataset tags stored at this node.
+    """
     available_tags = set()
     objs = local_worker._objects
 
@@ -234,6 +263,7 @@ def search_encrypted_models():
 @html.route("/search", methods=["POST"])
 @cross_origin()
 def search_dataset_tags():
+    """ Search for a specific dataset tag stored at this node. """
     body = json.loads(request.data)
 
     # Invalid body

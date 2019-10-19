@@ -13,6 +13,7 @@ import os
 # Used to make snapshot more efficient.
 last_snapshot_keys = set()
 
+
 def set_database_config(app, test_config=None, verbose=False):
     """ Set configs to use SQL Alchemy library.
 
@@ -50,6 +51,7 @@ def set_database_config(app, test_config=None, verbose=False):
     app.config["VERBOSE"] = verbose
     db.init_app(app)
     return app
+
 
 def snapshot(worker):
     """ Take a snapshot of worker's current state.
