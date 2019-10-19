@@ -7,6 +7,8 @@ from .authentication import BaseAuthentication
 
 class UserAuthentication(BaseAuthentication):
     FILENAME = "auth.user"
+    USERNAME_FIELD = "username"
+    PASSWORD_FIELD = "password"
 
     def __init__(self, username, password):
         """ Initialize a user authentication object.
@@ -34,10 +36,16 @@ class UserAuthentication(BaseAuthentication):
                 credentials = json.load(json_file)
                 cred_users = credentials["credential"]
                 for user in cred_users:
-                    new_user = UserAuthentication(user["username"], user["password"])
+                    new_user = UserAuthentication(
+                        user[UserAuthentication.USERNAME_FIELD],
+                        user[UserAuthentication.PASSWORD_FIELD],
+                    )
                     users.append(new_user)
         return users
 
     def json(self):
-        """ Reprensents user authentication object in a JSON/dict data structure. """
-        return {"user": self.username, "password": self.password}
+        """  Convert user instances into a JSON/Dictionary structure. """
+        return {
+            UserAuthentication.USERNAME_FIELD: self.username,
+            UserAuthentication.PASSWORD_FIELD: self.password,
+        }

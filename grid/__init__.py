@@ -34,11 +34,12 @@ syft.frameworks.torch.tensors.interpreters.native.TorchTensor.request_decryption
 
 # ========= Set up User credentials ============================
 
+
 def load_credentials(directory=None, folder=None):
-    ''' Load and parse files to set grid credentials.
+    """ Load and parse files to set grid credentials.
 
         Args:
             directory (str) : file's path (DEFAULT: /home/<user>).
             folder (str) : folder name (DEFAULT: .openmined).
-    '''
+    """
     auth.config.read_authentication_configs(directory, folder)

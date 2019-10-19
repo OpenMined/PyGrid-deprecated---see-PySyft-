@@ -6,19 +6,21 @@ import getpass
 import json
 
 
-def register_new_credentials(path):
-    """ We use this function to create a new credential if we don't find any credential during
-        load_credentials function.
+def register_new_credentials(path: str) -> UserAuthentication:
+    """ Create a new credential if not found any credential file during load_credentials function.
 
         Args:
-            path (str) : .openmined credentials path
+            path (str) : File path.
         Returns:
-            UserAuthentication : A Instance of our new credential.
+            user (UserAuthentication) : New credential instance.
     """
     # Create a new credential
-    username = input("Username: ")
-    password = getpass.getpass("Password:")
-    first_user = {"username": username, "password": password}
+    username = input(UserAuthentication.USERNAME_FIELD + ": ")
+    password = getpass.getpass(UserAuthentication.PASSWORD_FIELD + ": ")
+    first_user = {
+        UserAuthentication.USERNAME_FIELD: username,
+        UserAuthentication.PASSWORD_FIELD: password,
+    }
     credentials = json.dumps({"credential": [first_user]})
 
     # Save at BASE_DIR/BASE_FOLDER/UserAuthentication.FILENAME (JSON format)
@@ -30,7 +32,7 @@ def register_new_credentials(path):
     return UserAuthentication(username, password)
 
 
-def read_authentication_configs(directory=None, folder=None):
+def read_authentication_configs(directory=None, folder=None) -> list:
     """ Search for a path and folder used to store user credentials
         
         Args:
@@ -63,11 +65,11 @@ def read_authentication_configs(directory=None, folder=None):
     return auth_credentials
 
 
-def search_credential(user):
+def search_credential(user: str):
     """ Search for a specific credential instance.
         
         Args:
-            user : key used to identify some credential.
+            user (str) : Key used to identify the credential.
         Returns:
             BaseAuthentication : Credential's instance.
     """
