@@ -42,7 +42,7 @@ class GridAPITest(unittest.TestCase):
         self.assertEqual(len(response["grid-nodes"]), len(IDS))
         for node_id in IDS:
             self.assertTrue(node_id in response["grid-nodes"])
-    
+
     @pytest.mark.skip
     def test_host_inference_encrypted_model(self):
         sy.hook.local_worker.is_client_worker = False
@@ -73,7 +73,7 @@ class GridAPITest(unittest.TestCase):
         expected = decrypted_model(th.tensor([1.0, 2]))
 
         assert th.all(result - expected.detach() < 1e-2)
-    
+
     @pytest.mark.skip
     def test_model_ids_overview(self):
         class Net(sy.Plan):

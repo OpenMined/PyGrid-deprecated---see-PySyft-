@@ -119,7 +119,7 @@ def _save_model_in_db(
 def _save_states_in_db(model):
     tensors = []
     for state_id in model.state_ids:
-        tensor = local_worker.get_obj(obj_id)
+        tensor = local_worker.get_obj(state_id)
         tensors.append(TorchTensor(id=state_id, object=tensor.data))
 
     db.session.add_all(tensors)
