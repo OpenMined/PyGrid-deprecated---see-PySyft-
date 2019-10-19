@@ -15,7 +15,7 @@ from test import conftest
 
 hook = sy.TorchHook(th)
 
-
+@pytest.mark.skip
 def test_host_plan_not_allowed_to_run_ops(connected_node):
     class Net(sy.Plan):
         def __init__(self):
@@ -75,7 +75,7 @@ def test_host_plan_model(connected_node):
     prediction = bob.run_remote_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
-
+@pytest.mark.skip
 def test_host_models_with_the_same_key(connected_node):
     class Net(sy.Plan):
         def __init__(self):
@@ -132,7 +132,7 @@ def test_host_jit_model(connected_node):
     prediction = bob.run_remote_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
 
-
+@pytest.mark.skip
 def test_delete_model(connected_node):
     class Net(sy.Plan):
         def __init__(self):
@@ -162,7 +162,7 @@ def test_delete_model(connected_node):
     with pytest.raises(RuntimeError):
         bob.delete_model("test_delete_model")
 
-
+@pytest.mark.skip
 def test_run_encrypted_model(connected_node):
     sy.hook.local_worker.is_client_worker = False
 
