@@ -2,25 +2,28 @@
 This file exists to provide a route to websocket events.
 """
 
-from . import hook, local_worker, ws
+from .. import hook, local_worker, ws
 
-from .event_routes import *
+from .syft_events import *
+from .model_events import *
+from .control_events import *
 
+from grid.grid_codes import REQUEST_MSG
 import json
 
 # Websocket events routes
 # This structure allows compatibility between javascript applications (syft.js/grid.js) and PyGrid.
 routes = {
-    "get-id": get_node_id,
-    "connect-node": connect_grid_nodes,
-    "syft-command": syft_command,
-    "socket-ping": socket_ping,
-    "host-model": host_model,
-    "run-inference": run_inference,
-    "delete-model": delete_model,
-    "list-models": get_models,
-    "download-model": download_model,
-    "authentication": authentication,
+    REQUEST_MSG.GET_ID: get_node_id,
+    REQUEST_MSG.CONNECT_NODE: connect_grid_nodes,
+    REQUEST_MSG.SYFT_COMMAND: syft_command,
+    REQUEST_MSG.PING: socket_ping,
+    REQUEST_MSG.HOST_MODEL: host_model,
+    REQUEST_MSG.RUN_INFERENCE: run_inference,
+    REQUEST_MSG.DELETE_MODEL: delete_model,
+    REQUEST_MSG.DELETE_MODEL: get_models,
+    REQUEST_MSG.DOWNLOAD_MODEL: download_model,
+    REQUEST_MSG.AUTHENTICATE: authentication,
 }
 
 
@@ -37,7 +40,7 @@ def route_requests(message):
         return forward_binary_message(message)
     try:
         message = json.loads(message)
-        return routes[message["type"]](message)
+        return routes[message[REQUEST_MSG.TYPE_FIELD]](message)
     except Exception as e:
         return json.dumps({"error": "Invalid JSON format/field!"})
 
