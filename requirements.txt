@@ -19,3 +19,4 @@ gevent-websocket
 flask_sockets
 flask_login
 pbr
+torch
