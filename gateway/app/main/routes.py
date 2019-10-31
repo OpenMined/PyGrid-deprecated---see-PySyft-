@@ -63,6 +63,7 @@ def get_connected_nodes():
         mimetype="application/json",
     )
 
+
 @main.route("/delete-node", methods=["DELETE"])
 def delete_grid_note():
     """ Delete a grid node at grid network"""
@@ -88,6 +89,7 @@ def delete_grid_note():
             status=404,
             mimetype="appication/json",
         )
+
 
 @main.route("/choose-encrypted-model-host", methods=["GET"])
 def choose_encrypted_model_host():
