@@ -180,3 +180,7 @@ epub_exclude_files = ["search.html"]
 
 
 # -- Extension configuration -------------------------------------------------
+
+autodoc_mock_imports = ['numpy','syft','requests_toolbelt',
+                        'websocket','torch','gevent','flask',
+                        'flask_socketio','socketio']
