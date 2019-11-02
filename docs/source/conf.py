@@ -40,11 +40,7 @@ release = "0.1.0a1"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
-
-# Napoleon settings
-napoleon_google_docstring = True
-napoleon_numpy_docstring = False
+extensions = ["sphinx.ext.napoleon", "autoapi.extension",]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -181,6 +177,9 @@ epub_exclude_files = ["search.html"]
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['numpy','syft','requests_toolbelt',
-                        'websocket','torch','gevent','flask',
-                        'flask_socketio','socketio']
+# AutoApi
+autoapi_dirs = ['../../grid']
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
