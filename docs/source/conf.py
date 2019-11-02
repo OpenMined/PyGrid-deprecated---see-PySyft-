@@ -83,12 +83,17 @@ html_theme_path = [rtcat_sphinx_theme.get_html_theme_path()]
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    "collapse_navigation" : False
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+def setup(app):
+    app.add_stylesheet("css/theme.css")
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -178,6 +183,7 @@ epub_exclude_files = ["search.html"]
 # -- Extension configuration -------------------------------------------------
 
 # AutoApi
+autoapi_keep_files = True
 autoapi_dirs = ['../../grid']
 
 # Napoleon settings
