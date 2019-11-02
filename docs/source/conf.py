@@ -40,7 +40,7 @@ release = "0.1.0a1"
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.napoleon", "autoapi.extension",]
+extensions = ["sphinx.ext.napoleon", "autoapi.extension"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -184,7 +184,9 @@ epub_exclude_files = ["search.html"]
 
 # AutoApi
 autoapi_keep_files = True
+autoapi_root = 'api'
 autoapi_dirs = ['../../grid']
+
 
 # Napoleon settings
 napoleon_google_docstring = True
