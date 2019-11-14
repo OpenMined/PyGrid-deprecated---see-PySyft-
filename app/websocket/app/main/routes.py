@@ -43,8 +43,8 @@ def index():
 
 @html.route("/detailed_models_list/")
 def list_models_with_details():
-    """ Generates a detailed list of models currently saved at the worker 
-        
+    """ Generates a detailed list of models currently saved at the worker
+
         Returns:
             Response : List of models (and their properties) stored at this node.
     """
@@ -58,7 +58,7 @@ def list_models_with_details():
 @html.route("/workers/")
 def list_workers():
     """ Generates a list of remote nodes directly connected to this node.
-    
+
         Returns:
             Response : List of node's ids.
     """
@@ -80,7 +80,7 @@ def list_workers():
 @cross_origin()
 def list_models():
     """Generates a list of models currently saved at the worker
-       
+
        Returns:
             Response : List of model's ids stored at this node.
     """
@@ -92,8 +92,8 @@ def list_models():
 @html.route("/is_model_copy_allowed/<model_id>", methods=["GET"])
 @cross_origin()
 def is_model_copy_allowed(model_id):
-    """ Check if the desired model is available to download. 
-        
+    """ Check if the desired model is available to download.
+
         Args:
             model_id (str) : model's id.
         Returns:
@@ -111,7 +111,7 @@ def is_model_copy_allowed(model_id):
 @cross_origin()
 def get_model(model_id):
     """ Try to download a specific model if allowed.
-        
+
         Args:
             model_id (str) : model's id.
         Returns:
@@ -124,7 +124,7 @@ def get_model(model_id):
     if not check["success"]:  # If not allowed
         if check["error"] == mm.MODEL_NOT_FOUND_MSG:
             status_code = 404  # Not Found
-            response["error"] = mm.Model_NOT_FOUND_MSG
+            response["error"] = mm.MODEL_NOT_FOUND_MSG
         else:
             status_code = 403  # Forbidden
             response["error"] = mm.NOT_ALLOWED_TO_DOWNLOAD_MSG
@@ -182,7 +182,7 @@ def serve_model():
 @cross_origin()
 def get_available_tags():
     """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains.
-    
+
         Returns:
             Response : List of dataset tags stored at this node.
     """
