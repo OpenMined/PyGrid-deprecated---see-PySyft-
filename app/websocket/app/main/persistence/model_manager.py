@@ -212,7 +212,7 @@ def save_model(
         allow_download (bool): If the model can be copied by a worker.
         allow_remote_inference (bool): If a worker can run inference on the given model.
     Returns:
-        A dict with structure: {"success": Bool, "message": "Model Saved: {model_id}"}.
+        A dict with structure: {"success": Bool, "message": "Model Saved with id: {model_id}"}.
         On error returns dict: {"success": Bool, "error": error message}.
     """
     if _is_model_in_cache(model_id):
