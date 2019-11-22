@@ -18,7 +18,6 @@ from syft.generic.tensor import AbstractTensor
 from syft.workers.base import BaseWorker
 from syft import WebsocketClientWorker
 from syft.federated.federated_client import FederatedClient
-from syft.codes import MSGTYPE
 from syft.messaging.message import Message
 
 from grid import utils as gr_utils
@@ -447,7 +446,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
             # If we can download model (small models) by sockets
             if response.get("serialized_model", None):
-                serialized_model = result["serialized_model"].encode(self._encoding)
+                serialized_model = response["serialized_model"].encode(self._encoding)
                 model = sy.serde.deserialize(serialized_model)
                 return model
 
