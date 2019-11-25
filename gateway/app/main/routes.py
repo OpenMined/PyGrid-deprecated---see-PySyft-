@@ -16,6 +16,9 @@ from .persistence.manager import register_new_node, connected_nodes, delete_node
 grid_nodes = {}
 
 SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
+INVALID_JSON_FORMAT_MESSAGE = (
+    "Invalid JSON format."  # Default message used to report Invalid JSON format.
+)
 
 
 @main.route("/", methods=["GET"])
@@ -45,7 +48,7 @@ def join_grid_node():
 
     # JSON format not valid.
     except ValueError or KeyError as e:
-        response_body["message"] = "Invalid json format."
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
 
     return Response(
@@ -84,7 +87,7 @@ def delete_grid_note():
 
     # JSON format not valid.
     except ValueError or KeyError as e:
-        response_body["message"] = "Invalid json format."
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
 
     return Response(
@@ -161,7 +164,7 @@ def search_encrypted_model():
 
     # JSON format not valid.
     except ValueError or KeyError as e:
-        response_body["message"] = "Invalid json format."
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
 
     return Response(
@@ -179,14 +182,6 @@ def search_model():
     try:
         body = json.loads(request.data)
 
-        # Invalid body
-        if "model_id" not in body:
-            return Response(
-                {"message": "Invalid json fields."},
-                status=400,
-                mimetype="application/json",
-            )
-
         grid_nodes = connected_nodes()
         match_nodes = []
         for node in grid_nodes:
@@ -203,7 +198,7 @@ def search_model():
         status_code = 200
 
     except ValueError or KeyError:
-        response_body["message"] = "Invalid json format."
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
 
     return Response(
@@ -276,7 +271,7 @@ def search_dataset_tags():
         status_code = 200
 
     except ValueError or KeyError as e:
-        response_body["message"] = "Invalid json format."
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
 
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
