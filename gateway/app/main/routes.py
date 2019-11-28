@@ -17,7 +17,7 @@ grid_nodes = {}
 
 SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
 INVALID_JSON_FORMAT_MESSAGE = (
-    "Invalid JSON format."  # Default message used to report Invalid JSON format.
+    "Invalid JSON format."  # Default message used to report Invalid JSON format
 )
 
 
