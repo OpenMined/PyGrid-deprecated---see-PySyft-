@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - env:
+        - name: DATABASE_URL
+          value: sqlite:///databasegateway.db
+        - name: PORT
+          value: "5000"
+        - name: SECRET_KEY
+          value: ineedtoputasecrethere
+        name: gateway
+        image: gateway:latest
+        imagePullPolicy: IfNotPresent
+        resources: {}
+      restartPolicy: Always
+status: {}

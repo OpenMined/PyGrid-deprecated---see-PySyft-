@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: node
+  name: node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: node
+    spec:
+      containers:
+      - env:
+        - name: ADDRESS
+          value: http://localhost:3001/
+        - name: DATABASE_URL
+          value: sqlite:///databaseNode.db
+        - name: GRID_NETWORK_URL
+          value: http://localhost:5000
+        - name: ID
+          value: Node
+        - name: PORT
+          value: "3001"
+        image: node:latest
+        imagePullPolicy: IfNotPresent
+        name: node
+        resources: {}
+      restartPolicy: Always
+status: {}
