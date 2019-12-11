@@ -1,6 +1,6 @@
-namePrefix: dev-alice-
+namePrefix: prod-alice-
 commonLabels:
-  app: dev-alice
+  app: prod-alice
 resources:
 - ../../../base/node
 images:
