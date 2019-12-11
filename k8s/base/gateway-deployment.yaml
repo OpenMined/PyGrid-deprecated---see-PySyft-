@@ -3,29 +3,27 @@ kind: Deployment
 metadata:
   name: gateway
   labels:
-    app: gateway
+    name: gateway
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gateway
-  strategy: {}
+      service: gateway
   template:
     metadata:
       labels:
-        app: gateway
+        service: gateway
     spec:
       containers:
-      - env:
-        - name: DATABASE_URL
-          value: sqlite:///databasegateway.db
-        - name: PORT
-          value: "5000"
-        - name: SECRET_KEY
-          value: ineedtoputasecrethere
-        name: gateway
+      - name: gateway
         image: gateway:latest
         imagePullPolicy: IfNotPresent
-        resources: {}
+        env:
+          - name: DATABASE_URL
+            value: sqlite:///databasegateway.db
+          - name: PORT
+            value: "5000"
+          - name: SECRET_KEY
+            value: ineedtoputasecrethere
       restartPolicy: Always
 status: {}

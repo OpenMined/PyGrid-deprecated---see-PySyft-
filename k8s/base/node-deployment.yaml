@@ -1,35 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: node
   name: node
+  labels:
+    name: node
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: node
-  strategy: {}
+      service: node
   template:
     metadata:
       labels:
-        app: node
+        service: node
     spec:
       containers:
-      - env:
-        - name: ADDRESS
-          value: http://localhost:3001/
-        - name: DATABASE_URL
-          value: sqlite:///databaseNode.db
-        - name: GRID_NETWORK_URL
-          value: http://localhost:5000
-        - name: ID
-          value: Node
-        - name: PORT
-          value: "3001"
-        image: node:latest
+      - name: node
+        image: ramjee/syft-node:latest
         imagePullPolicy: IfNotPresent
-        name: node
-        resources: {}
+        env:
+          - name: ADDRESS
+            value: http://localhost:3000/
+          - name: DATABASE_URL
+            value: sqlite:///databaseNode.db
+          - name: GRID_NETWORK_URL
+            value: http://localhost:5000
+          - name: ID
+            value: Node
+          - name: PORT
+            value: "3000"
       restartPolicy: Always
-status: {}
