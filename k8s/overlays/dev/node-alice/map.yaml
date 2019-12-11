@@ -2,9 +2,9 @@ apiVersion: v1
 data:
   address: 'http://localhost:3000/'
   grid_network_url: 'http://dev-gateway:5000'
-  database_url: sqlite:///databaseNode.db
+  database_url: sqlite:///databaseAlice.db
   port: "3000"
-  id: 'Node'
+  id: 'Alice'
 kind: ConfigMap
 metadata:
   name: node-env
