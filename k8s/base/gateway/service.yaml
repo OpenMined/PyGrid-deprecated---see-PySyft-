@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: gateway
   labels:
-    service: gateway
+    app: gateway
 spec:
   selector:
-    service: gateway
+    app: gateway
   type: ClusterIP
   ports:
   - port: 5000

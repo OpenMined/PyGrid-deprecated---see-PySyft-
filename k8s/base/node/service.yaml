@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: node
   labels:
-    service: node
+    app: node
 spec:
   selector:
-    service: node
+    app: node
   type: ClusterIP
   ports:
   - port: 3000

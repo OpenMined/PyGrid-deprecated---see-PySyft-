@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: gateway
   labels:
-    name: gateway
+    app: gateway
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: gateway
+      app: gateway
   template:
     metadata:
       labels:
-        service: gateway
+        app: gateway
     spec:
       containers:
       - name: gateway

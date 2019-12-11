@@ -3,20 +3,20 @@ kind: Deployment
 metadata:
   name: node
   labels:
-    name: node
+    app: node
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: node
+      app: node
   template:
     metadata:
       labels:
-        service: node
+        app: node
     spec:
       containers:
       - name: node
-        image: ramjee/syft-node:latest
+        image: node:latest
         imagePullPolicy: IfNotPresent
         env:
           - name: ADDRESS
