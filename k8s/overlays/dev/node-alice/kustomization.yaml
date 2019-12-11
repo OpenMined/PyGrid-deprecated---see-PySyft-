@@ -1,0 +1,9 @@
+namePrefix: dev-alice-
+commonLabels:
+  app: dev-alice
+resources:
+- ../../../base/node
+images:
+- name: node
+  newName: ramjee/syft-node
+  newTag: latest

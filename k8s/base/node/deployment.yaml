@@ -15,18 +15,18 @@ spec:
         app: node
     spec:
       containers:
-      - name: node
+      - env:
+        - name: ADDRESS
+          value: http://localhost:3000/
+        - name: DATABASE_URL
+          value: sqlite:///databaseNode.db
+        - name: GRID_NETWORK_URL
+          value: http://gateway:5000
+        - name: ID
+          value: Node
+        - name: PORT
+          value: "3000"
         image: node:latest
         imagePullPolicy: IfNotPresent
-        env:
-          - name: ADDRESS
-            value: http://localhost:3000/
-          - name: DATABASE_URL
-            value: sqlite:///databaseNode.db
-          - name: GRID_NETWORK_URL
-            value: http://gateway:5000
-          - name: ID
-            value: Node
-          - name: PORT
-            value: "3000"
+        name: node
       restartPolicy: Always

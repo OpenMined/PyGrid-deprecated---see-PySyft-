@@ -15,15 +15,15 @@ spec:
         app: gateway
     spec:
       containers:
-      - name: gateway
-        image: gateway:latest
-        imagePullPolicy: IfNotPresent
-        env:
+      - env:
           - name: DATABASE_URL
             value: sqlite:///databasegateway.db
           - name: PORT
             value: "5000"
           - name: SECRET_KEY
             value: ineedtoputasecrethere
+        image: gateway:latest
+        imagePullPolicy: IfNotPresent
+        name: gateway
       restartPolicy: Always
 status: {}
