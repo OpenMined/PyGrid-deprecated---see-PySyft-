@@ -17,15 +17,30 @@ spec:
       containers:
       - env:
         - name: ADDRESS
-          value: http://localhost:3000/
+          valueFrom:
+            configMapKeyRef:
+              name: node-env
+              key: address
         - name: DATABASE_URL
-          value: sqlite:///databaseNode.db
+          valueFrom:
+            configMapKeyRef:
+              name: node-env
+              key: database_url
         - name: GRID_NETWORK_URL
-          value: http://gateway:5000
+          valueFrom:
+            configMapKeyRef:
+              name: node-env
+              key: grid_network_url
         - name: ID
-          value: Node
+          valueFrom:
+            configMapKeyRef:
+              name: node-env
+              key: id
         - name: PORT
-          value: "3000"
+          valueFrom:
+            configMapKeyRef:
+              name: node-env
+              key: port
         image: node:latest
         imagePullPolicy: IfNotPresent
         name: node

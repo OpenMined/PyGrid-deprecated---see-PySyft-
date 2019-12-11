@@ -17,11 +17,20 @@ spec:
       containers:
       - env:
           - name: DATABASE_URL
-            value: sqlite:///databasegateway.db
+            valueFrom:
+              configMapKeyRef:
+                name: gateway-env
+                key: database_url
           - name: PORT
-            value: "5000"
+            valueFrom:
+              configMapKeyRef:
+                name: gateway-env
+                key: port
           - name: SECRET_KEY
-            value: ineedtoputasecrethere
+            valueFrom:
+              configMapKeyRef:
+                  name: gateway-env
+                  key: secret_key
         image: gateway:latest
         imagePullPolicy: IfNotPresent
         name: gateway
