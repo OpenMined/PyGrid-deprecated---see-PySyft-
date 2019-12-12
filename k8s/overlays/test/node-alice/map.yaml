@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   address: 'http://localhost:3000/'
-  grid_network_url: 'http://dev-gateway'
+  grid_network_url: 'http://test-gateway'
   database_url: sqlite:///databaseAlice.db
   port: "3000"
   id: 'Alice'

@@ -3,9 +3,5 @@ commonLabels:
   app: prod-alice
 resources:
 - ../../../base/node
-images:
-- name: node
-  newName: ramjee/syft-node
-  newTag: latest
 patchesStrategicMerge:
   - map.yaml

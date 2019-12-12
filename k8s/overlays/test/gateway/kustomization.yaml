@@ -5,3 +5,7 @@ commonLabels:
   app: test-gateway
 bases:
 - ../../../base/gateway
+images:
+- name: gateway
+  newName: ramjee/syft-grid-gateway
+  newTag: latest
