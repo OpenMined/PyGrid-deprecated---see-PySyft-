@@ -23,6 +23,12 @@ echo "Deploy to "$SELECTED_CLUSTER
 
 # 1. Make the Local cluster active
 kubectl config set current-context $SELECTED_CLUSTER
-# 2. Create/update LOCAL
-kustomize build overlays/local/gateway/ | kubectl apply -f -
-kustomize build overlays/local/node-alice/ | kubectl apply -f -
+# 2. Create/update Cluster
+kustomize build overlays/$1/gateway/ | kubectl apply -f -
+kustomize build overlays/$1/node-alice/ | kubectl apply -f -
+
+# Starting minikube tunnel so that the loadbalancer service type can work.
+if [[ $1 == "local" && $SELECTED_CLUSTER == "minikube" ]]
+then
+    minikube tunnel &
+fi
