@@ -52,11 +52,3 @@ Ref: [Running Local Docker images in Kubernetes](https://dzone.com/articles/runn
   ```shell
     $ ./deploy.sh -t test -c <cluster_name>
   ```
-
-  ---
-
-### Todo:
-- [ ] Make the deploy script more robust (low priority)
-- [ ] Write unit tests for Kubernetes
-- [ ] Test on EKS (AWS), AKS (Azure)
-- [ ] #417
