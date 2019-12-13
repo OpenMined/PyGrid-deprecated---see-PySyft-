@@ -19,6 +19,10 @@ stages:
   - name: dockerpush
     if: branch = dev #@TODO to map it to production branch
 
+env:
+  jobs:
+    - DOCKER_ORG: ramjee
+
 install:
   - sudo apt-get update
   - hash -r
@@ -58,16 +62,16 @@ jobs:
       name: 'Docker build and push pysyft-grid-gateway'
       script:
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker build -t ramjee/pysyft-grid-gateway ./gateway/
-        - docker images ramjee/pysyft-grid-gateway
-        - docker push ramjee/pysyft-grid-gateway
+        - docker build -t $DOCKER_ORG/pysyft-grid-gateway ./gateway/
+        - docker images $DOCKER_ORG/pysyft-grid-gateway
+        - docker push $DOCKER_ORG/pysyft-grid-gateway
     - stage: dockerpush
       name: 'Docker build and push pysyft-grid-node'
       script:
         - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker build -t ramjee/pysyft-grid-node ./app/websocket/
-        - docker images ramjee/pysyft-grid-node
-        - docker push ramjee/pysyft-grid-node
+        - docker build -t $DOCKER_ORG/pysyft-grid-node ./app/websocket/
+        - docker images $DOCKER_ORG/pysyft-grid-node
+        - docker push $DOCKER_ORG/pysyft-grid-node
 
 notifications:
   on_success: change
