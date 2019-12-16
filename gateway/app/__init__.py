@@ -3,6 +3,7 @@ import os
 
 from flask import Flask
 from flask_cors import CORS
+from flask_sockets import Sockets
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -77,4 +78,17 @@ def create_app(debug=False, n_replica=None, test_config=None):
 
     app.register_blueprint(main_blueprint)
     CORS(app)
+    return app
+
+def create_socket_app(debug=False, test_config=None):
+    app = Flask(__name__)
+    app.debug = debug
+
+    from .main import ws
+    
+    sockets = Sockets(app)
+
+    # Register blueprints
+    sockets.register_blueprint(ws, url_prefix=r"/")
+
     return app
