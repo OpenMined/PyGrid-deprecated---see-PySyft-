@@ -11,7 +11,7 @@ PyGrid is a peer-to-peer network of data owners and data scientists who can coll
     - [PyGrid library](#pygrid-library)
   - [Common Installation Issues:](#common-installation-issues)
 - [Getting started](#getting-started)
-    - [Build Grid Platform Locally](#build-grid-platform locally)
+    - [Build Grid Platform Locally](#start-grid-platform-locally)
     - [Build images](#build-images)
     - [Let's put all together](#lets-put-all-together)
 - [Try out the Tutorials](#try-out-the-tutorials)
