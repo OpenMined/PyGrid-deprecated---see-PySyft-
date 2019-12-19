@@ -2,6 +2,6 @@ namePrefix: prod-alice-
 commonLabels:
   app: prod-alice
 resources:
-- ../../../base/node
+- ../../../../base/node
 patchesStrategicMerge:
   - map.yaml
