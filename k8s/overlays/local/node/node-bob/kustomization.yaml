@@ -1,8 +1,8 @@
-namePrefix: local-alice-
+namePrefix: local-bob-
 commonLabels:
-  app: local-alice
+  app: local-bob
 resources:
-- ../../../base/node
+- ../../../../base/node
 images:
 - name: node
   newName: openmined/grid-node

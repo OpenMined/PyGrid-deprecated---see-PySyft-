@@ -8,7 +8,7 @@ deploy() {
     kubectl config set current-context $2
     # 2. Create/update Cluster
     kustomize build overlays/$1/gateway/ | kubectl apply -f -
-    kustomize build overlays/$1/node-alice/ | kubectl apply -f -
+    kustomize build overlays/$1/node/ | kubectl apply -f -
 }
 
 usage() {
