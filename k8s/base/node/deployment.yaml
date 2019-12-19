@@ -41,7 +41,7 @@ spec:
             configMapKeyRef:
               name: node-env
               key: port
-        image: node:latest
+        image: openmined/grid-node:latest
         imagePullPolicy: IfNotPresent
         name: node
       restartPolicy: Always

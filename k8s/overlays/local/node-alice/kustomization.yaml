@@ -5,7 +5,7 @@ resources:
 - ../../../base/node
 images:
 - name: node
-  newName: ramjee/syft-node
+  newName: openmined/grid-node
   newTag: latest
 patchesStrategicMerge:
   - map.yaml
