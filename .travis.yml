@@ -16,7 +16,7 @@ python:
 stages:
   - test
   - docs
-  - name: dockerpush
+  - name: dockerbuild
     if: branch = dev #@TODO to map it to production branch
 
 env:
@@ -58,12 +58,12 @@ jobs:
         - cd docs
         - make html
         # - if grep -q "Traceback (most recent call last):" nb_to_md.txt; then false; else true; fi
-    - stage: dockerpush
+    - stage: dockerbuild
       name: 'Docker build openmined/grid-gateway'
       script:
         - docker build -t $DOCKER_ORG/grid-gateway ./gateway/
         - docker images $DOCKER_ORG/grid-gateway
-    - stage: dockerpush
+    - stage: dockerbuild
       name: 'Docker build openmined/grid-node'
       script:
         - docker build -t $DOCKER_ORG/grid-node ./app/websocket/
