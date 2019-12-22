@@ -21,7 +21,7 @@ stages:
 
 env:
   jobs:
-    - DOCKER_ORG: ramjee
+    - DOCKER_ORG: openmined
 
 install:
   - sudo apt-get update
@@ -52,26 +52,22 @@ jobs:
       name: 'Test Coverage'
       script:
         - coverage run -m pytest -v
-    - stage: docs
+    - stage: test
       name: 'Document Generation'
       script:
         - cd docs
         - make html
         # - if grep -q "Traceback (most recent call last):" nb_to_md.txt; then false; else true; fi
     - stage: dockerpush
-      name: 'Docker build and push pysyft-grid-gateway'
+      name: 'Docker build openmined/grid-gateway'
       script:
-        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker build -t $DOCKER_ORG/pysyft-grid-gateway ./gateway/
-        - docker images $DOCKER_ORG/pysyft-grid-gateway
-        - docker push $DOCKER_ORG/pysyft-grid-gateway
+        - docker build -t $DOCKER_ORG/grid-gateway ./gateway/
+        - docker images $DOCKER_ORG/grid-gateway
     - stage: dockerpush
-      name: 'Docker build and push pysyft-grid-node'
+      name: 'Docker build openmined/grid-node'
       script:
-        - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
-        - docker build -t $DOCKER_ORG/pysyft-grid-node ./app/websocket/
-        - docker images $DOCKER_ORG/pysyft-grid-node
-        - docker push $DOCKER_ORG/pysyft-grid-node
+        - docker build -t $DOCKER_ORG/grid-node ./app/websocket/
+        - docker images $DOCKER_ORG/grid-node
 
 notifications:
   on_success: change
