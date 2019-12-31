@@ -60,8 +60,9 @@ def join_grid_node():
 def get_connected_nodes():
     """ Get a list of connected nodes. """
     grid_nodes = connected_nodes()
+    nodes = map(lambda node_id: (node_id, grid_nodes[node_id]), grid_nodes)
     return Response(
-        json.dumps({"grid-nodes": list(grid_nodes.keys())}),
+        json.dumps({"grid-nodes": list(nodes)}),
         status=200,
         mimetype="application/json",
     )
