@@ -40,8 +40,9 @@ class GridAPITest(unittest.TestCase):
     def test_connected_nodes(self):
         response = json.loads(requests.get(GATEWAY_URL + "/connected-nodes").content)
         self.assertEqual(len(response["grid-nodes"]), len(IDS))
+        node_ids = list(map(lambda node: node[0], response["grid-nodes"]))
         for node_id in IDS:
-            self.assertTrue(node_id in response["grid-nodes"])
+            assert node_id in node_ids
 
     def test_host_inference_encrypted_model(self):
         sy.hook.local_worker.is_client_worker = False
