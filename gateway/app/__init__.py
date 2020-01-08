@@ -66,29 +66,20 @@ def create_app(debug=False, n_replica=None, test_config=None):
 
     app.config["N_REPLICA"] = n_replica
 
-    from .main import main as main_blueprint
+    from .main import main as main_blueprint, ws
     from .main import db
 
     global db
+    sockets = Sockets(app)
 
     # Set SQLAlchemy configs
     app = set_database_config(app, test_config=test_config)
     s = app.app_context().push()
     db.create_all()
 
+    # Register app blueprints
     app.register_blueprint(main_blueprint)
-    CORS(app)
-    return app
-
-def create_socket_app(debug=False, test_config=None):
-    app = Flask(__name__)
-    app.debug = debug
-
-    from .main import ws
-    
-    sockets = Sockets(app)
-
-    # Register blueprints
     sockets.register_blueprint(ws, url_prefix=r"/")
 
+    CORS(app)
     return app

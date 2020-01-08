@@ -7,10 +7,7 @@ import sys
 
 import argparse
 
-from app import create_app, create_socket_app
-
-from gevent import pywsgi
-from geventwebsocket.handler import WebSocketHandler
+from app import create_app
 
 parser = argparse.ArgumentParser(description="Run Grid Gatway application.")
 
@@ -56,18 +53,11 @@ if __name__ == "__main__":
             n_replica=args.num_replicas,
             test_config={"SQLALCHEMY_DATABASE_URI": db_path},
         )
-        socket = create_socket_app(
-            debug=False,
-            test_config={"SQLALCHEMY_DATABASE_URI": db_path} 
-        )    
     else:
         app = create_app(debug=False, n_replica=args.num_replicas)
-        socket = create_socket_app(debug=False)
 
-    server = pywsgi.WSGIServer(("", args.port), socket, handler_class=WebSocketHandler)
+    server = pywsgi.WSGIServer((args.host, args.port), app, handler_class=WebSocketHandler)
     server.serve_forever()
-    app.run(host=args.host, port=args.port)
-    
 else:
     num_replicas = os.environ.get("N_REPLICAS", None)
     app = create_app(debug=False, n_replica=num_replicas)
