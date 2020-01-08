@@ -2,7 +2,7 @@
 This file exists to provide a route to websocket events.
 """
 
-from .. ws
+from .. import ws
 
 import json
 

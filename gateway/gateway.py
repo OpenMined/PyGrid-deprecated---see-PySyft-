@@ -9,6 +9,9 @@ import argparse
 
 from app import create_app
 
+from gevent import pywsgi
+from geventwebsocket.handler import WebSocketHandler
+
 parser = argparse.ArgumentParser(description="Run Grid Gatway application.")
 
 
