@@ -59,7 +59,9 @@ if __name__ == "__main__":
     else:
         app = create_app(debug=False, n_replica=args.num_replicas)
 
-    server = pywsgi.WSGIServer((args.host, args.port), app, handler_class=WebSocketHandler)
+    server = pywsgi.WSGIServer(
+        (args.host, args.port), app, handler_class=WebSocketHandler
+    )
     server.serve_forever()
 else:
     num_replicas = os.environ.get("N_REPLICAS", None)
