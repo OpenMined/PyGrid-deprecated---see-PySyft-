@@ -4,11 +4,23 @@ This file exists to provide a route to websocket events.
 
 from .. import ws
 
+from .webrtc_events import *
+from .scope_events import *
+from .control_events import *
+
+from ..codes import GRID_MSG
+
 import json
 
 # Websocket events routes
 # This structure allows compatibility between javascript applications (syft.js/grid.js) and PyGrid.
-routes = {}
+routes = {
+    GRID_MSG.SOCKET_PING: socket_ping,
+    GRID_MSG.GET_PROTOCOL: get_protocol,
+    GRID_MSG.JOIN_ROOM: join_room,
+    GRID_MSG.INTERNAL_MSG: internal_message,
+    GRID_MSG.JOIN_ROOM: join_room,
+}
 
 
 def route_requests(message):
@@ -20,8 +32,6 @@ def route_requests(message):
             message_response : message response.
     """
     global routes
-    if isinstance(message, bytearray):
-        return forward_binary_message(message)
     try:
         message = json.loads(message)
         return routes[message[REQUEST_MSG.TYPE_FIELD]](message)
