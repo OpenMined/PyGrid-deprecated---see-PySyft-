@@ -34,7 +34,7 @@ def route_requests(message):
     global routes
     try:
         message = json.loads(message)
-        return routes[message[REQUEST_MSG.TYPE_FIELD]](message)
+        return routes[message[GRID_MSG.TYPE_FIELD]](message)
     except Exception as e:
         return json.dumps({"error": "Invalid JSON format/field!"})
 

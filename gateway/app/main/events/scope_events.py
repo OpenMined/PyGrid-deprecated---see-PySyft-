@@ -1,4 +1,4 @@
-from ..codes import GRID_MSG
+from ..codes import GRID_MSG, RESPONSE_MSG
 from ..scopes import scopes
 import uuid
 import json
@@ -27,12 +27,12 @@ def get_protocol(message: dict) -> str:
         # Returns:
         data = dict()
         data["user"] = {
-            "workerId": worker_id,
-            "scopeId": scope_id,
-            "protocolId": scope.protocol,
-            "role": scope.get_role(worker_id),
-            "plan": scope.plan_number(worker_id),
-            "assignment": scope.get_assignment(worker_id),
+            RESPONSE_MSG.WORKER_ID: worker_id,
+            RESPONSE_MSG.SCOPE_ID: scope_id,
+            RESPONSE_MSG.PROTOCOL_ID: scope.protocol,
+            RESPONSE_MSG.ROLE: scope.get_role(worker_id),
+            RESPONSE_MSG.PLAN: scope.plan_number(worker_id),
+            RESPONSE_MSG.ASSIGNMENT: scope.get_assignment(worker_id),
         }
 
         data["participants"] = {

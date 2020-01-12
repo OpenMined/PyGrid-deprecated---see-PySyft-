@@ -1,6 +1,6 @@
 import json
-
+from ..codes import RESPONSE_MSG
 
 def socket_ping(message: dict) -> str:
     """ Ping request to check node's health state. """
-    return json.dumps({"alive": "True"})
+    return json.dumps({RESPONSE_MSG.ALIVE: "True"})
