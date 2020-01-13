@@ -10,16 +10,17 @@ class Scope:
         self.protocol = protocol
 
     def add_participant(self, participant_id: str):
-        self.workers.add(participant_id)
-
         # Check if already exist an assignment / plan number defined to this id.
         assignment = self.assignments.get(participant_id, None)
         plan_number = self.plan_number.get(participant_id, None)
 
         if not assignment:
-            self.assignment[participant_id] = "assignment-" + len(self.assignments) + 1
-        if not plan_number:
-            self.plan_number[participant_id] = len(self.plan_number) + 1
+            self.assignments[participant_id] = "assignment-" + str(
+                len(self.assignments) + 1
+            )
+
+        if participant_id not in self.plan_number:
+            self.plan_number[participant_id] = len(self.plan_number)
 
     def get_role(self, participant_id: str) -> str:
         if participant_id in self.assignments:
@@ -28,10 +29,10 @@ class Scope:
             else:
                 return "participant"
 
-    def plan_number(self, participant_id: str) -> int:
+    def get_plan(self, participant_id: str) -> int:
         return self.plan_number[participant_id]
 
-    def assignment_position(self, participant_id: str) -> str:
+    def get_assignment(self, participant_id: str) -> str:
         return self.assignments[participant_id]
 
     def get_participants(self) -> list:

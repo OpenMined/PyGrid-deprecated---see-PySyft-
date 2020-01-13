@@ -8,6 +8,7 @@ class ScopeController:
     def create_scope(self, worker_id, protocol):
         scope = Scope(worker_id, protocol)
         self.scopes[scope.id] = scope
+        return self.scopes[scope.id]
 
     def delete_scope(self, scope_id):
         del self.scopes[scope_id]
