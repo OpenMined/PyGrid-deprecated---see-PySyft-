@@ -4,33 +4,49 @@ from .socket_handler import SocketHandler
 import uuid
 import json
 
+# Singleton socket handler
 handler = SocketHandler()
 
 
 def get_protocol(message: dict, socket) -> str:
+    """ This endpoint is used to create a new scope or add a new participant
+        in a previously registered scope.
+
+        Args:
+            message : Message body sended by some client.
+            socket: Socket descriptor.
+        Returns:
+            response : String response to the client
+    """
     data = message[GRID_MSG.DATA_FIELD]
+
+    # If something goes wrong it will return the exception message.
     try:
         worker_id = data.get("workerId", None)
         scope_id = data.get("scopeId", None)
         protocol_id = data.get("protocolId", None)
 
+        # If worker id was not sended, we need to create a new one.
         if not worker_id:
             # Create a new worker ID
             # Attach this ID on this ws connection.
             worker_id = str(uuid.uuid4())
 
+        # Create a link between worker id and socket descriptor
         handler.new_connection(worker_id, socket)
 
+        # If scope id wasn't sended, we need to create a new scope
         if not scope_id:
             # Create new scope.
             scope = scopes.create_scope(worker_id, protocol_id)
             scope_id = scope.id
-        else:
+        else:  # Try to find the desired scope.
             scope = scopes.get_scope(scope_id)
 
+        # Add the new participant
         scope.add_participant(worker_id)
 
-        # Returns:
+        # Build response
         data = {}
 
         data["user"] = {
