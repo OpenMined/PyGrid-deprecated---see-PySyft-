@@ -2,15 +2,18 @@ import unittest
 import pytest
 import grid as gr
 import json
-from test import PORTS, GATEWAY_URL
+from socket import socket, AF_INET, SOCK_STREAM
+from test import GATEWAY_PORT, GATEWAY_URL
 
 
 class GatewaySocketsTest(unittest.TestCase):
     def setUp(self):
         self.my_grid = gr.GridNetwork(GATEWAY_URL)
-    
+        self.client_socket = socket(AF_INET, SOCK_STREAM)
+        self.client_socket.connect(("", int(GATEWAY_PORT)))
+
     def tearDown(self):
-        self.my_grid.disconnect_nodes()
+        self.client_socket.close()
 
     def test_get_protocol(self):
         pass
@@ -23,5 +26,3 @@ class GatewaySocketsTest(unittest.TestCase):
 
     def test_webrtc_internal_message(self):
         pass
-
-    
