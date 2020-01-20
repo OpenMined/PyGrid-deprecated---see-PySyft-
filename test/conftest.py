@@ -1,8 +1,6 @@
 import pytest
 import torch
 from multiprocessing import Process
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 import os
 import sys
 import syft
