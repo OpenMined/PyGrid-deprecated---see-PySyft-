@@ -34,11 +34,6 @@ class ModelController:
 
         model = deserialize(serialized_model)
 
-        # If the model is a Plan we also need to store
-        # the state tensors
-        if isinstance(model, Plan):
-            storage.save_states(model)
-
         return {"success": True, "message": "Model saved with id: " + model_id}
 
     def get(self, worker, model_id: str):
@@ -51,9 +46,6 @@ class ModelController:
         model = deserialize(raw_model["model"])
 
         if model:
-            if isinstance(model, Plan):
-                storage.get_states(model)
-
             storage.cache.save(
                 model,
                 model_id,
