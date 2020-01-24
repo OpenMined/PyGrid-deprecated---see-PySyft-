@@ -42,20 +42,6 @@ class ModelStorage:
             serialized=True,
         )
 
-    def save_states(self, model) -> bool:
-        states = {id: serialize(self.worker.get(id)) for id in model.state_ids}
-
-        key = self._generate_hash_key(model.id)
-        return db_instance().hmset(key, states)
-
-    def get_states(self, model):
-        raw_states = self.get(model.id)
-        states = {
-            int(key.decode("utf-8")): deserialize(value)
-            for key, value in raw_states.items()
-        }
-        self.worker._objects = {**self.worker._objects, **states}
-
     def get(self, model_id: str):
         key = self._generate_hash_key(model_id)
         raw_data = db_instance().hgetall(key)
