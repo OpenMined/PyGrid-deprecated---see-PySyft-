@@ -22,7 +22,8 @@ class ModelCache:
             Returns:
                 An encoded model, else returns None.
         """
-        return self.cache.get(model_id)["model"]
+        if self.contains(model_id):
+            return self.cache.get(model_id)["model"]
 
     def save(
         self,
