@@ -6,6 +6,10 @@ class ModelCache:
     def __init__(self):
         self.cache = dict()
 
+    @property
+    def models(self):
+        return list(self.cache.keys())
+
     def contains(self, model_id: str) -> bool:
         """Checks if the given model_id is present in cache.
             Args:
@@ -23,7 +27,7 @@ class ModelCache:
                 An encoded model, else returns None.
         """
         if self.contains(model_id):
-            return self.cache.get(model_id)["model"]
+            return self.cache.get(model_id)
 
     def save(
         self,

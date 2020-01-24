@@ -63,9 +63,11 @@ def recover_objects(worker):
         Returns:
             worker: Updated worker instance.
     """
-    raw_objs = db_instance().hgetall(worker.id)
-    objects = {
-        int(key.decode("utf-8")): deserialize(value) for key, value in raw_objs.items()
-    }
-    worker._objects = objects
+    if db_instance():
+        raw_objs = db_instance().hgetall(worker.id)
+        objects = {
+            int(key.decode("utf-8")): deserialize(value)
+            for key, value in raw_objs.items()
+        }
+        worker._objects = objects
     return worker

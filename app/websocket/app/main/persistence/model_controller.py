@@ -40,12 +40,12 @@ class ModelController:
         storage = self.get_storage(worker)
 
         if storage.cache.contains(model_id):
-            return {"success": True, "model": storage.cache.get(model_id)}
+            return {"success": True, "model_properties": storage.cache.get(model_id)}
 
         raw_model = storage.get(model_id)
-        model = deserialize(raw_model["model"])
 
-        if model:
+        if raw_model:
+            model = deserialize(raw_model["model"])
             storage.cache.save(
                 model,
                 model_id,
@@ -54,7 +54,7 @@ class ModelController:
                 raw_model["mpc"],
                 False,
             )
-            return {"success": True, "model": storage.cache.get(model_id)}
+            return {"success": True, "model_properties": storage.cache.get(model_id)}
         else:
             return {"success": False, "error": ModelController.MODEL_NOT_FOUND_MSG}
 
@@ -72,6 +72,10 @@ class ModelController:
             response["error"] = "Model id not found on database!"
 
         return response
+
+    def models(self, worker):
+        storage = self.get_storage(worker)
+        return {"success": True, "models": storage.models}
 
     def get_storage(self, worker):
         if worker.id in self.model_storages:

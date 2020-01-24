@@ -16,7 +16,8 @@ from requests_toolbelt import MultipartEncoder
 from flask_cors import cross_origin
 
 from . import html, local_worker
-from .persistence import model_manager as mm
+
+from .persistence import model_controller
 
 
 # Suport for sending big models over the wire back to a
@@ -49,7 +50,7 @@ def list_models_with_details():
             Response : List of models (and their properties) stored at this node.
     """
     return Response(
-        json.dumps(mm.list_models(detailed_list=True)),
+        json.dumps("testing"),  # mm.list_models(detailed_list=True)),
         status=200,
         mimetype="application/json",
     )
@@ -84,7 +85,9 @@ def list_models():
             Response : List of model's ids stored at this node.
     """
     return Response(
-        json.dumps(mm.list_models()), status=200, mimetype="application/json"
+        json.dumps(model_controller.models(local_worker)),
+        status=200,
+        mimetype="application/json",
     )
 
 
@@ -99,7 +102,7 @@ def is_model_copy_allowed(model_id):
             Response : Model manager JSON response.
     """
     return Response(
-        json.dumps(mm.is_model_copy_allowed(model_id)),
+        json.dumps("testing"),  # mm.is_model_copy_allowed(model_id)),
         status=200,
         mimetype="application/json",
     )
@@ -118,21 +121,21 @@ def get_model(model_id):
     """
 
     # If not Allowed
-    check = mm.is_model_copy_allowed(model_id)
+    check = True  # mm.is_model_copy_allowed(model_id)
     response = {}
     if not check["success"]:  # If not allowed
-        if check["error"] == mm.MODEL_NOT_FOUND_MSG:
+        if check["error"] == "Message":  # mm.MODEL_NOT_FOUND_MSG:
             status_code = 404  # Not Found
-            response["error"] = mm.Model_NOT_FOUND_MSG
+            response["error"] = "Message"  # mm.Model_NOT_FOUND_MSG
         else:
             status_code = 403  # Forbidden
-            response["error"] = mm.NOT_ALLOWED_TO_DOWNLOAD_MSG
+            response["error"] = "Message"  # mm.NOT_ALLOWED_TO_DOWNLOAD_MSG
         return Response(
             json.dumps(response), status=status_code, mimetype="application/json"
         )
 
     # If allowed
-    result = mm.get_serialized_model_with_id(model_id)
+    result = {"success": "testing"}  # mm.get_serialized_model_with_id(model_id)
 
     if result["success"]:
         # Use correct encoding
@@ -171,9 +174,10 @@ def serve_model():
     serialized_model = serialized_model.encode(encoding)
 
     # save the model for later usage
-    response = mm.save_model(
-        serialized_model, model_id, allow_download, allow_remote_inference
-    )
+    # response = mm.save_model(
+    #    serialized_model, model_id, allow_download, allow_remote_inference
+    # )
+    response = {}
     if response["success"]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
