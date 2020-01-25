@@ -49,8 +49,22 @@ def list_models_with_details():
         Returns:
             Response : List of models (and their properties) stored at this node.
     """
+    model_ids = model_controller.models(local_worker)["models"]
+    models = list()
+    for id in model_ids:
+        model = model_controller.get(local_worker, id)
+        model_data = model_controller.get(local_worker, id)["model_properties"]
+        models.append(
+            {
+                "id": id,
+                "model_size": "{}KB".format(sys.getsizeof(model_data["model"]) / 1000),
+                "allow_download": model_data["allow_download"],
+                "allow_remote_inference": model_data["allow_remote_inference"],
+                "mpc": model_data["mpc"],
+            }
+        )
     return Response(
-        json.dumps("testing"),  # mm.list_models(detailed_list=True)),
+        json.dumps({"success": True, "models": models}),
         status=200,
         mimetype="application/json",
     )
@@ -91,66 +105,6 @@ def list_models():
     )
 
 
-@html.route("/is_model_copy_allowed/<model_id>", methods=["GET"])
-@cross_origin()
-def is_model_copy_allowed(model_id):
-    """ Check if the desired model is available to download. 
-        
-        Args:
-            model_id (str) : model's id.
-        Returns:
-            Response : Model manager JSON response.
-    """
-    return Response(
-        json.dumps("testing"),  # mm.is_model_copy_allowed(model_id)),
-        status=200,
-        mimetype="application/json",
-    )
-
-
-## Will be removed when sockets can download huge models
-@html.route("/get_model/<model_id>", methods=["GET"])
-@cross_origin()
-def get_model(model_id):
-    """ Try to download a specific model if allowed.
-        
-        Args:
-            model_id (str) : model's id.
-        Returns:
-            Response : If allowed, returns serialized model.
-    """
-
-    # If not Allowed
-    check = True  # mm.is_model_copy_allowed(model_id)
-    response = {}
-    if not check["success"]:  # If not allowed
-        if check["error"] == "Message":  # mm.MODEL_NOT_FOUND_MSG:
-            status_code = 404  # Not Found
-            response["error"] = "Message"  # mm.Model_NOT_FOUND_MSG
-        else:
-            status_code = 403  # Forbidden
-            response["error"] = "Message"  # mm.NOT_ALLOWED_TO_DOWNLOAD_MSG
-        return Response(
-            json.dumps(response), status=status_code, mimetype="application/json"
-        )
-
-    # If allowed
-    result = {"success": "testing"}  # mm.get_serialized_model_with_id(model_id)
-
-    if result["success"]:
-        # Use correct encoding
-        response = {"serialized_model": result["serialized_model"].decode("ISO-8859-1")}
-
-        # If model is large split it in multiple parts
-        if sys.getsizeof(response["serialized_model"]) >= MODEL_LIMIT_SIZE:
-            form = MultipartEncoder(response)
-            return Response(form.to_string(), mimetype=form.content_type)
-        else:
-            return Response(
-                json.dumps(response), status=200, mimetype="application/json"
-            )
-
-
 ## Will be removed when sockets can upload huge models
 @html.route("/serve-model/", methods=["POST"])
 @cross_origin()
@@ -174,9 +128,9 @@ def serve_model():
     serialized_model = serialized_model.encode(encoding)
 
     # save the model for later usage
-    # response = mm.save_model(
-    #    serialized_model, model_id, allow_download, allow_remote_inference
-    # )
+    response = model_controller.save_model(
+        serialized_model, model_id, allow_download, allow_remote_inference
+    )
     response = {}
     if response["success"]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
