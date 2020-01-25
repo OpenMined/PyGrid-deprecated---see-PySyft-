@@ -5,3 +5,4 @@ class MODEL:
     ALLOW_REMOTE_INFERENCE = "allow_remote_inference"
     MPC = "mpc"
     PROPERTIES = "model_properties"
+    SIZE = "model_size"

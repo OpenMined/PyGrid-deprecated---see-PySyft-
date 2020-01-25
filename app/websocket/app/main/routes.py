@@ -19,6 +19,7 @@ from . import html, local_worker
 
 from .persistence import model_controller
 from .codes import MODEL
+from syft.codes import RESPONSE_MSG
 
 # Suport for sending big models over the wire back to a
 # worker
@@ -53,18 +54,20 @@ def list_models_with_details():
     models = list()
     for id in model_ids:
         model = model_controller.get(local_worker, id)
-        model_data = model_controller.get(local_worker, id)["model_properties"]
+        model_data = model_controller.get(local_worker, id)[MODEL.PROPERTIES]
         models.append(
             {
                 "id": id,
-                "model_size": "{}KB".format(sys.getsizeof(model_data["model"]) / 1000),
+                MODEL.SIZE: "{}KB".format(
+                    sys.getsizeof(model_data[MODEL.MODEL]) / 1000
+                ),
                 MODEL.ALLOW_DOWNLOAD: model_data[MODEL.ALLOW_DOWNLOAD],
                 MODEL.ALLOW_REMOTE_INFERENCE: model_data[MODEL.ALLOW_REMOTE_INFERENCE],
                 MODEL.MPC: model_data[MODEL.MPC],
             }
         )
     return Response(
-        json.dumps({"success": True, "models": models}),
+        json.dumps({RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.MODELS: models}),
         status=200,
         mimetype="application/json",
     )
@@ -81,7 +84,7 @@ def list_workers():
         lambda x: isinstance(x, NodeClient), local_worker._known_workers.values(),
     )
     ids = map(lambda x: x.id, connected_workers)
-    response_body = {"success": True, "workers": list(ids)}
+    response_body = {RESPONSE_MSG.SUCCESS: True, "workers": list(ids)}
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
 
@@ -132,7 +135,7 @@ def serve_model():
         serialized_model, model_id, allow_download, allow_remote_inference
     )
     response = {}
-    if response["success"]:
+    if response[RESPONSE_MSG.SUCCESS]:
         return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
         return Response(json.dumps(response), status=409, mimetype="application/json")
@@ -209,11 +212,11 @@ def search_encrypted_models():
             }
             response_status = 200
         else:
-            response = {"error": "Model ID not found!"}
+            response = {RESPONSE_MSG.ERROR: "Model ID not found!"}
             response_status = 404
     # JSON without model_id field
     else:
-        response = {"error": "Invalid payload format"}
+        response = {RESPONSE_MSG.ERROR: "Invalid payload format"}
         response_status = 400
     return Response(
         json.dumps(response), status=response_status, mimetype="application/json"

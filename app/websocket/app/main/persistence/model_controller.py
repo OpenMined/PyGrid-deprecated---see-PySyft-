@@ -1,6 +1,8 @@
 from syft import Plan
 from syft.serde import deserialize
+from syft.codes import RESPONSE_MSG
 from .model_storage import ModelStorage
+from ..codes import MODEL
 
 
 class ModelController:
@@ -25,39 +27,48 @@ class ModelController:
         storage = self.get_storage(worker)
 
         if storage.contains(model_id):
-            return {"success": False, "error": ModelController.ID_CONFLICT_MSG}
+            return {
+                RESPONSE_MSG.SUCCESS: False,
+                RESPONSE_MSG.ERROR: ModelController.ID_CONFLICT_MSG,
+            }
 
         # Saves a copy in the database
         storage.save_model(
             serialized_model, model_id, allow_download, allow_remote_inference, mpc
         )
-        return {"success": True, "message": "Model saved with id: " + model_id}
+        return {
+            RESPONSE_MSG.SUCCESS: True,
+            "message": "Model saved with id: " + model_id,
+        }
 
     def get(self, worker, model_id: str):
         storage = self.get_storage(worker)
         if storage.contains(model_id):
-            return {"success": True, "model_properties": storage.get(model_id)}
+            return {RESPONSE_MSG.SUCCESS: True, MODEL.PROPERTIES: storage.get(model_id)}
         else:
-            return {"success": False, "error": ModelController.MODEL_NOT_FOUND_MSG}
+            return {
+                RESPONSE_MSG.SUCCESS: False,
+                RESPONSE_MSG.ERROR: ModelController.MODEL_NOT_FOUND_MSG,
+            }
 
     def delete(self, worker, model_id: str):
         storage = self.get_storage(worker)
 
         # Build response
         response = {}
-        response["success"] = bool(storage.remove(model_id))
+        response[RESPONSE_MSG.SUCCESS] = bool(storage.remove(model_id))
 
         # set log messages
-        if response["success"]:
+        if response[RESPONSE_MSG.SUCCESS]:
             response["message"] = "Model deleted with success!"
         else:
-            response["error"] = "Model id not found on database!"
+            response[RESPONSE_MSG.ERROR] = "Model id not found on database!"
 
         return response
 
     def models(self, worker):
         storage = self.get_storage(worker)
-        return {"success": True, "models": storage.models}
+        return {RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.MODELS: storage.models}
 
     def get_storage(self, worker):
         if worker.id in self.model_storages:
