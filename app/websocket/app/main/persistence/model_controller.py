@@ -20,41 +20,23 @@ class ModelController:
         model_id: str,
         allow_download: bool,
         allow_remote_inference: bool,
-        mpc: bool,
+        mpc: bool = False,
     ):
         storage = self.get_storage(worker)
 
-        if storage.cache.contains(model_id):
-            return {"success": False, "error": ModelController.ID_CONFLICT}
+        if storage.contains(model_id):
+            return {"success": False, "error": ModelController.ID_CONFLICT_MSG}
 
         # Saves a copy in the database
         storage.save_model(
             serialized_model, model_id, allow_download, allow_remote_inference, mpc
         )
-
-        model = deserialize(serialized_model)
-
         return {"success": True, "message": "Model saved with id: " + model_id}
 
     def get(self, worker, model_id: str):
         storage = self.get_storage(worker)
-
-        if storage.cache.contains(model_id):
-            return {"success": True, "model_properties": storage.cache.get(model_id)}
-
-        raw_model = storage.get(model_id)
-
-        if raw_model:
-            model = deserialize(raw_model["model"])
-            storage.cache.save(
-                model,
-                model_id,
-                raw_model["allow_download"],
-                raw_model["allow_inference"],
-                raw_model["mpc"],
-                False,
-            )
-            return {"success": True, "model_properties": storage.cache.get(model_id)}
+        if storage.contains(model_id):
+            return {"success": True, "model_properties": storage.get(model_id)}
         else:
             return {"success": False, "error": ModelController.MODEL_NOT_FOUND_MSG}
 

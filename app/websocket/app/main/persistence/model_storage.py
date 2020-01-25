@@ -40,7 +40,7 @@ class ModelStorage:
             model = {
                 "model": serialized_model,
                 "allow_download": int(allow_download),
-                "allow_inference": int(allow_remote_inference),
+                "allow_remote_inference": int(allow_remote_inference),
                 "mpc": int(mpc),
             }
 
@@ -63,17 +63,43 @@ class ModelStorage:
         )
 
     def get(self, model_id: str):
+        if self.cache.contains(model_id):
+            return self.cache.get(model_id)
+
         if db_instance():
             key = self._generate_hash_key(model_id)
             raw_data = db_instance().hgetall(key)
+
+            # Decode binary keys
             raw_data = {key.decode("utf-8"): value for key, value in raw_data.items()}
-            return raw_data
+
+            # Decode binary values
+            raw_data["allow_download"] = bool(
+                int(raw_data["allow_download"].decode("utf-8"))
+            )
+            raw_data["allow_remote_inference"] = bool(
+                int(raw_data["allow_remote_inference"].decode("utf-8"))
+            )
+            raw_data["mpc"] = bool(int(raw_data["mpc"].decode("utf-8")))
+
+            # Save model in cache
+            self.cache.save(
+                raw_data["model"],
+                model_id,
+                raw_data["allow_download"],
+                raw_data["allow_remote_inference"],
+                raw_data["mpc"],
+                True,
+            )
+
+            return self.cache.get(model_id)
         else:
             return None
 
     def remove(self, model_id) -> bool:
         # Remove model from cache
         self.cache.remove(model_id)
+
         if db_instance():
             # Remove model ID from id's list
             ids_list_key = self._generate_hash_key()
@@ -84,6 +110,13 @@ class ModelStorage:
             return db_instance().delete(key)
         else:
             return True
+
+    def contains(self, model_id):
+        key = self._generate_hash_key(model_id)
+        if not db_instance():
+            return self.cache.contains(model_id)
+        else:
+            return self.cache.contains(model_id) or bool(db_instance().hgetall(key))
 
     def _generate_hash_key(self, primary_key: str = "") -> str:
         return hashlib.sha256(bytes(self.id + primary_key, "utf-8")).hexdigest()
