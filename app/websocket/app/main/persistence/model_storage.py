@@ -2,6 +2,7 @@ from typing import List
 
 from .database import db_instance
 from .model_cache import ModelCache
+from ..codes import MODEL
 from syft.serde import serialize, deserialize
 import hashlib
 
@@ -38,10 +39,10 @@ class ModelStorage:
         if db_instance():
             key = self._generate_hash_key(model_id)
             model = {
-                "model": serialized_model,
-                "allow_download": int(allow_download),
-                "allow_remote_inference": int(allow_remote_inference),
-                "mpc": int(mpc),
+                MODEL.MODEL: serialized_model,
+                MODEL.ALLOW_DOWNLOAD: int(allow_download),
+                MODEL.ALLOW_REMOTE_INFERENCE: int(allow_remote_inference),
+                MODEL.MPC: int(mpc),
             }
 
             # Save serialized model into db
@@ -74,21 +75,21 @@ class ModelStorage:
             raw_data = {key.decode("utf-8"): value for key, value in raw_data.items()}
 
             # Decode binary values
-            raw_data["allow_download"] = bool(
-                int(raw_data["allow_download"].decode("utf-8"))
+            raw_data[MODEL.ALLOW_DOWNLOAD] = bool(
+                int(raw_data[MODEL.ALLOW_DOWNLOAD].decode("utf-8"))
             )
-            raw_data["allow_remote_inference"] = bool(
-                int(raw_data["allow_remote_inference"].decode("utf-8"))
+            raw_data[MODEL.ALLOW_REMOTE_INFERENCE] = bool(
+                int(raw_data[MODEL.ALLOW_REMOTE_INFERENCE].decode("utf-8"))
             )
-            raw_data["mpc"] = bool(int(raw_data["mpc"].decode("utf-8")))
+            raw_data[MODEL.MPC] = bool(int(raw_data[MODEL.MPC].decode("utf-8")))
 
             # Save model in cache
             self.cache.save(
-                raw_data["model"],
+                raw_data[MODEL.MODEL],
                 model_id,
-                raw_data["allow_download"],
-                raw_data["allow_remote_inference"],
-                raw_data["mpc"],
+                raw_data[MODEL.ALLOW_DOWNLOAD],
+                raw_data[MODEL.ALLOW_REMOTE_INFERENCE],
+                raw_data[MODEL.MPC],
                 True,
             )
 

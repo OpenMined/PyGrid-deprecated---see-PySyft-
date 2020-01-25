@@ -18,7 +18,7 @@ from flask_cors import cross_origin
 from . import html, local_worker
 
 from .persistence import model_controller
-
+from .codes import MODEL
 
 # Suport for sending big models over the wire back to a
 # worker
@@ -58,9 +58,9 @@ def list_models_with_details():
             {
                 "id": id,
                 "model_size": "{}KB".format(sys.getsizeof(model_data["model"]) / 1000),
-                "allow_download": model_data["allow_download"],
-                "allow_remote_inference": model_data["allow_remote_inference"],
-                "mpc": model_data["mpc"],
+                MODEL.ALLOW_DOWNLOAD: model_data[MODEL.ALLOW_DOWNLOAD],
+                MODEL.ALLOW_REMOTE_INFERENCE: model_data[MODEL.ALLOW_REMOTE_INFERENCE],
+                MODEL.MPC: model_data[MODEL.MPC],
             }
         )
     return Response(
@@ -110,19 +110,19 @@ def list_models():
 @cross_origin()
 def serve_model():
     encoding = request.form["encoding"]
-    model_id = request.form["model_id"]
-    allow_download = request.form["allow_download"] == "True"
-    allow_remote_inference = request.form["allow_remote_inference"] == "True"
+    model_id = request.form[MODEL.ID]
+    allow_download = request.form[MODEL.ALLOW_DOWNLOAD] == "True"
+    allow_remote_inference = request.form[MODEL.ALLOW_REMOTE_INFERENCE] == "True"
 
     if request.files:
         # If model is large, receive it by a stream channel
         try:
-            serialized_model = request.files["model"].read().decode("utf-8")
+            serialized_model = request.files[MODEL.MODEL].read().decode("utf-8")
         except UnicodeDecodeError:
-            serialized_model = request.files["model"].read().decode("latin-1")
+            serialized_model = request.files[MODEL.MODEL].read().decode("latin-1")
     else:
         # If model is small, receive it by a standard json
-        serialized_model = request.form["model"]
+        serialized_model = request.form[MODEL.MODEL]
 
     # Encode the model accordingly
     serialized_model = serialized_model.encode(encoding)
@@ -174,9 +174,9 @@ def search_encrypted_models():
         )
 
     # Check json fields
-    if body.get("model_id"):
+    if body.get(MODEL.ID):
         # Search model_id on node objects
-        model = local_worker._objects.get(body.get("model_id"))
+        model = local_worker._objects.get(body.get(MODEL.ID))
 
         # If found model is a plan
         if isinstance(model, sy.Plan):

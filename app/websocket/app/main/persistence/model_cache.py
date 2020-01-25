@@ -1,5 +1,6 @@
 import collections
 from syft.serde import deserialize
+from ..codes import MODEL
 
 
 class ModelCache:
@@ -53,10 +54,10 @@ class ModelCache:
 
             # Store model
             self.cache[model_id] = {
-                "model": model,
-                "allow_download": allow_download,
-                "allow_remote_inference": allow_remote_inference,
-                "mpc": mpc,
+                MODEL.MODEL: model,
+                MODEL.ALLOW_DOWNLOAD: allow_download,
+                MODEL.ALLOW_REMOTE_INFERENCE: allow_remote_inference,
+                MODEL.MPC: mpc,
             }
             return True
         else:

@@ -7,6 +7,7 @@ from syft.generic.pointers.pointer_tensor import PointerTensor
 from .. import local_worker, hook
 from ..persistence import model_controller
 from ..persistence.object_storage import recover_objects
+from ..codes import MODEL
 from flask_login import current_user
 from ..auth import authenticated_only
 
@@ -23,11 +24,11 @@ def host_model(message: dict) -> str:
             response (str) : Node's response.
     """
     encoding = message["encoding"]
-    model_id = message["model_id"]
-    allow_download = message["allow_download"] == "True"
-    allow_remote_inference = message["allow_remote_inference"] == "True"
-    mpc = message["mpc"] == "True"
-    serialized_model = message["model"]
+    model_id = message[MODEL.ID]
+    allow_download = message[MODEL.ALLOW_DOWNLOAD] == "True"
+    allow_remote_inference = message[MODEL.ALLOW_REMOTE_INFERENCE] == "True"
+    mpc = message[MODEL.MPC] == "True"
+    serialized_model = message[MODEL.MODEL]
 
     # Encode the model accordingly
     serialized_model = serialized_model.encode(encoding)
@@ -53,7 +54,7 @@ def delete_model(message: dict) -> str:
         Returns:
             response (str) : Node's response.
     """
-    model_id = message["model_id"]
+    model_id = message[MODEL.ID]
     result = model_controller.delete(current_user.worker, model_id)
     return json.dumps(result)
 
@@ -69,43 +70,6 @@ def get_models(message: dict) -> str:
     return json.dumps(model_list)
 
 
-def download_model(message: dict) -> str:
-    """ Download a specific model stored at this node.
-
-        Args:
-            message (dict) : Model's id.
-        Returns:
-            response (str) : Node's response with serialized model.
-    """
-    model_id = message["model_id"]
-
-    # If not Allowed
-    check = False  # mm.is_model_copy_allowed(model_id)
-    response = {}
-    if not check[RESPONSE_MSG.SUCCESS]:  # If not allowed
-        if check[RESPONSE_MSG.ERROR] == "Message":  # mm.MODEL_NOT_FOUND_MSG:
-            status_code = 404  # Not Found
-            response[RESPONSE_MSG.ERROR] = "Message"  # mm.Model_NOT_FOUND_MSG
-        else:
-            status_code = 403  # Forbidden
-            response[RESPONSE_MSG.ERROR] = "Message"  # mm.NOT_ALLOWED_TO_DOWNLOAD_MSG
-        response[RESPONSE_MSG.SUCCESS] = False
-        return json.dumps(response)
-
-    # If allowed
-    result = {}  # mm.get_serialized_model_with_id(model_id)
-
-    if result[RESPONSE_MSG.SUCCESS]:
-        # Use correct encoding
-        response = {"serialized_model": result["serialized_model"].decode("ISO-8859-1")}
-        if sys.getsizeof(response["serialized_model"]) >= MODEL_LIMIT_SIZE:
-            # Forward to HTTP method
-            # TODO: Implement download of huge models using sockets
-            return json.dumps({RESPONSE_MSG.SUCCESS: False})
-        else:
-            return json.dumps(response)
-
-
 @authenticated_only
 def run_inference(message: dict) -> str:
     """ Run dataset inference with a specifc model stored in this node.
@@ -119,12 +83,12 @@ def run_inference(message: dict) -> str:
     if not current_user.worker._objects:
         recover_objects(current_user.worker)
 
-    response = model_controller.get(current_user.worker, message["model_id"])
+    response = model_controller.get(current_user.worker, message[MODEL.ID])
 
     if response[RESPONSE_MSG.SUCCESS]:
 
         # If model exists but not allow remote inferences
-        if not response["model_properties"]["allow_remote_inference"]:
+        if not response[MODEL.PROPERTIES][MODEL.ALLOW_REMOTE_INFERENCE]:
             return json.dumps(
                 {
                     RESPONSE_MSG.SUCCESS: False,
@@ -133,7 +97,7 @@ def run_inference(message: dict) -> str:
                 }
             )
 
-        model = response["model_properties"]["model"]
+        model = response[MODEL.PROPERTIES][MODEL.MODEL]
 
         # serializing the data from GET request
         encoding = message["encoding"]
