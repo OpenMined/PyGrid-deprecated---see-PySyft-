@@ -1,7 +1,7 @@
 """
 This file exists to provide one common place for all grid node http requests.
 """
-import binascii
+
 import json
 import sys
 import os
@@ -12,7 +12,6 @@ from flask import request, send_from_directory
 
 import syft as sy
 from syft.workers.node_client import NodeClient
-from requests_toolbelt import MultipartEncoder
 from flask_cors import cross_origin
 
 from . import html, local_worker
@@ -21,9 +20,6 @@ from .persistence import model_controller
 from .codes import MODEL
 from syft.codes import RESPONSE_MSG
 
-# Suport for sending big models over the wire back to a
-# worker
-MODEL_LIMIT_SIZE = (1024 ** 2) * 100  # 100MB
 
 # ======= WEB ROUTES ======
 

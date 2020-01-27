@@ -1,12 +1,12 @@
-import syft as sy
 import json
 from flask_login import current_user
+
+import syft as sy
+from syft.exceptions import GetNotPermittedError
+
 from .. import local_worker, hook
 from ..persistence.object_storage import recover_objects
-from ..auth import authenticated_only
-from ..auth import UserSession
-
-from syft.exceptions import GetNotPermittedError
+from ..auth import authenticated_only, UserSession
 
 
 @authenticated_only

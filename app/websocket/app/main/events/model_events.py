@@ -1,17 +1,17 @@
-import syft as sy
-import torch as th
 import json
-import sys
+import torch as th
+
+import syft as sy
 from syft.codes import RESPONSE_MSG
 from syft.generic.pointers.pointer_tensor import PointerTensor
+from flask_login import current_user
+
+
 from .. import local_worker, hook
 from ..persistence import model_controller
 from ..persistence.object_storage import recover_objects
 from ..codes import MODEL
-from flask_login import current_user
 from ..auth import authenticated_only
-
-MODEL_LIMIT_SIZE = (1024 ** 2) * 64  # 64MB
 
 
 @authenticated_only

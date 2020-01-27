@@ -17,6 +17,9 @@ def create_app(node_id, debug=False, database_url=None):
 
     app.config["SECRET_KEY"] = "justasecretkeythatishouldputhere"
 
+    # Enable persistent mode
+    # Overwrite syft.object_storage methods to work in a persistent way
+    # Persist models / tensors
     if database_url:
         app.config["REDISCLOUD_URL"] = database_url
         from .main.persistence import database, object_storage

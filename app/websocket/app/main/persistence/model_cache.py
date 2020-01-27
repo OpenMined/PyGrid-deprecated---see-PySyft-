@@ -1,14 +1,19 @@
+from typing import List
+
 import collections
 from syft.serde import deserialize
 from ..codes import MODEL
 
 
 class ModelCache:
+    """Handle models in memory."""
+
     def __init__(self):
         self.cache = dict()
 
     @property
-    def models(self):
+    def models(self) -> List:
+        """ Returns a list of model ids stored at this cache. """
         return list(self.cache.keys())
 
     def contains(self, model_id: str) -> bool:

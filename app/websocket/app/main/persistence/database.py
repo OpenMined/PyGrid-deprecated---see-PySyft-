@@ -1,3 +1,6 @@
+"""
+This file provides a singleton db instance.
+"""
 import redis
 
 redis_db = None

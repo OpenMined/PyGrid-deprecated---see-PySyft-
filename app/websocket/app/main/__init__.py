@@ -3,13 +3,9 @@ from flask import Blueprint
 import syft as sy
 import torch as th
 
-# TEST PURPOSES
-
-from typing import Callable
 from typing import List
 from typing import Tuple
 from typing import Union
-from typing import TYPE_CHECKING
 
 from syft.serde import serialize, deserialize
 from syft.generic.frameworks.types import FrameworkTensor
@@ -80,6 +76,4 @@ ws = Blueprint(r"ws", __name__)
 
 
 from . import routes, events
-
-# from .persistence.models import db
 from . import auth
