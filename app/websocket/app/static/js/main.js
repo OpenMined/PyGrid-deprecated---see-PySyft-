@@ -132,7 +132,7 @@ async function update_server_status() {
   // just doing a identity check to see if server is online
   var identity = await get_status_from_server()
   console.log(identity)
-  if (identity["status"] == "OpenGrid") {
+  if (identity["data"]["status"] == "OpenGrid") {
     set_online_status("Online")
   } else {
     set_online_status("Offline")

@@ -83,16 +83,25 @@ def identity():
         mimetype="application/json",
     )
 
+
 @html.route("/status/")
 def show_status():
     """ Generates a response with the status of this node.
+        if the nodes has connected workers to it, the status is online
     
         Returns:
             Response : Status of node
     """
-    
+
+    connected_workers = filter(
+        lambda x: isinstance(x, NodeClient), local_worker._known_workers.values(),
+    )
+    ids = map(lambda x: x.id, connected_workers)
+
+    status = "OpenGrid" if len(list(ids)) > 0 else ""
+
     return Response(
-        json.dumps({RESPONSE_MSG.SUCCESS: True, "status": 1}),
+        json.dumps({RESPONSE_MSG.SUCCESS: True, "status": status}),
         status=200,
         mimetype="application/json",
     )
