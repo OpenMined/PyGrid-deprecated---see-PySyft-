@@ -87,7 +87,7 @@ def identity():
 @html.route("/status/")
 def show_status():
     """ Generates a response with the status of this node.
-        if the nodes has connected workers to it, the status is online
+        if the nodes is connected to workers, the status is online
     
         Returns:
             Response : Status of node
