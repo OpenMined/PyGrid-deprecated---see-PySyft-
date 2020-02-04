@@ -131,7 +131,6 @@ var server_ip = new Vue({
 async function update_server_status() {
   // just doing a identity check to see if server is online
   var identity = await get_status_from_server()
-  console.log(identity)
   if (identity["data"]["status"] == "OpenGrid") {
     set_online_status("Online")
   } else {
