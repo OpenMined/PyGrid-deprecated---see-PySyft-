@@ -1,42 +1,60 @@
 version: '3'
 services:
     gateway:
-        image: gateway:latest
+        image: openmined/grid-gateway:latest
         environment:
                 - PORT=5000
                 - SECRET_KEY=ineedtoputasecrethere
                 - DATABASE_URL=sqlite:///databasegateway.db
         network_mode: "host"
+    redis:
+        image: redis:latest
+        network_mode: "host"
     bob:
-        image: node:latest
+        image: openmined/grid-node:latest
         environment:
                 - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Bob
                 - ADDRESS=http://localhost:3000/
-                - DATABASE_URL=sqlite:///databaseBob.db
+                - REDISCLOUD_URL=redis:///localhost:6379
                 - PORT=3000
         depends_on:
                 - "gateway"
+                - "redis"
         network_mode: "host"
     alice:
-        image: node:latest
+        image: openmined/grid-node:latest
         environment:
                 - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Alice
                 - ADDRESS=http://localhost:3001/
-                - DATABASE_URL=sqlite:///databaseAlice.db
+                - REDISCLOUD_URL=redis:///localhost:6379
                 - PORT=3001
         depends_on:
                 - "gateway"
+                - "redis"
         network_mode: "host"
     bill:
-        image: node:latest
+        image: openmined/grid-node:latest
         environment:
                 - GRID_NETWORK_URL=http://localhost:5000
                 - ID=Bill
                 - ADDRESS=http://localhost:3002/
-                - DATABASE_URL=sqlite:///databaseBill.db
+                - REDISCLOUD_URL=redis:///localhost:6379
                 - PORT=3002
         depends_on:
                 - "gateway"
+                - "redis"
+        network_mode: "host"
+    james:
+        image: openmined/grid-node:latest
+        environment:
+                - GRID_NETWORK_URL=http://localhost:5000
+                - ID=James
+                - ADDRESS=http://localhost:3003/
+                - REDISCLOUD_URL=redis:///localhost:6379
+                - PORT=3003
+        depends_on:
+                - "gateway"
+                - "redis"
         network_mode: "host"

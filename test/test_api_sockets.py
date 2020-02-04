@@ -3,8 +3,7 @@ import time
 import pytest
 from random import randint, sample
 
-import grid as gr
-from grid import syft as sy
+import syft as sy
 import torch as th
 import torch.nn.functional as F
 import numpy as np
@@ -16,14 +15,14 @@ from test import conftest
 hook = sy.TorchHook(th)
 
 
-@pytest.mark.skip
 def test_host_plan_not_allowed_to_run_ops(connected_node):
+    hook.local_worker.is_client_worker = False
+
     class Net(sy.Plan):
         def __init__(self):
             super(Net, self).__init__()
             self.fc1 = th.nn.Linear(2, 1)
             self.bias = th.tensor([1000.0])
-            self.state += ["fc1", "bias"]
 
         def forward(self, x):
             x = self.fc1(x)
@@ -44,18 +43,17 @@ def test_host_plan_not_allowed_to_run_ops(connected_node):
     with pytest.raises(RuntimeError):
         bob.run_remote_inference(model_id="not_allowed", data=th.tensor([1.0, 2]))
 
-    with pytest.raises(RuntimeError):
-        bob.download_model(model_id="not_allowed")
+    hook.local_worker.is_client_worker = True
 
 
-@pytest.mark.skip
 def test_host_plan_model(connected_node):
+    hook.local_worker.is_client_worker = False
+
     class Net(sy.Plan):
         def __init__(self):
             super(Net, self).__init__()
             self.fc1 = th.nn.Linear(2, 1)
             self.bias = th.tensor([1000.0])
-            self.state += ["fc1", "bias"]
 
         def forward(self, x):
             x = self.fc1(x)
@@ -75,16 +73,17 @@ def test_host_plan_model(connected_node):
     # Call one more time
     prediction = bob.run_remote_inference(model_id="1", data=th.tensor([1.0, 2]))
     assert th.tensor(prediction) == th.tensor([1000.0])
+    hook.local_worker.is_client_worker = True
 
 
-@pytest.mark.skip
 def test_host_models_with_the_same_key(connected_node):
+    hook.local_worker.is_client_worker = False
+
     class Net(sy.Plan):
         def __init__(self):
             super(Net, self).__init__()
             self.fc1 = th.nn.Linear(2, 1)
             self.bias = th.tensor([1000.0])
-            self.state += ["fc1", "bias"]
 
         def forward(self, x):
             x = self.fc1(x)
@@ -102,6 +101,7 @@ def test_host_models_with_the_same_key(connected_node):
     # Error when using the same id twice
     with pytest.raises(RuntimeError):
         bob.serve_model(model, model_id="2")
+    hook.local_worker.is_client_worker = True
 
 
 @pytest.mark.skipif(
@@ -135,14 +135,14 @@ def test_host_jit_model(connected_node):
     assert th.tensor(prediction) == th.tensor([1000.0])
 
 
-@pytest.mark.skip
 def test_delete_model(connected_node):
+    hook.local_worker.is_client_worker = False
+
     class Net(sy.Plan):
         def __init__(self):
             super(Net, self).__init__()
             self.fc1 = th.nn.Linear(2, 1)
             self.bias = th.tensor([1000.0])
-            self.state += ["fc1", "bias"]
 
         def forward(self, x):
             x = self.fc1(x)
@@ -161,54 +161,7 @@ def test_delete_model(connected_node):
     assert bob.delete_model("test_delete_model")
     assert "test_delete_model" not in bob.models
 
-    # Error when deleting again
-    with pytest.raises(RuntimeError):
-        bob.delete_model("test_delete_model")
-
-
-@pytest.mark.skip
-def test_run_encrypted_model(connected_node):
-    sy.hook.local_worker.is_client_worker = False
-
-    class Net(sy.Plan):
-        def __init__(self):
-            super(Net, self).__init__()
-            self.bias = th.tensor([2.0])
-            self.state += ["bias"]
-
-        def forward(self, x):
-            # TODO: we're using a model that does not require
-            # communication between nodes to compute.
-            # Tests are breaking when communication
-            # between nodes is required.
-            return x + self.bias
-
-    plan = Net()
-    plan.build(th.tensor([1.0]))
-
-    nodes = list(connected_node.values())
-
-    bob, alice, james = nodes[:3]
-
-    # Send plan
-    plan.encrypt(bob, james, crypto_provider=alice)
-
-    # Share data
-    x = th.tensor([1.0])
-
-    # TODO: figure it out why encrypt is not working here
-    # but is working on the notebooks
-    x_sh = x.fix_prec().share(bob, james, crypto_provider=alice)
-
-    # Execute the plan
-    decrypted = plan(x_sh).get().float_prec()
-
-    # Compare with local plan
-    plan.get().float_precision()
-    expected = plan(x)
-    assert th.all(decrypted - expected.detach() < 1e-2)
-
-    sy.hook.local_worker.is_client_worker = True
+    hook.local_worker.is_client_worker = True
 
 
 @pytest.mark.parametrize(
@@ -230,20 +183,35 @@ def test_connect_node(connected_node):
         unittest.TestCase.fail("test_connect_nodes : Exception raised!")
 
 
-def test_connect_all_node(connected_node):
-    workers = [connected_node[node] for node in connected_node]
-    try:
-        gr.connect_all_nodes(workers)
-    except:
-        unittest.TestCase.fail("test_connect_nodes : Exception raised!")
-
-
 def test_send_tensor(connected_node):
     x = th.tensor([1.0, 0.4])
     x_s = x.send(connected_node["alice"])
 
     assert x_s.location.id == "alice"
     assert th.all(th.eq(x_s.get(), x))
+
+
+def test_send_private_tensor(connected_node):
+    x = th.tensor([1.0, 0.4])
+
+    # Private Tensor
+    _x = x.private_tensor(allowed_users=("user"))
+
+    # Pointer to private tensor.
+    p_x = _x.send(connected_node["alice"], user="user")
+    assert p_x.location.id == "alice"
+
+
+def test_get_private_tensor(connected_node):
+    x = th.tensor([1.0, 0.4])
+
+    # Private Tensor
+    _x = x.private_tensor(allowed_users=("user"))
+
+    # Pointer to private tensor.
+    p_x = _x.send(connected_node["alice"], user="user")
+    with pytest.raises(sy.exceptions.GetNotPermittedError):
+        p_x.get()
 
 
 def test_send_tag_tensor(connected_node):

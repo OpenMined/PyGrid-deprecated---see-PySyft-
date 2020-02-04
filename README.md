@@ -11,6 +11,7 @@ PyGrid is a peer-to-peer network of data owners and data scientists who can coll
     - [PyGrid library](#pygrid-library)
   - [Common Installation Issues:](#common-installation-issues)
 - [Getting started](#getting-started)
+    - [Build Grid Platform Locally](#start-grid-platform-locally)
     - [Build images](#build-images)
     - [Let's put all together](#lets-put-all-together)
 - [Try out the Tutorials](#try-out-the-tutorials)
@@ -31,22 +32,24 @@ $ pip install .
 - On macOS, you might get ```ld: library not found for -lssl```. It happens when openssl is missing. Kindly install openSSL, add it to you path and try again. You can also fix the issue by installing the appropriate Xcode Command line tools from [here](https://developer.apple.com/download/more/).
 
 ## Getting started
-To boot the entire PyGrid platform locally, we will use docker containers.  
+To boot the entire PyGrid platform locally, we will use docker containers.
 To install docker the dependencies, just follow [docker documentation](https://docs.docker.com/install/).
 
-
-#### Build images
-```
-$ docker build -t node ./app/websocket/  # Build PyGrid node image
-$ docker build -t gateway ./gateway/  # Build gateway image
-```
-
-#### Let's put all together
-**PS:** Fell free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
+#### Start Grid platform locally
+It will download the latest openmined's docker images and start a grid platform with 1 gateway and 4 grid nodes.
+**PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
 ```
 $ docker-compose up
 ```
-Done! now we have a gateway and three nodes (by default) running locally.
+#### Kubernetes deployment.
+You can now deploy the grid-gateway and grid-node docker containers on kubernetes. This can be either to a local (minikube) cluster or a remote cluster (GKE, EKS, AKS etc). The steps to setup the cluster can be found in [./k8s/Readme.md](https://github.com/OpenMined/PyGrid/tree/dev/k8s)
+
+#### Build your own images
+```
+$ docker build -t openmined/grid-node ./app/websocket/  # Build PyGrid node image
+$ docker build -t openmined/grid-gateway ./gateway/  # Build gateway image
+```
+
 
 ## Try out the Tutorials
 A comprehensive list of tutorials can be found [here](https://github.com/OpenMined/PyGrid/tree/dev/examples).

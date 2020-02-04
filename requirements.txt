@@ -5,7 +5,6 @@ numpy>=1.14.0
 pre-commit
 pytest
 requests
-syft
 websocket_client
 websockets>=7.0
 eventlet==0.25.0
@@ -19,3 +18,8 @@ gevent-websocket
 flask_sockets
 flask_login
 pbr
+syft_proto
+flask_cors
+flask_login
+redis
+-e git+https://github.com/IonesioJunior/PySyft@add_grid_workers#egg=syft

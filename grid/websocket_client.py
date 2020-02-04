@@ -18,7 +18,6 @@ from syft.generic.tensor import AbstractTensor
 from syft.workers.base import BaseWorker
 from syft import WebsocketClientWorker
 from syft.federated.federated_client import FederatedClient
-from syft.codes import MSGTYPE
 from syft.messaging.message import Message
 
 from grid import utils as gr_utils
@@ -212,6 +211,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         self,
         model,
         model_id: str = None,
+        mpc: bool = False,
         allow_download: bool = False,
         allow_remote_inference: bool = False,
     ) -> bool:
@@ -230,11 +230,6 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                 ValueError: if model_id is not provided and model is a jit model (aka does not have an id attribute).
                 RunTimeError: if there was a problem during model serving.
         """
-        if model_id is None:
-            if isinstance(model, sy.Plan):
-                model_id = model.id
-            else:
-                raise ValueError("Model id argument is mandatory for jit models.")
 
         # If the model is a Plan we send the model
         # and host the plan version created after
@@ -242,10 +237,8 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
         if isinstance(model, sy.Plan):
             # We need to use the same id in the model
             # as in the POST request.
-            model.id = model_id
-            model.send(self)
-            model.ptr_plans[self.id].garbage_collect_data = False
-            res_model = model.ptr_plans[self.id]
+            p_model = model.send(self)
+            res_model = p_model
         else:
             res_model = model
 
@@ -261,6 +254,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                 "allow_download": str(allow_download),
                 "allow_remote_inference": str(allow_remote_inference),
                 "model": serialized_model.decode(self._encoding),
+                "mpc": str(mpc),
             }
             response = self._forward_json_to_websocket_server_worker(message)
         else:
@@ -279,6 +273,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
                         "model_id": model_id,
                         "allow_download": str(allow_download),
                         "allow_remote_inference": str(allow_remote_inference),
+                        "mpc": str(mpc),
                     },
                 )
             )
@@ -447,7 +442,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
 
             # If we can download model (small models) by sockets
             if response.get("serialized_model", None):
-                serialized_model = result["serialized_model"].encode(self._encoding)
+                serialized_model = response["serialized_model"].encode(self._encoding)
                 model = sy.serde.deserialize(serialized_model)
                 return model
 
@@ -501,6 +496,7 @@ class WebsocketGridClient(WebsocketClientWorker, FederatedClient):
             res_model.id,
             allow_download=True,
             allow_remote_inference=False,
+            mpc=True,
         )
         return result
 

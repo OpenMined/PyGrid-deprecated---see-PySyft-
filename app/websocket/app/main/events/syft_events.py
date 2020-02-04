@@ -1,9 +1,12 @@
-import syft as sy
 import json
 from flask_login import current_user
+
+import syft as sy
+from syft.exceptions import GetNotPermittedError
+
 from .. import local_worker, hook
-from ..persistence.utils import recover_objects, snapshot
-from ..auth import authenticated_only
+from ..persistence.object_storage import recover_objects
+from ..auth import authenticated_only, UserSession
 
 
 @authenticated_only
@@ -15,17 +18,22 @@ def forward_binary_message(message: bin) -> bin:
         Returns:
             response (bin) : PySyft binary response.
     """
+    try:
+        ## If worker is empty, load previous database tensors.
+        if not current_user.worker._objects:
+            recover_objects(current_user.worker)
 
-    # If worker is empty, load previous database tensors
-    if not current_user.worker._objects:
-        recover_objects(current_user.worker)
+        # Process message
+        decoded_response = current_user.worker._recv_msg(message)
 
-    # Process message
-    decoded_response = current_user.worker._recv_msg(message)
+    except GetNotPermittedError as e:
+        message = sy.serde.deserialize(message, worker=current_user.worker)
 
-    # Save worker state at database
-    snapshot(current_user.worker)
+        # Register this request into tensor owner account.
+        if hasattr(current_user, "save_tensor_request"):
+            current_user.save_request(message._contents)
 
+        decoded_response = sy.serde.serialize(e)
     return decoded_response
 
 
