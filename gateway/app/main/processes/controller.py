@@ -1,4 +1,4 @@
-from .federated_learning_process import FederatedLearningProcess
+from .federated_learning_process import FLProcess
 
 
 class FLPController:
@@ -11,10 +11,10 @@ class FLPController:
         self,
         model,
         client_plans,
-        client_protocols,
         client_config,
-        server_averaging_plan,
         server_config,
+        server_averaging_plan,
+        client_protocols=None,
     ):
         """ Register a new federated learning process
             
@@ -26,15 +26,15 @@ class FLPController:
                 server_averaging_plan: a function that will instruct PyGrid on how to average model diffs that are returned from the workers.
                 server_config: the server configurations
             Returns:
-                process : FederatedLearningProcess Instance.
+                process : FLProcess Instance.
         """
-        process = FederatedLearningProcess(
-            model,
-            client_plans,
-            client_protocols,
-            client_config,
-            server_averaging_plan,
-            server_config,
+        process = FLProcess(
+            model=model,
+            client_plans=client_plans,
+            client_config=client_config,
+            server_config=server_config,
+            client_protocols=client_protocols,
+            server_averaging_plan=server_averaging_plan,
         )
 
         self.processes[process.id] = process
@@ -54,6 +54,6 @@ class FLPController:
             Args:
                 pid : Id used to identify the desired process.
             Returns:
-                process : FederatedLearningProcess Instance or None if it wasn't found.
+                process : FLProcess Instance or None if it wasn't found.
         """
         return self.processes.get(pid, None)

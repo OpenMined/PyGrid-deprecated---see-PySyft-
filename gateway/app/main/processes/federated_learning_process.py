@@ -1,17 +1,17 @@
 import uuid
 
 
-class FederatedLearningProcess:
+class FLProcess:
     """ An abstraction of a federated learning process """
 
     def __init__(
         self,
         model,
         client_plans,
-        client_protocols,
         client_config,
-        server_averaging_plan,
         server_config,
+        server_averaging_plan,
+        client_protocols=None,
     ):
         """ Create a federated learning process instance.
             
@@ -48,9 +48,9 @@ class FederatedLearningProcess:
         }
 
     def __str__(self):
-        return "< FederatedLearningProcess - ID: " + self.id + " >"
+        return "< FLProcess - ID: " + self.id + " >"
 
     def __eq__(self, other):
-        if isinstance(other, FederatedLearningProcess):
+        if isinstance(other, FLProcess):
             return self.id == other.id
         return False
