@@ -106,18 +106,20 @@ def cycle_request(message: dict, socket) -> str:
         ### MOCKUP ###
 
         # Build response
+        remaining_time = 2500 # Should be provided by FL Process Cycle structure.
         accepted = True
         if accepted:
             response[CYCLE.STATUS] = "accepted"
-            response[MSG_FIELD.MODEL] = model_id
+            response[MSG_FIELD.MODEL] = "my-federated-model"
             response[CYCLE.VERSION] = version
             response[CYCLE.KEY] = "LONG HASH KEY"
             response[CYCLE.PLANS] = {}
             response[CYCLE.PROTOCOLS] = {}
             response[CYCLE.CLIENT_CONFIG] = {}
+            response[MSG_FIELD.MODEL_ID] = model_id
         else:
             response[CYCLE.STATUS] = "rejected"
-            response[CYCLE.TIMEOUT] = 2700
+            response[CYCLE.TIMEOUT] = remaining_time + 1
 
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)

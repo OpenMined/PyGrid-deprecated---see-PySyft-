@@ -3,6 +3,7 @@ class MSG_FIELD:
     DATA = "data"
     WORKER_ID = "worker_id"
     MODEL = "model"
+    MODEL_ID = "model_id"
     ALIVE = "alive"
 
 
