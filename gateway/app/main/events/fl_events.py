@@ -23,12 +23,12 @@ def host_federated_training(message: dict, socket) -> str:
 
     try:
         # Retrieve JSON values
-        serialized_model = data.get(MSG_FIELD.MODEL, None)
-        serialized_client_plans = data.get(CYCLE.TRAINING_PLANS, None)
-        serialized_client_protocols = data.get(CYCLE.SECURE_AGG_PROTOCOL, None)
-        serialized_avg_plan = data.get(CYCLE.AVG_PLAN, None)
-        client_config = data.get(CYCLE.CLIENT_CONFIG, None)
-        server_config = data.get(CYCLE.SERVER_CONFIG, None)
+        serialized_model = data.get(MSG_FIELD.MODEL, None)  # Only one
+        serialized_client_plans = data.get(CYCLE.PLANS, None)  # 1 or *
+        serialized_client_protocols = data.get(CYCLE.PROTOCOLS, None)  # 0 or *
+        serialized_avg_plan = data.get(CYCLE.AVG_PLAN, None)  # Only one
+        client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
+        server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
         # Create a new FL Process
         fl_process = processes.create_process(
@@ -109,11 +109,12 @@ def cycle_request(message: dict, socket) -> str:
         accepted = True
         if accepted:
             response[CYCLE.STATUS] = "accepted"
+            response[MSG_FIELD.MODEL] = model_id
+            response[CYCLE.VERSION] = version
             response[CYCLE.KEY] = "LONG HASH KEY"
             response[CYCLE.PLANS] = {}
             response[CYCLE.PROTOCOLS] = {}
             response[CYCLE.CLIENT_CONFIG] = {}
-            response[MSG_FIELD.MODEL] = model_id
         else:
             response[CYCLE.STATUS] = "rejected"
             response[CYCLE.TIMEOUT] = 2700
