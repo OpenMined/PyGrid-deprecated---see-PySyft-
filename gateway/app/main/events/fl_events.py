@@ -106,7 +106,7 @@ def cycle_request(message: dict, socket) -> str:
         ### MOCKUP ###
 
         # Build response
-        remaining_time = 2500 # Should be provided by FL Process Cycle structure.
+        remaining_time = 2500  # Should be provided by FL Process Cycle structure.
         accepted = True
         if accepted:
             response[CYCLE.STATUS] = "accepted"
