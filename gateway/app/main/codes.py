@@ -36,8 +36,6 @@ class CYCLE(object):
     TIMEOUT = "timeout"
     DIFF = "diff"
     AVG_PLAN = "averaging_plan"
-    SECURE_AGG_PROTOCOL = "secure_agg_protocol"
-    TRAINING_PLANS = "training_plans"
 
 
 class RESPONSE_MSG(object):
