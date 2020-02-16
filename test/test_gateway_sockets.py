@@ -27,10 +27,12 @@ async def send_ws_message(data):
 def get_user(message):
     return json.loads(message.get("data")).get("user")
 
+
 async def get_protocol():
     return await send_ws_message(
         {"type": "get-protocol", "data": {"protocolId": "test-protocol"}}
     )
+
 
 # Gateway WebSockets API Test
 
@@ -39,13 +41,13 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
     async def test_socket_ping_alive(self):
         response = await send_ws_message({"type": "socket-ping", "data": {}})
         self.assertEqual(response, {"alive": "True"})
-    
+
     @pytest.mark.skip
     async def test_type_get_protocol(self):
         response = await get_protocol()
         message_type = response.get("type")
         self.assertEqual(message_type, "get-protocol")
-    
+
     @pytest.mark.skip
     async def test_get_protocol_creator_role(self):
         response = await get_protocol()
@@ -54,7 +56,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         role = user.get("role")
 
         self.assertEqual(role, "creator")
-    
+
     @pytest.mark.skip
     async def test_get_protocol_join_scope(self):
         response = await get_protocol()
@@ -73,7 +75,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         role = participant.get("role")
 
         self.assertEqual(role, "participant")
-    
+
     @pytest.mark.skip
     async def test_protocol_id(self):
         protocol_id = "not-fake-protocol-id"
@@ -98,7 +100,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         role = participant.get("role")
 
         self.assertEqual(role, "participant")
-    
+
     @pytest.mark.skip
     async def test_type_webrtc_join_room(self):
         response = await get_protocol()
@@ -180,7 +182,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
             pytest.fail("There was an error trying webrtc: peer-left")
         else:
             self.assertEqual(response, None)
-    
+
     @pytest.mark.skip
     async def test_invalid_message_type(self):
         response = await send_ws_message(
