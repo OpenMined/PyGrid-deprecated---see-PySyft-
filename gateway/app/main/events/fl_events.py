@@ -103,23 +103,32 @@ def cycle_request(message: dict, socket) -> str:
         # Check worker health (ping/download/upload rate)
         # If available,  add this worker on fd cycle
 
+        fl_process_id = uuid.uuid4()
+
+        # Retrieve Cycle instance
+        cycle = processes.get_cycle(model_id)
+
+        # If doesn't exist, create a new one.
+        if not cycle:
+            cycle = processes.create_cycle(model_id, fl_process_id)
+
         ### MOCKUP ###
 
         # Build response
-        remaining_time = 2500  # Should be provided by FL Process Cycle structure.
-        accepted = True
-        if accepted:
+        if cycle.insert(worker_id):
+            # If worker_id doesn't exist in the current cycle, insert it and return True.
             response[CYCLE.STATUS] = "accepted"
             response[MSG_FIELD.MODEL] = "my-federated-model"
             response[CYCLE.VERSION] = version
-            response[CYCLE.KEY] = "LONG HASH KEY"
+            response[CYCLE.KEY] = cycle.new_hash(worker_id)
             response[CYCLE.PLANS] = {}
             response[CYCLE.PROTOCOLS] = {}
             response[CYCLE.CLIENT_CONFIG] = {}
             response[MSG_FIELD.MODEL_ID] = model_id
         else:
+            # If worker_id already exists in the current cycle, return False.
             response[CYCLE.STATUS] = "rejected"
-            response[CYCLE.TIMEOUT] = remaining_time + 1
+            response[CYCLE.TIMEOUT] = cycle.remaining_time + 1
 
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)

@@ -1,11 +1,50 @@
 from .federated_learning_process import FLProcess
+from .federated_learning_cycle import FederatedLearningCycle
 
 
 class FLPController:
-    """ This class implements controller design pattern over the federated learning processes."""
+    """ This class implements controller design pattern over the federated learning processes. """
 
     def __init__(self):
         self.processes = {}
+        self._cycles = {}
+
+    def create_cycle(
+        self, model_id: str, fl_process: "FLProcess", cycle_time: int = 2500
+    ):
+        """ Create a new federated learning cycle.
+            
+            Args:
+                fl_process: Federated Learning Process Structure.
+                cycle_time: Remaining time to finish this cycle.
+            Returns:
+                fd_cycle: Cycle Instance.
+        """
+
+        cycle = FederatedLearningCycle(fl_process, cycle_time)
+
+        # Check if Cycle already exists
+        if model_id not in self._cycles:
+            self._cycles[model_id] = cycle
+
+        return cycle
+
+    def get_cycle(self, model_id: str):
+        """ Retrieve a registered cycle.
+            Args:
+                model_id: Model's ID.
+            Returns:
+                cycle: Cycle Instance / None
+        """
+        return self._cycles.get(model_id, None)
+
+    def delete_cycle(self, model_id: str):
+        """ Delete a registered Cycle.
+            Args:
+                model_id: Model's ID.
+        """
+        if model_id in self._cycles:
+            del self._cycles[model_id]
 
     def create_process(
         self,
