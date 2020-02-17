@@ -1,6 +1,6 @@
 import uuid
 import hashlib
-from . import FLProcess
+from .federated_learning_process import FLProcess
 
 
 class FederatedLearningCycle:
