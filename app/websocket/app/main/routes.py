@@ -94,7 +94,11 @@ def show_status():
     """
 
     connected_workers = filter(
+<<<<<<< HEAD
         lambda x: isinstance(x, NodeClient), local_worker._known_workers.values(),
+=======
+        lambda x: isinstance(x, NodeClient), local_worker._known_workers.values()
+>>>>>>> upstream/dev
     )
     ids = map(lambda x: x.id, connected_workers)
 
@@ -115,7 +119,7 @@ def list_workers():
             Response : List of node's ids.
     """
     connected_workers = filter(
-        lambda x: isinstance(x, NodeClient), local_worker._known_workers.values(),
+        lambda x: isinstance(x, NodeClient), local_worker._known_workers.values()
     )
     ids = map(lambda x: x.id, connected_workers)
     response_body = {RESPONSE_MSG.SUCCESS: True, "workers": list(ids)}

@@ -1,6 +1,6 @@
 ![PyGrid logo](https://raw.githubusercontent.com/OpenMined/design-assets/master/logos/PyGrid/horizontal-primary-trans.png)
 
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/OpenMined/PyGrid/dev) [![Build Status](https://travis-ci.org/OpenMined/PyGrid.svg)](https://travis-ci.org/OpenMined/PyGrid) [![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/team_pysyft) [![FOSSA Status](https://camo.githubusercontent.com/c0cb82174c3eb8fcbb00a46eb237556f63b36804/68747470733a2f2f6170702e666f7373612e696f2f6170692f70726f6a656374732f6769742532426769746875622e636f6d2532466d6174746865772d6d6361746565722532465079537966742e7376673f747970653d736d616c6c)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmatthew-mcateer%2FPySyft?ref=badge_small)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/OpenMined/PyGrid/dev) ![Run Tests](https://github.com/OpenMined/PyGrid/workflows/Run%20tests/badge.svg?branch=dev) [![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://openmined.slack.com/messages/team_pysyft) [![FOSSA Status](https://camo.githubusercontent.com/c0cb82174c3eb8fcbb00a46eb237556f63b36804/68747470733a2f2f6170702e666f7373612e696f2f6170692f70726f6a656374732f6769742532426769746875622e636f6d2532466d6174746865772d6d6361746565722532465079537966742e7376673f747970653d736d616c6c)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmatthew-mcateer%2FPySyft?ref=badge_small)
 
 PyGrid is a peer-to-peer network of data owners and data scientists who can collectively train AI models using [PySyft](https://github.com/OpenMined/PySyft/).
 
@@ -40,6 +40,15 @@ It will download the latest openmined's docker images and start a grid platform 
 **PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
 ```
 $ docker-compose up
+```
+
+On MacOS, you have to work-around the lack of support for `network_mode: host` in Docker for Mac by adding following to your `/etc/hosts`
+```
+127.0.0.1 host.docker.internal
+```
+and running:
+```
+$ docker-compose -f docker-compose-mac.yml up
 ```
 #### Kubernetes deployment.
 You can now deploy the grid-gateway and grid-node docker containers on kubernetes. This can be either to a local (minikube) cluster or a remote cluster (GKE, EKS, AKS etc). The steps to setup the cluster can be found in [./k8s/Readme.md](https://github.com/OpenMined/PyGrid/tree/dev/k8s)
