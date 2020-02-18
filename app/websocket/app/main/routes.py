@@ -94,11 +94,7 @@ def show_status():
     """
 
     connected_workers = filter(
-<<<<<<< HEAD
-        lambda x: isinstance(x, NodeClient), local_worker._known_workers.values(),
-=======
         lambda x: isinstance(x, NodeClient), local_worker._known_workers.values()
->>>>>>> upstream/dev
     )
     ids = map(lambda x: x.id, connected_workers)
 
