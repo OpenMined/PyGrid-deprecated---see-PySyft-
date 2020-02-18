@@ -10,7 +10,7 @@ import os
 import requests
 
 from .persistence.manager import register_new_node, connected_nodes, delete_node
-from .process import processes
+from .processes import processes
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
