@@ -28,7 +28,6 @@ def index():
     """ Main Page. """
     return render_template("index.html")
 
-
 @main.route("/join", methods=["POST"])
 def join_grid_node():
     """ Register a new grid node at grid network.
