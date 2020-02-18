@@ -10,7 +10,7 @@ import os
 import requests
 
 from .persistence.manager import register_new_node, connected_nodes, delete_node
-
+from .process import process
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
@@ -18,6 +18,10 @@ grid_nodes = {}
 SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
 INVALID_JSON_FORMAT_MESSAGE = (
     "Invalid JSON format."  # Default message used to report Invalid JSON format.
+)
+
+INVALID_REQUEST_KEY_MESSAGE = (
+    "Invalid request key."  # Default message for invalid request key.
 )
 
 
@@ -277,6 +281,35 @@ def search_dataset_tags():
         status_code = 400
 
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
+
+
+@main.route("/federated/get-protocol", methods=["GET"])
+def download_model():
+    """Request a download of a protocol from  PyGrid"""
+
+    response_body = {"message": None}
+
+    worker_id = request.args.get("worker_id")
+    request_key = request.args.get("request_key")
+    model_id = request.args.get("model_id")
+
+    _process = processes.get_process(model_id)
+
+    _validated = _process.validate(worker_id, request_key) if _process else False
+
+    if _validated:
+        return Response(
+            json.dumps(_cycle.fl_process.json()["client_protocols"]),
+            status=200,
+            mimetype="application/json",
+        )
+    else:
+        response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
+        status_code = 400
+
+        return Response(
+            json.dumps(response_body), status=status_code, mimetype="application/json"
+        )
 
 
 def _get_model_hosting_nodes(model_id):
