@@ -284,23 +284,25 @@ def search_dataset_tags():
 
 
 @main.route("/federated/get-protocol", methods=["GET"])
-def download_model():
+def download_protocol():
     """Request a download of a protocol from  PyGrid"""
 
     response_body = {"message": None}
+    status_code = None
 
     worker_id = request.args.get("worker_id")
     request_key = request.args.get("request_key")
-    model_id = request.args.get("model_id")
+    protocol_id = request.args.get("protocol_id")
 
-    _process = processes.get_process(model_id)
+    _process = processes.get_process(protocol_id)
 
     _validated = _process.validate(worker_id, request_key) if _process else False
 
     if _validated:
+        status_code = 200
         return Response(
-            json.dumps(_cycle.fl_process.json()["client_protocols"]),
-            status=200,
+            json.dumps(_process.fl_process.json()["client_protocols"]),
+            status=status_code,
             mimetype="application/json",
         )
     else:
