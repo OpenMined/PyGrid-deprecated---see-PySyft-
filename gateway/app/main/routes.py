@@ -12,6 +12,7 @@ import requests
 from .persistence.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
 
+
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
 
@@ -23,10 +24,12 @@ INVALID_REQUEST_KEY_MESSAGE = (
     "Invalid request key."  # Default message for invalid request key.
 )
 
+
 @main.route("/", methods=["GET"])
 def index():
     """ Main Page. """
     return render_template("index.html")
+
 
 @main.route("/join", methods=["POST"])
 def join_grid_node():
