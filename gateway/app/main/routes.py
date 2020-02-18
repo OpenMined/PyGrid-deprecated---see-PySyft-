@@ -294,14 +294,17 @@ def download_protocol():
     request_key = request.args.get("request_key")
     protocol_id = request.args.get("protocol_id")
 
-    _process = processes.get_process(protocol_id)
+    _protocol = processes.get_protocol(protocol_id)
 
-    _validated = _process.validate(worker_id, request_key) if _process else False
+    model_id = _protocol.fl_process.json()["model"]
+
+    _cycle = processes.get_cycle(model_id)
+    _validated = _cycle.validate(worker_id, request_key) if _cycle else False
 
     if _validated:
         status_code = 200
         return Response(
-            json.dumps(_process.fl_process.json()["client_protocols"]),
+            json.dumps(_protocol.fl_process.json()["client_protocols"]),
             status=status_code,
             mimetype="application/json",
         )
