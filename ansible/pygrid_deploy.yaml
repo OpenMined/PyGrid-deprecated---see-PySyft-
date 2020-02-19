@@ -1,90 +1,80 @@
-- hosts: hosts
-  remote_user: ubuntu
+---
+- name: Pygrid components deployment
+  vars:
+    network_mode: "host"
+    gateway:
+      name: grid_gateway_instance
+      image: openmined/grid-gateway:latest
+      port: "5000"
+      secret: "ineedtoputasecrethere"
+      database_url: "sqlite:///databasegateway.db"
+    redis:
+      name: redis
+      image: redis:latest
+    node:
+      image: openmined/grid-node:latest
+      env:
+        local_host: "http://localhost"
+        grid_network_port: "5000"
+        redis_url: "redis:///localhost:6379"
+  hosts: hosts
   gather_facts: False
   pre_tasks:
     - name: Install python
       raw: bash -c "test -e /usr/bin/python || (sudo apt -qqy update && sudo apt install -qqy python-minimal python2.7)"
       register: output
       changed_when: output.stdout
-    - setup: # aka gather_facts
+    - name: Gathering facts
+      setup:
   
   tasks:
     - name: Update apt
       apt:
         upgrade: yes
         update_cache: yes
-      become: true
     
     - name: Install pip
       apt:
         name: python-pip
-      become: true
+    
+    - name: Install docker
+      apt:
+        name: docker.io
 
     - name: Install python docker
       pip:
         name: docker-py
-      become: true
     
-    - docker_container:
-        name: grid_gateway_instance
-        image: openmined/grid-gateway:latest
+    - name: Deploy PyGrid gateway
+      docker_container:
+        name: "{{ vars.gateway.name }}"
+        image: "{{ vars.gateway.image }}"
         env:
-            PORT: "5000"
-            SECRET_KEY: "ineedtoputasecrethere" 
-            DATABASE_URL: "sqlite:///databasegateway.db"
-        network_mode: "host"
-      become: true
+            PORT: "{{ vars.gateway.port }}"
+            SECRET_KEY: "{{ vars.gateway.secret }}"
+            DATABASE_URL: "{{ vars.gateway.database_url }}"
+        network_mode: "{{ vars.network_mode }}"
 
-    - docker_container:
-        name: redis
-        image: redis:latest
-        network_mode: "host"
-      become: true
+    - name: Deploy redis service
+      docker_container:
+        name: "{{ vars.redis.name }}"
+        image: "{{ vars.redis.image }}"
+        network_mode: "{{ vars.network_mode }}"
     
-    - docker_container:
-        name: bob
-        image: openmined/grid-node:latest
+    - name: Deploy PyGrid nodes
+      docker_container:
+        name: "{{ item.name }}"
+        image: "{{ vars.node.image }}"
         env:
-            GRID_NETWORK_URL: "http://localhost:5000"
-            ID: "Bob"
-            ADDRESS: "http://localhost:3000/"
-            REDISCLOUD_URL: "redis:///localhost:6379"
-            PORT: "3000"
-        network_mode: "host"
-      become: true
-    
-    - docker_container:
-        name: alice
-        image: openmined/grid-node:latest
-        env:
-            GRID_NETWORK_URL: "http://localhost:5000"
-            ID: "Alice"
-            ADDRESS: "http://localhost:3001/"
-            REDISCLOUD_URL: "redis:///localhost:6379"
-            PORT: "3001"
-        network_mode: "host"
-      become: true
-    
-    - docker_container:
-        name: bill
-        image: openmined/grid-node:latest
-        env:
-            GRID_NETWORK_URL: "http://localhost:5000"
-            ID: "Bill"
-            ADDRESS: "http://localhost:3002/"
-            REDISCLOUD_URL: "redis:///localhost:6379"
-            PORT: "3002"
-        network_mode: "host"
-      become: true
-    
-    - docker_container:
-        name: james
-        image: openmined/grid-node:latest
-        env:
-            GRID_NETWORK_URL: "http://localhost:5000"
-            ID: "James"
-            ADDRESS: "http://localhost:3003/"
-            REDISCLOUD_URL: "redis:///localhost:6379"
-            PORT: "3003"
-        network_mode: "host"
-      become: true
+            GRID_NETWORK_URL: "{{ vars.node.env.local_host }}:{{ vars.node.env.grid_network_port }}"
+            ID: "{{ item.id }}"
+            ADDRESS: "{{ vars.node.env.local_host }}:{{ item.port }}"
+            REDISCLOUD_URL: "{{ vars.node.env.redis_url }}"
+            PORT: "{{ item.port }}"
+        network_mode: "{{ vars.network_mode }}"
+        
+      with_items:
+        - { name: bob, id: "Bob", port: "3000" }
+        - { name: alice, id: "Alice", port: "3001" } 
+        - { name: bill, id: "Bill", port: "3002" } 
+        - { name: james, id: "James", port: "3003" }

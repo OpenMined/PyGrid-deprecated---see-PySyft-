@@ -2,27 +2,45 @@
 
 ## Install ansible
 
-Before you try run any ansible script, you need install ansible. You can find more
+Before running ansible, it needs to be installed. One can find more
 information about installation to your linux distribution [here](http://docs.ansible.com/ansible/intro_installation.html).
 
-If you use Debian based distribution, you can install using the commands below:
+
+First, you need setup a [virtualenv](https://virtualenv.pypa.io/en/latest/installation.html). Follow the commands:
 
 ```
-$ apt-get update
-$ apt-get install ansible
+virtualenv venv
+source venv/bin/activate
 ```
 
-### Editing ansible.cfg to not ask ssh key host checking
+Installing Ansible with pip:
 
-SSH always ask if you sure in establish a ssh connection in your first time that you try to connect in a machine. For jump this, ucomment the line in **/etc/ansible/ansible.cfg**:
+```
+$ pip install ansible
+```
+
+### Editing **/etc/ansible/ansible.cfg**
+
+#### To not ask ssh key host checking:
+
+SSH always ask if you sure in establish a ssh connection in your first time that you try to connect in a machine. For jump this, add the following in "defaults" section:
 
 ```
 host_key_checking = False
 ```
 
+#### Enabling privilege escalations:
+
+This playbook tasks need superuser privilege to run correctly. As above, you can add this in "defaults" section:
+
+```
+become = True
+```
+
+
 ## Add keys in machine that will be managed
 
-To ansibe install and configure machine, it is necessary that your key is added in
+To Ansible install and configure machine, it's necessary that your key is added in
 **.ssh/authorized_keys** in machine that will be managed. To do this, run the command
 below:
 
@@ -32,7 +50,7 @@ $ ssh-copy-id -i ~/<route_ssh_public_key> <user>@<ip_or_hostname>
 
 ## Add hosts to the inventory
 
-Before all, add the hosts that will recieve the containers to inventory file like:
+Before anything, add the hosts that will receive the containers to inventory file like:
 
 ```
 [hosts]
