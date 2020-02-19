@@ -1,4 +1,3 @@
-
 class Worker:
     """ An abstraction of a worker. """
 
