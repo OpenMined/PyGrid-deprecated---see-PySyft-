@@ -14,14 +14,8 @@ class Worker:
             Args:
                 hash_key: Key used to map the cycle.
                 fl_cycle: FederatedLearning Cycle instance.
-            Returns:
-                result : Boolean flag.
         """
-        if not (hash_key in self._cycles):
-            self._cycle[hash_key] = fl_cycle
-            return True
-        else:
-            return False
+        self._cycle[hash_key] = fl_cycle
 
     def get_cycle(self, hash_key: str):
         """ Retrieve a specific cycle mapped by hash key.

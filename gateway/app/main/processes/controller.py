@@ -7,9 +7,9 @@ class FLPController:
 
     def __init__(self):
         self.processes = {}
-        self._workers = {}
+        self._cycles = {}
 
-    def create_cycle(self, model_id: str, worker_id: str, cycle_time: int = 2500):
+    def create_cycle(self, model_id: str, version: str, cycle_time: int = 2500):
         """ Create a new federated learning cycle.
             Args:
                 model_id: Model's ID.
@@ -18,48 +18,66 @@ class FLPController:
             Returns:
                 fd_cycle: Cycle Instance.
         """
-
-        # Retrieve Model's fl process
         _fl_process = self.processes.get(model_id, None)
 
         if _fl_process:
-            cycle = FederatedLearningCycle(_fl_process, cycle_time)
-            workers = self._workers.get(model_id, None)
+            # Retrieve a list of cycles using the same model_id/version
+            cycle_sequence = self._cycles.get((model_id, version), None)
 
-            # If already exists workers using this model/cycle add a new worker
-            if workers:
-                workers.append(worker_id)
-            else:
-                self._workers[model_id] = [worker_id]
+            # If already exists, create and append a new cycle
+            if cycle_sequence:
+                new_cycle = FederatedLearningCycle(
+                    _fl_process, cycle_time, len(cycle_sequence) + 1
+                )
+                self.cycle_sequence.append(new_cycle)
+            else:  # otherwise, create a new list
+                new_cycle = FederatedLearningCycle(
+                    _fl_process, cycle_time, 1
+                )  # Create the first one.
+                self._cycles[(model_id, version)] = [new_cycle]
 
-            return cycle
-
-    def get_cycle(self, model_id: str):
+    def get_cycle(self, model_id: str, version: str, sequence_number: int = None):
         """ Retrieve a registered cycle.
             Args:
                 model_id: Model's ID.
+                version: Model's version.
+                sequence_number: Cycle index.
             Returns:
                 cycle: Cycle Instance / None
         """
-        return self._cycles.get(model_id, None)
+        # Retrive a list of cycles used by this model_id/version
+        _cycle_sequences = self._cycles.get((model_id, version), None)
 
-    def delete_cycle(self, model_id: str):
+        # Select the cycle (By default, will return the last cycle)
+        cycle_index = sequence_number if sequence_number else len(_cycle_sequences) - 1
+
+        if _cycle_sequences:
+            return _cycle_sequences[cycle_index]
+
+    def delete_cycle(self, model_id: str, version: str):
         """ Delete a registered Cycle.
             Args:
                 model_id: Model's ID.
         """
         if model_id in self._cycles:
-            del self._cycles[model_id]
+            del self._cycles[(model_id, version)]
 
-    def is_attached(self, worker_id: str, model_id: str):
-        """ Check if already exists a specific worker training a specific model_id.
+    def last_participation(self, worker_id: str, model_id: str, version: str) -> int:
+        """ Retrieve the last time the worker participated from this cycle.
             Args:
                 worker_id: Worker's ID.
                 model_id: Model's ID.
-            Returns:
-                result: Boolean flag. True if exists,False if doens't exist.
+                version: Model's version.
+            Return:
+                last_participation: Index of the last cycle assigned to this worker.
         """
-        return worker_id in self._workers[model_id]
+        _cycle_sequences = self._cycles.get((model_id, version), None)
+
+        if _cycle_sequences:
+            for i in range(len(_cycle_sequences)):
+                if _cycle_sequences[i].contains(worker_id):
+                    return i
+        return 0
 
     def create_process(
         self,

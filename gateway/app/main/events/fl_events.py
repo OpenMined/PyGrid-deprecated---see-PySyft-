@@ -95,22 +95,25 @@ def cycle_request(message: dict, socket) -> str:
         download = data.get(CYCLE.DOWNLOAD, None)
         upload = data.get(CYCLE.UPLOAD, None)
 
+        # Retrieve the worker
         worker = workers.get_worker(worker_id)
-        _attached = processes.is_attached(worker_id, model_id)
-        cycle = processes.create_cycle(model_id, worker_id)
+
+        # The last time this worker was assigned for this model/version.
+        last_participation = processes.last_participation(worker_id, model_id, version)
+
+        # Retrieve the last cycle created for this model_id/version
+        cycle = processes.get_cycle(model_id, version)
 
         _accepted = False
 
-        if worker and cycle and not _attached:
-            # TODO:
-            # Check worker health (ping/download/upload rate)
-            _accepted = worker.register_cycle(cycle.hash, cycle)
+        if worker and cycle:
+            _accepted = cycle.assign(worker_id, upload, download, last_participation)
 
         ### MOCKUP ###
 
         # Build response
         if _accepted:
-            # If worker_id doesn't exist in the current cycle, insert it and return True.
+            worker.register_cycle(cycle.hash, cycle)
             response[CYCLE.STATUS] = "accepted"
             response[MSG_FIELD.MODEL] = cycle.fl_process.model
             response[CYCLE.VERSION] = version
