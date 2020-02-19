@@ -7,27 +7,32 @@ class FLPController:
 
     def __init__(self):
         self.processes = {}
-        self._cycles = {}
+        self._workers = {}
 
-    def create_cycle(
-        self, model_id: str, fl_process: "FLProcess", cycle_time: int = 2500
-    ):
+    def create_cycle(self, model_id: str, worker_id: str, cycle_time: int = 2500):
         """ Create a new federated learning cycle.
-            
             Args:
-                fl_process: Federated Learning Process Structure.
+                model_id: Model's ID.
+                worker_id: Worker's ID.
                 cycle_time: Remaining time to finish this cycle.
             Returns:
                 fd_cycle: Cycle Instance.
         """
 
-        cycle = FederatedLearningCycle(fl_process, cycle_time)
+        # Retrieve Model's fl process
+        _fl_process = self.processes.get(model_id, None)
 
-        # Check if Cycle already exists
-        if model_id not in self._cycles:
-            self._cycles[model_id] = cycle
+        if _fl_process:
+            cycle = FederatedLearningCycle(_fl_process, cycle_time)
+            workers = self._workers.get(model_id, None)
 
-        return cycle
+            # If already exists workers using this model/cycle add a new worker
+            if workers:
+                workers.append(worker_id)
+            else:
+                self._workers[model_id] = [worker_id]
+
+            return cycle
 
     def get_cycle(self, model_id: str):
         """ Retrieve a registered cycle.
@@ -46,6 +51,16 @@ class FLPController:
         if model_id in self._cycles:
             del self._cycles[model_id]
 
+    def is_attached(self, worker_id: str, model_id: str):
+        """ Check if already exists a specific worker training a specific model_id.
+            Args:
+                worker_id: Worker's ID.
+                model_id: Model's ID.
+            Returns:
+                result: Boolean flag. True if exists,False if doens't exist.
+        """
+        return worker_id in self._workers[model_id]
+
     def create_process(
         self,
         model,
@@ -56,7 +71,6 @@ class FLPController:
         client_protocols=None,
     ):
         """ Register a new federated learning process
-            
             Args:
                 model: The model that will be hosted.
                 client_plans : an object containing syft plans.
@@ -81,7 +95,6 @@ class FLPController:
 
     def delete_process(self, pid):
         """ Remove a registered federated learning process.
-
             Args:
                 pid : Id used identify the desired process. 
         """
@@ -89,7 +102,6 @@ class FLPController:
 
     def get_process(self, pid):
         """ Retrieve the desired federated learning process.
-            
             Args:
                 pid : Id used to identify the desired process.
             Returns:

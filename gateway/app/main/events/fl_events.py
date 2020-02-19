@@ -4,6 +4,7 @@ import json
 from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
 from ..processes import processes
+from ..auth import workers
 
 # Singleton socket handler
 handler = SocketHandler()
@@ -11,7 +12,6 @@ handler = SocketHandler()
 
 def host_federated_training(message: dict, socket) -> str:
     """This will allow for training cycles to begin on end-user devices.
-
         Args:
             message : Message body sended by some client.
             socket: Socket descriptor.
@@ -48,7 +48,6 @@ def host_federated_training(message: dict, socket) -> str:
 
 def authenticate(message: dict, socket) -> str:
     """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
-        
         Args:
             message : Message body sended by some client.
             socket: Socket descriptor.
@@ -65,8 +64,8 @@ def authenticate(message: dict, socket) -> str:
         # Create a link between worker id and socket descriptor
         handler.new_connection(worker_id, socket)
 
-        # TODO:
-        # Create a new User/Worker instance to map and manage this worker.
+        # Create worker instance
+        workers.create_worker(worker_id)
 
         response[MSG_FIELD.WORKER_ID] = worker_id
 
@@ -78,7 +77,6 @@ def authenticate(message: dict, socket) -> str:
 
 def cycle_request(message: dict, socket) -> str:
     """This event is where the worker is attempting to join an active federated learning cycle. 
-        
         Args:
             message : Message body sended by some client.
             socket: Socket descriptor.
@@ -97,33 +95,29 @@ def cycle_request(message: dict, socket) -> str:
         download = data.get(CYCLE.DOWNLOAD, None)
         upload = data.get(CYCLE.UPLOAD, None)
 
-        # TODO:
-        # Search/Identify worker id
-        # Search/Identify model id
-        # Check worker health (ping/download/upload rate)
-        # If available,  add this worker on fd cycle
+        worker = workers.get_worker(worker_id)
+        _attached = processes.is_attached(worker_id, model_id)
+        cycle = processes.create_cycle(model_id, worker_id)
 
-        fl_process_id = uuid.uuid4()
+        _accepted = False
 
-        # Retrieve Cycle instance
-        cycle = processes.get_cycle(model_id)
-
-        # If doesn't exist, create a new one.
-        if not cycle:
-            cycle = processes.create_cycle(model_id, fl_process_id)
+        if worker and cycle and not _attached:
+            # TODO:
+            # Check worker health (ping/download/upload rate)
+            _accepted = worker.register_cycle(cycle.hash, cycle)
 
         ### MOCKUP ###
 
         # Build response
-        if cycle.insert(worker_id):
+        if _accepted:
             # If worker_id doesn't exist in the current cycle, insert it and return True.
             response[CYCLE.STATUS] = "accepted"
-            response[MSG_FIELD.MODEL] = "my-federated-model"
+            response[MSG_FIELD.MODEL] = fl_process.model
             response[CYCLE.VERSION] = version
-            response[CYCLE.KEY] = cycle.new_hash(worker_id)
-            response[CYCLE.PLANS] = {}
-            response[CYCLE.PROTOCOLS] = {}
-            response[CYCLE.CLIENT_CONFIG] = {}
+            response[CYCLE.KEY] = cycle.hash
+            response[CYCLE.PLANS] = fl_process.client_plans
+            response[CYCLE.PROTOCOLS] = fl_process.client_protocols
+            response[CYCLE.CLIENT_CONFIG] = fl_process.client_config
             response[MSG_FIELD.MODEL_ID] = model_id
         else:
             # If worker_id already exists in the current cycle, return False.
@@ -139,7 +133,6 @@ def cycle_request(message: dict, socket) -> str:
 def report(message: dict, socket) -> str:
     """ This method will allow a worker that has been accepted into a cycle
         and finished training a model on their device to upload the resulting model diff.
-        
         Args:
             message : Message body sended by some client.
             socket: Socket descriptor.
