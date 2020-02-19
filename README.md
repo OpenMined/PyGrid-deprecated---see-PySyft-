@@ -62,7 +62,7 @@ We also have a Github Project page for PySyft and PyGrid [here](https://github.c
 
 ## High-level Architecture
 
-![PyGrid Platform](https://raw.githubusercontent.com/OpenMined/PyGrid/dev/art/PyGrid.png)
+![PyGrid Platform](https://raw.githubusercontent.com/IonesioJunior/PyGrid/dev/art/PyGrid.png)
 
 ![High-level Architecture](https://raw.githubusercontent.com/OpenMined/PyGrid/dev/art/PyGrid-Arch.png)
 
