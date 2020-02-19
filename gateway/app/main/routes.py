@@ -283,40 +283,6 @@ def search_dataset_tags():
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
 
-@main.route("/federated/get-protocol", methods=["GET"])
-def download_protocol():
-    """Request a download of a protocol from  PyGrid"""
-
-    response_body = {"message": None}
-    status_code = None
-
-    worker_id = request.args.get("worker_id")
-    request_key = request.args.get("request_key")
-    protocol_id = request.args.get("protocol_id")
-
-    _protocol = processes.get_protocol(protocol_id)
-
-    model_id = _protocol.fl_process.json()["model"]
-
-    _cycle = processes.get_cycle(model_id)
-    _validated = _cycle.validate(worker_id, request_key) if _cycle else False
-
-    if _validated:
-        status_code = 200
-        return Response(
-            json.dumps(_protocol.fl_process.json()["client_protocols"]),
-            status=status_code,
-            mimetype="application/json",
-        )
-    else:
-        response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
-        status_code = 400
-
-        return Response(
-            json.dumps(response_body), status=status_code, mimetype="application/json"
-        )
-
-
 def _get_model_hosting_nodes(model_id):
     """ Search all nodes if they are currently hosting the model.
 
