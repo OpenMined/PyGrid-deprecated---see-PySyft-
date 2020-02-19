@@ -31,7 +31,7 @@ def host_federated_training(message: dict, socket) -> str:
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
         # Create a new FL Process
-        fl_process = processes.create_process(
+        processes.create_process(
             model=serialized_model,
             client_plans=serialized_client_plans,
             client_protocols=serialized_client_protocols,
@@ -112,12 +112,12 @@ def cycle_request(message: dict, socket) -> str:
         if _accepted:
             # If worker_id doesn't exist in the current cycle, insert it and return True.
             response[CYCLE.STATUS] = "accepted"
-            response[MSG_FIELD.MODEL] = fl_process.model
+            response[MSG_FIELD.MODEL] = cycle.fl_process.model
             response[CYCLE.VERSION] = version
             response[CYCLE.KEY] = cycle.hash
-            response[CYCLE.PLANS] = fl_process.client_plans
-            response[CYCLE.PROTOCOLS] = fl_process.client_protocols
-            response[CYCLE.CLIENT_CONFIG] = fl_process.client_config
+            response[CYCLE.PLANS] = cycle.fl_process.client_plans
+            response[CYCLE.PROTOCOLS] = cycle.fl_process.client_protocols
+            response[CYCLE.CLIENT_CONFIG] = cycle.fl_process.client_config
             response[MSG_FIELD.MODEL_ID] = model_id
         else:
             # If worker_id already exists in the current cycle, return False.

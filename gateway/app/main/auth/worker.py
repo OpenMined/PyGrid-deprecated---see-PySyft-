@@ -1,5 +1,3 @@
-from ..processes.federated_learning_cycle import FederatedLearningCycle
-
 
 class Worker:
     """ An abstraction of a worker. """
@@ -20,7 +18,7 @@ class Worker:
             Returns:
                 result : Boolean flag.
         """
-        if not hash_key in self._cycles:
+        if not (hash_key in self._cycles):
             self._cycle[hash_key] = fl_cycle
             return True
         else:
