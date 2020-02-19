@@ -66,6 +66,14 @@ Run the playbook using the command below:
 $ ansible-playbook -i inventory pygrid_deploy.yaml
 ```
 
+## Destroy containers
+
+To destroy the containers created by deploy playbook, run the following command:
+
+```
+$ ansible-playbook -i inventory destroy.yaml
+```
+
 #### WARNING:
 PyGrid nodes require PyGrid gateway and Redis service to be up and running, so deploy them first (always put their tasks before in the playbook)
 
