@@ -62,6 +62,7 @@ def join_grid_node():
 
 @main.route("/connected-nodes", methods=["GET"])
 def get_connected_nodes():
+    print("yolo2")
     """ Get a list of connected nodes. """
     grid_nodes = connected_nodes()
     return Response(
@@ -332,3 +333,99 @@ def download_model():
         return Response(
             json.dumps(response_body), status=status_code, mimetype="application/json"
         )
+
+
+@main.route("/req_join", methods=["GET"])
+def fl_cycle_application_decision():
+    """
+        use the temporary req_join endpoint to mockup:
+        - reject if worker does not satisfy 'minimum_upload_speed' and/or 'minimum_download_speed'
+        - is a part of current or recent cycle according to 'do_not_reuse_workers_until_cycle'
+        - selects according to pool_selection
+        - is under max worker (with some padding to account for expected percent of workers so do not report successfully)
+    """
+
+    # parse query strings (for now), evetually this will be parsed from the request body
+    model_id = request.args.get("model_id")
+    up_speed = request.args.get("up_speed")
+    down_speed = request.args.get("down_speed")
+    worker_id = request.args.get("worker_id")
+    _cycle = processes.get_cycle(model_id)
+    _accept = False
+    """
+    MVP variable stubs:
+        we will stub these with hard coded numbers first, then make functions to dynaically query/update in subsquent PRs
+    """
+    # this will be replaced with a function that check for the same (model_id, version_#) tuple when the worker last participated
+    last_participation = 1
+    # how late is too late into the cycle time to give a worker "new work", if only 5 seconds left probably don't bother
+    MINIMUM_CYCLE_TIME_LEFT = 500
+    # the historical amount of workers that fail to report (out of time, offline, too slow etc...),
+    # could be modified to be worker/model specific later, track across overall pygrid instance for now
+    EXPECTED_FAILURE_RATE = 0.2
+
+    dummy_server_config = {
+        "max_workers": 100,
+        "pool_selection": "random",  # or "iterate"
+        "num_cycles": 5,
+        "do_not_reuse_workers_until_cycle": 4,
+        "cycle_length": 8 * 60 * 60,  # 8 hours
+        "minimum_upload_speed": 2000,  # 2 mbps
+        "minimum_download_speed": 4000,  # 4 mbps
+    }
+
+    """  end of variable stubs """
+
+    _server_config = dummy_server_config
+
+    up_speed_check = up_speed > _server_config["minimum_upload_speed"]
+    down_speed_check = down_speed > _server_config["minimum_download_speed"]
+    cycle_valid_check = (
+        (
+            last_participation + _server_config["do_not_reuse_workers_until_cycle"]
+            >= _cycle.get(
+                "cycle_sequence", 99999
+            )  # this should reuturn current cycle sequence number
+        )
+        * (_cycle.get("cycle_sequence", 99999) <= _server_config["num_cycles"])
+        * (_cycle.cycle_time > MINIMUM_CYCLE_TIME_LEFT)
+        * (worker_id not in _cycle._workers)
+    )
+
+    if up_speed_check * down_speed_check * cycle_valid_check:
+        if _server_config["pool_selection"] == "iterate" and len(
+            _cycle._workers
+        ) < _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE):
+            """ first come first serve selection mode """
+            _accept = True
+        elif (
+            _server_config["pool_selection"] == "random"
+            and random.random_sample() > 0.8
+        ):  # TODO@Maddie: remove magic number, hardcoded for naive probability of accept
+            _accept = True
+            """
+                TODO@Maddie: stub model
+                    - model the rate of worker's request to join as lambda in a poisson process
+                    - set probabilistic reject rate such that we can expect enough workers will request to join and be accepted
+                        - between now and ETA till end of _server_config['cycle_length']
+                        - such that we can expect (,say with 95% confidence) successful completion of the cycle
+                        - while accounting for EXPECTED_FAILURE_RATE
+            """
+
+    if _accept:
+        return Response(
+            json.dumps(
+                {"status": "accepted"}
+            ),  # leave out other accpet keys/values for now
+            status=200,
+            mimetype="application/json",
+        )
+
+    # reject by default
+    return Response(
+        json.dumps(
+            {"status": "rejected"}
+        ),  # leave out other accpet keys/values for now
+        status=400,
+        mimetype="application/json",
+    )
