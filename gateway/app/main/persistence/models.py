@@ -23,7 +23,7 @@ class GridNodes(db.Model):
 class FLProcess(db.Model):
     """ Federated Learning Process """
 
-    __tablename__ = "__gridnode__"
+    __tablename__ = "__fl_process__"
 
     id = db.Column(db.String(64), primary_key=True)
 
