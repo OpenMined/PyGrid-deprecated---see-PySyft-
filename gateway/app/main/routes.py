@@ -400,7 +400,7 @@ def fl_cycle_application_decision():
             _accept = True
         elif (
             _server_config["pool_selection"] == "random"
-            and random.random_sample() > 0.8
+            and random.random_sample() < 0.8
         ):  # TODO@Maddie: remove magic number, hardcoded for naive probability of accept
             _accept = True
             """
