@@ -5,7 +5,7 @@ db = SQLAlchemy()
 
 class Model(db.Model):
     """ Model table that represents the AI Models.
-        Collumns:
+        Columns:
             id (primary_key) : Model's id, used to recover stored model.
             version (string) : Model version.
             checkpoints (list) : Model Checkpoints.
@@ -24,7 +24,7 @@ class Model(db.Model):
 
 class ModelCheckPoint(db.Model):
     """ Model's save points.
-        Collumns:
+        Columns:
             id: Checkpoint ID.
             values: Value of the model at a given checkpoint.
     """
@@ -41,7 +41,7 @@ class ModelCheckPoint(db.Model):
 
 class Plan(db.Model):
     """ Plan table that represents Syft Plans.
-        Collumns:
+        Columns:
             id: Plan ID.
             value: String  (List of operations)
             value_ts: String (TorchScript)
@@ -61,7 +61,7 @@ class Plan(db.Model):
 
 class Protocol(db.Model):
     """ Protocol table that represents Syft Protocols.
-        Collumns:
+        Columns:
             id: Protocol ID.
             value: String  (List of operations)
             value_ts: String (TorchScript)
@@ -81,7 +81,7 @@ class Protocol(db.Model):
 
 class Config(db.Model):
     """ Configs table.
-        Collumns:
+        Columns:
             id: Config ID.
             value: Dictionary
     """
@@ -94,7 +94,7 @@ class Config(db.Model):
 class Cycle(db.Model):
     """ Cycle table.
 
-        Collumns:
+        Columns:
             id (String):
             start (TIME): Start time.
             end (TIME): End time.
@@ -106,7 +106,7 @@ class Cycle(db.Model):
 
 class WorkerCycle(db.Model):
     """ Relation between Workers and Cycles.
-        Collumns:
+        Columns:
             id (String):
             fl_process_id (String):
             cycle_id (String):
@@ -126,7 +126,7 @@ class WorkerCycle(db.Model):
 
 class Worker(db.Model):
     """ Web / Mobile worker table.
-        Collumns:
+        Columns:
             id (String): Worker's ID.
             format_preference (String): either "list" or "ts"
             ping (Int): Ping rate.
@@ -138,8 +138,8 @@ class Worker(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     format_preference = db.Column(db.String(64))
     ping = db.Column(db.BigInteger)
-    avg_download = db.Collumn(db.BigInteger)
-    avg_upload = db.Collumn(db.BigInteger)
+    avg_download = db.Column(db.String(64))
+    avg_upload = db.Column(db.String(64))
     # TODO
     # Worker Cycles (Worker)
 
@@ -149,7 +149,7 @@ class Worker(db.Model):
 
 class FLProcess(db.Model):
     """ Federated Learning Process table.
-        Collumns:
+        Columns:
             id (String):
             averaging_plan (Plan):
             plans: [
@@ -172,7 +172,7 @@ class FLProcess(db.Model):
 class GridNodes(db.Model):
     """ Grid Nodes table that represents connected grid nodes.
     
-        Collumns:
+        Columns:
             id (primary_key) : node id, used to recover stored grid nodes (UNIQUE).
             address: Address of grid node.
     """
