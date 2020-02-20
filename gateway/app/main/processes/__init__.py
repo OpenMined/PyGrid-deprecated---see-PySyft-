@@ -1,3 +1,3 @@
 from .controller import FLPController
 
-processes = FLPController()
+processes = FLController()

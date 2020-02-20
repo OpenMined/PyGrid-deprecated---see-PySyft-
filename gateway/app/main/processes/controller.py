@@ -2,7 +2,7 @@ from .federated_learning_process import FLProcess
 from .federated_learning_cycle import FederatedLearningCycle
 
 
-class FLPController:
+class FLController:
     """ This class implements controller design pattern over the federated learning processes. """
 
     def __init__(self):
