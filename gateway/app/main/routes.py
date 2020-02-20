@@ -23,9 +23,7 @@ INVALID_JSON_FORMAT_MESSAGE = (
 INVALID_REQUEST_KEY_MESSAGE = (
     "Invalid request key."  # Default message for invalid request key.
 )
-INVALID_PROTOCOL_MESSAGE = (
-    "Protocol is None or the id does not exist."
-)
+INVALID_PROTOCOL_MESSAGE = "Protocol is None or the id does not exist."
 
 
 @main.route("/", methods=["GET"])
@@ -304,8 +302,8 @@ def download_protocol():
         _cycle = _worker.get_cycle(request_key)
 
     if _cycle:
-        protocol_res  = _cycle.fl_process.json()["protocol"]
-        if(protocol_res != None and protocol_id in protocol_res.keys()):
+        protocol_res = _cycle.fl_process.json()["protocol"]
+        if protocol_res != None and protocol_id in protocol_res.keys():
             return Response(
                 json.dumps(protocol_res[protocol_id]),
                 status=200,
@@ -316,8 +314,10 @@ def download_protocol():
             status_code = 400
 
             return Response(
-                json.dumps(response_body), status=status_code, mimetype="application/json"
-            )    
+                json.dumps(response_body),
+                status=status_code,
+                mimetype="application/json",
+            )
     else:
         response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
         status_code = 400
