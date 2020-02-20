@@ -302,7 +302,7 @@ def download_protocol():
         _cycle = _worker.get_cycle(request_key)
 
     if _cycle:
-        protocol_res = _cycle.fl_process.json()["protocol"]
+        protocol_res = _cycle.fl_process.json()["client_protocols"]
         if protocol_res != None and protocol_id in protocol_res.keys():
             return Response(
                 json.dumps(protocol_res[protocol_id]),
