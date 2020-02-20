@@ -47,31 +47,31 @@
     
     - name: Deploy PyGrid gateway
       docker_container:
-        name: "{{ vars.gateway.name }}"
-        image: "{{ vars.gateway.image }}"
+        name: "{{ gateway.name }}"
+        image: "{{ gateway.image }}"
         env:
-            PORT: "{{ vars.gateway.port }}"
-            SECRET_KEY: "{{ vars.gateway.secret }}"
-            DATABASE_URL: "{{ vars.gateway.database_url }}"
-        network_mode: "{{ vars.network_mode }}"
+            PORT: "{{ gateway.port }}"
+            SECRET_KEY: "{{ gateway.secret }}"
+            DATABASE_URL: "{{ gateway.database_url }}"
+        network_mode: "{{ network_mode }}"
 
     - name: Deploy redis service
       docker_container:
-        name: "{{ vars.redis.name }}"
-        image: "{{ vars.redis.image }}"
-        network_mode: "{{ vars.network_mode }}"
+        name: "{{ redis.name }}"
+        image: "{{ redis.image }}"
+        network_mode: "{{ network_mode }}"
     
     - name: Deploy PyGrid nodes
       docker_container:
         name: "{{ item.name }}"
-        image: "{{ vars.node.image }}"
+        image: "{{ node.image }}"
         env:
-            GRID_NETWORK_URL: "{{ vars.node.env.local_host }}:{{ vars.node.env.grid_network_port }}"
+            GRID_NETWORK_URL: "{{ node.env.local_host }}:{{ node.env.grid_network_port }}"
             ID: "{{ item.id }}"
-            ADDRESS: "{{ vars.node.env.local_host }}:{{ item.port }}"
-            REDISCLOUD_URL: "{{ vars.node.env.redis_url }}"
+            ADDRESS: "{{ node.env.local_host }}:{{ item.port }}"
+            REDISCLOUD_URL: "{{ node.env.redis_url }}"
             PORT: "{{ item.port }}"
-        network_mode: "{{ vars.network_mode }}"
+        network_mode: "{{ network_mode }}"
         
       with_items:
         - { name: bob, id: "Bob", port: "3000" }
