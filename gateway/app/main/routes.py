@@ -288,7 +288,7 @@ def search_dataset_tags():
 
 @main.route("/federated/get-protocol", methods=["GET"])
 def download_protocol():
-    """Download request of a protocol from PyGrid"""
+    """Request a download of a protocol"""
 
     response_body = {"message": None}
     status_code = None
