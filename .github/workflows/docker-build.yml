@@ -10,7 +10,6 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged
     steps:
     - uses: actions/checkout@master
     - name: Update PyGrid Gateway Image
