@@ -24,6 +24,7 @@ INVALID_REQUEST_KEY_MESSAGE = (
     "Invalid request key."  # Default message for invalid request key.
 )
 INVALID_PROTOCOL_MESSAGE = "Protocol is None or the id does not exist."
+INVALID_PLAN_MESSAGE = "Plan is None or the id does not exist."
 
 
 @main.route("/", methods=["GET"])
@@ -371,6 +372,55 @@ def download_model():
         )
     else:
         response_body = {"message": None}
+        response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
+        status_code = 400
+
+        return Response(
+            json.dumps(response_body), status=status_code, mimetype="application/json"
+        )
+
+
+@main.route("/federated/get-plan", methods=["GET"])
+def download_plan():
+    """ validate request key and download plan
+    """
+
+    plan_id = request.args.get("plan_id")
+    worker_id = request.args.get("worker_id")
+    request_key = request.args.get("request_key")
+    receive_operations_as = request.args.get("receive_operations_as")
+
+    _worker = workers.get_worker(worker_id)
+    response_body = {"message": None}
+
+    _cycle = None
+    if _worker:
+        _cycle = _worker.get_cycle(request_key)
+
+    # If the worker own a cycle matching with the request_key
+    if _cycle:
+
+        # TODO: format plan to how worker specified it
+        if receive_operations_as == "list":
+            pass
+        else:
+            pass
+        plan_res = _cycle.fl_process.json()["client_plans"]
+
+        if plan_res is not None and plan_id in plan_res.keys():
+            return Response(
+                json.dumps(plan_res[plan_id]), status=200, mimetype="application/json"
+            )
+        else:
+            response_body["message"] = INVALID_PLAN_MESSAGE
+            status_code = 400
+
+            return Response(
+                json.dumps(response_body),
+                status=status_code,
+                mimetype="application/json",
+            )
+    else:
         response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
         status_code = 400
 
