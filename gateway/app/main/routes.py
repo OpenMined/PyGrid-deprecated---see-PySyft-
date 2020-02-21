@@ -377,3 +377,24 @@ def download_model():
         return Response(
             json.dumps(response_body), status=status_code, mimetype="application/json"
         )
+
+
+@main.route(f"/{FL_EVENTS.CYCLE_REQUEST}", methods=["POST"])
+@cross_origin()
+def worker_cycle_request():
+    
+    try:
+        body = json.loads(request.data)
+    except json.decoder.JSONDecodeError:
+        response = {"status": "rejected", "timeout": 0}
+        return Response(
+            json.dumps(response), # FIXME define timout
+            status=400,
+            mimetype="application/json",
+        )
+    
+    worker_id = body["worker_id"]
+    if not worker_id in local_worker._known_workers:
+        response = {"error": "worker ID not found"}
+    
+    # TODO
