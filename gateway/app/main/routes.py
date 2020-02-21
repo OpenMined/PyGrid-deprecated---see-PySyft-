@@ -23,6 +23,10 @@ INVALID_JSON_FORMAT_MESSAGE = (
 INVALID_REQUEST_KEY_MESSAGE = (
     "Invalid request key."  # Default message for invalid request key.
 )
+WORKER_NOT_FOUND_MESSAGE = (
+    "Worker ID not found."  # Default message for worker not found.
+)
+WORKER_HAS_NO_REGISTERED_CYCLE_MESSAGE = "Worker has no registered cycle."  # Default message for worker with no registered cycle.
 INVALID_PROTOCOL_MESSAGE = "Protocol is None or the id does not exist."
 
 
@@ -379,22 +383,45 @@ def download_model():
         )
 
 
-@main.route(f"/{FL_EVENTS.CYCLE_REQUEST}", methods=["POST"])
-@cross_origin()
+@main.route("/federated/cycle-request", methods=["POST"])
 def worker_cycle_request():
-    
+
+    response_body = {"message": None}
+    status_code = None
+
     try:
         body = json.loads(request.data)
-    except json.decoder.JSONDecodeError:
-        response = {"status": "rejected", "timeout": 0}
-        return Response(
-            json.dumps(response), # FIXME define timout
-            status=400,
-            mimetype="application/json",
-        )
-    
-    worker_id = body["worker_id"]
-    if not worker_id in local_worker._known_workers:
-        response = {"error": "worker ID not found"}
-    
-    # TODO
+
+        worker_id = body["worker_id"]
+        model = body["model"]
+        version = body["version"]
+        ping = body["ping"]
+        download = body["download"]
+        upload = body["upload"]
+
+        _worker = workers.get_worker(worker_id)
+
+        _cycles = None
+        if _worker:
+
+            _cycles = _worker.get_cycles()
+
+            if not len(_cycles):
+                # TODO there's cycles so we need to find one alive :D
+                pass
+            else:
+                response_body["message"] = WORKER_HAS_NO_REGISTERED_CYCLE_MESSAGE
+                response_body["status"] = "rejected"
+                status_code = 400
+        else:
+            response_body["message"] = WORKER_NOT_FOUND_MESSAGE
+            response_body["status"] = "rejected"
+            status_code = 400
+
+    except ValueError or KeyError as e:
+        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
+        status_code = 400
+
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )

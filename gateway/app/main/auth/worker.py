@@ -26,6 +26,13 @@ class Worker:
         """
         return self._cycle.get(hash_key, None)
 
+    def get_cycles(self):
+        """ Retrieves all the registered cycles.
+            Returns:
+                Dict: A list of cycles owned by this worker
+        """
+        return self._cycles
+
     def worker_id(self) -> str:
         """ Get the id of this worker.
             Returns:
