@@ -27,4 +27,4 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_PASSWORD }}
         cache: ${{ github.event_name != 'schedule' }}
-        workdir: app/webscket 
+        workdir: app/websocket 
