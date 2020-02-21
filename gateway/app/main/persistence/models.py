@@ -1,5 +1,6 @@
 import json
 from flask_sqlalchemy import SQLAlchemy
+import syft as sy
 
 db = SQLAlchemy()
 
