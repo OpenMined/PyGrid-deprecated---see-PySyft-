@@ -1,6 +1,5 @@
 import json
 from flask_sqlalchemy import SQLAlchemy
-import syft as sy
 
 db = SQLAlchemy()
 
@@ -8,7 +7,7 @@ db = SQLAlchemy()
 class Model(db.Model):
     """ Model table that represents the AI Models.
         Columns:
-            id (Integer, Primary Key) : Model's id, used to recover stored model.
+            id (String, Primary Key) : Model's id, used to recover stored model.
             version (String) : Model version.
             checkpoints (ModelCheckPoint) : Model Checkpoints. (One to Many relationship)
             fl_process_id (Integer, ForeignKey) : FLProcess Foreign Key.
@@ -16,7 +15,7 @@ class Model(db.Model):
 
     __tablename__ = "__model__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.String, primary_key=True)
     version = db.Column(db.String())
     checkpoints = db.relationship("ModelCheckPoint", backref="checkpoint")
     fl_process_id = db.Column(
@@ -32,14 +31,14 @@ class ModelCheckPoint(db.Model):
         Columns:
             id (Integer, Primary Key): Checkpoint ID.
             values (Binary): Value of the model at a given checkpoint.
-            model_id (Integer, ForeignKey): Model's ID.
+            model_id (String, Foreign Key): Model's ID.
     """
 
     __tablename__ = "__model_checkpoint__"
 
     id = db.Column(db.BigInteger, primary_key=True)
     values = db.Column(db.LargeBinary)
-    model_id = db.Column(db.BigInteger, db.ForeignKey("__model__.id"), unique=True)
+    model_id = db.Column(db.String, db.ForeignKey("__model__.id"), unique=True)
 
     @property
     def object(self):
@@ -59,6 +58,7 @@ class Plan(db.Model):
             id (Integer, Primary Key): Plan ID.
             value (String): String  (List of operations)
             value_ts (String): String (TorchScript)
+            fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
     __tablename__ = "__plan__"
@@ -66,9 +66,7 @@ class Plan(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
-    fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
-    )
+    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
         return (
@@ -82,6 +80,7 @@ class Protocol(db.Model):
             id (Integer, Primary Key): Protocol ID.
             value: String  (List of operations)
             value_ts: String (TorchScript)
+            fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
     __tablename__ = "__protocol__"
@@ -89,9 +88,7 @@ class Protocol(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
-    fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
-    )
+    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
         return f"<Protocol id: {self.id}, values: {self.value}, torchscript: {self.value_ts}>"
@@ -102,25 +99,14 @@ class Config(db.Model):
         Columns:
             id (Integer, Primary Key): Config ID.
             value (String): Dictionary
+            fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
     __tablename__ = "__config__"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    config = db.Column(db.String())
-    fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
-    )
-
-    @property
-    def object(self):
-        # Convert Python Dict data structure to String
-        return json.dumps(self.config)
-
-    @object.setter
-    def object(self):
-        # Convert Python String to Dict data tructure
-        self.config = json.loads(self.config)
+    config = db.Column(db.PickleType)
+    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
         return f"<Config id: {self.id} , configs: {self.config}>"
@@ -131,6 +117,7 @@ class Cycle(db.Model):
         Columns:
             id (Integer, Primary Key): Cycle ID.
             start (TIME): Start time.
+            sequence (Integer): Cycle's sequence number.
             end (TIME): End time.
             worker_cycles (WorkerCycle): Relationship between workers and cycles (One to many).
             fl_process_id (Integer,ForeignKey): Federated learning ID that owns this cycle.
@@ -143,9 +130,7 @@ class Cycle(db.Model):
     end = db.Column(db.DateTime())
     sequence = db.Column(db.BigInteger())
     worker_cycles = db.relationship("WorkerCycle", backref="cycle")
-    fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
-    )
+    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
         return f"< Cycle id : {self.id}, start: {self.start}, end: {self.end}>"
@@ -154,7 +139,7 @@ class Cycle(db.Model):
 class Worker(db.Model):
     """ Web / Mobile worker table.
         Columns:
-            id (Integer, Primary Key): Worker's ID.
+            id (String, Primary Key): Worker's ID.
             format_preference (String): either "list" or "ts"
             ping (Int): Ping rate.
             avg_download (Int): Download rate.
@@ -164,7 +149,7 @@ class Worker(db.Model):
 
     __tablename__ = "__worker__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.String, primary_key=True)
     format_preference = db.Column(db.String())
     ping = db.Column(db.BigInteger)
     avg_download = db.Column(db.BigInteger)
@@ -179,19 +164,18 @@ class WorkerCycle(db.Model):
     """ Relation between Workers and Cycles.
         Columns:
             id (Integer, Primary Key): Worker Cycle ID.
-            fl_process_id (String): Federated Learning process ID.
+            fl_process (FLProcess) : FL Process executed during this cycle.
             cycle_id (Integer, ForeignKey): Cycle Foreign key that owns this worker cycle.
-            worker_id (Integer, ForeignKey): Worker Foreign key that owns this worker cycle.
+            worker_id (String, ForeignKey): Worker Foreign key that owns this worker cycle.
             request_key (String): unique token that permits downloading specific Plans, Protocols, etc.
     """
 
     __tablename__ = "__worker_cycle__"
 
     id = db.Column(db.BigInteger, primary_key=True)
-    fl_process_id = db.Column(db.String())
     request_key = db.Column(db.String())
     cycle_id = db.Column(db.BigInteger, db.ForeignKey("__cycle__.id"), unique=True)
-    worker_id = db.Column(db.BigInteger, db.ForeignKey("__worker__.id"), unique=True)
+    worker_id = db.Column(db.String, db.ForeignKey("__worker__.id"), unique=True)
 
     def __str__(self):
         f"<WorkerCycle id: {self.id}, fl_process: {self.fl_process_id}, cycle: {self.cycle_id}, worker: {self.worker}, request_key: {self.request_key}>"
@@ -201,16 +185,13 @@ class FLProcess(db.Model):
     """ Federated Learning Process table.
         Columns:
             id (Integer, Primary Key): Federated Learning Process ID.
-            model (Model): 
-            averaging_plan (Plan): Averaging Plan
-            plans: [
-                training_plan: Plan
-                validation-plan: Plan
-            ]
-            protocols (Protocol) :
-            server_config (Config):
-            client_config (Config):
-            cycles [Cycles]:
+            model (Model): Model.
+            averaging_plan (Plan): Averaging Plan.
+            plans: Generic Plans (such as training plan and validation plan)
+            protocols (Protocol) : Generic protocols.
+            server_config (Config): Server Configs.
+            client_config (Config): Client Configs.
+            cycles [Cycles]: FL Cycles.
     """
 
     __tablename__ = "__fl_process__"
@@ -218,15 +199,11 @@ class FLProcess(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     model = db.relationship("Model", backref="flprocess", uselist=False)
     averaging_plan = db.relationship("Plan", backref="avg_flprocess", uselist=False)
-    plans = db.relationship("Plan", backref="plans_flprocess")
-    protocols = db.relationship("Protocol", backref="flprocess")
-    server_config = db.relationship(
-        "Config", backref="flprocess_server_config", uselist=False
-    )
-    client_config = db.relationship(
-        "Config", backref="flprocess_client_config", uselist=False
-    )
-    cycles = db.relationship("Cycle", backref="flprocess")
+    plans = db.relationship("Plan", backref="plan_flprocess")
+    protocols = db.relationship("Protocol", backref="protocol_flprocess")
+    server_config = db.relationship("Config", backref="server_flprocess_config")
+    client_config = db.relationship("Config", backref="client_flprocess_config")
+    cycles = db.relationship("Cycle", backref="cycle_flprocess")
 
     def __str__(self):
         return f"<FederatedLearningProcess id : {self.id}>"
