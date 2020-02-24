@@ -330,7 +330,7 @@ def download_protocol():
 
 @main.route("/federated/report", methods=["POST"])
 def report_diff():
-    """Request a download of a protocol"""
+    """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
     response_body = {"message": None}
 
     try:
