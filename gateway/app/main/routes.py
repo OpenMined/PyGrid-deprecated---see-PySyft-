@@ -11,6 +11,7 @@ import requests
 
 from .persistence.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
+from .events import handler
 
 
 # All grid nodes registered at grid network will be stored here
@@ -358,11 +359,17 @@ def fl_cycle_application_decision():
     """
     # this will be replaced with a function that check for the same (model_id, version_#) tuple when the worker last participated
     last_participation = 1
-    # how late is too late into the cycle time to give a worker "new work", if only 5 seconds left probably don't bother
+    # how late is too late into the cycle time to give a worker "new work", if only 5 seconds left probably don't bother, set this intelligently later
     MINIMUM_CYCLE_TIME_LEFT = 500
     # the historical amount of workers that fail to report (out of time, offline, too slow etc...),
     # could be modified to be worker/model specific later, track across overall pygrid instance for now
     EXPECTED_FAILURE_RATE = 0.2
+
+    # dummy function to ping worker, to be replaced with a function that actually pings the worker and verifies connection
+    async def ping_worker(worker_id):
+        return await handler.connections[
+            worker_id
+        ].ping()  # TODO@Maddie: ask Patrick about success / failure of ping, just return is good or?
 
     dummy_server_config = {
         "max_workers": 100,
@@ -380,6 +387,7 @@ def fl_cycle_application_decision():
 
     up_speed_check = up_speed > _server_config["minimum_upload_speed"]
     down_speed_check = down_speed > _server_config["minimum_download_speed"]
+    ping_check = ping_worker(worker_id)
     cycle_valid_check = (
         (
             last_participation + _server_config["do_not_reuse_workers_until_cycle"]
@@ -392,7 +400,7 @@ def fl_cycle_application_decision():
         * (worker_id not in _cycle._workers)
     )
 
-    if up_speed_check * down_speed_check * cycle_valid_check:
+    if up_speed_check * down_speed_check * cycle_valid_check * ping_check:
         if _server_config["pool_selection"] == "iterate" and len(
             _cycle._workers
         ) < _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE):
@@ -410,6 +418,20 @@ def fl_cycle_application_decision():
                         - between now and ETA till end of _server_config['cycle_length']
                         - such that we can expect (,say with 95% confidence) successful completion of the cycle
                         - while accounting for EXPECTED_FAILURE_RATE
+
+                        EXPECTED_FAILURE_RATE = moving average with exponential decay (with noised up weights for security)
+                        k' = max_workers * (1+EXPECTED_FAILURE_RATE) # expected failure adjusted max_workers
+                        T_left = T_end - T_now # how much time is left (in the same unit as below)
+                        lambda_actual = (recent) historical rate of request / unit time
+                        lambda' = number of requests / unit of time that would satisfy the below equation
+
+                        probability of receiving at least k* requests per unit time:
+                            P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
+
+                        solve for lambda':
+                            use numerical approximation (newton's method) or just repeatedly call prob = poisson.cdf(x, lambda') via scipy
+
+                        reject_probability = 1 - lambda' / lamba_actual
             """
 
     if _accept:
