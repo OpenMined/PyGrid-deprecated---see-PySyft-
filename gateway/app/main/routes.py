@@ -504,13 +504,17 @@ def fl_cycle_application_decision():
             """
 
             # time base units = 1 hr
+
             k_prime = _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE)
             T_left = _cycle.get("cycle_time", 0)
+
+            # TODO: remove magic number below... see block comment above re: how
             lambda_actual = 5
             confidence = 0.95  # of P(K>=k')
             pois = lambda l: poisson.sf(k_prime, l) - confidence
 
-            def _bisect_approximator(arr, search_tol):
+            def _bisect_approximator(arr, search_tolerance):
+                """ uses binary search to find value within search_tolerance"""
                 n = len(arr)
                 L = 0
                 R = n - 1
@@ -518,9 +522,9 @@ def fl_cycle_application_decision():
                 while L <= R:
                     mid = floor((L + R) / 2)
                     print(mid, pois(arr[mid]))
-                    if pois(arr[mid]) > 0 and pois(arr[mid]) < search_tol:
+                    if pois(arr[mid]) > 0 and pois(arr[mid]) < search_tolerance:
                         return mid
-                    elif pois(arr[mid]) > 0 and pois(arr[mid]) > search_tol:
+                    elif pois(arr[mid]) > 0 and pois(arr[mid]) > search_tolerance:
                         R = mid - 1
                     else:
                         L = mid + 1
