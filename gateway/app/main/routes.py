@@ -13,6 +13,7 @@ from .persistence.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
 from .events import handler
 from .auth import workers
+from .events.fl_events import report
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
@@ -24,6 +25,7 @@ INVALID_JSON_FORMAT_MESSAGE = (
 INVALID_REQUEST_KEY_MESSAGE = (
     "Invalid request key."  # Default message for invalid request key.
 )
+INVALID_PROTOCOL_MESSAGE = "Protocol is None or the id does not exist."
 
 
 @main.route("/", methods=["GET"])
@@ -285,6 +287,70 @@ def search_dataset_tags():
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
 
+@main.route("/federated/get-protocol", methods=["GET"])
+def download_protocol():
+    """Request a download of a protocol"""
+
+    response_body = {"message": None}
+    status_code = None
+
+    worker_id = request.args.get("worker_id")
+    request_key = request.args.get("request_key")
+    protocol_id = request.args.get("protocol_id")
+
+    _worker = workers.get_worker(worker_id)
+
+    _cycle = None
+    if _worker:
+        _cycle = _worker.get_cycle(request_key)
+
+    if _cycle:
+        protocol_res = _cycle.fl_process.json()["client_protocols"]
+        if protocol_res != None and protocol_id in protocol_res.keys():
+            return Response(
+                json.dumps(protocol_res[protocol_id]),
+                status=200,
+                mimetype="application/json",
+            )
+        else:
+            response_body["message"] = INVALID_PROTOCOL_MESSAGE
+            status_code = 400
+
+            return Response(
+                json.dumps(response_body),
+                status=status_code,
+                mimetype="application/json",
+            )
+    else:
+        response_body["message"] = INVALID_REQUEST_KEY_MESSAGE
+        status_code = 400
+
+        return Response(
+            json.dumps(response_body), status=status_code, mimetype="application/json"
+        )
+
+
+@main.route("/federated/report", methods=["POST"])
+def report_diff():
+    """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
+    response_body = {"message": None}
+
+    try:
+        data = json.loads(request.data)
+
+        resp = report(data, None)
+
+        return Response(resp, status=200, mimetype="application/json")
+
+    # JSON format not valid.
+    except ValueError or KeyError as e:
+        return Response(
+            json.dumps({"message": INVALID_JSON_FORMAT_MESSAGE}),
+            status=400,
+            mimetype="application/json",
+        )
+
+
 def _get_model_hosting_nodes(model_id):
     """ Search all nodes if they are currently hosting the model.
 
@@ -318,7 +384,7 @@ def download_model():
 
     _cycle = None
     if _worker:
-        cycle = _worker.get_cycle(request_key)
+        _cycle = _worker.get_cycle(request_key)
 
     # If the worker own a cycle matching with the request_key
     if _cycle:
