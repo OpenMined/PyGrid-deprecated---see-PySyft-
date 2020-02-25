@@ -2,6 +2,7 @@ from .worker import Worker
 from ..storage.db_manager import Warehouse
 from ..storage import models
 
+
 class WorkerController:
     """ This class implements controller design pattern over the workers."""
 
@@ -16,9 +17,9 @@ class WorkerController:
             Returns:
                 worker: a Worker instance.
         """
-        if self._storage.contains(worker_id)
+        if self._storage.contains(worker_id):
             return self._storage.query(id=worker_id)
-        
+
         self._storage.register({"id": worker_id})
         worker = Worker(worker_id)
         self.cache[worker.worker_id] = worker
@@ -40,9 +41,8 @@ class WorkerController:
                 worker: worker Instance or None if it wasn't found.
         """
         _worker = self.cache.get(worker_id, None)
-        
+
         if not _worker:
             _worker = self._storage.query(id=worker_id)
-        
-        return _worker
 
+        return _worker
