@@ -499,8 +499,7 @@ def fl_cycle_application_decision():
                         solve for lambda':
                             use numerical approximation (newton's method) or just repeatedly call prob = poisson.cdf(x, lambda') via scipy
 
-                        reject_probability = 1 - lambda' / lamba_actual
-
+                        reject_probability = 1 - lambda_actual / lambda'
             """
 
             # time base units = 1 hr
@@ -537,13 +536,12 @@ def fl_cycle_application_decision():
                 lambda_approx = _bisect_approximator(range(floor(k_prime * 3)), 0.01)
 
             rej_prob = (
-                (1 - lambda_approx / lambda_actual)
-                if lambda_approx < lambda_actual
-                else 1
+                (1 - lambda_actual / lambda_approx)
+                if lambda_actual > lambda_approx
+                else 1  # don't reject if we expect to be short on worker requests
             )
 
             if random.random_sample() > rej_prob:
-
                 _accept = True
 
     if _accept:
