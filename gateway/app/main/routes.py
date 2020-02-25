@@ -3,6 +3,10 @@
 """
 
 from flask import render_template, Response, request, current_app
+from math import floor
+import numpy as np
+from scipy.optimize import minimize_scalar
+from scipy.stats import poisson
 from . import main
 import json
 import random
@@ -14,6 +18,7 @@ from .processes import processes
 from .events import handler
 from .auth import workers
 from .events.fl_events import report
+
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
@@ -473,11 +478,7 @@ def fl_cycle_application_decision():
         ) < _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE):
             """ first come first serve selection mode """
             _accept = True
-        elif (
-            _server_config["pool_selection"] == "random"
-            and random.random_sample() < 0.8
-        ):  # TODO@Maddie: remove magic number, hardcoded for naive probability of accept
-            _accept = True
+        elif _server_config["pool_selection"] == "random":
             """
                 TODO@Maddie: stub model
                     - model the rate of worker's request to join as lambda in a poisson process
@@ -492,14 +493,54 @@ def fl_cycle_application_decision():
                         lambda_actual = (recent) historical rate of request / unit time
                         lambda' = number of requests / unit of time that would satisfy the below equation
 
-                        probability of receiving at least k* requests per unit time:
+                        probability of receiving at least k' requests per unit time:
                             P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
 
                         solve for lambda':
                             use numerical approximation (newton's method) or just repeatedly call prob = poisson.cdf(x, lambda') via scipy
 
                         reject_probability = 1 - lambda' / lamba_actual
+
             """
+
+            # time base units = 1 hr
+            k_prime = _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE)
+            T_left = _cycle.get("cycle_time", 0)
+            lambda_actual = 5
+            confidence = 0.95  # of P(K>=k')
+            pois = lambda l: poisson.sf(k_prime, l) - confidence
+
+            def _bisect_approximator(arr, search_tol):
+                n = len(arr)
+                L = 0
+                R = n - 1
+
+                while L <= R:
+                    mid = floor((L + R) / 2)
+                    print(mid, pois(arr[mid]))
+                    if pois(arr[mid]) > 0 and pois(arr[mid]) < search_tol:
+                        return mid
+                    elif pois(arr[mid]) > 0 and pois(arr[mid]) > search_tol:
+                        R = mid - 1
+                    else:
+                        L = mid + 1
+                return None
+
+            # if the number of workers is small, approximiation methods is not neccessary and tolerance is not guaranteed
+            if k_prime < 50:
+                lambda_approx = np.argmin([abs(pois(x)) for x in range(k_prime * 3)])
+            else:
+                lambda_approx = _bisect_approximator(range(floor(k_prime * 3)), 0.01)
+
+            rej_prob = (
+                (1 - lambda_approx / lambda_actual)
+                if lambda_approx < lambda_actual
+                else 1
+            )
+
+            if random.random_sample() > rej_prob:
+
+                _accept = True
 
     if _accept:
         return Response(
