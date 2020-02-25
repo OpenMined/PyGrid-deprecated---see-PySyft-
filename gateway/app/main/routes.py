@@ -9,7 +9,7 @@ import random
 import os
 import requests
 
-from .persistence.manager import register_new_node, connected_nodes, delete_node
+from .storage.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
 from .auth import workers
 from .events.fl_events import report
