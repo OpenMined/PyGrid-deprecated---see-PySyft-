@@ -538,10 +538,10 @@ def fl_cycle_application_decision():
             rej_prob = (
                 (1 - lambda_actual / lambda_approx)
                 if lambda_actual > lambda_approx
-                else 1  # don't reject if we expect to be short on worker requests
+                else 0  # don't reject if we expect to be short on worker requests
             )
 
-            if random.random_sample() > rej_prob:
+            if random.random_sample() < rej_prob:
                 _accept = True
 
     if _accept:
