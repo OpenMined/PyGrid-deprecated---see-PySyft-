@@ -497,7 +497,7 @@ def fl_cycle_application_decision():
                             P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
 
                         solve for lambda':
-                            use numerical approximation (newton's method) or just repeatedly call prob = poisson.cdf(x, lambda') via scipy
+                            use numerical approximation (newton's method) or just repeatedly call prob = poisson.sf(x, lambda') via scipy
 
                         reject_probability = 1 - lambda_actual / lambda'
             """
