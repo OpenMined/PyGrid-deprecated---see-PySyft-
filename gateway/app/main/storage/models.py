@@ -1,6 +1,7 @@
 import json
 from flask_sqlalchemy import SQLAlchemy
-import syft as sy
+
+# import syft as sy
 
 db = SQLAlchemy()
 
@@ -40,7 +41,7 @@ class ModelCheckPoint(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     values = db.Column(db.LargeBinary)
     model_id = db.Column(db.String, db.ForeignKey("__model__.id"), unique=True)
-
+    """
     @property
     def object(self):
         return sy.serde.deserialize(self.values)
@@ -48,6 +49,7 @@ class ModelCheckPoint(db.Model):
     @object.setter
     def object(self):
         self.data = sy.serde.serialize(self.values)
+    """
 
     def __str__(self):
         return f"<CheckPoint id: {self.id} , values: {self.data}>"
