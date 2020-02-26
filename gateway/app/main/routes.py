@@ -563,7 +563,11 @@ def fl_cycle_application_decision():
             )
 
             # additional security:
-            if abs(poisson.sf(k_prime, lambda_approx) - confidence) > _search_tolerance:
+            if (
+                k_prime > 50
+                and abs(poisson.sf(k_prime, lambda_approx) - confidence)
+                > _search_tolerance
+            ):
                 """something went wrong, fall back to safe default"""
                 rej_prob = 0.1
                 WARN = "_bisect_approximator failed unexpectedly, reset rej_prob to default"
