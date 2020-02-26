@@ -399,7 +399,8 @@ def worker_cycle_request():
         download = body["download"]
         upload = body["upload"]
 
-        _worker = workers.get_worker(worker_id)
+        # Retrieve the worker
+        worker = workers.get_worker(worker_id)
 
         _cycles = None
         if _worker:
@@ -408,6 +409,7 @@ def worker_cycle_request():
 
             if not len(_cycles):
                 # TODO there's cycles so we need to find one alive :D
+
                 pass
             else:
                 response_body["message"] = WORKER_HAS_NO_REGISTERED_CYCLE_MESSAGE
