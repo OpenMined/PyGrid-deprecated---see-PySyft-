@@ -5,13 +5,13 @@
 from flask import render_template, Response, request, current_app
 from math import floor
 import numpy as np
-from scipy.optimize import minimize_scalar
 from scipy.stats import poisson
 from . import main
 import json
 import random
 import os
 import requests
+import logging
 
 from .persistence.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
@@ -423,6 +423,7 @@ def fl_cycle_application_decision():
     up_speed = request.args.get("up_speed")
     down_speed = request.args.get("down_speed")
     worker_id = request.args.get("worker_id")
+    worker_ping = request.args.get("ping")
     _cycle = processes.get_cycle(model_id)
     _accept = False
     """
@@ -436,12 +437,6 @@ def fl_cycle_application_decision():
     # the historical amount of workers that fail to report (out of time, offline, too slow etc...),
     # could be modified to be worker/model specific later, track across overall pygrid instance for now
     EXPECTED_FAILURE_RATE = 0.2
-
-    # dummy function to ping worker, to be replaced with a function that actually pings the worker and verifies connection
-    async def ping_worker(worker_id):
-        return await handler.connections[
-            worker_id
-        ].ping()  # TODO@Maddie: ask Patrick about success / failure of ping, just return is good or?
 
     dummy_server_config = {
         "max_workers": 100,
@@ -459,7 +454,6 @@ def fl_cycle_application_decision():
 
     up_speed_check = up_speed > _server_config["minimum_upload_speed"]
     down_speed_check = down_speed > _server_config["minimum_download_speed"]
-    ping_check = ping_worker(worker_id)
     cycle_valid_check = (
         (
             last_participation + _server_config["do_not_reuse_workers_until_cycle"]
@@ -472,7 +466,7 @@ def fl_cycle_application_decision():
         * (worker_id not in _cycle._workers)
     )
 
-    if up_speed_check * down_speed_check * cycle_valid_check * ping_check:
+    if up_speed_check * down_speed_check * cycle_valid_check:
         if _server_config["pool_selection"] == "iterate" and len(
             _cycle._workers
         ) < _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE):
@@ -480,40 +474,61 @@ def fl_cycle_application_decision():
             _accept = True
         elif _server_config["pool_selection"] == "random":
             """
-                TODO@Maddie: stub model
+                probabilistic model for rejction rate:
                     - model the rate of worker's request to join as lambda in a poisson process
                     - set probabilistic reject rate such that we can expect enough workers will request to join and be accepted
                         - between now and ETA till end of _server_config['cycle_length']
                         - such that we can expect (,say with 95% confidence) successful completion of the cycle
-                        - while accounting for EXPECTED_FAILURE_RATE
+                        - while accounting for EXPECTED_FAILURE_RATE (% of workers that join cycle but never successfully report diff)
 
-                        EXPECTED_FAILURE_RATE = moving average with exponential decay (with noised up weights for security)
-                        k' = max_workers * (1+EXPECTED_FAILURE_RATE) # expected failure adjusted max_workers
-                        T_left = T_end - T_now # how much time is left (in the same unit as below)
-                        lambda_actual = (recent) historical rate of request / unit time
-                        lambda' = number of requests / unit of time that would satisfy the below equation
+                EXPECTED_FAILURE_RATE = moving average with exponential decay based on historical data (maybe: noised up weights for security)
 
-                        probability of receiving at least k' requests per unit time:
-                            P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
+                k' = max_workers * (1+EXPECTED_FAILURE_RATE) # expected failure adjusted max_workers = var: k_prime
 
-                        solve for lambda':
-                            use numerical approximation (newton's method) or just repeatedly call prob = poisson.sf(x, lambda') via scipy
+                T_left = T_cycle_end - T_now # how much time is left (in the same unit as below)
 
-                        reject_probability = 1 - lambda_actual / lambda'
+                normalized_lambda_actual = (recent) historical rate of request / unit time
+
+                lambda' = number of requests / unit of time that would satisfy the below equation
+
+                probability of receiving at least k' requests per unit time:
+                    P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
+
+                var: lambda_approx = lambda' * T_left
+
+                solve for lambda':
+                    use numerical approximation (newton's method) or just repeatedly call prob = poisson.sf(x, lambda') via scipy
+
+                reject_probability = 1 - lambda_approx / (normalized_lambda_actual * T_left)
             """
 
-            # time base units = 1 hr
-
+            # time base units = 1 hr, assumes lambda_actual and lambda_approx have the same unit as T_left
             k_prime = _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE)
             T_left = _cycle.get("cycle_time", 0)
 
-            # TODO: remove magic number below... see block comment above re: how
-            lambda_actual = 5
-            confidence = 0.95  # of P(K>=k')
+            # TODO: remove magic number = 5 below... see block comment above re: how
+            normalized_lambda_actual = 5
+            lambda_actual = (
+                normalized_lambda_actual * T_left
+            )  # makes lambda_actual have same unit as lambda_approx
+            # @hyperparam: valid_range => (0, 1) | (+) => more certainty to have completed cycle, (-) => more efficient use of worker as computational resource
+            confidence = 0.95  # P(K>=k')
             pois = lambda l: poisson.sf(k_prime, l) - confidence
 
-            def _bisect_approximator(arr, search_tolerance):
-                """ uses binary search to find value within search_tolerance"""
+            """
+            _bisect_approximator because:
+                - solving for lambda given P(K>=k') has no algebraic solution (that I know of) => need approxmiation
+                - scipy's optimizers are not stable for this problem (I tested a few) => need custom approxmiation
+                - at this MVP stage we are not likely to experince performance problems, binary search is log(N)
+            refactor notes:
+                - implmenting a smarter approximiator using lambert's W or newton's methods will take more time
+                - if we do need to scale then we can refactor to the above ^
+            """
+            # @hyperparam: valid_range => (0, 1) | (+) => get a faster but lower quality approximation
+            _search_tolerance = 0.01
+
+            def _bisect_approximator(arr, search_tolerance=_search_tolerance):
+                """ uses binary search to find lambda_actual within search_tolerance"""
                 n = len(arr)
                 L = 0
                 R = n - 1
@@ -529,17 +544,30 @@ def fl_cycle_application_decision():
                         L = mid + 1
                 return None
 
-            # if the number of workers is small, approximiation methods is not neccessary and tolerance is not guaranteed
+            """
+            if the number of workers is relatively small:
+                - approximiation methods is not neccessary / we can find exact solution fast
+                - and search_tolerance is not guaranteed because lambda has to be int()
+            """
             if k_prime < 50:
-                lambda_approx = np.argmin([abs(pois(x)) for x in range(k_prime * 3)])
+                lambda_approx = np.argmin(
+                    [abs(pois(x)) for x in range(floor(k_prime * 3))]
+                )
             else:
-                lambda_approx = _bisect_approximator(range(floor(k_prime * 3)), 0.01)
+                lambda_approx = _bisect_approximator(range(floor(k_prime * 3)))
 
             rej_prob = (
-                (1 - lambda_actual / lambda_approx)
+                (1 - lambda_approx / lambda_actual)
                 if lambda_actual > lambda_approx
                 else 0  # don't reject if we expect to be short on worker requests
             )
+
+            # additional security:
+            if abs(poisson.sf(k_prime, lambda_approx) - confidence) > _search_tolerance:
+                """something went wrong, fall back to safe default"""
+                rej_prob = 0.1
+                WARN = "_bisect_approximator failed unexpectedly, reset rej_prob to default"
+                logging.exception(WARN)  # log error
 
             if random.random_sample() < rej_prob:
                 _accept = True
