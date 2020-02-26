@@ -70,7 +70,6 @@ def join_grid_node():
 
 @main.route("/connected-nodes", methods=["GET"])
 def get_connected_nodes():
-    print("yolo2")
     """ Get a list of connected nodes. """
     grid_nodes = connected_nodes()
     return Response(
@@ -535,7 +534,6 @@ def fl_cycle_application_decision():
 
                 while L <= R:
                     mid = floor((L + R) / 2)
-                    print(mid, pois(arr[mid]))
                     if pois(arr[mid]) > 0 and pois(arr[mid]) < search_tolerance:
                         return mid
                     elif pois(arr[mid]) > 0 and pois(arr[mid]) > search_tolerance:
