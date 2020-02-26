@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import sys
 from random import randint
@@ -6,7 +7,7 @@ from datetime import datetime
 
 from flask import Flask
 
-sys.path.append("../gateway/app/")
+sys.path.append("./gateway/app/")
 
 
 from flask_sqlalchemy import SQLAlchemy
@@ -317,7 +318,3 @@ class TestDatabase(unittest.TestCase):
 
         self.db.session.add(worker_cycle)
         self.db.session.commit()
-
-
-if __name__ == "__main__":
-    unittest.main()
