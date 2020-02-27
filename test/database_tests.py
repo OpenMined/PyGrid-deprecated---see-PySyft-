@@ -6,11 +6,11 @@ from datetime import datetime
 
 from flask import Flask
 
-sys.path.append("../")
+sys.path.append("../gateway/app/")
 
 
 from flask_sqlalchemy import SQLAlchemy
-from main.persistence import models
+from main.storage import models
 
 app = Flask(__name__)
 
