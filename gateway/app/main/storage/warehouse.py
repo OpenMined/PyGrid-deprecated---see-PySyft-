@@ -5,21 +5,25 @@ class Warehouse:
     def __init__(self, schema):
         self._schema = schema
 
-    def register(self, *kwargs):
+    def register(self, **kwargs):
         """ Register e  new object into the database.
             Args:
                 parameters : List of object parameters.
+            Returns:
+                object: Database Object
         """
-        new_obj = self._schema(kwargs)
-        db.session.add(new_obj)
+        _obj = self._schema(**kwargs)
+        db.session.add(_obj)
         db.session.commit()
 
-    def query(self, *kwargs):
+        return _obj
+
+    def query(self, **kwargs):
         """ Query db objects filtering by parameters
             Args:
                 parameters : List of parameters used to filter. 
         """
-        objects = self._schema.query.filter_by(kwargs)
+        objects = self._schema.query.filter_by(**kwargs).first()
         return objects
 
     def contains(self, id):
@@ -29,11 +33,14 @@ class Warehouse:
         """
         return self._schema.query.filter_by(id=id) != None
 
-    def delete(self, *kwargs):
+    def delete(self, **kwargs):
         """ Delete an object from the database.
             Args:
                 parameters: Parameters used to filter the object.
         """
-        object_to_delete = self.query(kwargs)
+        object_to_delete = self.query(**kwargs)
         db.session.delete(object_to_delete)
+        db.session.commit()
+
+    def update(self):
         db.session.commit()
