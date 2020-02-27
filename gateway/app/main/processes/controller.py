@@ -4,6 +4,7 @@ from ..storage import models
 from ..storage.warehouse import Warehouse
 from sqlalchemy import func
 from random import randint
+from datetime import datetime
 
 BIG_INT = 2 ** 32
 
@@ -31,20 +32,23 @@ class FLController:
         """
         _fl_process = self._processes.query(model=model_id)
 
+        _new_cycle = None
         if _fl_process:
             # Retrieve a list of cycles using the same model_id/version
             sequence_number = len(
                 self._cycles.query(fl_process_id=_fl_process.id, version=version)
             )
 
-            self._cycles.register(
+            _new_cycle = self._cycles.register(
                 id=randint(0, BIG_INT),
-                start=datetime,
-                end=datetime,
+                start=datetime.now(),
+                end=datetime.now(),
                 sequence=sequence_number + 1,
                 version=version,
                 fl_process_id=_fl_process,
             )
+
+        return _new_cycle
 
     def get_cycle(self, model_id: str, version: str):
         """ Retrieve a registered cycle.
