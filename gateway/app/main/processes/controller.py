@@ -62,14 +62,14 @@ class FLController:
         _cycle = self._cycles.query(fl_process_id=_model.fl_process_id, version=version)
 
         if _cycle:
-            return cycle.last()
+            return _cycle.last()
 
-    def delete_cycle(self, *kwargs):
+    def delete_cycle(self, **kwargs):
         """ Delete a registered Cycle.
             Args:
                 model_id: Model's ID.
         """
-        self._cycles.delete(kwargs)
+        self._cycles.delete(**kwargs)
 
     def last_participation(self, worker_id: str, model_id: str, version: str) -> int:
         """ Retrieve the last time the worker participated from this cycle.
