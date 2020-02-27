@@ -1,13 +1,24 @@
 from .federated_learning_process import FLProcess
 from .federated_learning_cycle import FederatedLearningCycle
+from ..storage import models
+from ..storage.warehouse import Warehouse
+from sqlalchemy import func
+from random import randint
+
+BIG_INT = 2 ** 32
 
 
 class FLController:
     """ This class implements controller design pattern over the federated learning processes. """
 
     def __init__(self):
-        self.processes = {}
-        self._cycles = {}
+        self._processes = Warehouse(models.FLProcess)
+        self._cycles = Warehouse(models.Cycle)
+        self._worker_cycle = Warehouse(models.WorkerCycle)
+        self._configs = Warehouse(models.Config)
+        self._plans = Warehouse(models.Plan)
+        self._protocols = Warehouse(models.Protocol)
+        self._models = Warehouse(models.Model)
 
     def create_cycle(self, model_id: str, version: str, cycle_time: int = 2500):
         """ Create a new federated learning cycle.
@@ -18,49 +29,43 @@ class FLController:
             Returns:
                 fd_cycle: Cycle Instance.
         """
-        _fl_process = self.processes.get(model_id, None)
+        _fl_process = self._processes.query(model=model_id)
 
         if _fl_process:
             # Retrieve a list of cycles using the same model_id/version
-            cycle_sequence = self._cycles.get((model_id, version), None)
+            sequence_number = len(
+                self._cycles.query(fl_process_id=_fl_process.id, version=version)
+            )
 
-            # If already exists, create and append a new cycle
-            if cycle_sequence:
-                new_cycle = FederatedLearningCycle(
-                    _fl_process, cycle_time, len(cycle_sequence) + 1
-                )
-                self.cycle_sequence.append(new_cycle)
-            else:  # otherwise, create a new list
-                new_cycle = FederatedLearningCycle(
-                    _fl_process, cycle_time, 1
-                )  # Create the first one.
-                self._cycles[(model_id, version)] = [new_cycle]
+            self._cycles.register(
+                id=randint(0, BIG_INT),
+                start=datetime,
+                end=datetime,
+                sequence=sequence_number + 1,
+                version=version,
+                fl_process_id=_fl_process,
+            )
 
-    def get_cycle(self, model_id: str, version: str, sequence_number: int = None):
+    def get_cycle(self, model_id: str, version: str):
         """ Retrieve a registered cycle.
             Args:
                 model_id: Model's ID.
                 version: Model's version.
-                sequence_number: Cycle index.
             Returns:
                 cycle: Cycle Instance / None
         """
-        # Retrive a list of cycles used by this model_id/version
-        _cycle_sequences = self._cycles.get((model_id, version), None)
+        _model = self._models.query(id=model_id)
+        _cycle = self._cycles.query(fl_process_id=_model.fl_process_id, version=version)
 
-        # Select the cycle (By default, will return the last cycle)
-        cycle_index = sequence_number if sequence_number else len(_cycle_sequences) - 1
+        if _cycle:
+            return cycle.last()
 
-        if _cycle_sequences:
-            return _cycle_sequences[cycle_index]
-
-    def delete_cycle(self, model_id: str, version: str):
+    def delete_cycle(self, *kwargs):
         """ Delete a registered Cycle.
             Args:
                 model_id: Model's ID.
         """
-        if model_id in self._cycles:
-            del self._cycles[(model_id, version)]
+        self._cycles.delete(kwargs)
 
     def last_participation(self, worker_id: str, model_id: str, version: str) -> int:
         """ Retrieve the last time the worker participated from this cycle.
@@ -71,17 +76,25 @@ class FLController:
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        _cycle_sequences = self._cycles.get((model_id, version), None)
+        _model = self._models.query(id=model_id)
+        _cycles = self._cycles.query(fl_process_id=_model.fl_process_id)
 
-        if _cycle_sequences:
-            for i in range(len(_cycle_sequences)):
-                if _cycle_sequences[i].contains(worker_id):
-                    return i
-        return 0
+        last = 0
+        if not _cycles:
+            return last
+
+        for cycle in _cycles:
+            worker_cycle = self._worker_cycle.query(
+                cycle_id=cycle.id, worker_id=worker_id
+            )
+            if worker_cycle and cycle.sequence > last:
+                last = cycle.sequence
+
+        return last
 
     def create_process(
         self,
-        model,
+        model_id,
         client_plans,
         client_config,
         server_config,
@@ -90,7 +103,7 @@ class FLController:
     ):
         """ Register a new federated learning process
             Args:
-                model: The model that will be hosted.
+                model_id: Model's ID.
                 client_plans : an object containing syft plans.
                 client_protocols : an object containing syft protocols.
                 client_config: the client configurations
@@ -99,30 +112,61 @@ class FLController:
             Returns:
                 process : FLProcess Instance.
         """
-        process = FLProcess(
-            model=model,
-            client_plans=client_plans,
-            client_config=client_config,
-            server_config=server_config,
-            client_protocols=client_protocols,
-            server_averaging_plan=server_averaging_plan,
+
+        # Register a new FL Process
+        fl_process = self._processes.register(id=randint(0, BIG_INT))
+
+        _model = self._models.query(id=model_id)
+        if not _model:
+            self._models.register(id=model_id, flprocess=fl_process)
+        print(_model)
+
+        # Register new Plans into the database
+        for key, value in client_plans.items():
+            self._plans.register(
+                id=randint(0, BIG_INT), name=key, value=value, plan_flprocess=fl_process
+            )
+
+        # Register new Protocols into the database
+        for key, value in client_protocols.items():
+            self._protocols.register(
+                id=randint(0, BIG_INT),
+                name=key,
+                value=value,
+                protocol_flprocess=fl_process,
+            )
+
+        # Register the average plan into the database
+        self._plans.register(
+            id=randint(0, BIG_INT), value=value, avg_flprocess=fl_process
         )
 
-        self.processes[process.id] = process
-        return self.processes[process.id]
+        # Register the client/server setup configs
+        client_config = self._configs.register(
+            id=randint(0, BIG_INT),
+            config=client_config,
+            server_flprocess_config=fl_process,
+        )
+        server_config = self._configs.register(
+            id=randint(0, BIG_INT),
+            config=server_config,
+            client_flprocess_config=fl_process,
+        )
 
-    def delete_process(self, pid):
+        return fl_process
+
+    def delete_process(self, **kwargs):
         """ Remove a registered federated learning process.
             Args:
                 pid : Id used identify the desired process. 
         """
-        del self.processes[pid]
+        self._processes.delete(**kwargs)
 
-    def get_process(self, pid):
+    def get_process(self, **kwargs):
         """ Retrieve the desired federated learning process.
             Args:
                 pid : Id used to identify the desired process.
             Returns:
                 process : FLProcess Instance or None if it wasn't found.
         """
-        return self.processes.get(pid, None)
+        return self._processes.query(**kwargs)
