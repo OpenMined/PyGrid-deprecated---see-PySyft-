@@ -59,6 +59,7 @@ class Plan(db.Model):
     """ Plan table that represents Syft Plans.
         Columns:
             id (Integer, Primary Key): Plan ID.
+            name (String): Plan name.
             value (String): String  (List of operations)
             value_ts (String): String (TorchScript)
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
@@ -67,6 +68,7 @@ class Plan(db.Model):
     __tablename__ = "__plan__"
 
     id = db.Column(db.BigInteger, primary_key=True)
+    name = db.Column(db.String())
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
@@ -81,6 +83,7 @@ class Protocol(db.Model):
     """ Protocol table that represents Syft Protocols.
         Columns:
             id (Integer, Primary Key): Protocol ID.
+            name (String): protocol name.
             value: String  (List of operations)
             value_ts: String (TorchScript)
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
@@ -89,6 +92,7 @@ class Protocol(db.Model):
     __tablename__ = "__protocol__"
 
     id = db.Column(db.BigInteger, primary_key=True)
+    name = db.Column(db.String())
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
@@ -101,7 +105,7 @@ class Config(db.Model):
     """ Configs table.
         Columns:
             id (Integer, Primary Key): Config ID.
-            value (String): Dictionary
+            config (String): Dictionary
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
@@ -121,6 +125,7 @@ class Cycle(db.Model):
             id (Integer, Primary Key): Cycle ID.
             start (TIME): Start time.
             sequence (Integer): Cycle's sequence number.
+            version (String) : Cycle Version.
             end (TIME): End time.
             worker_cycles (WorkerCycle): Relationship between workers and cycles (One to many).
             fl_process_id (Integer,ForeignKey): Federated learning ID that owns this cycle.
@@ -131,6 +136,7 @@ class Cycle(db.Model):
     id = db.Column(db.BigInteger, primary_key=True)
     start = db.Column(db.DateTime())
     end = db.Column(db.DateTime())
+    version = db.Column(db.String())
     sequence = db.Column(db.BigInteger())
     worker_cycles = db.relationship("WorkerCycle", backref="cycle")
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
@@ -177,8 +183,8 @@ class WorkerCycle(db.Model):
 
     id = db.Column(db.BigInteger, primary_key=True)
     request_key = db.Column(db.String())
-    cycle_id = db.Column(db.BigInteger, db.ForeignKey("__cycle__.id"), unique=True)
-    worker_id = db.Column(db.String, db.ForeignKey("__worker__.id"), unique=True)
+    cycle_id = db.Column(db.BigInteger, db.ForeignKey("__cycle__.id"))
+    worker_id = db.Column(db.String, db.ForeignKey("__worker__.id"))
 
     def __str__(self):
         f"<WorkerCycle id: {self.id}, fl_process: {self.fl_process_id}, cycle: {self.cycle_id}, worker: {self.worker}, request_key: {self.request_key}>"
