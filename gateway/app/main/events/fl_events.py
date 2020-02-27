@@ -5,6 +5,8 @@ from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
 from ..processes import processes
 from ..auth import workers
+import traceback
+
 
 # Singleton socket handler
 handler = SocketHandler()
@@ -32,14 +34,13 @@ def host_federated_training(message: dict, socket) -> str:
 
         # Create a new FL Process
         processes.create_process(
-            model=serialized_model,
+            model_id=serialized_model,
             client_plans=serialized_client_plans,
             client_protocols=serialized_client_protocols,
             server_averaging_plan=serialized_avg_plan,
             client_config=client_config,
             server_config=server_config,
         )
-
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)
 
@@ -65,7 +66,7 @@ def authenticate(message: dict, socket) -> str:
         handler.new_connection(worker_id, socket)
 
         # Create worker instance
-        workers.create_worker(worker_id)
+        workers.create(worker_id)
 
         response[MSG_FIELD.WORKER_ID] = worker_id
 
@@ -96,7 +97,11 @@ def cycle_request(message: dict, socket) -> str:
         upload = data.get(CYCLE.UPLOAD, None)
 
         # Retrieve the worker
-        worker = workers.get_worker(worker_id)
+        worker = workers.get(id=worker_id)
+        worker.ping = ping
+        worker.avg_download = download
+        worker.avg_upload = upload
+        workers.update(worker)
 
         # The last time this worker was assigned for this model/version.
         last_participation = processes.last_participation(worker_id, model_id, version)
@@ -122,13 +127,17 @@ def cycle_request(message: dict, socket) -> str:
             response[CYCLE.PROTOCOLS] = cycle.fl_process.client_protocols
             response[CYCLE.CLIENT_CONFIG] = cycle.fl_process.client_config
             response[MSG_FIELD.MODEL_ID] = model_id
-        else:
+        elif cycle:
             # If worker_id already exists in the current cycle, return False.
             response[CYCLE.STATUS] = "rejected"
             response[CYCLE.TIMEOUT] = cycle.remaining_time + 1
+        else:
+            # If Cycle doesn't exist
+            response[CYCLE.STATUS] = "rejected"
 
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)
+        traceback.print_tb(e.__traceback__)
 
     return json.dumps(response)
 
