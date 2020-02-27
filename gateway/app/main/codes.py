@@ -18,6 +18,7 @@ class WEBRTC_EVENTS(object):
 
 
 class FL_EVENTS(object):
+    HOST_FL_TRAINING = "federated/host-training"
     REPORT = "federated/report"
     AUTHENTICATE = "federated/authenticate"
     CYCLE_REQUEST = "federated/cycle-request"
