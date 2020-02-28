@@ -108,7 +108,7 @@ class FLController:
 
         # Retrieve server configs
         server = self._configs.first(
-            fl_process_id=_model.fl_process_id, client_config=True
+            fl_process_id=_model.fl_process_id, is_server_config=True
         )
 
         # Retrieve the last cycle used by this fl process/ version
@@ -164,7 +164,7 @@ class FLController:
                 CYCLE.PLANS: _plans,
                 CYCLE.PROTOCOLS: _protocols,
                 CYCLE.CLIENT_CONFIG: self._configs.first(
-                    fl_process_id=_model.fl_process_id, client_config=False
+                    fl_process_id=_model.fl_process_id, is_server_config=False
                 ).config,
                 MSG_FIELD.MODEL_ID: _model.id,
             }
@@ -229,13 +229,13 @@ class FLController:
 
         # Register the client/server setup configs
         self._configs.register(
-            config=client_config,
-            client_config=False,
-            server_flprocess_config=fl_process,
+            config=client_config, server_flprocess_config=fl_process,
         )
 
         self._configs.register(
-            config=server_config, client_config=True, client_flprocess_config=fl_process
+            config=server_config,
+            is_server_config=True,
+            client_flprocess_config=fl_process,
         )
 
         # Create a new cycle

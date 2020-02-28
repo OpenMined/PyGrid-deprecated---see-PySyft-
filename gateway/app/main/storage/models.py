@@ -119,7 +119,7 @@ class Config(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     config = db.Column(db.PickleType)
-    client_config = db.Column(db.Boolean)
+    is_server_config = db.Column(db.Boolean, default=False)
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
