@@ -3,10 +3,10 @@ from .federated_learning_cycle import FederatedLearningCycle
 from ..storage import models
 from ..storage.warehouse import Warehouse
 from sqlalchemy import func
-from random import randint
-from datetime import datetime
-
-BIG_INT = 2 ** 32
+from datetime import datetime, timedelta
+import hashlib
+import uuid
+from ..codes import MSG_FIELD, CYCLE
 
 
 class FLController:
@@ -40,7 +40,6 @@ class FLController:
             )
 
             _new_cycle = self._cycles.register(
-                id=randint(0, BIG_INT),
                 start=datetime.now(),
                 end=datetime.now(),
                 sequence=sequence_number + 1,
@@ -58,11 +57,16 @@ class FLController:
             Returns:
                 cycle: Cycle Instance / None
         """
-        _model = self._models.query(id=model_id)
-        _cycle = self._cycles.query(fl_process_id=_model.fl_process_id, version=version)
+        _model = self._models.first(id=model_id)
+        if version:
+            _cycle = self._cycles.last(
+                fl_process_id=_model.fl_process_id, version=version
+            )
+        else:
+            _cycle = self._cycles.last(fl_process_id=_model.fl_process_id)
 
         if _cycle:
-            return _cycle.last()
+            return _cycle
 
     def delete_cycle(self, **kwargs):
         """ Delete a registered Cycle.
@@ -80,21 +84,107 @@ class FLController:
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        _model = self._models.query(id=model_id)
+        _model = self._models.first(id=model_id)
         _cycles = self._cycles.query(fl_process_id=_model.fl_process_id)
 
         last = 0
-        if not _cycles:
+        if not len(_cycles):
             return last
 
         for cycle in _cycles:
-            worker_cycle = self._worker_cycle.query(
+            worker_cycle = self._worker_cycle.first(
                 cycle_id=cycle.id, worker_id=worker_id
             )
             if worker_cycle and cycle.sequence > last:
                 last = cycle.sequence
 
         return last
+
+    def assign(self, model_id: str, version: str, worker, last_participation: int):
+        _accepted = False
+
+        # Retrieve model to track federated learning process
+        _model = self._models.first(id=model_id)
+
+        # Retrieve server configs
+        server = self._configs.first(
+            fl_process_id=_model.fl_process_id, client_config=True
+        )
+
+        # Retrieve the last cycle used by this fl process/ version
+        if version:
+            _cycle = self._cycles.last(
+                fl_process_id=_model.fl_process_id, version=version
+            )
+        else:
+            _cycle = self._cycles.last(fl_process_id=_model.fl_process_id)
+
+        # Retrieve an WorkerCycle instance if this worker is already registered on this cycle.
+        _worker_cycle = self._worker_cycle.query(
+            worker_id=worker.id, cycle_id=_cycle.id
+        )
+
+        # Check bandwith
+        _comp_bandwith = (
+            worker.avg_upload > server.config["minimum_upload_speed"]
+        ) and (worker.avg_download > server.config["minimum_download_speed"])
+
+        # Check if the current worker is allowed to join into this cycle
+        _allowed = (
+            last_participation + server.config["do_not_reuse_workers_until_cycle"]
+            >= _cycle.sequence
+        )
+
+        _accepted = (not _worker_cycle) and _comp_bandwith and _allowed
+        if _accepted:
+            _worker_cycle = self._worker_cycle.register(
+                worker=worker,
+                cycle=_cycle,
+                request_key=self._generate_hash_key(uuid.uuid4().hex),
+            )
+            # Create a plan dictionary
+            _plans = {
+                plan.name: plan.id
+                for plan in self._plans.query(
+                    fl_process_id=_model.fl_process_id, is_avg_plan=False
+                )
+            }
+            # Create a protocol dictionary
+            _protocols = {
+                protocol.name: protocol.id
+                for protocol in self._protocols.query(
+                    fl_process_id=_model.fl_process_id
+                )
+            }
+
+            return {
+                CYCLE.STATUS: "accepted",
+                CYCLE.KEY: _worker_cycle.request_key,
+                MSG_FIELD.MODEL: str(_model),
+                CYCLE.PLANS: _plans,
+                CYCLE.PROTOCOLS: _protocols,
+                CYCLE.CLIENT_CONFIG: self._configs.first(
+                    fl_process_id=_model.fl_process_id, client_config=False
+                ).config,
+                MSG_FIELD.MODEL_ID: _model.id,
+            }
+        else:
+            if _cycle:
+                remaining = _cycle.end - datetime.now()
+                return {
+                    CYCLE.STATUS: "rejected",
+                    CYCLE.TIMEOUT: str(remaining),
+                }
+
+    def _generate_hash_key(self, primary_key: str) -> str:
+        """ Generate SHA256 Hash to give access to the cycle.
+            Args:
+                primary_key : Used to generate hash code.
+            Returns:
+                hash_code : Hash in string format.
+        """
+        print("Primary key: ", primary_key)
+        return hashlib.sha256(primary_key.encode()).hexdigest()
 
     def create_process(
         self,
@@ -118,45 +208,46 @@ class FLController:
         """
 
         # Register a new FL Process
-        fl_process = self._processes.register(id=randint(0, BIG_INT))
+        fl_process = self._processes.register()
 
         _model = self._models.query(id=model_id)
         if not _model:
             self._models.register(id=model_id, flprocess=fl_process)
-        print(_model)
 
         # Register new Plans into the database
         for key, value in client_plans.items():
-            self._plans.register(
-                id=randint(0, BIG_INT), name=key, value=value, plan_flprocess=fl_process
-            )
+            self._plans.register(name=key, value=value, plan_flprocess=fl_process)
 
         # Register new Protocols into the database
         for key, value in client_protocols.items():
             self._protocols.register(
-                id=randint(0, BIG_INT),
-                name=key,
-                value=value,
-                protocol_flprocess=fl_process,
+                name=key, value=value, protocol_flprocess=fl_process,
             )
 
         # Register the average plan into the database
-        self._plans.register(
-            id=randint(0, BIG_INT), value=value, avg_flprocess=fl_process
-        )
+        self._plans.register(value=value, avg_flprocess=fl_process, is_avg_plan=True)
 
         # Register the client/server setup configs
-        client_config = self._configs.register(
-            id=randint(0, BIG_INT),
+        self._configs.register(
             config=client_config,
+            client_config=False,
             server_flprocess_config=fl_process,
         )
-        server_config = self._configs.register(
-            id=randint(0, BIG_INT),
-            config=server_config,
-            client_flprocess_config=fl_process,
+
+        self._configs.register(
+            config=server_config, client_config=True, client_flprocess_config=fl_process
         )
 
+        # Create a new cycle
+        _now = datetime.now()
+        _end = _now + timedelta(seconds=server_config["cycle_length"])
+        self._cycles.register(
+            start=_now,
+            end=_end,
+            sequence=0,
+            version="1.0.0",
+            cycle_flprocess=fl_process,
+        )
         return fl_process
 
     def delete_process(self, **kwargs):

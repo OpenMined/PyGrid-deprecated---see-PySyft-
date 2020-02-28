@@ -1,7 +1,8 @@
 import json
 from flask_sqlalchemy import SQLAlchemy
+import uuid
 
-import syft as sy
+# import syft as sy
 
 db = SQLAlchemy()
 
@@ -38,11 +39,12 @@ class ModelCheckPoint(db.Model):
 
     __tablename__ = "__model_checkpoint__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     values = db.Column(db.LargeBinary)
     alias = db.Column(db.String)
     model_id = db.Column(db.String, db.ForeignKey("__model__.id"), unique=True)
 
+    """
     @property
     def object(self):
         return sy.serde.deserialize(self.values)
@@ -50,6 +52,7 @@ class ModelCheckPoint(db.Model):
     @object.setter
     def object(self):
         self.data = sy.serde.serialize(self.values)
+    """
 
     def __str__(self):
         return f"<CheckPoint id: {self.id} , values: {self.data}>"
@@ -62,15 +65,17 @@ class Plan(db.Model):
             name (String): Plan name.
             value (String): String  (List of operations)
             value_ts (String): String (TorchScript)
+            is_avg_plan (Boolean) : Boolean flag to indicate if it is the avg plan
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
     __tablename__ = "__plan__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String())
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
+    is_avg_plan = db.Column(db.Boolean, default=False)
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
@@ -91,7 +96,7 @@ class Protocol(db.Model):
 
     __tablename__ = "__protocol__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String())
     value = db.Column(db.String())
     value_ts = db.Column(db.String())
@@ -106,13 +111,15 @@ class Config(db.Model):
         Columns:
             id (Integer, Primary Key): Config ID.
             config (String): Dictionary
+            client_config (Boolean) : Boolean flag to indicate if it is a client config (True) or server config (False)
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
     __tablename__ = "__config__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     config = db.Column(db.PickleType)
+    client_config = db.Column(db.Boolean)
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
     def __str__(self):
@@ -133,7 +140,7 @@ class Cycle(db.Model):
 
     __tablename__ = "__cycle__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     start = db.Column(db.DateTime())
     end = db.Column(db.DateTime())
     version = db.Column(db.String())
@@ -181,7 +188,7 @@ class WorkerCycle(db.Model):
 
     __tablename__ = "__worker_cycle__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     request_key = db.Column(db.String())
     cycle_id = db.Column(db.BigInteger, db.ForeignKey("__cycle__.id"))
     worker_id = db.Column(db.String, db.ForeignKey("__worker__.id"))
@@ -205,7 +212,7 @@ class FLProcess(db.Model):
 
     __tablename__ = "__fl_process__"
 
-    id = db.Column(db.BigInteger, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     model = db.relationship("Model", backref="flprocess", uselist=False)
     averaging_plan = db.relationship("Plan", backref="avg_flprocess", uselist=False)
     plans = db.relationship("Plan", backref="plan_flprocess")

@@ -33,7 +33,7 @@ class WorkerController:
             Returns:
                 worker: worker Instance or None if it wasn't found.
         """
-        return self._workers.query(**kwargs)
+        return self._workers.first(**kwargs)
 
     def update(self, worker):
         """ Update Workers Attributes. """

@@ -23,8 +23,30 @@ class Warehouse:
             Args:
                 parameters : List of parameters used to filter. 
         """
-        objects = self._schema.query.filter_by(**kwargs).first()
+        objects = self._schema.query.filter_by(**kwargs).all()
         return objects
+
+    def first(self, **kwargs):
+        """ Query and return the first occurence.
+            Args:
+                parameters: List of parameters used to filter.
+            Return:
+                object: First object instance.
+        """
+        return self._schema.query.filter_by(**kwargs).first()
+
+    def last(self, **kwargs):
+        """ Query and return the first occurence.
+            Args:
+                parameters: List of parameters used to filter.
+            Return:
+                object: Last object instance.
+        """
+        return (
+            self._schema.query.filter_by(**kwargs)
+            .order_by(self._schema.id.desc())
+            .first()
+        )
 
     def contains(self, id):
         """ Check if the object id already exists into the database.

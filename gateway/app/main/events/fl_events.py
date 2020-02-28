@@ -112,33 +112,13 @@ def cycle_request(message: dict, socket) -> str:
         _accepted = False
 
         if worker and cycle:
-            _accepted = cycle.assign(worker_id, upload, download, last_participation)
-
-        ### MOCKUP ###
-
-        # Build response
-        if _accepted:
-            worker.register_cycle(cycle.hash, cycle)
-            response[CYCLE.STATUS] = "accepted"
-            response[MSG_FIELD.MODEL] = cycle.fl_process.model
-            response[CYCLE.VERSION] = version
-            response[CYCLE.KEY] = cycle.hash
-            response[CYCLE.PLANS] = cycle.fl_process.client_plans
-            response[CYCLE.PROTOCOLS] = cycle.fl_process.client_protocols
-            response[CYCLE.CLIENT_CONFIG] = cycle.fl_process.client_config
-            response[MSG_FIELD.MODEL_ID] = model_id
-        elif cycle:
-            # If worker_id already exists in the current cycle, return False.
-            response[CYCLE.STATUS] = "rejected"
-            response[CYCLE.TIMEOUT] = cycle.remaining_time + 1
-        else:
-            # If Cycle doesn't exist
-            response[CYCLE.STATUS] = "rejected"
+            response = processes.assign(model_id, version, worker, last_participation)
 
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
+        response[CYCLE.STATUS] = "rejected"
         response[RESPONSE_MSG.ERROR] = str(e)
-        traceback.print_tb(e.__traceback__)
 
+    print("My Response: ", response)
     return json.dumps(response)
 
 
