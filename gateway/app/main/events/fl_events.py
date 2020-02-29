@@ -41,6 +41,7 @@ def host_federated_training(message: dict, socket) -> str:
             client_config=client_config,
             server_config=server_config,
         )
+        response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)
 
@@ -68,9 +69,11 @@ def authenticate(message: dict, socket) -> str:
         # Create worker instance
         workers.create(worker_id)
 
+        response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
         response[MSG_FIELD.WORKER_ID] = worker_id
 
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
+        response[CYCLE.STATUS] = RESPONSE_MSG.ERROR
         response[RESPONSE_MSG.ERROR] = str(e)
 
     return json.dumps(response)
@@ -92,33 +95,27 @@ def cycle_request(message: dict, socket) -> str:
         worker_id = data.get(MSG_FIELD.WORKER_ID, None)
         model_id = data.get(MSG_FIELD.MODEL, None)
         version = data.get(CYCLE.VERSION, None)
-        ping = data.get(CYCLE.PING, None)
-        download = data.get(CYCLE.DOWNLOAD, None)
-        upload = data.get(CYCLE.UPLOAD, None)
+        ping = int(data.get(CYCLE.PING, None))
+        download = float(data.get(CYCLE.DOWNLOAD, None))
+        upload = float(data.get(CYCLE.UPLOAD, None))
 
         # Retrieve the worker
         worker = workers.get(id=worker_id)
+
         worker.ping = ping
         worker.avg_download = download
         worker.avg_upload = upload
-        workers.update(worker)
+        workers.update(worker)  # Update database worker attributes
 
         # The last time this worker was assigned for this model/version.
         last_participation = processes.last_participation(worker_id, model_id, version)
 
-        # Retrieve the last cycle created for this model_id/version
-        cycle = processes.get_cycle(model_id, version)
-
-        _accepted = False
-
-        if worker and cycle:
-            response = processes.assign(model_id, version, worker, last_participation)
-
-    except Exception as e:  # Retrieve exception messages such as missing JSON fields.
-        response[CYCLE.STATUS] = "rejected"
+        # Assign
+        response = processes.assign(model_id, version, worker, last_participation)
+    except Exception as e:
+        response[CYCLE.STATUS] = CYCLE.REJECTED
         response[RESPONSE_MSG.ERROR] = str(e)
 
-    print("My Response: ", response)
     return json.dumps(response)
 
 
@@ -131,19 +128,19 @@ def report(message: dict, socket) -> str:
         Returns:
             response : String response to the client
     """
-    data = message[MSG_FIELD.DATA]
+    # data = message[MSG_FIELD.DATA]
     response = {}
 
     try:
-        model_id = data.get(MSG_FIELD.MODEL, None)
-        request_key = data.get(CYCLE.KEY, None)
-        diff = data.get(CYCLE.DIFF, None)
+        # model_id = data.get(MSG_FIELD.MODEL, None)
+        # request_key = data.get(CYCLE.KEY, None)
+        # diff = data.get(CYCLE.DIFF, None)
 
         # TODO:
         # Perform Secure Aggregation
         # Update Model weights
 
-        response[CYCLE.STATUS] = "success"
+        response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)
 
