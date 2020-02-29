@@ -2,7 +2,7 @@ import json
 from flask_sqlalchemy import SQLAlchemy
 import uuid
 
-# import syft as sy
+import syft as sy
 
 db = SQLAlchemy()
 
@@ -44,7 +44,6 @@ class ModelCheckPoint(db.Model):
     alias = db.Column(db.String)
     model_id = db.Column(db.String, db.ForeignKey("__model__.id"), unique=True)
 
-    """
     @property
     def object(self):
         return sy.serde.deserialize(self.values)
@@ -52,7 +51,6 @@ class ModelCheckPoint(db.Model):
     @object.setter
     def object(self):
         self.data = sy.serde.serialize(self.values)
-    """
 
     def __str__(self):
         return f"<CheckPoint id: {self.id} , values: {self.data}>"
@@ -111,7 +109,7 @@ class Config(db.Model):
         Columns:
             id (Integer, Primary Key): Config ID.
             config (String): Dictionary
-            client_config (Boolean) : Boolean flag to indicate if it is a client config (True) or server config (False)
+            is_server_config (Boolean) : Boolean flag to indicate if it is a server config (True) or client config (False)
             fl_process_id (Integer, Foreign Key) : Referece to FL Process.
     """
 
@@ -143,8 +141,8 @@ class Cycle(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     start = db.Column(db.DateTime())
     end = db.Column(db.DateTime())
-    version = db.Column(db.String())
     sequence = db.Column(db.BigInteger())
+    version = db.Column(db.String())
     worker_cycles = db.relationship("WorkerCycle", backref="cycle")
     fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
 
@@ -180,7 +178,6 @@ class WorkerCycle(db.Model):
     """ Relation between Workers and Cycles.
         Columns:
             id (Integer, Primary Key): Worker Cycle ID.
-            fl_process (FLProcess) : FL Process executed during this cycle.
             cycle_id (Integer, ForeignKey): Cycle Foreign key that owns this worker cycle.
             worker_id (String, ForeignKey): Worker Foreign key that owns this worker cycle.
             request_key (String): unique token that permits downloading specific Plans, Protocols, etc.
