@@ -1,6 +1,7 @@
 from .worker import Worker
 from ..storage.warehouse import Warehouse
 from ..storage import models
+from ..exceptions import WorkerNotFoundError
 
 
 class WorkerController:
@@ -33,6 +34,11 @@ class WorkerController:
             Returns:
                 worker: worker Instance or None if it wasn't found.
         """
+        _worker = self._workers.first(**kwargs)
+
+        if not _worker:
+            raise WorkerNotFoundError
+
         return self._workers.first(**kwargs)
 
     def update(self, worker):
