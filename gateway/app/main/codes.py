@@ -38,7 +38,10 @@ class CYCLE(object):
     TIMEOUT = "timeout"
     DIFF = "diff"
     AVG_PLAN = "averaging_plan"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
 
 
 class RESPONSE_MSG(object):
     ERROR = "error"
+    SUCCESS = "success"
