@@ -2,11 +2,16 @@ from .federated_learning_process import FLProcess
 from .federated_learning_cycle import FederatedLearningCycle
 from ..storage import models
 from ..storage.warehouse import Warehouse
-from sqlalchemy import func
 from datetime import datetime, timedelta
 import hashlib
 import uuid
 from ..codes import MSG_FIELD, CYCLE
+from ..exceptions import (
+    CycleNotFoundError,
+    ProtocolNotFoundError,
+    ModelNotFoundError,
+    ProcessFoundError,
+)
 
 
 class FLController:
@@ -20,6 +25,7 @@ class FLController:
         self._plans = Warehouse(models.Plan)
         self._protocols = Warehouse(models.Protocol)
         self._models = Warehouse(models.Model)
+        self._model_checkpoints = Warehouse(models.ModelCheckPoint)
 
     def create_cycle(self, model_id: str, version: str, cycle_time: int = 2500):
         """ Create a new federated learning cycle.
@@ -49,7 +55,7 @@ class FLController:
 
         return _new_cycle
 
-    def get_cycle(self, model_id: str, version: str):
+    def get_cycle(self, fl_process_id: int, version: str = None):
         """ Retrieve a registered cycle.
             Args:
                 model_id: Model's ID.
@@ -57,16 +63,46 @@ class FLController:
             Returns:
                 cycle: Cycle Instance / None
         """
-        _model = self._models.first(id=model_id)
         if version:
-            _cycle = self._cycles.last(
-                fl_process_id=_model.fl_process_id, version=version
-            )
+            _cycle = self._cycles.last(fl_process_id=fl_process_id, version=version)
         else:
-            _cycle = self._cycles.last(fl_process_id=_model.fl_process_id)
+            _cycle = self._cycles.last(fl_process_id=fl_process_id)
 
-        if _cycle:
-            return _cycle
+        if not _cycle:
+            raise CycleNotFoundError
+
+        return _cycle
+
+    def get_protocol(self, **kwargs):
+        _protocol = self._protocols.first(**kwargs)
+        if not _protocol:
+            raise ProtocolNotFoundError
+
+        return _protocol
+
+    def get_model(self, **kwargs):
+        _model = self._models.first(**kwargs)
+
+        if not _model:
+            raise ModelNotFoundError
+
+        return _model
+
+    def get_model_checkpoint(self, **kwargs):
+        _check_point = self._model_checkpoints.last(**kwargs)
+
+        if not _check_point:
+            raise ModelNotFoundError
+
+        return _check_point
+
+    def validate(self, worker_id: str, cycle_id: str, request_key: str):
+        _worker_cycle = self._worker_cycle.first(worker_id=worker_id, cycle_id=cycle_id)
+
+        if not _worker_cycle:
+            raise ProcessFoundError
+
+        return _worker_cycle.request_key == request_key
 
     def delete_cycle(self, **kwargs):
         """ Delete a registered Cycle.
@@ -112,12 +148,7 @@ class FLController:
         )
 
         # Retrieve the last cycle used by this fl process/ version
-        if version:
-            _cycle = self._cycles.last(
-                fl_process_id=_model.fl_process_id, version=version
-            )
-        else:
-            _cycle = self._cycles.last(fl_process_id=_model.fl_process_id)
+        _cycle = self.get_cycle(_model.fl_process_id, version)
 
         # Retrieve an WorkerCycle instance if this worker is already registered on this cycle.
         _worker_cycle = self._worker_cycle.query(
@@ -169,12 +200,11 @@ class FLController:
                 MSG_FIELD.MODEL_ID: _model.id,
             }
         else:
-            if _cycle:
-                remaining = _cycle.end - datetime.now()
-                return {
-                    CYCLE.STATUS: "rejected",
-                    CYCLE.TIMEOUT: str(remaining),
-                }
+            remaining = _cycle.end - datetime.now()
+            return {
+                CYCLE.STATUS: "rejected",
+                CYCLE.TIMEOUT: str(remaining),
+            }
 
     def _generate_hash_key(self, primary_key: str) -> str:
         """ Generate SHA256 Hash to give access to the cycle.
@@ -183,7 +213,6 @@ class FLController:
             Returns:
                 hash_code : Hash in string format.
         """
-        print("Primary key: ", primary_key)
         return hashlib.sha256(primary_key.encode()).hexdigest()
 
     def create_process(
@@ -264,4 +293,9 @@ class FLController:
             Returns:
                 process : FLProcess Instance or None if it wasn't found.
         """
-        return self._processes.query(**kwargs)
+        _process = self._processes.query(**kwargs)
+
+        if not _process:
+            raise ProtocolNotFoundError
+
+        return _process
