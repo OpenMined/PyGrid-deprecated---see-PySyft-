@@ -163,15 +163,15 @@ def report(message: dict, socket) -> str:
             - check if we have enough diffs? vs. max_worker
             - if enough diffs => average every param => save as new model value => M_prime (save params new values)
             - create new fl_process with M_prime
-                processes.create_process(
-                    model=serialized_model,
+                new_model = processes.create_process(
+                    model=serialized_M_prime,
                     client_plans=serialized_client_plans,
                     client_protocols=serialized_client_protocols,
                     server_averaging_plan=serialized_avg_plan,
                     client_config=client_config,
                     server_config=server_config,
                 )
-            - create new fl_cycle
+            - create new processes.create_cycle(model_id: new_model.id, version: str => same as previous version, cycle_time: int = 2500)
             - at this point new workers can join because a cycle for a model exists
 
         """
