@@ -154,6 +154,28 @@ def report(message: dict, socket) -> str:
         # Perform Secure Aggregation
         # Update Model weights
 
+        """ TODO @Maddie: stub
+            Plan only
+            - get cycle
+            - check hash?
+            - track how many has reported successfully
+            - (add diffs) {worker_id: diff_from_this_worker}
+            - check if we have enough diffs? vs. max_worker
+            - if enough diffs => average every param => save as new model value => M_prime (save params new values)
+            - create new fl_process with M_prime
+                processes.create_process(
+                    model=serialized_model,
+                    client_plans=serialized_client_plans,
+                    client_protocols=serialized_client_protocols,
+                    server_averaging_plan=serialized_avg_plan,
+                    client_config=client_config,
+                    server_config=server_config,
+                )
+            - create new fl_cycle
+            - at this point new workers can join because a cycle for a model exists
+
+        """
+
         response[CYCLE.STATUS] = "success"
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e)
