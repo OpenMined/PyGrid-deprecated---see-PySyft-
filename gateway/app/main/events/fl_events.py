@@ -1,6 +1,7 @@
 import uuid
 import json
 
+
 from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
 from ..processes import processes
@@ -154,12 +155,58 @@ def report(message: dict, socket) -> str:
         # Perform Secure Aggregation
         # Update Model weights
 
-        """ TODO @Maddie: stub
+        """ stub some variables """
+
+        received_diffs_exceeds_min_worker = (
+            True
+        )  # get this from persisted server_config for model_id and self._diffs
+        received_diffs_exceeds_max_worker = (
+            False
+        )  # get this from persisted server_config for model_id and self._diffs
+        cycle_ended = (
+            True
+        )  # check cycle.cycle_time (but we should probably track cycle startime too)
+        ready_to_avarege = (
+            True
+            if (
+                (received_diffs_exceeds_max_worker or cycle_ended)
+                and received_diffs_exceeds_min_worker
+            )
+            else False
+        )
+        no_protocol = True  # only deal with plans for now
+
+        """ end variable stubs """
+
+        if ready_to_avarege and no_protocol:
+            # may need to deserialize
+            _diff_state = diff
+            _average_plan_diffs(model_id, _diff_state)
+            # assume _diff_state produced the same as here
+            # https://github.com/OpenMined/PySyft/blob/ryffel/syft-core/examples/experimental/FL%20Training%20Plan/Execute%20Plan.ipynb
+            # see step 7
+
+        response[CYCLE.STATUS] = "success"
+    except Exception as e:  # Retrieve exception messages such as missing JSON fields.
+        response[RESPONSE_MSG.ERROR] = str(e)
+
+    return json.dumps(response)
+
+
+from syft.execution.state import State
+from syft.frameworks.torch.tensors.interpreters.placeholder import PlaceHolder
+import random
+import numpy as np
+from syft.serde import protobuf
+
+
+def _average_plan_diffs(model_id, _diff_state):
+    """ TODO @Maddie: stub
             Plan only
             - get cycle
             - check hash?
             - track how many has reported successfully
-            - (add diffs) {worker_id: diff_from_this_worker}
+            - (add diffs) list of (worker_id, diff_from_this_worker)
             - check if we have enough diffs? vs. max_worker
             - if enough diffs => average every param => save as new model value => M_prime (save params new values)
             - create new fl_process with M_prime
@@ -174,10 +221,34 @@ def report(message: dict, socket) -> str:
             - create new processes.create_cycle(model_id: new_model.id, version: str => same as previous version, cycle_time: int = 2500)
             - at this point new workers can join because a cycle for a model exists
 
-        """
+    """
 
-        response[CYCLE.STATUS] = "success"
-    except Exception as e:  # Retrieve exception messages such as missing JSON fields.
-        response[RESPONSE_MSG.ERROR] = str(e)
+    _model = processes[model_id]  # de-seriallize if needed
+    _model_params = _model.get_params()
+    _cycle = processes.get_cycle(model_id, _model.client_config.version)
 
-    return json.dumps(response)
+    if len(_cycle.diffs) > _model.server_config.max_worker:
+        # random select max
+        index_to_average = random.sample(
+            range(len(_cycle.diffs)), _model.server_config.max_workerk
+        )
+
+    _updated_model_params = {
+        model_param: np.mean(_cycle.diffs[diff_from_worker][model_param])
+        for diff_from_worker in index_to_average
+        for model_param in _model_params
+    }
+
+    local_worker = None  # should be this pygrid instance, or do we not need it?
+
+    model_params_state = State(
+        owner=local_worker,
+        state_placeholders=[
+            PlaceHolder().instantiate(_updated_model_params[param])
+            for param in _updated_model_params
+        ],
+    )
+    pb = protobuf.serde._bufferize(local_worker, model_params_state)
+    serialized_state = pb.SerializeToString()
+
+    # TODO @Maddie make new fl_process with new model and fl_cycle here (confirm with patrick first)
