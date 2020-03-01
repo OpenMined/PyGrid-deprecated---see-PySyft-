@@ -201,7 +201,7 @@ from syft.serde import protobuf
 
 
 def _average_plan_diffs(model_id, _diff_state):
-    """ TODO @Maddie: stub
+    """ TODO @Maddie: skeleton code
             Plan only
             - get cycle
             - check hash?
