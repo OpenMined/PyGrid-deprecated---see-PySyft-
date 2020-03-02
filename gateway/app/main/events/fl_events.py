@@ -1,10 +1,13 @@
 import uuid
 import json
+from binascii import unhexlify
 
 from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
 from ..processes import processes
 from ..auth import workers
+from syft.serde.serde import deserialize
+from .. import hook
 import traceback
 
 
@@ -25,16 +28,22 @@ def host_federated_training(message: dict, socket) -> str:
 
     try:
         # Retrieve JSON values
-        serialized_model = data.get(MSG_FIELD.MODEL, None)  # Only one
-        serialized_client_plans = data.get(CYCLE.PLANS, None)  # 1 or *
-        serialized_client_protocols = data.get(CYCLE.PROTOCOLS, None)  # 0 or *
+        serialized_model = unhexlify(
+            data.get(MSG_FIELD.MODEL, None).encode()
+        )  # Only one
+        serialized_client_plans = json.loads(data.get(CYCLE.PLANS, None))  # 1 or *
+        serialized_client_protocols = json.loads(
+            data.get(CYCLE.PROTOCOLS, None)
+        )  # 0 or *
         serialized_avg_plan = data.get(CYCLE.AVG_PLAN, None)  # Only one
-        client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
-        server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
+        client_config = json.loads(data.get(CYCLE.CLIENT_CONFIG, None))  # Only one
+        server_config = json.loads(data.get(CYCLE.SERVER_CONFIG, None))  # Only one
+
+        model = deserialize(serialized_model)
 
         # Create a new FL Process
         processes.create_process(
-            model_id=serialized_model,
+            model=model,
             client_plans=serialized_client_plans,
             client_protocols=serialized_client_protocols,
             server_averaging_plan=serialized_avg_plan,
@@ -71,7 +80,6 @@ def authenticate(message: dict, socket) -> str:
 
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
         response[MSG_FIELD.WORKER_ID] = worker_id
-
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[CYCLE.STATUS] = RESPONSE_MSG.ERROR
         response[RESPONSE_MSG.ERROR] = str(e)
