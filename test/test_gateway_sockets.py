@@ -163,9 +163,11 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
             "upload": 23.7,
         }
 
+        message = {"type": "federated/cycle-request", "data": req_cycle_msg}
+
         # Send worker authentication message
-        response = await send_ws_message(req_cycle_msg)
-        self.assertEqual(response["status"], "success")
+        response = await send_ws_message(message)
+        self.assertEqual(response["status"], "accepted")
 
         response_fields = [
             "request_key",
