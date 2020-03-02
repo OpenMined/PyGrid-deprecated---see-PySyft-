@@ -217,7 +217,7 @@ class FLController:
 
     def create_process(
         self,
-        model_id,
+        model,
         client_plans,
         client_config,
         server_config,
@@ -226,7 +226,7 @@ class FLController:
     ):
         """ Register a new federated learning process
             Args:
-                model_id: Model's ID.
+                model: Model object.
                 client_plans : an object containing syft plans.
                 client_protocols : an object containing syft protocols.
                 client_config: the client configurations
@@ -239,9 +239,11 @@ class FLController:
         # Register a new FL Process
         fl_process = self._processes.register()
 
-        _model = self._models.query(id=model_id)
+        _model = self._models.query(id=model.id)
         if not _model:
-            self._models.register(id=model_id, flprocess=fl_process)
+            self._models.register(id=model.id, flprocess=fl_process)
+
+        # SAVE model weights into ModelCheckpoint
 
         # Register new Plans into the database
         for key, value in client_plans.items():
@@ -271,11 +273,7 @@ class FLController:
         _now = datetime.now()
         _end = _now + timedelta(seconds=server_config["cycle_length"])
         self._cycles.register(
-            start=_now,
-            end=_end,
-            sequence=0,
-            version="1.0.0",
-            cycle_flprocess=fl_process,
+            start=_now, end=_end, sequence=0, version=None, cycle_flprocess=fl_process,
         )
         return fl_process
 
