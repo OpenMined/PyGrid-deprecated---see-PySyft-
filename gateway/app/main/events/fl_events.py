@@ -195,24 +195,16 @@ from syft.serde import protobuf
 
 
 def _average_plan_diffs(model_id, _diff_state):
-    """ TODO @Maddie: skeleton code
+    """ skeleton code
             Plan only
-            - get cycle
-            - check hash?
-            - track how many has reported successfully
-            - (add diffs) list of (worker_id, diff_from_this_worker)
-            - check if we have enough diffs? vs. max_worker
-            - if enough diffs => average every param => save as new model value => M_prime (save params new values)
-            - create new fl_process with M_prime
-                new_model = processes.create_process(
-                    model=serialized_M_prime,
-                    client_plans=serialized_client_plans,
-                    client_protocols=serialized_client_protocols,
-                    server_averaging_plan=serialized_avg_plan,
-                    client_config=client_config,
-                    server_config=server_config,
-                )
-            - create new processes.create_cycle(model_id: new_model.id, version: str => same as previous version, cycle_time: int = 2500)
+            - x get cycle
+            - x check hash?
+            - x track how many has reported successfully
+            -   (add diffs) list of (worker_id, diff_from_this_worker)
+            - x check if we have enough diffs? vs. max_worker
+            - x if enough diffs => average every param => save as new model value => M_prime (save params new values)
+            - x new cycle
+            - x new checkpoint
             - at this point new workers can join because a cycle for a model exists
 
     """
