@@ -203,10 +203,8 @@ def _average_plan_diffs(model_id, _diff_state):
             -   (add diffs) list of (worker_id, diff_from_this_worker)
             - x check if we have enough diffs? vs. max_worker
             - x if enough diffs => average every param => save as new model value => M_prime (save params new values)
-            - x new cycle
-            - x new checkpoint
+            - x new cycle & new checkpoint
             - at this point new workers can join because a cycle for a model exists
-
     """
 
     _model = processes[model_id]  # de-seriallize if needed
@@ -227,7 +225,8 @@ def _average_plan_diffs(model_id, _diff_state):
         for model_param in _model_params
     ]
 
-    local_worker = None  # should be this pygrid instance, or do we not need it?
+    # should be this pygrid instance, or do we not need it?
+    local_worker = None
 
     model_params_state = State(
         owner=local_worker,
@@ -236,6 +235,7 @@ def _average_plan_diffs(model_id, _diff_state):
             for param in _updated_model_params
         ],
     )
+
     pb = protobuf.serde._bufferize(local_worker, model_params_state)
     serialized_state = pb.SerializeToString()
 
