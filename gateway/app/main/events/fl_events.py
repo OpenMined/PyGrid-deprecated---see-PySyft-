@@ -247,4 +247,8 @@ def _average_plan_diffs(model_id, _diff_state):
     pb = protobuf.serde._bufferize(local_worker, model_params_state)
     serialized_state = pb.SerializeToString()
 
-    # TODO @Maddie make new fl_process with new model and fl_cycle here (confirm with patrick first)
+    # make new checkpoint and cycle
+    _new_checkpoint = processes._model_checkpoints.register(
+        id=str(uuid.uuid4()), values=serialized_state, model_id=model_id
+    )
+    _new_cycle = processes.create_cycle(model_id, _model.client_config.version)
