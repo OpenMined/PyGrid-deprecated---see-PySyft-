@@ -152,11 +152,11 @@ def report(message: dict, socket) -> str:
         """ stub some variables """
 
         received_diffs_exceeds_min_worker = (
-            True
-        )  # get this from persisted server_config for model_id and self._diffs
+            True  # get this from persisted server_config for model_id and self._diffs
+        )
         received_diffs_exceeds_max_worker = (
-            False
-        )  # get this from persisted server_config for model_id and self._diffs
+            False  # get this from persisted server_config for model_id and self._diffs
+        )
         cycle_ended = (
             True
         )  # check cycle.cycle_time (but we should probably track cycle startime too)
