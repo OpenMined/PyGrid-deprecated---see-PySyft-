@@ -1,7 +1,7 @@
 import uuid
 import json
 from binascii import unhexlify
-
+import torch as th
 
 from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
@@ -224,14 +224,16 @@ def _average_plan_diffs(model_id, _diff_state):
     if len(_cycle.diffs) > _model.server_config.max_worker:
         # random select max
         index_to_average = random.sample(
-            range(len(_cycle.diffs)), _model.server_config.max_workerk
+            range(len(_cycle.diffs)), _model.server_config.max_worker
         )
 
-    _updated_model_params = {
-        model_param: np.mean(_cycle.diffs[diff_from_worker][model_param])
+    _updated_model_params = [
+        th.div(
+            th.add(_cycle.diffs[diff_from_worker][model_param]), len(index_to_average)
+        )
         for diff_from_worker in index_to_average
         for model_param in _model_params
-    }
+    ]
 
     local_worker = None  # should be this pygrid instance, or do we not need it?
 
