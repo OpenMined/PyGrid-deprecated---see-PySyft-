@@ -11,6 +11,7 @@ from ..exceptions import (
     ProtocolNotFoundError,
     ModelNotFoundError,
     ProcessFoundError,
+    FLProcessConflict,
 )
 
 
@@ -120,7 +121,7 @@ class FLController:
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        _fl_process = self._processes.first(name=name, version=version)
+        _fl_process = self._processes.first(name=name)
         _cycles = self._cycles.query(fl_process_id=_fl_process.id)
 
         last = 0
@@ -151,7 +152,7 @@ class FLController:
         _fl_process = self._processes.first(name=name)
 
         # Retrieve model to tracked federated learning process id
-        _model = self._models.query(fl_process_id=_fl_process.id)
+        _model = self._models.first(fl_process_id=_fl_process.id)
 
         # Retrieve server configs
         server = self._configs.first(
@@ -246,13 +247,20 @@ class FLController:
         """
 
         # Register a new FL Process
-        fl_process = self._processes.register(name=client_config["name"])
+        name = client_config["name"]
+        version = client_config["version"]
+
+        # Check if already exists
+        if self._processes.contains(name=name, version=version):
+            raise FLProcessConflict
+
+        fl_process = self._processes.register(name=name, version=version)
 
         # Register new model
         _model = self._models.register(flprocess=fl_process)
 
         # Save model initial weights into ModelCheckpoint
-        self._model_checkpoints.register(values=model, model=_model)
+        # self._model_checkpoints.register(values=model, model=_model)
 
         # Register new Plans into the database
         for key, value in client_plans.items():
