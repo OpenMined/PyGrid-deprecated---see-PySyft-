@@ -198,6 +198,7 @@ class FLProcess(db.Model):
     """ Federated Learning Process table.
         Columns:
             id (Integer, Primary Key): Federated Learning Process ID.
+            name (String) : Federated Process name.
             model (Model): Model.
             averaging_plan (Plan): Averaging Plan.
             plans: Generic Plans (such as training plan and validation plan)
@@ -210,7 +211,8 @@ class FLProcess(db.Model):
     __tablename__ = "__fl_process__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.relationship(db.String)
+    name = db.Column(db.String())
+    version = db.Column(db.String())
     model = db.relationship("Model", backref="flprocess", uselist=False)
     averaging_plan = db.relationship("Plan", backref="avg_flprocess", uselist=False)
     plans = db.relationship("Plan", backref="plan_flprocess")
