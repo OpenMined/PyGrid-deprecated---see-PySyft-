@@ -111,17 +111,17 @@ class FLController:
         """
         self._cycles.delete(**kwargs)
 
-    def last_participation(self, worker_id: str, model_id: str, version: str) -> int:
+    def last_participation(self, worker_id: str, name: str, version: str) -> int:
         """ Retrieve the last time the worker participated from this cycle.
             Args:
                 worker_id: Worker's ID.
-                model_id: Model's ID.
+                name: Federated Learning Process Name.
                 version: Model's version.
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        _model = self._models.first(id=model_id)
-        _cycles = self._cycles.query(fl_process_id=_model.fl_process_id)
+        _fl_process = self._processes.first(name=name, version=version)
+        _cycles = self._cycles.query(fl_process_id=_fl_process.id)
 
         last = 0
         if not len(_cycles):
@@ -136,19 +136,30 @@ class FLController:
 
         return last
 
-    def assign(self, model_id: str, version: str, worker, last_participation: int):
+    def assign(self, name: str, version: str, worker, last_participation: int):
+        """ Assign a new worker  the speficied federated training worker cycle
+            Args:
+                name: Federated learning process name.
+                version: Federated learning process version.
+                worker: Worker Object.
+                last_participation: The last time that this worker worked on this fl process.
+            Return:
+                last_participation: Index of the last cycle assigned to this worker.
+        """
         _accepted = False
 
-        # Retrieve model to track federated learning process
-        _model = self._models.first(id=model_id)
+        _fl_process = self._processes.first(name=name)
+
+        # Retrieve model to tracked federated learning process id
+        _model = self._models.query(fl_process_id=_fl_process.id)
 
         # Retrieve server configs
         server = self._configs.first(
-            fl_process_id=_model.fl_process_id, is_server_config=True
+            fl_process_id=_fl_process.id, is_server_config=True
         )
 
         # Retrieve the last cycle used by this fl process/ version
-        _cycle = self.get_cycle(_model.fl_process_id, version)
+        _cycle = self.get_cycle(_fl_process.id, version)
 
         # Retrieve an WorkerCycle instance if this worker is already registered on this cycle.
         _worker_cycle = self._worker_cycle.query(
@@ -177,25 +188,23 @@ class FLController:
             _plans = {
                 plan.name: plan.id
                 for plan in self._plans.query(
-                    fl_process_id=_model.fl_process_id, is_avg_plan=False
+                    fl_process_id=_fl_process.id, is_avg_plan=False
                 )
             }
             # Create a protocol dictionary
             _protocols = {
                 protocol.name: protocol.id
-                for protocol in self._protocols.query(
-                    fl_process_id=_model.fl_process_id
-                )
+                for protocol in self._protocols.query(fl_process_id=_fl_process.id)
             }
 
             return {
                 CYCLE.STATUS: "accepted",
                 CYCLE.KEY: _worker_cycle.request_key,
-                MSG_FIELD.MODEL: str(_model),
+                MSG_FIELD.MODEL: name,
                 CYCLE.PLANS: _plans,
                 CYCLE.PROTOCOLS: _protocols,
                 CYCLE.CLIENT_CONFIG: self._configs.first(
-                    fl_process_id=_model.fl_process_id, is_server_config=False
+                    fl_process_id=_fl_process.id, is_server_config=False
                 ).config,
                 MSG_FIELD.MODEL_ID: _model.id,
             }
@@ -237,7 +246,7 @@ class FLController:
         """
 
         # Register a new FL Process
-        fl_process = self._processes.register()
+        fl_process = self._processes.register(name=client_config["name"])
 
         # Register new model
         _model = self._models.register(flprocess=fl_process)

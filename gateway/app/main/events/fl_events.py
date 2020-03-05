@@ -97,7 +97,7 @@ def cycle_request(message: dict, socket) -> str:
     try:
         # Retrieve JSON values
         worker_id = data.get(MSG_FIELD.WORKER_ID, None)
-        model_id = data.get(MSG_FIELD.MODEL, None)
+        name = data.get(MSG_FIELD.MODEL, None)
         version = data.get(CYCLE.VERSION, None)
         ping = int(data.get(CYCLE.PING, None))
         download = float(data.get(CYCLE.DOWNLOAD, None))
@@ -112,10 +112,10 @@ def cycle_request(message: dict, socket) -> str:
         workers.update(worker)  # Update database worker attributes
 
         # The last time this worker was assigned for this model/version.
-        last_participation = processes.last_participation(worker_id, model_id, version)
+        last_participation = processes.last_participation(worker_id, name, version)
 
         # Assign
-        response = processes.assign(model_id, version, worker, last_participation)
+        response = processes.assign(name, version, worker, last_participation)
     except Exception as e:
         response[CYCLE.STATUS] = CYCLE.REJECTED
         response[RESPONSE_MSG.ERROR] = str(e)

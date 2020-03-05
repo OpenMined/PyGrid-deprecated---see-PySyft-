@@ -210,6 +210,7 @@ class FLProcess(db.Model):
     __tablename__ = "__fl_process__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.relationship(db.String)
     model = db.relationship("Model", backref="flprocess", uselist=False)
     averaging_plan = db.relationship("Plan", backref="avg_flprocess", uselist=False)
     plans = db.relationship("Plan", backref="plan_flprocess")
