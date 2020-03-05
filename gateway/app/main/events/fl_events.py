@@ -37,11 +37,9 @@ def host_federated_training(message: dict, socket) -> str:
         client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
-        model = deserialize(serialized_model)
-
         # Create a new FL Process
         processes.create_process(
-            model=model,
+            model=serialized_model,
             client_plans=serialized_client_plans,
             client_protocols=serialized_client_protocols,
             server_averaging_plan=serialized_avg_plan,
