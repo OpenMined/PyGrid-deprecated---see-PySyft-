@@ -409,7 +409,7 @@ def worker_cycle_request():
     """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
     response_body = {}
     status_code = None
-
+    
     try:
         body = json.loads(request.data)
         response_body = cycle_request({"data": body}, None)
@@ -421,7 +421,7 @@ def worker_cycle_request():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    if isinstance(dict, response_body):
+    if isinstance(response_body,dict):
         response_body = json.dumps(response_body)
 
     return Response(response_body, status=status_code, mimetype="application/json")
