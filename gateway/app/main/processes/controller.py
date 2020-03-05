@@ -239,11 +239,11 @@ class FLController:
         # Register a new FL Process
         fl_process = self._processes.register()
 
-        _model = self._models.query(id=model.id)
-        if not _model:
-            self._models.register(id=model.id, flprocess=fl_process)
+        # Register new model
+        _model = self._models.register(flprocess=fl_process)
 
-        # SAVE model weights into ModelCheckpoint
+        # Save model initial weights into ModelCheckpoint
+        self._model_checkpoints.register(values=model, model=_model)
 
         # Register new Plans into the database
         for key, value in client_plans.items():
