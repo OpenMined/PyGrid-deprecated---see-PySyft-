@@ -193,3 +193,6 @@ processes.create_process(
     server_config,
     serialized_avg_plan,
 )
+
+
+processes.create_cycle(model.id, '1.0.0')
