@@ -136,7 +136,6 @@ class Net(sy.Plan):
 
 
 model = Net()
-print(999999999999999, model.id)
 model.build(th.tensor([1.0, 2]))
 
 # Serialize plans / protocols and model

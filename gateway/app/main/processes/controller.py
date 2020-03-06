@@ -237,7 +237,7 @@ class FLController:
         fl_process = self._processes.register()
 
         _model = self._models.query(id=model.id)
-        print(88888888888, _model)
+        print('model has been seeded', _model)
         if not _model:
             self._models.register(id=model.id, flprocess=fl_process)
 
