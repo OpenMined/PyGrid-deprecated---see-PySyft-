@@ -637,9 +637,9 @@ def download_plan():
         status_code = 200  # Success
         
         if receive_operations_as == "torchscript":
-          response_body[CYCLE.PLANS] = _plans.value_ts
+          response_body[CYCLE.PLANS] = _plan.value_ts
         else:
-          response_body[CYCLE.PLANS] = _plans.value
+          response_body[CYCLE.PLANS] = _plan.value
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
         response_body[RESPONSE_MSG.ERROR] = str(e)
