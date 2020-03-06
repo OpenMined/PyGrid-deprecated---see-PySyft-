@@ -96,7 +96,6 @@ app = create_app()
 from syft.serde.serde import serialize, deserialize
 
 
-
 # async def test_fl_process(self):
 #         """ 1 - Host Federated Training """
 #         # Plan Functions
@@ -107,16 +106,19 @@ def foo_1(x, y, z):
     c = y + z
     return c, b, a
 
+
 @sy.func2plan(args_shape=[(1,), (1,), (1,)])
 def foo_2(x, y, z):
     a = x + x
     b = x + z
     return b, a
 
+
 @sy.func2plan(args_shape=[(1,), (1,)])
 def avg_plan(x, y):
     result = x + y / 2
     return result
+
 
 # Plan Model
 class Net(sy.Plan):
@@ -131,6 +133,7 @@ class Net(sy.Plan):
         x = self.fc2(x)
         x = self.fc3(x)
         return F.log_softmax(x, dim=0)
+
 
 model = Net()
 print(999999999999999, model.id)
@@ -169,7 +172,7 @@ host_training_message = {
         "model": serialized_plan_model,
         "plans": {
             "foo_1": serialized_plan_method_1,
-#             "foo_2": serialized_plan_method_2,
+            #             "foo_2": serialized_plan_method_2,
         },
         "protocols": {"protocol_1": "serialized_protocol_mockup"},
         "averaging_plan": serialized_avg_plan,
@@ -183,9 +186,11 @@ host_training_message = {
 #         self.assertEqual(response, {"status": "success"})
 
 from main.processes import processes
-processes.create_process(model, host_training_message['data']['plans'], client_config, server_config, serialized_avg_plan)
 
-
-
-
-
+processes.create_process(
+    model,
+    host_training_message["data"]["plans"],
+    client_config,
+    server_config,
+    serialized_avg_plan,
+)

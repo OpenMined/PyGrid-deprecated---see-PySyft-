@@ -152,9 +152,6 @@ def report(message: dict, socket) -> str:
 
     return json.dumps(response)
 
-
-
-
     async def test_fl_process(self):
         """ 1 - Host Federated Training """
         # Plan Functions
