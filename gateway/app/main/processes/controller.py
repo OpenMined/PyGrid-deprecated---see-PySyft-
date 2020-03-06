@@ -240,6 +240,7 @@ class FLController:
         fl_process = self._processes.register()
 
         _model = self._models.query(id=model.id)
+        print(88888888888, _model)
         if not _model:
             self._models.register(id=model.id, flprocess=fl_process)
 
@@ -250,10 +251,11 @@ class FLController:
             self._plans.register(name=key, value=value, plan_flprocess=fl_process)
 
         # Register new Protocols into the database
-        for key, value in client_protocols.items():
-            self._protocols.register(
-                name=key, value=value, protocol_flprocess=fl_process,
-            )
+        if client_protocols:
+            for key, value in client_protocols.items():
+                self._protocols.register(
+                    name=key, value=value, protocol_flprocess=fl_process,
+                )
 
         # Register the average plan into the database
         self._plans.register(value=value, avg_flprocess=fl_process, is_avg_plan=True)
@@ -280,7 +282,7 @@ class FLController:
     def delete_process(self, **kwargs):
         """ Remove a registered federated learning process.
             Args:
-                pid : Id used identify the desired process. 
+                pid : Id used identify the desired process.
         """
         self._processes.delete(**kwargs)
 
