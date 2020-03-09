@@ -199,6 +199,7 @@ class FLProcess(db.Model):
         Columns:
             id (Integer, Primary Key): Federated Learning Process ID.
             name (String) : Federated Process name.
+            version (String) : FL Process version.
             model (Model): Model.
             averaging_plan (Plan): Averaging Plan.
             plans: Generic Plans (such as training plan and validation plan)
