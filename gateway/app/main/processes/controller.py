@@ -121,7 +121,7 @@ class FLController:
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        _fl_process = self._processes.first(name=name)
+        _fl_process = self._processes.first(name=name, version=version)
         _cycles = self._cycles.query(fl_process_id=_fl_process.id)
 
         last = 0
@@ -149,7 +149,10 @@ class FLController:
         """
         _accepted = False
 
-        _fl_process = self._processes.first(name=name)
+        if version:
+            _fl_process = self._processes.first(name=name, version=version)
+        else:
+            _fl_process = self._processes.last(name=name)
 
         # Retrieve model to tracked federated learning process id
         _model = self._models.first(fl_process_id=_fl_process.id)
@@ -260,7 +263,7 @@ class FLController:
         _model = self._models.register(flprocess=fl_process)
 
         # Save model initial weights into ModelCheckpoint
-        # self._model_checkpoints.register(values=model, model=_model)
+        self._model_checkpoints.register(values=model, model=_model)
 
         # Register new Plans into the database
         for key, value in client_plans.items():
