@@ -9,6 +9,7 @@ from ..codes import MSG_FIELD, CYCLE
 from ..exceptions import (
     CycleNotFoundError,
     ProtocolNotFoundError,
+    PlanNotFoundError,
     ModelNotFoundError,
     ProcessFoundError,
     FLProcessConflict,
@@ -78,6 +79,13 @@ class FLController:
         _protocol = self._protocols.first(**kwargs)
         if not _protocol:
             raise ProtocolNotFoundError
+
+        return _protocol
+
+    def get_plan(self, **kwargs):
+        _protocol = self._plans.first(**kwargs)
+        if not _protocol:
+            raise PlanNotFoundError
 
         return _protocol
 
