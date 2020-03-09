@@ -156,6 +156,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         req_cycle_msg = {
             "worker_id": worker_id,
             "model": "my-federated-model",
+            "version": "0.1.0",
             "ping": 8,
             "download": 46.3,
             "upload": 23.7,

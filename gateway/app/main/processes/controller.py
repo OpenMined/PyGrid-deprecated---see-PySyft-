@@ -163,7 +163,7 @@ class FLController:
         )
 
         # Retrieve the last cycle used by this fl process/ version
-        _cycle = self.get_cycle(_fl_process.id, version)
+        _cycle = self.get_cycle(_fl_process.id, None)
 
         # Retrieve an WorkerCycle instance if this worker is already registered on this cycle.
         _worker_cycle = self._worker_cycle.query(
