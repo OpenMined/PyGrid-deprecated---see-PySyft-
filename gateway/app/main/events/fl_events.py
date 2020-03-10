@@ -153,7 +153,9 @@ def report(message: dict, socket) -> str:
         received_diffs_exceeds_max_worker = (
             False  # get this from persisted server_config for model_id and self._diffs
         )
-        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = (
+            True
+        )  # check cycle.cycle_time (but we should probably track cycle startime too)
         ready_to_avarege = (
             True
             if (
@@ -193,13 +195,13 @@ from functools import reduce
 def _average_plan_diffs(model_id, _diff_state):
     """ skeleton code
             Plan only
-            - x get cycle
-            - x check hash?
-            - x track how many has reported successfully
-            -   (add diffs) list of (worker_id, diff_from_this_worker)
-            - x check if we have enough diffs? vs. max_worker
-            - x if enough diffs => average every param => save as new model value => M_prime (save params new values)
-            - x new cycle & new checkpoint
+            - get cycle
+            - track how many has reported successfully
+            - get diffs: list of (worker_id, diff_from_this_worker) on cycle._diffs
+            - check if we have enough diffs? vs. max_worker
+            - if enough diffs => average every param (by turning tensors into python matrices, reduce sum using numpy, convert back to float tensor, torch.div by number of diffs)
+            - save as new model value => M_prime (save params new values)
+            - new cycle & new checkpoint
             - at this point new workers can join because a cycle for a model exists
     """
     sy.hook(globals())
@@ -207,26 +209,25 @@ def _average_plan_diffs(model_id, _diff_state):
     _model = processes[model_id]  # de-seriallize if needed
     _model_params = _model.get_params()
     _cycle = processes.get_cycle(model_id, _model.client_config.version)
+    diffs_to_average = range(len(_cycle.diffs))
 
     if len(_cycle.diffs) > _model.server_config.max_worker:
         # random select max
-        index_to_average = random.sample(
+        diffs_to_average = random.sample(
             range(len(_cycle.diffs)), _model.server_config.max_worker
         )
 
     raw_diffs = [
         [
             _cycle.diffs[diff_from_worker][model_param].tolist()
-            for diff_from_worker in range(_model.server_config.max_worker)
+            for diff_from_worker in diffs_to_average
         ]
         for model_param in range(len(_model_params))
     ]
 
     sums = [th.FloatTensor(reduce(np.add, [x for x in t_list])) for t_list in raw_diffs]
 
-    _updated_model_params = [
-        th.div(param, _model.server_config.max_worker) for param in sums
-    ]
+    _updated_model_params = [th.div(param, len(diffs_to_average)) for param in sums]
 
     model_params_state = State(
         owner=None,
