@@ -197,10 +197,10 @@ def _average_plan_diffs(model_id, _diff_state):
             - track how many has reported successfully
             - get diffs: list of (worker_id, diff_from_this_worker) on cycle._diffs
             - check if we have enough diffs? vs. max_worker
-            - if enough diffs => average every param (by turning tensors into python matrices, reduce sum using numpy, convert back to float tensor, torch.div by number of diffs)
+            - if enough diffs => average every param (by turning tensors into python matrices => reduce sum using numpy => convert back to float tensor => torch.div by number of diffs)
             - save as new model value => M_prime (save params new values)
-            - new cycle & new checkpoint
-            - at this point new workers can join because a cycle for a model exists
+            - create new cycle & new checkpoint
+            at this point new workers can join because a cycle for a model exists
     """
     sy.hook(globals())
 
