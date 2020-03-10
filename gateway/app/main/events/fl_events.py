@@ -153,9 +153,7 @@ def report(message: dict, socket) -> str:
         received_diffs_exceeds_max_worker = (
             False  # get this from persisted server_config for model_id and self._diffs
         )
-        cycle_ended = (
-            True
-        )  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
         ready_to_avarege = (
             True
             if (
