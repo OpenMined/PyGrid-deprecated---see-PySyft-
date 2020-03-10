@@ -79,7 +79,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         # Plan Model
         class Net(sy.Plan):
             def __init__(self):
-                super(Net, self).__init__(id="my-model")
+                super(Net, self).__init__()
                 self.fc1 = nn.Linear(2, 3)
                 self.fc2 = nn.Linear(3, 2)
                 self.fc3 = nn.Linear(2, 1)
@@ -124,16 +124,14 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
             "type": "federated/host-training",
             "data": {
                 "model": serialized_plan_model,
-                "plans": json.dumps(
-                    {
-                        "foo_1": serialized_plan_method_1,
-                        "foo_2": serialized_plan_method_2,
-                    }
-                ),
-                "protocols": json.dumps({"protocol_1": "serialized_protocol_mockup"}),
+                "plans": {
+                    "foo_1": serialized_plan_method_1,
+                    "foo_2": serialized_plan_method_2,
+                },
+                "protocols": {"protocol_1": "serialized_protocol_mockup"},
                 "averaging_plan": serialized_avg_plan,
-                "client_config": json.dumps(client_config),
-                "server_config": json.dumps(server_config),
+                "client_config": client_config,
+                "server_config": server_config,
             },
         }
 
@@ -157,7 +155,8 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         # "federated/cycle-request" request body
         req_cycle_msg = {
             "worker_id": worker_id,
-            "model": model.id,
+            "model": "my-federated-model",
+            "version": "0.1.0",
             "ping": 8,
             "download": 46.3,
             "upload": 23.7,
