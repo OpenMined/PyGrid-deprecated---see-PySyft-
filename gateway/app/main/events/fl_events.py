@@ -153,7 +153,9 @@ def report(message: dict, socket) -> str:
         received_diffs_exceeds_max_worker = (
             False  # get this from persisted server_config for model_id and self._diffs
         )
-        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = (
+            True
+        )  # check cycle.cycle_time (but we should probably track cycle startime too)
         ready_to_avarege = (
             True
             if (
@@ -223,7 +225,7 @@ def _average_plan_diffs(model_id, _diff_state):
         for model_param in range(len(_model_params))
     ]
 
-    sums = [th.FloatTensor(reduce(np.add, [x for x in t_list])) for t_list in raw_diffs]
+    sums = [reduce(th.add, [x for x in t_list]) for t_list in raw_diffs]
 
     _updated_model_params = [th.div(param, len(diffs_to_average)) for param in sums]
 
