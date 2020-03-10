@@ -157,7 +157,9 @@ def report(message: dict, socket) -> str:
         received_diffs_exceeds_max_worker = (
             False  # get this from persisted server_config for model_id and self._diffs
         )
-        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = (
+            True
+        )  # check cycle.cycle_time (but we should probably track cycle startime too)
         ready_to_avarege = (
             True
             if (
@@ -190,6 +192,8 @@ from syft.frameworks.torch.tensors.interpreters.placeholder import PlaceHolder
 import random
 import numpy as np
 from syft.serde import protobuf
+import syft as sy
+from functools import reduce
 
 
 def _average_plan_diffs(model_id, _diff_state):
@@ -204,6 +208,7 @@ def _average_plan_diffs(model_id, _diff_state):
             - x new cycle & new checkpoint
             - at this point new workers can join because a cycle for a model exists
     """
+    sy.hook(globals())
 
     _model = processes[model_id]  # de-seriallize if needed
     _model_params = _model.get_params()
@@ -215,24 +220,30 @@ def _average_plan_diffs(model_id, _diff_state):
             range(len(_cycle.diffs)), _model.server_config.max_worker
         )
 
-    _updated_model_params = [
-        th.div(
-            th.add(_cycle.diffs[diff_from_worker][model_param]), len(index_to_average)
-        )
-        for diff_from_worker in index_to_average
-        for model_param in _model_params
+    raw_diffs = [
+        [
+            _cycle.diffs[diff_from_worker][model_param].tolist()
+            for diff_from_worker in range(_model.server_config.max_worker)
+        ]
+        for model_param in range(len(_model_params))
     ]
 
-    # should be this pygrid instance, or do we not need it?
-    local_worker = None
+    sums = [th.FloatTensor(reduce(np.add, [x for x in t_list])) for t_list in raw_diffs]
+
+    _updated_model_params = [
+        th.div(param, _model.server_config.max_worker) for param in sums
+    ]
 
     model_params_state = State(
-        owner=local_worker,
+        owner=None,
         state_placeholders=[
             PlaceHolder().instantiate(_updated_model_params[param])
             for param in _updated_model_params
         ],
     )
+
+    # make fake local worker for serialization
+    local_worker = hook.local_worker
 
     pb = protobuf.serde._bufferize(local_worker, model_params_state)
     serialized_state = pb.SerializeToString()
