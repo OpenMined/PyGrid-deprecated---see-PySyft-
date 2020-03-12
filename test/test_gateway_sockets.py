@@ -54,7 +54,8 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
     async def test_socket_ping_alive(self):
         response = await send_ws_message({"type": "socket-ping", "data": {}})
         self.assertEqual(response, {"alive": "True"})
-
+    
+    @pytest.mark.skip
     async def test_fl_process(self):
         """ 1 - Host Federated Training """
         # Plan Functions
