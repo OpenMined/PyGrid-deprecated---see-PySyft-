@@ -37,7 +37,9 @@ def host_federated_training(message: dict, socket) -> str:
         serialized_client_protocols = {
             k: unhexlify(v.encode()) for k, v in data.get(CYCLE.PROTOCOLS, {}).items()
         }  # 0 or *
-        serialized_avg_plan = unhexlify(data.get(CYCLE.AVG_PLAN, None).encode())  # Only one
+        serialized_avg_plan = unhexlify(
+            data.get(CYCLE.AVG_PLAN, None).encode()
+        )  # Only one
         client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 

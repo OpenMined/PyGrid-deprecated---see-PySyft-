@@ -101,7 +101,7 @@ class TestDatabase(unittest.TestCase):
         self.db.session.commit()
 
     def testCreateFLProcess(self):
-        new_fl_process = models.FLProcess(id=randint(0, BIG_INT),)
+        new_fl_process = models.FLProcess(id=randint(0, BIG_INT))
 
         self.db.session.add(new_fl_process)
 

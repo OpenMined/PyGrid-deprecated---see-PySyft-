@@ -349,8 +349,7 @@ def download_model():
         _last_checkpoint = processes.get_model_checkpoint(id=model_id)
 
         return send_file(
-            io.BytesIO(_last_checkpoint.values),
-            mimetype='application/octet-stream'
+            io.BytesIO(_last_checkpoint.values), mimetype="application/octet-stream"
         )
 
     except InvalidRequestKeyError as e:
@@ -649,10 +648,7 @@ def download_plan():
             # TODO leave only list of ops plan
             pass
 
-        return send_file(
-            io.BytesIO(_plan.value),
-            mimetype='application/octet-stream'
-        )
+        return send_file(io.BytesIO(_plan.value), mimetype="application/octet-stream")
 
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
