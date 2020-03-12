@@ -273,10 +273,6 @@ class FLController:
         # Save model initial weights into ModelCheckpoint
         self._model_checkpoints.register(values=model, model=_model)
 
-        # Register new Plans into the database
-        for key, value in client_plans.items():
-            self._plans.register(name=key, value=value, plan_flprocess=fl_process)
-
         # Register new Protocols into the database
         for key, value in client_protocols.items():
             self._protocols.register(
@@ -284,7 +280,11 @@ class FLController:
             )
 
         # Register the average plan into the database
-        self._plans.register(value=value, avg_flprocess=fl_process, is_avg_plan=True)
+        self._plans.register(value=server_averaging_plan, avg_flprocess=fl_process, is_avg_plan=True)
+
+        # Register new Plans into the database
+        for key, value in client_plans.items():
+            self._plans.register(name=key, value=value, plan_flprocess=fl_process)
 
         # Register the client/server setup configs
         self._configs.register(
