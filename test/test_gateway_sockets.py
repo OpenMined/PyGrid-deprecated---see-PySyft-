@@ -98,7 +98,9 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         serialized_plan_method_2 = binascii.hexlify(serialize(foo_2)).decode()
         serialized_avg_plan = binascii.hexlify(serialize(avg_plan)).decode()
         serialized_plan_model = binascii.hexlify(serialize(model)).decode()
-        serialized_protocol_mockup = binascii.hexlify("serialized_protocol_mockup".encode("utf-8")).decode()
+        serialized_protocol_mockup = binascii.hexlify(
+            "serialized_protocol_mockup".encode("utf-8")
+        ).decode()
 
         # As mentioned at federated learning roadmap.
         # We're supposed to set up client / server configs
@@ -129,9 +131,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
                     "foo_1": serialized_plan_method_1,
                     "foo_2": serialized_plan_method_2,
                 },
-                "protocols": {
-                    "protocol_1": serialized_protocol_mockup
-                },
+                "protocols": {"protocol_1": serialized_protocol_mockup},
                 "averaging_plan": serialized_avg_plan,
                 "client_config": client_config,
                 "server_config": server_config,
