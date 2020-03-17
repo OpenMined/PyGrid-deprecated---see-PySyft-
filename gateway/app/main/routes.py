@@ -376,6 +376,7 @@ def auth():
     try:
         auth_token = request.args.get("auth_token", None)
         resp = fl_events_auth({"auth_token": auth_token}, None)
+        resp = json.loads(resp)["data"]
     except Exception as e:
         status_code = 401
         resp = {"error_auth_failed": e}
