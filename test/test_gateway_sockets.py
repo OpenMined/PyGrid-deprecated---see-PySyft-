@@ -150,7 +150,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         # Send worker authentication message
         response = await send_ws_message(auth_msg)
         self.assertEqual(response["data"]["status"], "success")
-        worker_id = response.get("worker_id", None)
+        worker_id = response["data"].get("worker_id", None)
 
         assert worker_id != None
 
