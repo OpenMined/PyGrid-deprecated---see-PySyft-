@@ -407,6 +407,7 @@ def report_diff():
     response_body = json.dumps(response_body)
     return Response(response_body, status=status_code, mimetype="application/json")
 
+
 def _get_model_hosting_nodes(model_id):
     """ Search all nodes if they are currently hosting the model.
 
