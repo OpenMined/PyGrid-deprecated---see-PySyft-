@@ -6,6 +6,7 @@ from ... import db
 
 import syft as sy
 
+
 class Model(db.Model):
     """ Model table that represents the AI Models.
         Columns:

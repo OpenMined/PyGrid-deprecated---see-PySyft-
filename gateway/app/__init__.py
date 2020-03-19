@@ -15,6 +15,7 @@ db = SQLAlchemy()
 executor = Executor()
 logging.getLogger().setLevel(logging.INFO)
 
+
 def set_database_config(app, test_config=None, verbose=False):
     """ Set configs to use SQL Alchemy library.
 
@@ -70,6 +71,7 @@ def create_app(debug=False, n_replica=None, test_config=None):
 
     # Register app blueprints
     from .main import main as main_blueprint, ws
+
     app.register_blueprint(main_blueprint)
     sockets.register_blueprint(ws, url_prefix=r"/")
 
@@ -83,7 +85,7 @@ def create_app(debug=False, n_replica=None, test_config=None):
 
     # Threads
     executor.init_app(app)
-    app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
+    app.config["EXECUTOR_PROPAGATE_EXCEPTIONS"] = True
     app.config["EXECUTOR_TYPE"] = "thread"
 
     return app

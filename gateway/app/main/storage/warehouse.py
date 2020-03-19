@@ -1,6 +1,7 @@
 from ... import db
 from sqlalchemy import func
 
+
 class Warehouse:
     def __init__(self, schema):
         self._schema = schema

@@ -9,6 +9,7 @@ from syft.execution.placeholder import PlaceHolder
 # see step 7
 # This serialization format will likely to change
 
+
 def unserialize_model_params(bin: bin):
     """Unserializes model or checkpoint or diff stored in db to list of tensors"""
     state = StatePB()
@@ -23,10 +24,7 @@ def serialize_model_params(params):
     """Serializes list of tensors into State/protobuf"""
     model_params_state = State(
         owner=None,
-        state_placeholders=[
-            PlaceHolder().instantiate(param)
-            for param in params
-        ],
+        state_placeholders=[PlaceHolder().instantiate(param) for param in params],
     )
 
     # make fake local worker for serialization

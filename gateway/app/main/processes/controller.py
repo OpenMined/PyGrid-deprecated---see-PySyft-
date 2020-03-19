@@ -22,6 +22,7 @@ import torch as th
 import json
 import logging
 
+
 class FLController:
     """ This class implements controller design pattern over the federated learning processes. """
 
@@ -72,10 +73,9 @@ class FLController:
                 model_checkpoint: ModelCheckpoint instance.
         """
 
-        #checkpoints_count = self._model_checkpoints.count(model_id=model_id)
+        # checkpoints_count = self._model_checkpoints.count(model_id=model_id)
         new_checkpoint = self._model_checkpoints.register(
-            model_id=model_id,
-            values=data
+            model_id=model_id, values=data
         )
         return new_checkpoint
 
@@ -88,7 +88,9 @@ class FLController:
                 cycle: Cycle Instance / None
         """
         if version:
-            _cycle = self._cycles.last(fl_process_id=fl_process_id, version=version, is_completed=False)
+            _cycle = self._cycles.last(
+                fl_process_id=fl_process_id, version=version, is_completed=False
+            )
         else:
             _cycle = self._cycles.last(fl_process_id=fl_process_id, is_completed=False)
 
@@ -346,7 +348,9 @@ class FLController:
 
     def add_worker_diff(self, worker_id: str, request_key: str, diff: bin):
         """Store reported diff"""
-        worker_cycle = self._worker_cycle.first(worker_id=worker_id, request_key=request_key)
+        worker_cycle = self._worker_cycle.first(
+            worker_id=worker_id, request_key=request_key
+        )
         if not worker_cycle:
             raise ProcessLookupError
 
@@ -367,14 +371,18 @@ class FLController:
             logging.info("cycle is already completed!")
             return
 
-        _server_config = self._configs.first(is_server_config=True, fl_process_id=cycle.fl_process_id)
+        _server_config = self._configs.first(
+            is_server_config=True, fl_process_id=cycle.fl_process_id
+        )
         server_config = _server_config.config
         logging.info("server_config: %s" % json.dumps(server_config, indent=2))
-        completed_cycles_num = self._worker_cycle.count(cycle_id=cycle_id, is_completed=True)
+        completed_cycles_num = self._worker_cycle.count(
+            cycle_id=cycle_id, is_completed=True
+        )
         logging.info("# of diffs: %d" % completed_cycles_num)
 
-        min_worker = server_config.get('min_worker', 3)
-        max_worker = server_config.get('max_worker', 3)
+        min_worker = server_config.get("min_worker", 3)
+        max_worker = server_config.get("max_worker", 3)
         received_diffs_exceeds_min_worker = completed_cycles_num >= min_worker
         received_diffs_exceeds_max_worker = completed_cycles_num >= max_worker
         cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
@@ -384,12 +392,12 @@ class FLController:
         # 'cycle end' condition should probably depend on cycle_length regardless of number of actual received diffs
         # another 'cycle end' condition can be based on min_diffs
         ready_to_average = (
-             True
-             if (
-                 (received_diffs_exceeds_max_worker or cycle_ended)
-                 and received_diffs_exceeds_min_worker
-             )
-             else False
+            True
+            if (
+                (received_diffs_exceeds_max_worker or cycle_ended)
+                and received_diffs_exceeds_min_worker
+            )
+            else False
         )
 
         no_protocol = True  # only deal with plans for now
@@ -431,11 +439,13 @@ class FLController:
         #    avg = avg_plan(avg, N, diff_N)
         # and the plan is:
         # avg_next = (avg_current*(N-1) + diff_N) / N
-        reports_to_average = self._worker_cycle.query(cycle_id=cycle.id, is_completed=True)
+        reports_to_average = self._worker_cycle.query(
+            cycle_id=cycle.id, is_completed=True
+        )
         diffs = [unserialize_model_params(report.diff) for report in reports_to_average]
 
         # Again, not sure max_workers == number of diffs to avg
-        diffs = random.sample(diffs, server_config.get('max_workers'))
+        diffs = random.sample(diffs, server_config.get("max_workers"))
 
         raw_diffs = [
             [diff[model_param] for diff in diffs]
@@ -451,9 +461,13 @@ class FLController:
 
         # apply avg diff!
         _updated_model_params = [
-            model_param - diff_param for model_param, diff_param in zip(model_params, diff_avg)
+            model_param - diff_param
+            for model_param, diff_param in zip(model_params, diff_avg)
         ]
-        logging.info("_updated_model_params shapes: %s" % str([p.shape for p in _updated_model_params]))
+        logging.info(
+            "_updated_model_params shapes: %s"
+            % str([p.shape for p in _updated_model_params])
+        )
 
         # make new checkpoint
         serialized_params = serialize_model_params(_updated_model_params)
@@ -464,9 +478,11 @@ class FLController:
         cycle.is_completed = True
         self._cycles.update()
 
-        completed_cycles_num = self._cycles.count(fl_process_id=cycle.fl_process_id, is_completed=True)
+        completed_cycles_num = self._cycles.count(
+            fl_process_id=cycle.fl_process_id, is_completed=True
+        )
         logging.info("completed_cycles_num: %d" % completed_cycles_num)
-        max_cycles = server_config.get('num_cycles')
+        max_cycles = server_config.get("num_cycles")
         if completed_cycles_num < max_cycles:
             # make new cycle
             _new_cycle = self.create_cycle(cycle.fl_process_id, cycle.version)

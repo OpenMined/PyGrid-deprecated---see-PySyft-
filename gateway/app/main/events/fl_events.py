@@ -152,14 +152,14 @@ def report(message: dict, socket) -> str:
         request_key = data.get(CYCLE.KEY, None)
 
         # It's simpler for client (and more efficient for bandwidth) to use base64
-        #diff = unhexlify()
+        # diff = unhexlify()
         diff = base64.b64decode(data.get(CYCLE.DIFF, None).encode())
 
         cycle_id = processes.add_worker_diff(worker_id, request_key, diff)
 
         # Run cycle end task async to we don't block report request
         # (for prod we probably should be replace this with Redis queue + separate worker)
-        run_task_once('complete_cycle', complete_cycle, processes, cycle_id)
+        run_task_once("complete_cycle", complete_cycle, processes, cycle_id)
 
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
