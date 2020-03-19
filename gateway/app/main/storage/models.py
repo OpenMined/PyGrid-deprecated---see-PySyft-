@@ -2,7 +2,7 @@ import datetime
 import json
 from flask_sqlalchemy import SQLAlchemy
 import uuid
-from ... import db
+from .. import db
 
 import syft as sy
 

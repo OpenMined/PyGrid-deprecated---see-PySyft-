@@ -1,6 +1,6 @@
 import traceback
 import logging
-from ... import executor
+from .. import executor
 
 
 def run_task_once(name, func, *args):

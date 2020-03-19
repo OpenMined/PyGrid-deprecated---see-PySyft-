@@ -7,11 +7,11 @@ from datetime import datetime
 
 from flask import Flask
 
-sys.path.append("./gateway/app/")
+sys.path.append(".")
 
 
 from flask_sqlalchemy import SQLAlchemy
-from main.storage import models
+from gateway.app.main.storage import models
 
 app = Flask(__name__)
 
@@ -88,7 +88,7 @@ class TestDatabase(unittest.TestCase):
             id=randint(0, BIG_INT),
             start=datetime(2019, 2, 21, 7, 29, 32, 45),
             sequence=randint(0, 100),
-            end=datetime(2019, 2, 22, 7, 29, 32, 45),
+            end=datetime(2019, 2, 22, 7, 29, 32, 45)
         )
 
         self.db.session.add(new_cycle)
