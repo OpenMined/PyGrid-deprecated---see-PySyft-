@@ -98,6 +98,9 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         serialized_plan_method_2 = binascii.hexlify(serialize(foo_2)).decode()
         serialized_avg_plan = binascii.hexlify(serialize(avg_plan)).decode()
         serialized_plan_model = binascii.hexlify(serialize(model)).decode()
+        serialized_protocol_mockup = binascii.hexlify(
+            "serialized_protocol_mockup".encode("utf-8")
+        ).decode()
 
         # As mentioned at federated learning roadmap.
         # We're supposed to set up client / server configs
@@ -128,7 +131,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
                     "foo_1": serialized_plan_method_1,
                     "foo_2": serialized_plan_method_2,
                 },
-                "protocols": {"protocol_1": "serialized_protocol_mockup"},
+                "protocols": {"protocol_1": serialized_protocol_mockup},
                 "averaging_plan": serialized_avg_plan,
                 "client_config": client_config,
                 "server_config": server_config,
@@ -137,7 +140,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
 
         # Send host_training message
         response = await send_ws_message(host_training_message)
-        self.assertEqual(response, {"status": "success"})
+        self.assertEqual(response["data"], {"status": "success"})
 
         """ 2 - Authentication Request """
 
@@ -146,8 +149,8 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
 
         # Send worker authentication message
         response = await send_ws_message(auth_msg)
-        self.assertEqual(response["status"], "success")
-        worker_id = response.get("worker_id", None)
+        self.assertEqual(response["data"]["status"], "success")
+        worker_id = response["data"].get("worker_id", None)
 
         assert worker_id != None
 
@@ -166,11 +169,12 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
 
         # Send worker authentication message
         response = await send_ws_message(message)
-        self.assertEqual(response["status"], "accepted")
+        self.assertEqual(response["data"]["status"], "accepted")
 
         response_fields = [
             "request_key",
             "model",
+            "version",
             "plans",
             "protocols",
             "client_config",
@@ -178,152 +182,4 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
 
         # Check if response fields are empty
         for field in response_fields:
-            assert response.get(field, None) != None
-
-    @pytest.mark.skip
-    async def test_type_get_protocol(self):
-        response = await get_protocol()
-        message_type = response.get("type")
-        self.assertEqual(message_type, "get-protocol")
-
-    @pytest.mark.skip
-    async def test_get_protocol_creator_role(self):
-        response = await get_protocol()
-
-        user = get_user(response)
-        role = user.get("role")
-
-        self.assertEqual(role, "creator")
-
-    @pytest.mark.skip
-    async def test_get_protocol_join_scope(self):
-        response = await get_protocol()
-
-        creator = get_user(response)
-        generated_scope_id = creator.get("scopeId")
-
-        response = await send_ws_message(
-            {
-                "type": "get-protocol",
-                "data": {"protocolId": "test-protocol", "scopeId": generated_scope_id},
-            }
-        )
-
-        participant = get_user(response)
-        role = participant.get("role")
-
-        self.assertEqual(role, "participant")
-
-    @pytest.mark.skip
-    async def test_protocol_id(self):
-        protocol_id = "not-fake-protocol-id"
-        response = await send_ws_message(
-            {"type": "get-protocol", "data": {"protocolId": protocol_id}}
-        )
-
-        user = get_user(response)
-        self.assertEqual(protocol_id, user.get("protocolId"))
-
-        creator = get_user(response)
-        generated_scope_id = creator.get("scopeId")
-
-        response = await send_ws_message(
-            {
-                "type": "get-protocol",
-                "data": {"protocolId": "test-protocol", "scopeId": generated_scope_id},
-            }
-        )
-
-        participant = get_user(response)
-        role = participant.get("role")
-
-        self.assertEqual(role, "participant")
-
-    @pytest.mark.skip
-    async def test_type_webrtc_join_room(self):
-        response = await get_protocol()
-
-        user = get_user(response)
-        worker_id = user.get("workerId")
-        scope_id = user.get("scopeId")
-        try:
-            response = await send_ws_message(
-                {
-                    "type": "webrtc: join-room",
-                    "data": {"workerId": worker_id, "scopeId": scope_id},
-                }
-            )
-        except:
-            pytest.fail("There was an error trying webrtc: join-room")
-        else:
-            self.assertEqual(response, None)
-
-    @pytest.mark.skip
-    async def test_webrtc_left_room(self):
-        response = await get_protocol()
-
-        user = get_user(response)
-        worker_id = user.get("workerId")
-        scope_id = user.get("scopeId")
-
-        await send_ws_message(
-            {
-                "type": "webrtc: join-room",
-                "data": {"workerId": worker_id, "scopeId": scope_id},
-            }
-        )
-
-        try:
-            response = await send_ws_message(
-                {
-                    "type": "webrtc: peer-left",
-                    "data": {"workerId": worker_id, "scopeId": scope_id},
-                }
-            )
-        except:
-            pytest.fail("There was an error trying webrtc: peer-left")
-        else:
-            self.assertEqual(response, None)
-
-    @pytest.mark.skip
-    async def test_webrtc_internal_message(self):
-        response = await get_protocol()
-
-        user = get_user(response)
-        scope_id = user.get("scopeId")
-
-        creator_id = user.get("workerId")
-
-        response = await send_ws_message(
-            {
-                "type": "get-protocol",
-                "data": {"protocol-id": "test-protocol", "scopeId": scope_id},
-            }
-        )
-
-        participant_id = get_user(response).get("workerId")
-
-        try:
-            response = await send_ws_message(
-                {
-                    "type": "webrtc: internal-message",
-                    "data": {
-                        "workerId": creator_id,
-                        "scopeId": scope_id,
-                        "to": participant_id,
-                        "type": "offer",
-                        "data": "some message here",
-                    },
-                }
-            )
-        except:
-            pytest.fail("There was an error trying webrtc: peer-left")
-        else:
-            self.assertEqual(response, None)
-
-    @pytest.mark.skip
-    async def test_invalid_message_type(self):
-        response = await send_ws_message(
-            {"type": "not-a-type", "data": {"protocol-id": "test-protocol"}}
-        )
-        self.assertEqual(response, {"error": "Invalid JSON format/field!"})
+            assert response["data"].get(field, None) != None

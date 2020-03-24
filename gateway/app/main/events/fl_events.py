@@ -1,15 +1,14 @@
 import uuid
 import json
 from binascii import unhexlify
-
 from .socket_handler import SocketHandler
-from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE
+from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
+from ..exceptions import CycleNotFoundError
 from ..processes import processes
 from ..auth import workers
-from syft.serde.serde import deserialize
-from .. import hook
+from ..tasks.cycle import complete_cycle, run_task_once
 import traceback
-
+import base64
 
 # Singleton socket handler
 handler = SocketHandler()
@@ -31,9 +30,15 @@ def host_federated_training(message: dict, socket) -> str:
         serialized_model = unhexlify(
             data.get(MSG_FIELD.MODEL, None).encode()
         )  # Only one
-        serialized_client_plans = data.get(CYCLE.PLANS, None)  # 1 or *
-        serialized_client_protocols = data.get(CYCLE.PROTOCOLS, None)  # 0 or *
-        serialized_avg_plan = data.get(CYCLE.AVG_PLAN, None)  # Only one
+        serialized_client_plans = {
+            k: unhexlify(v.encode()) for k, v in data.get(CYCLE.PLANS, {}).items()
+        }  # 1 or *
+        serialized_client_protocols = {
+            k: unhexlify(v.encode()) for k, v in data.get(CYCLE.PROTOCOLS, {}).items()
+        }  # 0 or *
+        serialized_avg_plan = unhexlify(
+            data.get(CYCLE.AVG_PLAN, None).encode()
+        )  # Only one
         client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
@@ -48,7 +53,9 @@ def host_federated_training(message: dict, socket) -> str:
         )
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
-        response[RESPONSE_MSG.ERROR] = str(e)
+        response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
+
+    response = {MSG_FIELD.TYPE: FL_EVENTS.HOST_FL_TRAINING, MSG_FIELD.DATA: response}
 
     return json.dumps(response)
 
@@ -80,6 +87,7 @@ def authenticate(message: dict, socket) -> str:
         response[CYCLE.STATUS] = RESPONSE_MSG.ERROR
         response[RESPONSE_MSG.ERROR] = str(e)
 
+    response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
     return json.dumps(response)
 
 
@@ -116,10 +124,14 @@ def cycle_request(message: dict, socket) -> str:
 
         # Assign
         response = processes.assign(name, version, worker, last_participation)
+    except CycleNotFoundError:
+        # Nothing to do
+        response[CYCLE.STATUS] = CYCLE.REJECTED
     except Exception as e:
         response[CYCLE.STATUS] = CYCLE.REJECTED
-        response[RESPONSE_MSG.ERROR] = str(e)
+        response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
 
+    response = {MSG_FIELD.TYPE: FL_EVENTS.CYCLE_REQUEST, MSG_FIELD.DATA: response}
     return json.dumps(response)
 
 
@@ -132,20 +144,26 @@ def report(message: dict, socket) -> str:
         Returns:
             response : String response to the client
     """
-    # data = message[MSG_FIELD.DATA]
+    data = message[MSG_FIELD.DATA]
     response = {}
 
     try:
-        # model_id = data.get(MSG_FIELD.MODEL, None)
-        # request_key = data.get(CYCLE.KEY, None)
-        # diff = data.get(CYCLE.DIFF, None)
+        worker_id = data.get(MSG_FIELD.WORKER_ID, None)
+        request_key = data.get(CYCLE.KEY, None)
 
-        # TODO:
-        # Perform Secure Aggregation
-        # Update Model weights
+        # It's simpler for client (and more efficient for bandwidth) to use base64
+        # diff = unhexlify()
+        diff = base64.b64decode(data.get(CYCLE.DIFF, None).encode())
+
+        cycle_id = processes.add_worker_diff(worker_id, request_key, diff)
+
+        # Run cycle end task async to we don't block report request
+        # (for prod we probably should be replace this with Redis queue + separate worker)
+        run_task_once("complete_cycle", complete_cycle, processes, cycle_id)
 
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
-        response[RESPONSE_MSG.ERROR] = str(e)
+        response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
 
+    response = {MSG_FIELD.TYPE: FL_EVENTS.REPORT, MSG_FIELD.DATA: response}
     return json.dumps(response)

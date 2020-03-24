@@ -7,11 +7,11 @@ from datetime import datetime
 
 from flask import Flask
 
-sys.path.append("./gateway/app/")
+sys.path.append(".")
 
 
 from flask_sqlalchemy import SQLAlchemy
-from main.storage import models
+from gateway.app.main.storage import models
 
 app = Flask(__name__)
 
@@ -29,8 +29,8 @@ class TestDatabase(unittest.TestCase):
     def testCreatePlan(self):
         my_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
         )
         self.db.session.add(my_plan)
         self.db.session.commit()
@@ -38,8 +38,8 @@ class TestDatabase(unittest.TestCase):
     def testCreateProtocol(self):
         my_protocol = models.Protocol(
             id=randint(0, BIG_INT),
-            value="list of protocol values",
-            value_ts="torchscript(protocol)",
+            value="list of protocol values".encode("utf-8"),
+            value_ts="torchscript(protocol)".encode("utf-8"),
         )
         self.db.session.add(my_protocol)
         self.db.session.commit()
@@ -101,7 +101,7 @@ class TestDatabase(unittest.TestCase):
         self.db.session.commit()
 
     def testCreateFLProcess(self):
-        new_fl_process = models.FLProcess(id=randint(0, BIG_INT),)
+        new_fl_process = models.FLProcess(id=randint(0, BIG_INT))
 
         self.db.session.add(new_fl_process)
 
@@ -111,8 +111,8 @@ class TestDatabase(unittest.TestCase):
 
         avg_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             avg_flprocess=new_fl_process,
         )
 
@@ -120,8 +120,8 @@ class TestDatabase(unittest.TestCase):
 
         training_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             plan_flprocess=new_fl_process,
         )
 
@@ -129,8 +129,8 @@ class TestDatabase(unittest.TestCase):
 
         validation_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             plan_flprocess=new_fl_process,
         )
 
@@ -138,8 +138,8 @@ class TestDatabase(unittest.TestCase):
 
         protocol_1 = models.Protocol(
             id=randint(0, BIG_INT),
-            value="list of protocol values",
-            value_ts="torchscript(protocol)",
+            value="list of protocol values".encode("utf-8"),
+            value_ts="torchscript(protocol)".encode("utf-8"),
             protocol_flprocess=new_fl_process,
         )
 
@@ -147,8 +147,8 @@ class TestDatabase(unittest.TestCase):
 
         protocol_2 = models.Protocol(
             id=randint(0, BIG_INT),
-            value="list of protocol values",
-            value_ts="torchscript(protocol)",
+            value="list of protocol values".encode("utf-8"),
+            value_ts="torchscript(protocol)".encode("utf-8"),
             protocol_flprocess=new_fl_process,
         )
 
@@ -218,8 +218,8 @@ class TestDatabase(unittest.TestCase):
 
         avg_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             avg_flprocess=new_fl_process,
         )
 
@@ -227,8 +227,8 @@ class TestDatabase(unittest.TestCase):
 
         training_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             plan_flprocess=new_fl_process,
         )
 
@@ -236,8 +236,8 @@ class TestDatabase(unittest.TestCase):
 
         validation_plan = models.Plan(
             id=randint(0, BIG_INT),
-            value="list of plan values",
-            value_ts="torchscript(plan)",
+            value="list of plan values".encode("utf-8"),
+            value_ts="torchscript(plan)".encode("utf-8"),
             plan_flprocess=new_fl_process,
         )
 
@@ -245,8 +245,8 @@ class TestDatabase(unittest.TestCase):
 
         protocol = models.Protocol(
             id=randint(0, BIG_INT),
-            value="list of protocol values",
-            value_ts="torchscript(protocol)",
+            value="list of protocol values".encode("utf-8"),
+            value_ts="torchscript(protocol)".encode("utf-8"),
             protocol_flprocess=new_fl_process,
         )
 

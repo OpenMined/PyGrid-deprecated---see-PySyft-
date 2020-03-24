@@ -2,7 +2,7 @@
     All Gateway routes (REST API).
 """
 
-from flask import render_template, Response, request, current_app
+from flask import render_template, Response, request, current_app, send_file
 from math import floor
 import numpy as np
 from scipy.stats import poisson
@@ -12,10 +12,12 @@ import random
 import os
 import requests
 import logging
+import io
 
 from .storage.manager import register_new_node, connected_nodes, delete_node
 from .processes import processes
 from .events import handler
+from .events.fl_events import authenticate as fl_events_auth
 from .auth import workers
 from .events.fl_events import cycle_request, report
 from .exceptions import InvalidRequestKeyError, PyGridError
@@ -345,9 +347,12 @@ def download_model():
         if not _accepted:
             raise InvalidRequestKeyError
 
-        _last_checkpoint = processes.get_model_checkpoint(id=model_id)
-        status_code = 200  # Success
-        response_body[MSG_FIELD.MODEL] = _last_checkpoint
+        _last_checkpoint = processes.get_model_checkpoint(model_id=model_id)
+
+        return send_file(
+            io.BytesIO(_last_checkpoint.values), mimetype="application/octet-stream"
+        )
+
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -356,32 +361,51 @@ def download_model():
         response_body[RESPONSE_MSG.ERROR] = str(e)
     except Exception as e:
         status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG] = str(e)
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
     )
 
 
+@main.route("/federated/authenticate", methods=["POST"])
+def auth():
+    """returns worker_id !!!currently!!! does not have auth logic"""
+    response_body = {}
+    status_code = 200
+    try:
+        auth_token = request.args.get("auth_token", None)
+        resp = fl_events_auth({"auth_token": auth_token}, None)
+        resp = json.loads(resp)["data"]
+    except Exception as e:
+        status_code = 401
+        resp = {"error_auth_failed": e}
+    return Response(json.dumps(resp), status=status_code, mimetype="application/json")
+
+
 @main.route("/federated/report", methods=["POST"])
 def report_diff():
     """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
-    response_body = {"message": None}
+    response_body = {}
+    status_code = None
 
     try:
-        data = json.loads(request.data)
+        body = json.loads(request.data)
+        response_body = report({MSG_FIELD.DATA: body}, None)
+    except PyGridError or json.decoder.JSONDecodeError as e:
+        status_code = 400  # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        response_body = json.dumps(response_body)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
-        resp = report({"data": data}, None)
+    if isinstance(response_body, str):
+        # Consider just data field as a response
+        response_body = json.loads(response_body)[MSG_FIELD.DATA]
 
-        return Response(resp, status=200, mimetype="application/json")
-
-    # JSON format not valid.
-    except ValueError or KeyError as e:
-        return Response(
-            json.dumps({"message": INVALID_JSON_FORMAT_MESSAGE}),
-            status=400,
-            mimetype="application/json",
-        )
+    response_body = json.dumps(response_body)
+    return Response(response_body, status=status_code, mimetype="application/json")
 
 
 def _get_model_hosting_nodes(model_id):
@@ -412,7 +436,7 @@ def worker_cycle_request():
 
     try:
         body = json.loads(request.data)
-        response_body = cycle_request({"data": body}, None)
+        response_body = cycle_request({MSG_FIELD.DATA: body}, None)
     except PyGridError or json.decoder.JSONDecodeError as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -421,9 +445,11 @@ def worker_cycle_request():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    if isinstance(response_body, dict):
-        response_body = json.dumps(response_body)
+    if isinstance(response_body, str):
+        # Consider just data field as a response
+        response_body = json.loads(response_body)[MSG_FIELD.DATA]
 
+    response_body = json.dumps(response_body)
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
@@ -627,8 +653,8 @@ def download_plan():
         receive_operations_as = request.args.get("receive_operations_as", None)
 
         # Retrieve Process Entities
-        _plan = processes.get_plan(name=plan_id)
-        _cycle = processes.get_cycle(_plan.fl_process_id)
+        _plan = processes.get_plan(id=plan_id, is_avg_plan=False)
+        _cycle = processes.get_cycle(fl_process_id=_plan.fl_process_id)
         _worker = workers.get(id=worker_id)
         _accepted = processes.validate(_worker.id, _cycle.id, request_key)
 
@@ -638,9 +664,14 @@ def download_plan():
         status_code = 200  # Success
 
         if receive_operations_as == "torchscript":
-            response_body[CYCLE.PLANS] = _plan.value_ts
+            # TODO leave only torchscript plan
+            pass
         else:
-            response_body[CYCLE.PLANS] = _plan.value
+            # TODO leave only list of ops plan
+            pass
+
+        return send_file(io.BytesIO(_plan.value), mimetype="application/octet-stream")
+
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -649,7 +680,7 @@ def download_plan():
         response_body[RESPONSE_MSG.ERROR] = str(e)
     except Exception as e:
         status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG] = str(e)
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
