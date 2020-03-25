@@ -25,6 +25,11 @@ To install docker the dependencies, just follow [docker documentation](https://d
 ### Start Grid platform locally
 
 #### Using Docker
+
+The latest PyGrid Gateway and Node images are available on the Docker Hub.
+- PyGrid Gateway - `openmined/grid-node`
+- PyGrid Node - `openmined/grid-node`
+
 It will download the latest openmined's docker images and start a grid platform with 1 gateway and 4 grid nodes.
 **PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
 ```
@@ -61,7 +66,6 @@ $ docker build -t openmined/grid-node ./app/websocket/  # Build PyGrid node imag
 $ docker build -t openmined/grid-gateway ./gateway/  # Build gateway image
 ```
 
-
 ## Try out the Tutorials
 A comprehensive list of tutorials can be found [here](https://github.com/OpenMined/PySyft/tree/master/examples/tutorials/grid).
 
@@ -70,7 +74,7 @@ These tutorials cover how to create a PyGrid node and what operations you can pe
 ## Start Contributing
 The guide for contributors can be found [here](https://github.com/OpenMined/PyGrid/tree/dev/CONTRIBUTING.md). It covers all that you need to know to start contributing code to PyGrid in an easy way.
 
-Also join the rapidly growing community of 6500+ on [Slack](http://slack.openmined.org). The slack community is very friendly and great about quickly answering questions about the use and development of PyGrid/PySyft!
+Also join the rapidly growing community of 7300+ on [Slack](http://slack.openmined.org). The slack community is very friendly and great about quickly answering questions about the use and development of PyGrid/PySyft!
 
 We also have a Github Project page for a Federated Learning MVP [here](https://github.com/orgs/OpenMined/projects/13).  
 You can check the PyGrid's official development and community roadmap [here](https://github.com/OpenMined/Roadmap/tree/master/pygrid_team).
@@ -78,7 +82,6 @@ You can check the PyGrid's official development and community roadmap [here](htt
 ## High-level Architecture
 
 ![High-level Architecture](https://raw.githubusercontent.com/OpenMined/PyGrid/dev/art/PyGrid-Arch.png)
-
 
 
 ## Disclaimer
