@@ -43,3 +43,19 @@ raw_env = [
     'DATABASE_URL=sqlite:///databasegateway.db',
 ]
 ```
+
+### Docker
+
+The latests PyGrid Gateway images are available on Docker Hub  
+
+PyGrid Gateway Docker image - `openmined/grid-gateway`
+
+#### Pulling images
+```
+$ docker pull openmined/grid-gateway  # Download gateway image
+```
+
+#### Build your own PyGrid Gateway image
+```
+$ docker build openmined/grid-gateway  # Build gateway image
+```
