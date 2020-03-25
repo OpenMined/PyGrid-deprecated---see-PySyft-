@@ -22,12 +22,19 @@ PyGrid is a peer-to-peer network of data owners and data scientists who can coll
 To boot the entire PyGrid platform locally, we will use docker containers.
 To install docker the dependencies, just follow [docker documentation](https://docs.docker.com/install/).
 
-#### Start Grid platform locally
+### Start Grid platform locally
+
+#### Using Docker
 It will download the latest openmined's docker images and start a grid platform with 1 gateway and 4 grid nodes.
 **PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
 ```
 $ docker-compose up
 ```
+If you want to rebuild and run the images, you just need to add the `--build` param when running `docker-compose up`
+```
+$ docker-compose up --build
+```
+
 
 On MacOS, you have to work-around the lack of support for `network_mode: host` in Docker for Mac by adding following to your `/etc/hosts`
 ```
@@ -37,10 +44,18 @@ and running:
 ```
 $ docker-compose -f docker-compose-mac.yml up
 ```
-#### Kubernetes deployment.
+
+#### Starting manually
+Start the grid platform manually with 1 gateway and how many grid nodes you want.  
+
+- **PyGrid Gateway** - Check out the instructions under [`/gateway`](./gateway)
+
+- **PyGrid Node** - Check out the instructions under [`/app/websocket`](./app/websocket)
+
+### Kubernetes deployment.
 You can now deploy the grid-gateway and grid-node docker containers on kubernetes. This can be either to a local (minikube) cluster or a remote cluster (GKE, EKS, AKS etc). The steps to setup the cluster can be found in [./k8s/Readme.md](https://github.com/OpenMined/PyGrid/tree/dev/k8s)
 
-#### Build your own images
+### Build your own images
 ```
 $ docker build -t openmined/grid-node ./app/websocket/  # Build PyGrid node image
 $ docker build -t openmined/grid-gateway ./gateway/  # Build gateway image
