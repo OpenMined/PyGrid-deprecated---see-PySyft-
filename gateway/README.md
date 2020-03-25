@@ -13,6 +13,7 @@ To start a grid gateway using python, run:
 python gateway.py 
 ```
 You can pass the arguments or use environment variables to set the gateway configs.  
+
 **Arguments**
 ```
   -h, --help                shows the help message and exit
