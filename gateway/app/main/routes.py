@@ -380,7 +380,7 @@ def connection_speed_test():
         # If GET method
         if request.method == "GET":
             response_body = _test_download()
-        else: # Otherwise, it's POST method
+        else:  # Otherwise, it's POST method
             response_body = _test_upload()
 
     except InvalidRequestKeyError as e:
@@ -401,7 +401,7 @@ def connection_speed_test():
 # Auxiliar methods to check download / upload rate
 def _test_download():
     """ Test worker download rate. """
-    return {}}
+    return {}
 
 
 def _test_upload():
