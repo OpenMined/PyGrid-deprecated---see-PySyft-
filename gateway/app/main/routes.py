@@ -368,6 +368,55 @@ def download_model():
     )
 
 
+@main.route("/federated/speed-test", methods=["GET", "POST"])
+def connection_speed_test():
+    """ Connection speed test. """
+    response_body = {}
+    status_code = None
+    try:
+        worker_id = request.args.get("worker_id", None)
+        request_key = request.args.get("request_key", None)
+
+        _worker_cycles = processes._worker_cycle.query(worker_id=worker_id)
+
+        _accepted = False
+        for cycle in _worker_cycles:
+            if cycle.request_key == request_key:
+                _accepted = True
+
+        # If request key doesn't match with any worker cycle, raise an exception
+        if not _accepted:
+            raise InvalidRequestKeyError
+        
+        # If GET method
+        if request.method == "GET":
+            response_body = _test_download()
+        else: # Otherwise, it's POST method
+            response_body = _test_upload()
+
+    except InvalidRequestKeyError as e:
+        status_code = 401  # Unauthorized
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except PyGridError as e:
+        status_code = 400 # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    return Response(
+        json.dumps(response_body), status_code=status_code, mimetype="application/json"
+    )
+
+# Auxiliar methods to check download / upload rate
+def _test_download():
+    """ Test worker download rate. """
+    return None
+
+def _test_upload():
+    """ Test worker's upload rate. """
+    return None
+
 @main.route("/federated/authenticate", methods=["POST"])
 def auth():
     """returns worker_id !!!currently!!! does not have auth logic"""
