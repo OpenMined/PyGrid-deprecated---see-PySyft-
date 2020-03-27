@@ -1,27 +1,28 @@
+aiounittest==1.3.1
 black
 coverage
-Flask
-numpy>=1.14.0
-pre-commit
-pytest
-requests
-websocket_client
-websockets>=7.0
 eventlet==0.25.0
-requests-toolbelt==0.9.1
-flask_sqlalchemy
-flask_migrate
-flask_testing
+Flask
 flask_cors
+flask_cors
+flask_login
+flask_login
+flask_migrate
+flask_sockets
+flask_sqlalchemy
+flask_testing
 gevent
 gevent-websocket
-flask_sockets
-flask_login
+numpy>=1.14.0
 pbr
-syft_proto
-flask_cors
-flask_login
+pre-commit
+pyjwt
+pytest
 redis
-aiounittest==1.3.1
--e git+https://github.com/OpenMined/syft-proto@master#egg=syft_proto
+requests
+requests-toolbelt==0.9.1
 -e git+https://github.com/OpenMined/PySyft@master#egg=syft
+syft_proto
+-e git+https://github.com/OpenMined/syft-proto@master#egg=syft_proto
+websocket_client
+websockets>=7.0
