@@ -22,6 +22,8 @@ from .auth import workers
 from .events.fl_events import cycle_request, report
 from .exceptions import InvalidRequestKeyError, PyGridError
 from .codes import MSG_FIELD, CYCLE, RESPONSE_MSG
+from requests_toolbelt import MultipartEncoder
+
 
 # All grid nodes registered at grid network will be stored here
 grid_nodes = {}
@@ -373,19 +375,19 @@ def connection_speed_test():
     """ Connection speed test. """
     response_body = {}
     status_code = None
+
     try:
         _worker_id = request.args.get("worker_id", None)
         _random = request.args.get("random", None)
 
         # If GET method
         if request.method == "GET":
-            response_body = _test_download()
+            form = _test_download(request)
+            return Response(form.to_string(), mimetype=form.content_type)
         else:  # Otherwise, it's POST method
-            response_body = _test_upload()
+            status_code = _test_upload(request)
+            return Response(status_code=status_code)
 
-    except InvalidRequestKeyError as e:
-        status_code = 401  # Unauthorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
     except PyGridError as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -399,14 +401,27 @@ def connection_speed_test():
 
 
 # Auxiliar methods to check download / upload rate
-def _test_download():
+def _test_download(request):
     """ Test worker download rate. """
-    return {}
+    # Download data sample (1MB)
+    data_sample = b"x" * 1048576  # 1 Megabyte
+    response = {"sample": data_sample}
+    form = MultipartEncoder(response)
+
+    return form
 
 
-def _test_upload():
+def _test_upload(request):
     """ Test worker's upload rate. """
-    return {}
+    # Upload client data sample
+    status_code = None
+
+    if request.files:
+        _sample = request.files.read().decode("utf-8")
+    else:
+        raise PyGridError
+
+    return 200  # Success
 
 
 @main.route("/federated/authenticate", methods=["POST"])
