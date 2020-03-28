@@ -4,7 +4,6 @@ eventlet==0.24.1
 gunicorn==19.9.0
 Flask-Cors==3.0.7
 Flask-Executor==0.9.3
-Flask-SocketIO==4.2.1
 itsdangerous==1.1.0
 Flask-Sockets==0.2.1
 Jinja2==2.10.1
