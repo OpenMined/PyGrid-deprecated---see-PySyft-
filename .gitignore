@@ -4,6 +4,8 @@
 .eggs/
 build/
 dist/
+gateway/src/syft/
+src/syft/
 *.swp
 grid.egg-info/
 *.ipynb_checkpoints*
@@ -22,6 +24,7 @@ ipfs.log*
 notebooks/ipfs.log
 .pytest_cache
 .idea/*
+.vscode
 venv/
 test_flask_grid_server.db
 

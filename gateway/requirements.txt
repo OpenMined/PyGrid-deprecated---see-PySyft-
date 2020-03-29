@@ -15,4 +15,5 @@ flask_sqlalchemy
 flask_migrate
 flask_testing
 psycopg2-binary
-git+https://github.com/OpenMined/PySyft@master#egg=syft
+git+git://github.com/OpenMined/syft-proto@vvm/torchscript-plan#egg=syft_proto
+git+https://github.com/OpenMined/PySyft@vvm/torchscript-plan#egg=syft
