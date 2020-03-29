@@ -14,7 +14,7 @@ from syft.grid.private_grid import PrivateGridNetwork
 
 hook = sy.TorchHook(th)
 
-
+"""
 class PublicGridAPITest(unittest.TestCase):
     def setUp(self):
         nodes = list(self.connect_nodes().values())
@@ -325,3 +325,5 @@ class PublicGridAPITest(unittest.TestCase):
 
         search_nothing = self.public_grid.search("#nothing")
         self.assertEqual(len(search_nothing), 0)
+"""
+

@@ -7,9 +7,6 @@ import syft
 from syft.workers.node_client import NodeClient
 from syft.grid.public_grid import PublicGridNetwork
 
-# We need to add our rest api as a path since it is a separate application
-# deployed on Heroku:
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)) + "/../app/pg_rest_api")
 
 from . import IDS, PORTS, GATEWAY_URL, GATEWAY_PORT
 import time
@@ -69,6 +66,7 @@ def init_gateway():
     p.terminate()
 
 
+"""
 @pytest.fixture(scope="session", autouse=True)
 def init_nodes(node_infos):
     BASEDIR = os.path.dirname(os.path.dirname(__file__))
@@ -126,6 +124,7 @@ def grid_network(hook):
     yield my_grid
 
     my_grid.disconnect_nodes()
+"""
 
 
 @pytest.fixture(scope="session", autouse=True)
