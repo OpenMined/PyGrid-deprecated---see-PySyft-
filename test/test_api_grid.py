@@ -326,4 +326,3 @@ class PublicGridAPITest(unittest.TestCase):
         search_nothing = self.public_grid.search("#nothing")
         self.assertEqual(len(search_nothing), 0)
 """
-

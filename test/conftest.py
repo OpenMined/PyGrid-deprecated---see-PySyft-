@@ -3,6 +3,7 @@ import torch
 from multiprocessing import Process
 import os
 import sys
+
 import syft
 from syft.workers.node_client import NodeClient
 from syft.grid.public_grid import PublicGridNetwork
@@ -10,6 +11,7 @@ from syft.grid.public_grid import PublicGridNetwork
 
 from . import IDS, PORTS, GATEWAY_URL, GATEWAY_PORT
 import time
+
 import requests
 import json
 
