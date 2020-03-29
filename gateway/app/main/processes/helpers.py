@@ -15,6 +15,7 @@ from syft.execution.placeholder import PlaceHolder
 # Make fake local worker for serialization
 worker = sy.VirtualWorker(hook=None)
 
+
 def unserialize_model_params(bin: bin):
     """Unserializes model or checkpoint or diff stored in db to list of tensors"""
     state = StatePB()
@@ -52,9 +53,7 @@ def serialize_plan(plan: "Plan"):
 
 def translate_plan(plan: "Plan", variant: str):
     """Translate Plan to specified variant"""
-    translators = {
-        "torchscript": PlanTranslatorTorchscript
-    }
+    translators = {"torchscript": PlanTranslatorTorchscript}
     translator_cls = translators.get(variant, None)
 
     if translator_cls is None:
