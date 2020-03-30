@@ -380,14 +380,12 @@ def auth():
     model_name = data.get("model_name", None)
 
     """stub DB vars"""
-    JWT_VERIFY_API = (
-        "localhost:5000/federated/rt_true"
-    )  # maybe processes._processes.last()["server_config"].get("JWT_VERIFY_API", None)
+    JWT_VERIFY_API = "localhost:5000/federated/rt_true"  # maybe processes._processes.last()["server_config"].get("JWT_VERIFY_API", None)
     SECRET = (
-        "very long a$$ very secret key phrase"
-    )  #  TODO:@PRTFW remove after hookup to DB
+        "very long a$$ very secret key phrase"  #  TODO:@PRTFW remove after hookup to DB
+    )
     # maybe processes._processes.last(name=model_name)["server_config"].get("JWT_SECRET", "very long a$$ very secret key phrase")
-    RSA = True
+    RSA = False
     if RSA:
         pub_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAswWWr/kU9Z5kj7KIQEs54B9x1MaEhEp4WDZPJ+PGONfg2tD4BKuGtDl345f4zgx7EPZL7EZRApLq6HxcznVbLleIbyqKkzvR88zHLBaxQ9GBRx+0kH8VqZspmMI/6fDBVm/SDtG1GOAYPwX1zK3DZZFMkkA2v8oGZ3U791jd9gy7S5CxewJrFMcFMStj9x8x3tW07OAdC7/HZpa5zKE2rWN01tytxbsl9/coMNBAfWIWEflhZgRz2+Onp2uDaXez7RNTe4m0+tQlx2FD0Pb7rFvlKwsgziKBReO8wwCQXWqcAPLsIXCOfUZXlBNpvPvp9I4HPEffaHyR1FC2eRoj4hzUibEu0+OQNj7QM5P9KsMV9k4wxURFxsd78rlFF8cnbKwIMf5nB8/FbqL/IyJOggxtntHr1Gum44QnG794GtSQHZNlWKKak2z/u2O++flxfZ9dBBAYWjJYM5kIT+X9NVYbWWryBqupHYipwP8f3vovKWVacOMMm3S0z76O5IDiIp5Gjnsifbnz57FWQok0HrSv8l3QMRPCxi3SjIFyI2ZusFC/4VLy9zZXQe07qI6l7s91UN6W8VW1YUFQ7nLGffkpAd/bLZSOueYQrf5tslQjZf3Jon5C/MkTJ7PGyOUmoAYya2kyKi4izMg/ODRIloVbWjU6tEPWyhzK8VMsXw== root@388da63cf68e"
         # maybe processes._processes.last(name=model_name)["server_config"].get("pub_key", None)
@@ -474,10 +472,7 @@ def auth():
     except Exception as e:
         status_code = 401
         print(e, flush=True)
-        response_body = {
-            "error_auth_failed": str(e)
-            + " | please check token encoding (expects base64)"
-        }
+        response_body = {"error_auth_failed": str(e)}
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
