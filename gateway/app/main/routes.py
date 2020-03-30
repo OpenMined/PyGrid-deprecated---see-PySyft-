@@ -471,7 +471,6 @@ def auth():
             )
     except Exception as e:
         status_code = 401
-        print(e, flush=True)
         response_body = {"error_auth_failed": str(e)}
 
     return Response(
