@@ -393,7 +393,7 @@ def auth():
     """end stub DB vars"""
 
     HIGH_SECURITY_RISK_NO_AUTH_FLOW = (
-        False if JWT_VERIFY_API is not None else False
+        False if JWT_VERIFY_API is not None else True
     )  #  TODO:@PRTFW change to True after dev phase
 
     try:
@@ -455,7 +455,7 @@ def auth():
         verification_result = requests.get(
             "http://google.com"
         )  # test with get and google for now. using .post should result in failure
-        # TODO:@MADDIE replace with after we have a api to test with verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))
+        # TODO:@MADDIE replace after we have a api to test with `verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))`
         if verification_result.status_code == 200:
             resp = fl_events_auth({"auth_token": _auth_token}, None)
             response_body = json.loads(resp)["data"]
