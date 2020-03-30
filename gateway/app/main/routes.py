@@ -392,9 +392,7 @@ def auth():
 
     """end stub DB vars"""
 
-    HIGH_SECURITY_RISK_NO_AUTH_FLOW = (
-        False if JWT_VERIFY_API is not None else True
-    )  #  TODO:@PRTFW change to True after dev phase
+    HIGH_SECURITY_RISK_NO_AUTH_FLOW = False if JWT_VERIFY_API is not None else True
 
     try:
         if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
