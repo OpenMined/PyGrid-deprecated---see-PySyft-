@@ -370,51 +370,37 @@ def download_model():
     )
 
 
-"""
-    ENV VARS for 3rd party oAUTH FLOW
-"""
-
-# This variable MUST point to a function that handles 3rd party oAUTH (type: )
-# the function MUST have the following siguature:
-# def custom_oAuth_function(auth_token: Union[str, None] = None) -> bool:
-#   """ processes auth_token; returns True if token is verified and False otherwise"""
-#   pass
-
-
-def dummy_3rd_party_oAuth(auth_token):
-    return True
-
-
-_oAUTH_Handler_function = dummy_3rd_party_oAuth
-
-
 @main.route("/federated/authenticate", methods=["POST"])
-def auth(
-    oAUTH_Handler_function: Union[Callable[..., bool], None] = _oAUTH_Handler_function
-):
-
+def auth():
+    """uses JWT (HSA/RSA) to authenticate"""
     response_body = {}
     status_code = 200
     data = json.loads(request.data)
     _auth_token = data["auth_token"]
-    model_name = data["model_name"]
+    model_name = data.get("model_name", None)
+
+    """stub DB vars"""
+    JWT_VERIFY_API = (
+        "localhost:5000/federated/rt_true"
+    )  # maybe processes._processes.last()["server_config"].get("JWT_VERIFY_API", None)
+    SECRET = (
+        "very long a$$ very secret key phrase"
+    )  #  TODO:@PRTFW remove after hookup to DB
+    # maybe processes._processes.last(name=model_name)["server_config"].get("JWT_SECRET", "very long a$$ very secret key phrase")
+    RSA = True
+    if RSA:
+        pub_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAswWWr/kU9Z5kj7KIQEs54B9x1MaEhEp4WDZPJ+PGONfg2tD4BKuGtDl345f4zgx7EPZL7EZRApLq6HxcznVbLleIbyqKkzvR88zHLBaxQ9GBRx+0kH8VqZspmMI/6fDBVm/SDtG1GOAYPwX1zK3DZZFMkkA2v8oGZ3U791jd9gy7S5CxewJrFMcFMStj9x8x3tW07OAdC7/HZpa5zKE2rWN01tytxbsl9/coMNBAfWIWEflhZgRz2+Onp2uDaXez7RNTe4m0+tQlx2FD0Pb7rFvlKwsgziKBReO8wwCQXWqcAPLsIXCOfUZXlBNpvPvp9I4HPEffaHyR1FC2eRoj4hzUibEu0+OQNj7QM5P9KsMV9k4wxURFxsd78rlFF8cnbKwIMf5nB8/FbqL/IyJOggxtntHr1Gum44QnG794GtSQHZNlWKKak2z/u2O++flxfZ9dBBAYWjJYM5kIT+X9NVYbWWryBqupHYipwP8f3vovKWVacOMMm3S0z76O5IDiIp5Gjnsifbnz57FWQok0HrSv8l3QMRPCxi3SjIFyI2ZusFC/4VLy9zZXQe07qI6l7s91UN6W8VW1YUFQ7nLGffkpAd/bLZSOueYQrf5tslQjZf3Jon5C/MkTJ7PGyOUmoAYya2kyKi4izMg/ODRIloVbWjU6tEPWyhzK8VMsXw== root@388da63cf68e"
+        # maybe processes._processes.last(name=model_name)["server_config"].get("pub_key", None)
+    """end stub DB vars"""
+
     HIGH_SECURITY_RISK_NO_AUTH_FLOW = (
-        False
-        if processes._processes.last(name=model_name)["server_config"].get(
-            "JWT_VERIFY_API", None
-        )
-        else False
-    )  # change to True after dev phase
-    SECRET = processes._processes.last(
-        name=model_name
-    )[  # change to false after dev phase
-        "server_config"
-    ].get(
-        "JWT_SECRET", "very long a$$ very secret key phrase"
-    )
+        False if JWT_VERIFY_API is not None else False
+    )  #  TODO:@PRTFW change to True after dev phase
+
     try:
         if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
             if _auth_token is None:
+
                 status_code = 400
                 return Response(
                     json.dumps(
@@ -428,65 +414,70 @@ def auth(
             else:
                 base64Header, base64Payload, signature = _auth_token.split(".")
                 header_str = base64.b64decode(base64Header)
-                payload_str = base64.b64decode(base64Payload)
                 header = json.loads(header_str)
-                payload = json.loads(payload_str)
+                _algorithm = header["alg"]
 
-                expected_token = jwt.encode(
-                    payload, SECRET, algorithm=header.alg
-                ).decode("utf-8")
+                if not RSA:
+                    payload_str = base64.b64decode(base64Payload)
+                    payload = json.loads(payload_str)
+                    expected_token = jwt.encode(
+                        payload, SECRET, algorithm=_algorithm
+                    ).decode("utf-8")
 
-                if expected_token != _auth_token:
-                    status_code = 400
-                    return Response(
-                        json.dumps({"error": "The 'auth_token' you sent is invalid."}),
-                        status=status_code,
-                        mimetype="application/json",
-                    )
+                    if expected_token != _auth_token:
+                        status_code = 400
+                        return Response(
+                            json.dumps(
+                                {"error": "The 'auth_token' you sent is invalid."}
+                            ),
+                            status=status_code,
+                            mimetype="application/json",
+                        )
+                else:
+                    # we should check if RSA is true there is a pubkey string included during call to `host_federated_training`
+                    # here we assume it exists / no redundant check
+                    try:
+                        jwt.decode(_auth_token, pub_key, _algorithm)
 
-        # if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
-        #     if oAUTH_Handler_function is None:
-        #         status_code = 500
-        #         return Response(
-        #             json.dumps(
-        #                 {
-        #                     "error": "Authentication is required, but no '_oAUTH_Handler_function' was provided."
-        #                 }
-        #             ),
-        #             status=status_code,
-        #             mimetype="application/json",
-        #         )
-
-        #     if _auth_token is None:
-        #         status_code = 400
-        #         return Response(
-        #             json.dumps(
-        #                 {
-        #                     "error": "Authentication is required, please pass an 'auth_token'."
-        #                 }
-        #             ),
-        #             status=status_code,
-        #             mimetype="application/json",
-        #         )
-
-        #     oAuth_verfified = oAUTH_Handler_function(auth_token=_auth_token)
-        #     assert (
-        #         type(oAuth_verfified) == bool
-        #     )  # we should inforce that this method/function returns a bool
-
-        # if not oAuth_verfified:
-        #     status_code = 400
-        #     return Response(
-        #         json.dumps({"error": "The 'auth_token' you sent is invalid."}),
-        #         status=status_code,
-        #         mimetype="application/json",
-        #     )
-
-        resp = fl_events_auth({"auth_token": _auth_token}, None)
-        response_body = json.loads(resp)["data"]
+                    except Exception as e:
+                        if e.__class__.__name__ == "InvalidSignatureError":
+                            status_code = 400
+                            return Response(
+                                json.dumps(
+                                    {
+                                        "error": "The 'auth_token' you sent is invalid. "
+                                        + str(e)
+                                    }
+                                ),
+                                status=status_code,
+                                mimetype="application/json",
+                            )
+        external_api_verify_data = {"auth_token": f"{_auth_token}"}
+        verification_result = requests.get(
+            "http://google.com"
+        )  # test with get and google for now. using .post should result in failure
+        # TODO:@MADDIE replace with after we have a api to test with verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))
+        if verification_result.status_code == 200:
+            resp = fl_events_auth({"auth_token": _auth_token}, None)
+            response_body = json.loads(resp)["data"]
+        else:
+            status_code = 400
+            return Response(
+                json.dumps(
+                    {
+                        "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. "
+                    }
+                ),
+                status=status_code,
+                mimetype="application/json",
+            )
     except Exception as e:
         status_code = 401
-        response_body = {"error_auth_failed": e}
+        print(e, flush=True)
+        response_body = {
+            "error_auth_failed": str(e)
+            + " | please check token encoding (expects base64)"
+        }
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
