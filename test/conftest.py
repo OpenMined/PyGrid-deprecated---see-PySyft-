@@ -68,67 +68,6 @@ def init_gateway():
     p.terminate()
 
 
-"""
-@pytest.fixture(scope="session", autouse=True)
-def init_nodes(node_infos):
-    BASEDIR = os.path.dirname(os.path.dirname(__file__))
-
-    def setUpNode(port, node_id):
-        from app.websocket.app import create_app as ws_create_app
-
-        requests.post(
-            GATEWAY_URL + "/join",
-            data=json.dumps(
-                {"node-id": node_id, "node-address": "http://localhost:" + port + "/"}
-            ),
-        )
-        app = ws_create_app(node_id, debug=False, database_url=None)
-        server = pywsgi.WSGIServer(("", int(port)), app, handler_class=WebSocketHandler)
-        server.serve_forever()
-
-    jobs = []
-    # Init Grid Nodes
-    for (node_id, port) in node_infos:
-        p = Process(target=setUpNode, args=(port, node_id))
-        p.start()
-        jobs.append(p)
-    time.sleep(5)
-
-    yield
-
-    for job in jobs:
-        job.terminate()
-
-
-def create_websocket_client(hook, port, id):
-    node = NodeClient(hook, "http://localhost:" + port + "/", id=id)
-    return node
-
-
-@pytest.fixture(scope="function")
-def connected_node(hook):
-    nodes = {}
-    for (node_id, port) in zip(IDS, PORTS):
-        node = create_websocket_client(hook, port, node_id)
-        nodes[node_id] = node
-
-    yield nodes
-
-    for node in nodes:
-        nodes[node].close()
-        time.sleep(0.1)
-
-
-@pytest.fixture(scope="function")
-def grid_network(hook):
-    my_grid = PublicGridNetwork(hook, GATEWAY_URL)
-
-    yield my_grid
-
-    my_grid.disconnect_nodes()
-"""
-
-
 @pytest.fixture(scope="session", autouse=True)
 def hook():
     hook = syft.TorchHook(torch)
