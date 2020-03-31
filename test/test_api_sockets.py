@@ -486,4 +486,3 @@ def test_mul_shared_tensors(x, y, connected_node):
 
     assert th.allclose(result_s.get().float_prec(), result, atol=1e-2)
 """
-
