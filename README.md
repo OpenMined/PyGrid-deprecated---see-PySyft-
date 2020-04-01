@@ -34,7 +34,7 @@ To install docker the dependencies, just follow [docker documentation](https://d
 #### 1 - Using Docker
 
 The latest PyGrid Gateway and Node images are available on the Docker Hub.
-- PyGrid Gateway - `openmined/grid-node`
+- PyGrid - `openmined/grid-gateway`
 - PyGrid Node - `openmined/grid-node`
 
 ##### 1.1 - Setting the Domain Names
