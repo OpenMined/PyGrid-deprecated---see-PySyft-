@@ -39,7 +39,7 @@ The latest PyGrid Gateway and Node images are available on the Docker Hub.
 
 ##### 1.1 - Setting the Domain Names
 
-Before start the grid platform locally using docker, we need to setup the domain names used by the bridge network. In order to access these nodes from outside of containers context, you should add the following domain names on your `/etc/hosts`
+Before start the grid platform locally using docker, we need to set up the domain names used by the bridge network. In order to use these nodes from outside of containers context, you should add the following domain names on your `/etc/hosts`
 ```
 127.0.0.1 gateway
 127.0.0.1 bob
