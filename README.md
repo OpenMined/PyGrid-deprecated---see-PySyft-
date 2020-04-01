@@ -48,6 +48,17 @@ Before start the grid platform locally using docker, we need to setup the domain
 127.0.0.1 james
 ```
 
+
+It will download the latest openmined's docker images and start a grid platform with 1 gateway and 4 grid nodes.
+**PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
+```
+127.0.0.1 gateway
+127.0.0.1 bob
+127.0.0.1 alice
+127.0.0.1 bill
+127.0.0.1 james
+```
+
 #### 1.2 - Run Docker Images
 To setup and start the PyGrid platform you just need start the docker-compose process.
 ```
