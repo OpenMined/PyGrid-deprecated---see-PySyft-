@@ -21,3 +21,4 @@ git+https://github.com/OpenMined/PySyft@master#egg=syft
 black
 coverage
 pytest
+aiounittest
