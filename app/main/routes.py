@@ -382,14 +382,21 @@ def connection_speed_test():
         _worker_id = request.args.get("worker_id", None)
         _random = request.args.get("random", None)
 
+        if not _worker_id or not _random:
+            raise PyGridError
+
         # If GET method
         if request.method == "GET":
-            form = _test_download(request)
+            # Download data sample (1MB)
+            data_sample = b"x" * 67108864  # 64 Megabyte
+            response = {"sample": data_sample}
+            form = MultipartEncoder(response)
             return Response(form.to_string(), mimetype=form.content_type)
-        else:  # Otherwise, it's POST method
-            status_code = _test_upload(request)
-            return Response(status_code=status_code)
-
+        elif request.method == "POST":  # Otherwise, it's POST method
+            if request.file:
+                status_code = 200  # Success
+            else:
+                raise PyGridError
     except PyGridError as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -400,30 +407,6 @@ def connection_speed_test():
     return Response(
         json.dumps(response_body), status_code=status_code, mimetype="application/json"
     )
-
-
-# Auxiliar methods to check download / upload rate
-def _test_download(request):
-    """ Test worker download rate. """
-    # Download data sample (1MB)
-    data_sample = b"x" * 1048576  # 1 Megabyte
-    response = {"sample": data_sample}
-    form = MultipartEncoder(response)
-
-    return form
-
-
-def _test_upload(request):
-    """ Test worker's upload rate. """
-    # Upload client data sample
-    status_code = None
-
-    if request.files:
-        _sample = request.files.read().decode("utf-8")
-    else:
-        raise PyGridError
-
-    return 200  # Success
 
 
 @main.route("/federated/authenticate", methods=["POST"])
