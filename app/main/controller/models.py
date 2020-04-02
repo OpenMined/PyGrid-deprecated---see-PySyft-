@@ -1,0 +1,58 @@
+from ..models.ai_model import Model, ModelCheckPoint
+from ..models.warehouse import Warehouse
+from ..exceptions import ModelNotFoundError
+
+
+class Models:
+    def __init__(self):
+        self._models = Warehouse(Model)
+        self._model_checkpoints = Warehouse(ModelCheckPoint)
+
+    def create(self, model, process):
+        # Register new model
+        _model_obj = self._models.register(flprocess=process)
+
+        # Save model initial weights into ModelCheckpoint
+        self._model_checkpoints.register(values=model, model=_model_obj)
+
+        return _model_obj
+
+    def save(self, model_id: str, data: bin):
+        """ Create a new model checkpoint.
+            Args:
+                model_id: Model ID.
+                data: Model data.
+            Returns:
+                model_checkpoint: ModelCheckpoint instance.
+        """
+
+        # checkpoints_count = self._model_checkpoints.count(model_id=model_id)
+        new_checkpoint = self._model_checkpoints.register(
+            model_id=model_id, values=data
+        )
+        return new_checkpoint
+
+    def load(self, **kwargs):
+        """ Load model's Checkpoint. """
+        _check_point = self._model_checkpoints.last(**kwargs)
+
+        if not _check_point:
+            raise ModelNotFoundError
+
+        return _check_point
+
+    def get(self, process_id: int):
+        """ Retrieve the model instance object.
+            Args:
+                process_id : Federated Learning Process ID attached to this model.
+            Returns:
+                model : SQL Model Object.
+            Raises:
+                ModelNotFoundError (PyGridError) : If model not found.
+        """
+        _model = self._models.first(fl_process_id=_fl_process.id)
+
+        if not _model:
+            raise ModelNotFoundError
+
+        return _model
