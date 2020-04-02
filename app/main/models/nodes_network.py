@@ -1,5 +1,4 @@
-from .models import GridNodes
-from .models import db
+from .nodes import db, GridNodes
 
 
 def register_new_node(node_id, node_address):
