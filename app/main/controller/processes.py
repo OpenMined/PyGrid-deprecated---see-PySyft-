@@ -53,7 +53,7 @@ class Processes:
         self._protocols.register(fl_process, client_protocols)
 
         # Register Server avg plan
-        self._plans(fl_process, server_avg_plan, avg_plan=True)
+        self._plans.register(fl_process, server_avg_plan, avg_plan=True)
 
         # Register the client setup configs
         self._configs.register(config=client_config, server_flprocess_config=fl_process)
