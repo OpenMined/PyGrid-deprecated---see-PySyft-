@@ -1,5 +1,8 @@
-from ..storage.warehouse import Warehouse
+# Syft assets module imports
 from .plan import Plan
+
+# PyGrid imports
+from ..storage.warehouse import Warehouse
 from ..exceptions import PlanNotFoundError
 
 

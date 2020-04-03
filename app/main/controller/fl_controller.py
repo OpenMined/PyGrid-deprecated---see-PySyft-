@@ -173,14 +173,12 @@ class FLController:
         return hashlib.sha256(primary_key.encode()).hexdigest()
 
     def submit_diff(self, worker_id: str, request_key: str, diff: bin):
-        """Submit reported diff
-           Args:
+        """ Submit worker model diff to the assigned cycle.
+            Args:
                 worker_id: Worker's ID.
                 request_key: request (token) used by this worker during this cycle.
                 diff: Model params trained by this worker.
-           Returns:
-                cycle_id : Cycle's ID.
-           Raises:
+            Raises:
                 ProcessLookupError : If Not found any relation between the worker/cycle.
         """
         return cycle_manager.submit_worker_diff(worker_id, request_key, diff)

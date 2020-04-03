@@ -1,7 +1,9 @@
-from ..storage.warehouse import Warehouse
+# Processes module imports
 from .fl_process import FLProcess
 from .config import Config
 
+# PyGrid imports
+from ..storage.warehouse import Warehouse
 from ..syft_assets import plans, protocols
 from ..exceptions import (
     FLProcessConflict,

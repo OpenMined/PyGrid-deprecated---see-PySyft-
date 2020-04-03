@@ -1,5 +1,8 @@
-from ..storage.warehouse import Warehouse
+# workers module imports
 from .worker import Worker
+
+# PyGrid imports
+from ..storage.warehouse import Warehouse
 from ..exceptions import WorkerNotFoundError
 
 

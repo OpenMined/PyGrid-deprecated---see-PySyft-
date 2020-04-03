@@ -1,12 +1,16 @@
-import uuid
-import json
-from binascii import unhexlify
+# Events module import
 from .socket_handler import SocketHandler
+
+# PyGrid imports
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ..exceptions import CycleNotFoundError, MaxCycleLimitExceededError
 from ..controller import processes
 from ..workers import worker_manager
-from ..tasks.cycle import complete_cycle, run_task_once
+
+# Generic imports
+import uuid
+import json
+from binascii import unhexlify
 import traceback
 import base64
 
@@ -158,11 +162,9 @@ def report(message: dict, socket) -> str:
         # diff = unhexlify()
         diff = base64.b64decode(data.get(CYCLE.DIFF, None).encode())
 
-        cycle_id = processes.add_worker_diff(worker_id, request_key, diff)
-
-        # Run cycle end task async to we don't block report request
+        # Submit model diff and run cycle and task async to avoid block report request
         # (for prod we probably should be replace this with Redis queue + separate worker)
-        run_task_once("complete_cycle", complete_cycle, processes, cycle_id)
+        processes.submit_diff(worker_id, request_key, diff)
 
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
