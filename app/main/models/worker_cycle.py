@@ -1,5 +1,5 @@
 import datetime
-from . import db
+from .. import db
 
 
 class WorkerCycle(db.Model):
