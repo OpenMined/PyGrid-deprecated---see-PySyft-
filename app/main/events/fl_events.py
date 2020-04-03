@@ -4,8 +4,8 @@ from binascii import unhexlify
 from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ..exceptions import CycleNotFoundError, MaxCycleLimitExceededError
-from ..processes import processes
-from ..controller import workers
+from ..controller import processes
+from ..workers import worker_manager
 from ..tasks.cycle import complete_cycle, run_task_once
 import traceback
 import base64
@@ -79,7 +79,7 @@ def authenticate(message: dict, socket) -> str:
         handler.new_connection(worker_id, socket)
 
         # Create worker instance
-        workers.create(worker_id)
+        worker_manager.create(worker_id)
 
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
         response[MSG_FIELD.WORKER_ID] = worker_id
@@ -112,12 +112,12 @@ def cycle_request(message: dict, socket) -> str:
         upload = float(data.get(CYCLE.UPLOAD, None))
 
         # Retrieve the worker
-        worker = workers.get(id=worker_id)
+        worker = worker_manager.get(id=worker_id)
 
         worker.ping = ping
         worker.avg_download = download
         worker.avg_upload = upload
-        workers.update(worker)  # Update database worker attributes
+        worker_manager.update(worker)  # Update database worker attributes
 
         # The last time this worker was assigned for this model/version.
         last_participation = processes.last_participation(worker_id, name, version)

@@ -12,13 +12,13 @@ sys.path.append(".")
 
 from flask_sqlalchemy import SQLAlchemy
 from app.main.models.ai_model import Model, ModelCheckPoint
-from app.main.models.protocol import Protocol
-from app.main.models.plan import Plan
-from app.main.models.worker import Worker
-from app.main.models.worker_cycle import WorkerCycle
-from app.main.models.fl_process import FLProcess
-from app.main.models.cycle import Cycle
-from app.main.models.config import Config
+from app.main.syft_assets.protocol import Protocol
+from app.main.syft_assets.plan import Plan
+from app.main.workers.worker import Worker
+from app.main.cycles.worker_cycle import WorkerCycle
+from app.main.processes.fl_process import FLProcess
+from app.main.cycles.cycle import Cycle
+from app.main.processes.config import Config
 from app.main import db
 
 app = Flask(__name__)

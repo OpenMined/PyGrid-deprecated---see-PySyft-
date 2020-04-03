@@ -16,11 +16,11 @@ import requests
 import logging
 import io
 
-from .models.nodes_network import register_new_node, connected_nodes, delete_node
-from .processes import processes
+from .node_routing.nodes_network import register_new_node, connected_nodes, delete_node
+from .controller import processes
 from .events import handler
 from .events.fl_events import authenticate as fl_events_auth
-from .controller import workers
+from .workers import worker_manager
 from .events.fl_events import cycle_request, report
 from .exceptions import InvalidRequestKeyError, PyGridError
 from .codes import MSG_FIELD, CYCLE, RESPONSE_MSG
@@ -308,7 +308,7 @@ def download_protocol():
         # Retrieve Process Entities
         _protocol = processes.get_protocol(id=protocol_id)
         _cycle = processes.get_cycle(_protocol.fl_process_id)
-        _worker = workers.get(id=worker_id)
+        _worker = worker_manager.get(id=worker_id)
         _accepted = processes.validate(_worker.id, _cycle.id, request_key)
 
         if not _accepted:
@@ -345,7 +345,7 @@ def download_model():
         # Retrieve Process Entities
         _model = processes.get_model(id=model_id)
         _cycle = processes.get_cycle(_model.fl_process_id)
-        _worker = workers.get(id=worker_id)
+        _worker = worker_manager.get(id=worker_id)
         _accepted = processes.validate(_worker.id, _cycle.id, request_key)
 
         if not _accepted:
@@ -788,7 +788,7 @@ def download_plan():
         # Retrieve Process Entities
         _plan = processes.get_plan(id=plan_id, is_avg_plan=False)
         _cycle = processes.get_cycle(fl_process_id=_plan.fl_process_id)
-        _worker = workers.get(id=worker_id)
+        _worker = worker_manager.get(id=worker_id)
         _accepted = processes.validate(_worker.id, _cycle.id, request_key)
 
         if not _accepted:
