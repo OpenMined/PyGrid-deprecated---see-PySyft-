@@ -135,6 +135,7 @@ def cycle_request(message: dict, socket) -> str:
         response[CYCLE.STATUS] = CYCLE.REJECTED
         response[MSG_FIELD.MODEL] = e.name
     except Exception as e:
+        print("Exception: ", str(e))
         response[CYCLE.STATUS] = CYCLE.REJECTED
         response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
 

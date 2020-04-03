@@ -132,7 +132,7 @@ class FLController:
             _protocols = process_manager.get_protocols(fl_process_id=_fl_process.id)
 
             # Get model ID
-            _model = model_manager.get(_fl_process.id)
+            _model = model_manager.get(fl_process_id=_fl_process.id)
             return {
                 CYCLE.STATUS: "accepted",
                 CYCLE.KEY: _worker_cycle.request_key,
