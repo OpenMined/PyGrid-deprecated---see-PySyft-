@@ -6,7 +6,7 @@ from .worker_cycle import WorkerCycle
 from ..storage.warehouse import Warehouse
 from ..exceptions import CycleNotFoundError
 from ..tasks.cycle import complete_cycle, run_task_once
-
+from ..models import model_manager
 
 # Generic imports
 from datetime import datetime, timedelta
@@ -170,7 +170,7 @@ class CycleManager:
     def complete_cycle(self, cycle_id: str):
         """Checks if the cycle is completed and runs plan avg"""
         logging.info("running complete_cycle for cycle_id: %s" % cycle_id)
-        cycle = cycle_manager.first(id=cycle_id)
+        cycle = self._cycles.first(id=cycle_id)
         logging.info("found cycle: %s" % str(cycle))
 
         if cycle.is_completed:
