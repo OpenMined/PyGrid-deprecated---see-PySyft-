@@ -1,9 +1,16 @@
 from ..models.ai_model import Model, ModelCheckPoint
-from ..models.warehouse import Warehouse
+from ..storage.warehouse import Warehouse
 from ..exceptions import ModelNotFoundError
 
+# Syft dependencies
+import syft as sy
+from syft.execution.state import State
+from syft.serde import protobuf
+from syft_proto.execution.v1.state_pb2 import State as StatePB
+from syft.execution.placeholder import PlaceHolder
 
-class Models:
+
+class ModelManager:
     def __init__(self):
         self._models = Warehouse(Model)
         self._model_checkpoints = Warehouse(ModelCheckPoint)
@@ -50,9 +57,35 @@ class Models:
             Raises:
                 ModelNotFoundError (PyGridError) : If model not found.
         """
-        _model = self._models.first(fl_process_id=_fl_process.id)
+        _model = self._models.first(fl_process_id=process_id)
 
         if not _model:
             raise ModelNotFoundError
 
         return _model
+
+    @staticmethod
+    def serialize_model_params(self, params):
+        """Serializes list of tensors into State/protobuf"""
+        model_params_state = State(
+            owner=None,
+            state_placeholders=[PlaceHolder().instantiate(param) for param in params],
+        )
+
+        # make fake local worker for serialization
+        worker = sy.VirtualWorker(hook=None)
+
+        pb = protobuf.serde._bufferize(worker, model_params_state)
+        serialized_state = pb.SerializeToString()
+
+        return serialized_state
+
+    @staticmethod
+    def unserialize_model_params(self, bin: bin):
+        """Unserializes model or checkpoint or diff stored in db to list of tensors"""
+        state = StatePB()
+        state.ParseFromString(bin)
+        worker = sy.VirtualWorker(hook=None)
+        state = protobuf.serde._unbufferize(worker, state)
+        model_params = state.tensors()
+        return model_params

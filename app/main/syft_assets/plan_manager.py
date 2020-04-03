@@ -1,9 +1,9 @@
-from ..models.warehouse import Warehouse
-from ..models.plan import Plan
+from ..storage.warehouse import Warehouse
+from .plan import Plan
 from ..exceptions import PlanNotFoundError
 
 
-class Plans:
+class PlanManager:
     def __init__(self):
         self._plans = Warehouse(Plan)
 

@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from ..models.warehouse import Warehouse
-from ..models.cycle import Cycle
-from ..models.worker_cycle import WorkerCycle
+from ..storage.warehouse import Warehouse
+from .cycle import Cycle
+from .worker_cycle import WorkerCycle
 from ..exceptions import CycleNotFoundError
 
 
-class Cycles:
+class CycleManager:
     def __init__(self):
         self._cycles = Warehouse(Cycle)
         self._worker_cycles = Warehouse(WorkerCycle)
@@ -45,7 +45,7 @@ class Cycles:
             Returns:
                 last_participation: last cycle.
         """
-        _cycles = self._cycles.get(fl_process_id=process.id)
+        _cycles = self._cycles.query(fl_process_id=process.id)
 
         last = 0
         if not len(_cycles):
@@ -95,7 +95,7 @@ class Cycles:
             Returns:
                 result : Boolean Flag.
         """
-        return self._worker_cycle.first(worker_id=worker.id, cycle_id=_cycle.id) != None
+        return self._worker_cycles.first(worker_id=worker_id, cycle_id=cycle_id) != None
 
     def assign(self, worker, cycle, hash_key: str):
         _worker_cycle = self._worker_cycles.register(

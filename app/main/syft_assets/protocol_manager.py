@@ -1,9 +1,9 @@
-from ..models.warehouse import Warehouse
-from ..models.protocol import Protocol
+from ..storage.warehouse import Warehouse
+from .protocol import Protocol
 from ..exceptions import ProtocolNotFoundError
 
 
-class Protocols:
+class ProtocolManager:
     def __init__(self):
         self._protocols = Warehouse(Protocol)
 

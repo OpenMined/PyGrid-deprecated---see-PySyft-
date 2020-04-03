@@ -1,8 +1,9 @@
-from ..models.warehouse import Warehouse
-from ..models.worker import Worker
+from ..storage.warehouse import Warehouse
+from .worker import Worker
+from ..exceptions import WorkerNotFoundError
 
 
-class Workers:
+class WorkerManager:
     def __init__(self):
         self._workers = Warehouse(Worker)
 

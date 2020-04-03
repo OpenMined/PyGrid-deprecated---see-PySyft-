@@ -1,8 +1,8 @@
-from ..models.warehouse import Warehouse
-from ..models.fl_process import FLProcess
-from ..models.config import Config
-from .plans import Plans
-from .protocols import Protocols
+from ..storage.warehouse import Warehouse
+from .fl_process import FLProcess
+from .config import Config
+
+from ..syft_assets import plans, protocols
 from ..exceptions import (
     FLProcessConflict,
     ProcessFoundError,
@@ -11,10 +11,8 @@ from ..exceptions import (
 )
 
 
-class Processes:
+class ProcessManager:
     def __init__(self):
-        self._plans = Plans()
-        self._protocols = Protocols()
         self._processes = Warehouse(FLProcess)
         self._configs = Warehouse(Config)
 
@@ -47,13 +45,13 @@ class Processes:
         fl_process = self._processes.register(name=name, version=version)
 
         # Register client plans
-        self._plans.register(fl_process, client_plans, avg_plan=False)
+        plans.register(fl_process, client_plans, avg_plan=False)
 
         # Register client protocols
-        self._protocols.register(fl_process, client_protocols)
+        protocols.register(fl_process, client_protocols)
 
         # Register Server avg plan
-        self._plans(fl_process, server_avg_plan, avg_plan=True)
+        plans.register(fl_process, server_avg_plan, avg_plan=True)
 
         # Register the client setup configs
         self._configs.register(config=client_config, server_flprocess_config=fl_process)
@@ -98,15 +96,15 @@ class Processes:
             Raises:
                 PlanNotFoundError (PyGridError) : If Plan not found.
         """
-        _plans = self._plans.get(**kwargs)
+        _plans = plans.get(**kwargs)
 
         if not _plans:
             raise PlanNotFoundError
 
         # Build a plan dictionary
-        plans = {plan.name: plan.id for plan in _plans}
+        plan_dict = {_plan.name: _plan.id for _plan in _plans}
 
-        return plans
+        return plan_dict
 
     def get_protocols(self, **kwargs):
         """ Return FL Process Protocols.
@@ -117,15 +115,15 @@ class Processes:
             Raises:
                 ProtocolNotFoundError (PyGridError) : If Protocol not found.
         """
-        _protocols = self._protocols.get(**kwargs)
+        _protocols = protocols.get(**kwargs)
 
         if not _protocols:
             raise ProtocolNotFoundError
 
         # Build a protocol dictionary
-        protocols = {protocol.name: protocol.id for protocol in _protocols}
+        protocol_dict = {_protocol.name: _protocol.id for _protocol in _protocols}
 
-        return protocols
+        return protocol_dict
 
     def get(self, **kwargs):
         """ Retrieve the desired federated learning process.

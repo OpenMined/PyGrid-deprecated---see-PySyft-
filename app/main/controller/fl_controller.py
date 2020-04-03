@@ -1,9 +1,7 @@
-from .federated_learning_process import FLProcess
-from .federated_learning_cycle import FederatedLearningCycle
-
 import hashlib
 import uuid
 from ..codes import MSG_FIELD, CYCLE
+from datetime import datetime
 from ..exceptions import (
     CycleNotFoundError,
     ProtocolNotFoundError,
@@ -13,14 +11,13 @@ from ..exceptions import (
     FLProcessConflict,
 )
 
-from ..controller.processes import Processes
-from ..controller.cycles import Cycles
-from ..controller.models import Models
-from ..controller.workers import Workers
+from ..processes import process_manager
+from ..cycles import cycle_manager
+from ..models import model_manager
+from ..workers import worker_manager
 
 import random
 from functools import reduce
-from .helpers import unserialize_model_params, serialize_model_params
 import torch as th
 import json
 import logging
@@ -30,10 +27,7 @@ class FLController:
     """ This class implements controller design pattern over the federated learning processes. """
 
     def __init__(self):
-        self._processes = Processes()
-        self._cycles = Cycles()
-        self._models = Models()
-        self._workers = Workers()
+        pass
 
     def create_process(
         self,
@@ -64,7 +58,7 @@ class FLController:
         # 2 - Save client plans/protocols
         # 3 - Save Server AVG plan
         # 4 - Save Client/Server configs
-        _process = self._processes.create(
+        _process = process_manager.create(
             client_config,
             client_plans,
             client_protocols,
@@ -74,10 +68,10 @@ class FLController:
 
         # Save Model
         # Define the initial version ( first checkpoint)
-        _model = self._models.create(model, _process)
+        _model = model_manager.create(model, _process)
 
         # Create the initial cycle
-        _cycle = self._cycles.create(_process.id, _process.version, cycle_len)
+        _cycle = cycle_manager.create(_process.id, _process.version, cycle_len)
 
         return _process
 
@@ -90,8 +84,8 @@ class FLController:
             Return:
                 last_participation: Index of the last cycle assigned to this worker.
         """
-        process = self._processes.get(name=name, version=version)
-        return self._cycles.last_participation(process, worker_id)
+        process = process_manager.get(name=name, version=version)
+        return cycle_manager.last_participation(process, worker_id)
 
     def assign(self, name: str, version: str, worker, last_participation: int):
         """ Assign a new worker  the specified federated training worker cycle
@@ -106,22 +100,22 @@ class FLController:
         _accepted = False
 
         if version:
-            _fl_process = self._processes.first(name=name, version=version)
+            _fl_process = process_manager.first(name=name, version=version)
         else:
-            _fl_process = self._processes.last(name=name)
+            _fl_process = process_manager.last(name=name)
 
-        server_config, client_config = self._processes.get_configs(
+        server_config, client_config = process_manager.get_configs(
             name=name, version=version
         )
 
         # Retrieve the last cycle used by this fl process/ version
-        _cycle = self._cycles.last(_fl_process.id, None)
+        _cycle = cycle_manager.last(_fl_process.id, None)
 
         # Check if already exists a relation between the worker and the cycle.
-        _assigned = self._cycles.is_assigned(worker.id, _cycle.id)
+        _assigned = cycle_manager.is_assigned(worker.id, _cycle.id)
 
         # Check bandwith
-        _comp_bandwith = self._workers.is_eligible(worker.id, server_config)
+        _comp_bandwith = worker_manager.is_eligible(worker.id, server_config)
 
         # Check if the current worker is allowed to join into this cycle
         _allowed = True
@@ -138,18 +132,18 @@ class FLController:
             # 1 - Generate new request key
             # 2 - Assign the worker with the cycle.
             key = self._generate_hash_key(uuid.uuid4().hex)
-            _worker_cycle = self._cycles.assign(worker, _cycle, key)
+            _worker_cycle = cycle_manager.assign(worker, _cycle, key)
 
             # Create a plan dictionary
-            _plans = self._processes.get_plans(
+            _plans = process_manager.get_plans(
                 fl_process_id=_fl_process.id, is_avg_plan=False
             )
 
             # Create a protocol dictionary
-            _protocols = self._processes.get_protocols(fl_process_id=_fl_process.id)
+            _protocols = process_manager.get_protocols(fl_process_id=_fl_process.id)
 
             # Get model ID
-            _model = self._models.get(_fl_process.id)
+            _model = model_manager.get(_fl_process.id)
             return {
                 CYCLE.STATUS: "accepted",
                 CYCLE.KEY: _worker_cycle.request_key,
@@ -161,7 +155,7 @@ class FLController:
                 MSG_FIELD.MODEL_ID: _model.id,
             }
         else:
-            n_completed_cycles = self._cycles.count(
+            n_completed_cycles = cycle_manager.count(
                 fl_process_id=_fl_process.id, is_completed=True
             )
 
@@ -207,7 +201,7 @@ class FLController:
     def complete_cycle(self, cycle_id: str):
         """Checks if the cycle is completed and runs plan avg"""
         logging.info("running complete_cycle for cycle_id: %s" % cycle_id)
-        cycle = self._cycles.first(id=cycle_id)
+        cycle = cycle_manager.first(id=cycle_id)
         logging.info("found cycle: %s" % str(cycle))
 
         if cycle.is_completed:
@@ -271,7 +265,7 @@ class FLController:
         logging.info("model id: %d" % model_id)
         _checkpoint = self.get_model_checkpoint(model_id=model_id)
         logging.info("current checkpoint: %s" % str(_checkpoint))
-        model_params = unserialize_model_params(_checkpoint.values)
+        model_params = model_manager.unserialize_model_params(_checkpoint.values)
         logging.info("model params shapes: %s" % str([p.shape for p in model_params]))
 
         # Here comes simple hardcoded avg plan
@@ -285,7 +279,10 @@ class FLController:
         reports_to_average = self._worker_cycle.query(
             cycle_id=cycle.id, is_completed=True
         )
-        diffs = [unserialize_model_params(report.diff) for report in reports_to_average]
+        diffs = [
+            model_manager.unserialize_model_params(report.diff)
+            for report in reports_to_average
+        ]
 
         # Again, not sure max_workers == number of diffs to avg
         diffs = random.sample(diffs, server_config.get("max_workers"))
@@ -313,7 +310,7 @@ class FLController:
         )
 
         # make new checkpoint
-        serialized_params = serialize_model_params(_updated_model_params)
+        serialized_params = model_manager.serialize_model_params(_updated_model_params)
         _new_checkpoint = self.create_checkpoint(model_id, serialized_params)
         logging.info("new checkpoint: %s" % str(_new_checkpoint))
 
