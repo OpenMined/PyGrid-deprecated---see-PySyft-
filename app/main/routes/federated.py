@@ -29,6 +29,93 @@ import logging
 from random import random
 
 
+@main.route("/federated/cycle-request", methods=["POST"])
+def worker_cycle_request():
+    """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
+    response_body = {}
+    status_code = None
+
+    try:
+        body = json.loads(request.data)
+        response_body = cycle_request({MSG_FIELD.DATA: body}, None)
+    except PyGridError or json.decoder.JSONDecodeError as e:
+        status_code = 400  # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        response_body = json.dumps(response_body)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    if isinstance(response_body, str):
+        # Consider just data field as a response
+        response_body = json.loads(response_body)[MSG_FIELD.DATA]
+
+    response_body = json.dumps(response_body)
+    return Response(response_body, status=status_code, mimetype="application/json")
+
+
+@main.route("/federated/speed-test", methods=["GET", "POST"])
+def connection_speed_test():
+    """ Connection speed test. """
+    response_body = {}
+    status_code = None
+
+    try:
+        _worker_id = request.args.get("worker_id", None)
+        _random = request.args.get("random", None)
+
+        if not _worker_id or not _random:
+            raise PyGridError
+
+        # If GET method
+        if request.method == "GET":
+            # Download data sample (1MB)
+            data_sample = b"x" * 67108864  # 64 Megabyte
+            response = {"sample": data_sample}
+            form = MultipartEncoder(response)
+            return Response(form.to_string(), mimetype=form.content_type)
+        elif request.method == "POST":  # Otherwise, it's POST method
+            if request.file:
+                status_code = 200  # Success
+            else:
+                raise PyGridError
+    except PyGridError as e:
+        status_code = 400  # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    return Response(
+        json.dumps(response_body), status_code=status_code, mimetype="application/json"
+    )
+
+
+@main.route("/federated/report", methods=["POST"])
+def report_diff():
+    """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
+    response_body = {}
+    status_code = None
+
+    try:
+        body = json.loads(request.data)
+        response_body = report({MSG_FIELD.DATA: body}, None)
+    except PyGridError or json.decoder.JSONDecodeError as e:
+        status_code = 400  # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        response_body = json.dumps(response_body)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    if isinstance(response_body, str):
+        # Consider just data field as a response
+        response_body = json.loads(response_body)[MSG_FIELD.DATA]
+
+    response_body = json.dumps(response_body)
+    return Response(response_body, status=status_code, mimetype="application/json")
+
+
 @main.route("/federated/get-protocol", methods=["GET"])
 def download_protocol():
     """Request a download of a protocol"""
@@ -155,43 +242,6 @@ def download_plan():
     )
 
 
-@main.route("/federated/speed-test", methods=["GET", "POST"])
-def connection_speed_test():
-    """ Connection speed test. """
-    response_body = {}
-    status_code = None
-
-    try:
-        _worker_id = request.args.get("worker_id", None)
-        _random = request.args.get("random", None)
-
-        if not _worker_id or not _random:
-            raise PyGridError
-
-        # If GET method
-        if request.method == "GET":
-            # Download data sample (1MB)
-            data_sample = b"x" * 67108864  # 64 Megabyte
-            response = {"sample": data_sample}
-            form = MultipartEncoder(response)
-            return Response(form.to_string(), mimetype=form.content_type)
-        elif request.method == "POST":  # Otherwise, it's POST method
-            if request.file:
-                status_code = 200  # Success
-            else:
-                raise PyGridError
-    except PyGridError as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-
-    return Response(
-        json.dumps(response_body), status_code=status_code, mimetype="application/json"
-    )
-
-
 @main.route("/federated/authenticate", methods=["POST"])
 def auth():
     """uses JWT (HSA/RSA) to authenticate"""
@@ -297,56 +347,6 @@ def auth():
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
     )
-
-
-@main.route("/federated/report", methods=["POST"])
-def report_diff():
-    """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
-    response_body = {}
-    status_code = None
-
-    try:
-        body = json.loads(request.data)
-        response_body = report({MSG_FIELD.DATA: body}, None)
-    except PyGridError or json.decoder.JSONDecodeError as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        response_body = json.dumps(response_body)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-
-    if isinstance(response_body, str):
-        # Consider just data field as a response
-        response_body = json.loads(response_body)[MSG_FIELD.DATA]
-
-    response_body = json.dumps(response_body)
-    return Response(response_body, status=status_code, mimetype="application/json")
-
-
-@main.route("/federated/cycle-request", methods=["POST"])
-def worker_cycle_request():
-    """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
-    response_body = {}
-    status_code = None
-
-    try:
-        body = json.loads(request.data)
-        response_body = cycle_request({MSG_FIELD.DATA: body}, None)
-    except PyGridError or json.decoder.JSONDecodeError as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        response_body = json.dumps(response_body)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-
-    if isinstance(response_body, str):
-        # Consider just data field as a response
-        response_body = json.loads(response_body)[MSG_FIELD.DATA]
-
-    response_body = json.dumps(response_body)
-    return Response(response_body, status=status_code, mimetype="application/json")
 
 
 @main.route("/req_join", methods=["GET"])
