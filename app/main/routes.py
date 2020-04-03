@@ -16,11 +16,11 @@ import requests
 import logging
 import io
 
-from .storage.manager import register_new_node, connected_nodes, delete_node
+from .models.nodes_network import register_new_node, connected_nodes, delete_node
 from .processes import processes
 from .events import handler
 from .events.fl_events import authenticate as fl_events_auth
-from .auth import workers
+from .controller import workers
 from .events.fl_events import cycle_request, report
 from .exceptions import InvalidRequestKeyError, PyGridError
 from .codes import MSG_FIELD, CYCLE, RESPONSE_MSG
