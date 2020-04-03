@@ -1,6 +1,6 @@
 # PyGrid imports
 from .. import main
-from ..node_routing import network_manager
+from ..network import network_manager
 
 # General imports
 import os
