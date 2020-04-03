@@ -120,7 +120,7 @@ def cycle_request(message: dict, socket) -> str:
         worker_manager.update(worker)  # Update database worker attributes
 
         # The last time this worker was assigned for this model/version.
-        last_participation = processes.last_participation(worker_id, name, version)
+        last_participation = processes.last_cycle(worker_id, name, version)
 
         # Assign
         response = processes.assign(name, version, worker, last_participation)
