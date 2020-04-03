@@ -49,7 +49,7 @@ class ModelManager:
 
         return _check_point
 
-    def get(self, process_id: int):
+    def get(self, **kwargs):
         """ Retrieve the model instance object.
             Args:
                 process_id : Federated Learning Process ID attached to this model.
@@ -58,7 +58,7 @@ class ModelManager:
             Raises:
                 ModelNotFoundError (PyGridError) : If model not found.
         """
-        _model = self._models.first(fl_process_id=process_id)
+        _model = self._models.last(**kwargs)
 
         if not _model:
             raise ModelNotFoundError

@@ -1,297 +1,32 @@
-"""
-    All Gateway routes (REST API).
-"""
-import base64
-from flask import render_template, Response, request, current_app, send_file
-from math import floor
-from typing import Union, Callable
-import numpy as np
-from scipy.stats import poisson
-from . import main
-import json
-import jwt
-import random
-import os
-import requests
-import logging
+# Import PyGrid modules
+from .. import main
+from ..controller import processes
+from ..cycles import cycle_manager
+from ..models import model_manager
+from ..workers import worker_manager
+from ..processes import process_manager
+from ..syft_assets import plans, protocols
+from ..codes import RESPONSE_MSG, CYCLE, MSG_FIELD
+from ..events.fl_events import report, cycle_request
+from ..events.fl_events import authenticate as fl_events_auth
+from ..exceptions import InvalidRequestKeyError, PyGridError
+
+# General Imports
 import io
-
-from .node_routing.nodes_network import register_new_node, connected_nodes, delete_node
-from .controller import processes
-from .events import handler
-from .events.fl_events import authenticate as fl_events_auth
-from .workers import worker_manager
-from .events.fl_events import cycle_request, report
-from .exceptions import InvalidRequestKeyError, PyGridError
-from .codes import MSG_FIELD, CYCLE, RESPONSE_MSG
+import jwt
+import json
+import base64
+import requests
 from requests_toolbelt import MultipartEncoder
+from flask import render_template, Response, request, current_app, send_file
 
-
-# All grid nodes registered at grid network will be stored here
-grid_nodes = {}
-
-SMPC_HOST_CHUNK = 4  # Minimum nodes required to host an encrypted model
-INVALID_JSON_FORMAT_MESSAGE = (
-    "Invalid JSON format."  # Default message used to report Invalid JSON format.
-)
-
-
-@main.route("/", methods=["GET"])
-def index():
-    """ Main Page. """
-    return render_template("index.html")
-
-
-@main.route("/join", methods=["POST"])
-def join_grid_node():
-    """ Register a new grid node at grid network.
-        TODO: Add Authentication process.
-    """
-
-    response_body = {"message": None}
-    status_code = None
-
-    try:
-        data = json.loads(request.data)
-        # Register new node
-        if register_new_node(data["node-id"], data["node-address"]):
-            response_body["message"] = "Successfully Connected!"
-            status_code = 200
-        else:  # Grid ID already registered
-            response_body["message"] = "This ID has already been registered"
-            status_code = 409
-
-    # JSON format not valid.
-    except ValueError or KeyError as e:
-        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
-        status_code = 400
-
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
-
-
-@main.route("/connected-nodes", methods=["GET"])
-def get_connected_nodes():
-    """ Get a list of connected nodes. """
-    grid_nodes = connected_nodes()
-    return Response(
-        json.dumps({"grid-nodes": list(grid_nodes.keys())}),
-        status=200,
-        mimetype="application/json",
-    )
-
-
-@main.route("/delete-node", methods=["DELETE"])
-def delete_grid_note():
-    """ Delete a grid node at grid network"""
-
-    response_body = {"message": None}
-    status_code = None
-
-    try:
-        data = json.loads(request.data)
-
-        # Register new node
-        if delete_node(data["node-id"], data["node-address"]):
-            response_body["message"] = "Successfully Deleted!"
-            status_code = 200
-        else:  # Grid ID was not found
-            response_body["message"] = "This ID was not found in connected nodes"
-            status_code = 409
-
-    # JSON format not valid.
-    except ValueError or KeyError as e:
-        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
-        status_code = 400
-
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
-
-
-@main.route("/choose-encrypted-model-host", methods=["GET"])
-def choose_encrypted_model_host():
-    """ Used to choose grid nodes to host an encrypted model
-        PS: currently we perform this randomly
-    """
-    grid_nodes = connected_nodes()
-    n_replica = current_app.config["N_REPLICA"]
-
-    if not n_replica:
-        n_replica = 1
-    try:
-        hosts = random.sample(list(grid_nodes.keys()), n_replica * SMPC_HOST_CHUNK)
-        hosts_info = [(host, grid_nodes[host]) for host in hosts]
-    # If grid network doesn't have enough grid nodes
-    except ValueError:
-        hosts_info = []
-
-    return Response(json.dumps(hosts_info), status=200, mimetype="application/json")
-
-
-@main.route("/choose-model-host", methods=["GET"])
-def choose_model_host():
-    """ Used to choose some grid node to host a model.
-        PS: Currently we perform this randomly.
-    """
-    grid_nodes = connected_nodes()
-    n_replica = current_app.config["N_REPLICA"]
-    if not n_replica:
-        n_replica = 1
-
-    model_id = request.args.get("model_id")
-    hosts_info = None
-
-    # lookup the nodes already hosting this model to prevent hosting different model versions
-    if model_id:
-        hosts_info = _get_model_hosting_nodes(model_id)
-
-    # no model id given or no hosting nodes found: randomly choose node
-    if not hosts_info:
-        hosts = random.sample(list(grid_nodes.keys()), n_replica)
-        hosts_info = [(host, grid_nodes[host]) for host in hosts]
-
-    return Response(json.dumps(hosts_info), status=200, mimetype="application/json")
-
-
-@main.route("/search-encrypted-model", methods=["POST"])
-def search_encrypted_model():
-    """ Search for an encrypted plan model on the grid network, if found,
-        returns host id, host address and SMPC workers infos.
-    """
-
-    response_body = {"message": None}
-    status_code = None
-
-    try:
-        body = json.loads(request.data)
-
-        grid_nodes = connected_nodes()
-        match_nodes = {}
-        for node in grid_nodes:
-            try:
-                response = requests.post(
-                    os.path.join(grid_nodes[node], "search-encrypted-models"),
-                    data=request.data,
-                )
-            except requests.exceptions.ConnectionError:
-                continue
-
-            response = json.loads(response.content)
-
-            # If workers / crypto_provider fields in response dict
-            if not len({"workers", "crypto_provider"} - set(response.keys())):
-                match_nodes[node] = {"address": grid_nodes[node], "nodes": response}
-
-            response_body = match_nodes
-            status_code = 200
-
-    # JSON format not valid.
-    except ValueError or KeyError as e:
-        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
-        status_code = 400
-
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
-
-
-@main.route("/search-model", methods=["POST"])
-def search_model():
-    """ Search for a plain text model on the grid network. """
-
-    response_body = {"message": None}
-    status_code = None
-
-    try:
-        body = json.loads(request.data)
-
-        model_id = body["model_id"]
-        match_nodes = _get_model_hosting_nodes(model_id)
-
-        # It returns a list[ (id, address) ]  with all grid nodes that have the desired model
-        response_body = match_nodes
-        status_code = 200
-
-    except ValueError or KeyError:
-        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
-        status_code = 400
-
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
-
-
-@main.route("/search-available-models", methods=["GET"])
-def available_models():
-    """ Get all available models on the grid network. Can be useful to know what models our grid network have. """
-    grid_nodes = connected_nodes()
-    models = set()
-    for node in grid_nodes:
-        try:
-            response = requests.get(grid_nodes[node] + "/models/").content
-        except requests.exceptions.ConnectionError:
-            continue
-        response = json.loads(response)
-        models.update(set(response.get("models", [])))
-
-    # Return a list[ "model_id" ]  with all grid nodes
-    return Response(json.dumps(list(models)), status=200, mimetype="application/json")
-
-
-@main.route("/search-available-tags", methods=["GET"])
-def available_tags():
-    """ Returns all available tags stored on grid nodes. Can be useful to know what dataset our grid network have. """
-    grid_nodes = connected_nodes()
-    tags = set()
-    for node in grid_nodes:
-        try:
-            response = requests.get(grid_nodes[node] + "/dataset-tags").content
-        except requests.exceptions.ConnectionError:
-            continue
-        response = json.loads(response)
-        tags.update(set(response))
-
-    # Return a list[ "#tags" ]  with all grid nodes
-    return Response(json.dumps(list(tags)), status=200, mimetype="application/json")
-
-
-@main.route("/search", methods=["POST"])
-def search_dataset_tags():
-    """ Search for information on all known nodes and return a list of the nodes that own it. """
-
-    response_body = {"message": None}
-    status_code = None
-
-    try:
-        body = json.loads(request.data)
-        grid_nodes = connected_nodes()
-
-        # Perform requests (HTTP) to all known nodes looking for the desired data tag
-        match_grid_nodes = []
-        for node in grid_nodes:
-            try:
-                response = requests.post(
-                    grid_nodes[node] + "/search",
-                    data=json.dumps({"query": body["query"]}),
-                ).content
-            except requests.exceptions.ConnectionError:
-                continue
-            response = json.loads(response)
-            # If contains
-            if response["content"]:
-                match_grid_nodes.append((node, grid_nodes[node]))
-
-        # It returns a list[ (id, address) ]  with all grid nodes that have the desired data
-        response_body = match_grid_nodes
-        status_code = 200
-
-    except ValueError or KeyError as e:
-        response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
-        status_code = 400
-
-    return Response(json.dumps(response_body), status=200, mimetype="application/json")
+# Dependencies used by req_join endpoint
+# It's is a mockup endpoint and should be removed soon.
+from scipy.stats import poisson
+import numpy as np
+from math import floor
+import logging
+from random import random
 
 
 @main.route("/federated/get-protocol", methods=["GET"])
@@ -306,10 +41,10 @@ def download_protocol():
         protocol_id = request.args.get("protocol_id", None)
 
         # Retrieve Process Entities
-        _protocol = processes.get_protocol(id=protocol_id)
-        _cycle = processes.get_cycle(_protocol.fl_process_id)
+        _protocol = protocols.get(id=protocol_id)
+        _cycle = cycle_manager.last(_protocol.fl_process_id)
         _worker = worker_manager.get(id=worker_id)
-        _accepted = processes.validate(_worker.id, _cycle.id, request_key)
+        _accepted = cycle_manager.validate(_worker.id, _cycle.id, request_key)
 
         if not _accepted:
             raise InvalidRequestKeyError
@@ -343,19 +78,67 @@ def download_model():
         model_id = request.args.get("model_id", None)
 
         # Retrieve Process Entities
-        _model = processes.get_model(id=model_id)
-        _cycle = processes.get_cycle(_model.fl_process_id)
+        _model = model_manager.get(id=model_id)
+        _cycle = cycle_manager.last(_model.fl_process_id)
         _worker = worker_manager.get(id=worker_id)
-        _accepted = processes.validate(_worker.id, _cycle.id, request_key)
+        _accepted = cycle_manager.validate(_worker.id, _cycle.id, request_key)
 
         if not _accepted:
             raise InvalidRequestKeyError
 
-        _last_checkpoint = processes.get_model_checkpoint(model_id=model_id)
+        _last_checkpoint = model_manager.load(model_id=model_id)
 
         return send_file(
             io.BytesIO(_last_checkpoint.values), mimetype="application/octet-stream"
         )
+
+    except InvalidRequestKeyError as e:
+        status_code = 401  # Unauthorized
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except PyGridError as e:
+        status_code = 400  # Bad request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
+
+
+@main.route("/federated/get-plan", methods=["GET"])
+def download_plan():
+    """Request a download of a plan"""
+
+    response_body = {}
+    status_code = None
+
+    try:
+        worker_id = request.args.get("worker_id", None)
+        request_key = request.args.get("request_key", None)
+        plan_id = request.args.get("plan_id", None)
+        receive_operations_as = request.args.get("receive_operations_as", None)
+
+        # Retrieve Process Entities
+        _plan = process_manager.get_plan(id=plan_id, is_avg_plan=False)
+        _cycle = cycle_manager.last(fl_process_id=_plan.fl_process_id)
+        _worker = worker_manager.get(id=worker_id)
+        _accepted = cycle_manager.validate(_worker.id, _cycle.id, request_key)
+
+        if not _accepted:
+            raise InvalidRequestKeyError
+
+        status_code = 200  # Success
+
+        if receive_operations_as == "torchscript":
+            # TODO leave only torchscript plan
+            pass
+        else:
+            # TODO leave only list of ops plan
+            pass
+
+        return send_file(io.BytesIO(_plan.value), mimetype="application/octet-stream")
 
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
@@ -541,26 +324,6 @@ def report_diff():
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
-def _get_model_hosting_nodes(model_id):
-    """ Search all nodes if they are currently hosting the model.
-
-    :param model_id: The model to search for
-    :return: An array of the nodes currently hosting the model
-    """
-    grid_nodes = connected_nodes()
-    match_nodes = []
-    for node in grid_nodes:
-        try:
-            response = requests.get(grid_nodes[node] + "/models/").content
-        except requests.exceptions.ConnectionError:
-            continue
-        response = json.loads(response)
-        if model_id in response.get("models", []):
-            match_nodes.append((node, grid_nodes[node]))
-
-    return match_nodes
-
-
 @main.route("/federated/cycle-request", methods=["POST"])
 def worker_cycle_request():
     """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
@@ -602,7 +365,7 @@ def fl_cycle_application_decision():
     down_speed = request.args.get("down_speed")
     worker_id = request.args.get("worker_id")
     worker_ping = request.args.get("ping")
-    _cycle = processes.get_cycle(model_id)
+    _cycle = cycle_manager.last(model_id)
     _accept = False
     """
     MVP variable stubs:
@@ -769,52 +532,4 @@ def fl_cycle_application_decision():
         ),  # leave out other accpet keys/values for now
         status=400,
         mimetype="application/json",
-    )
-
-
-@main.route("/federated/get-plan", methods=["GET"])
-def download_plan():
-    """Request a download of a plan"""
-
-    response_body = {}
-    status_code = None
-
-    try:
-        worker_id = request.args.get("worker_id", None)
-        request_key = request.args.get("request_key", None)
-        plan_id = request.args.get("plan_id", None)
-        receive_operations_as = request.args.get("receive_operations_as", None)
-
-        # Retrieve Process Entities
-        _plan = processes.get_plan(id=plan_id, is_avg_plan=False)
-        _cycle = processes.get_cycle(fl_process_id=_plan.fl_process_id)
-        _worker = worker_manager.get(id=worker_id)
-        _accepted = processes.validate(_worker.id, _cycle.id, request_key)
-
-        if not _accepted:
-            raise InvalidRequestKeyError
-
-        status_code = 200  # Success
-
-        if receive_operations_as == "torchscript":
-            # TODO leave only torchscript plan
-            pass
-        else:
-            # TODO leave only list of ops plan
-            pass
-
-        return send_file(io.BytesIO(_plan.value), mimetype="application/octet-stream")
-
-    except InvalidRequestKeyError as e:
-        status_code = 401  # Unauthorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except PyGridError as e:
-        status_code = 400  # Bad request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
     )

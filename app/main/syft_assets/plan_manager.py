@@ -20,7 +20,23 @@ class PlanManager:
             self._plans.register(value=plans, avg_flprocess=process, is_avg_plan=True)
 
     def get(self, **kwargs):
-        """ Retrieve the desired plan.
+        """ Retrieve the desired plans.
+            Args:
+                query : query used to identify the desired plans object.
+            Returns:
+                plan : Plan list or None if it wasn't found.
+            Raises:
+                PlanNotFound (PyGridError) : If Plan not found. 
+        """
+        _plans = self._plans.query(**kwargs)
+
+        if not _plans:
+            raise PlanNotFoundError
+
+        return _plans
+
+    def first(self, **kwargs):
+        """ Retrieve the first occurence that matches with query.
             Args:
                 query : query used to identify the desired plans object.
             Returns:
@@ -28,7 +44,7 @@ class PlanManager:
             Raises:
                 PlanNotFound (PyGridError) : If Plan not found. 
         """
-        _plan = self._plans.query(**kwargs)
+        _plan = self._plans.first(**kwargs)
 
         if not _plan:
             raise PlanNotFoundError

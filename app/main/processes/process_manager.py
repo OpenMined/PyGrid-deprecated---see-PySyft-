@@ -108,6 +108,9 @@ class ProcessManager:
 
         return plan_dict
 
+    def get_plan(self, **kwargs):
+        return plans.first(**kwargs)
+
     def get_protocols(self, **kwargs):
         """ Return FL Process Protocols.
             Args:
