@@ -19,7 +19,7 @@ from app.main.models.worker_cycle import WorkerCycle
 from app.main.models.fl_process import FLProcess
 from app.main.models.cycle import Cycle
 from app.main.models.config import Config
-from app.main.models import db
+from app.main import db
 
 app = Flask(__name__)
 

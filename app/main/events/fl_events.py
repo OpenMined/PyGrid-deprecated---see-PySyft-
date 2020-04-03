@@ -5,7 +5,7 @@ from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ..exceptions import CycleNotFoundError, MaxCycleLimitExceededError
 from ..processes import processes
-from ..auth import workers
+from ..controller import workers
 from ..tasks.cycle import complete_cycle, run_task_once
 import traceback
 import base64
