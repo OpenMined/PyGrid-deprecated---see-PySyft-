@@ -17,7 +17,13 @@ from ..exceptions import (
 
 import random
 from functools import reduce
-from .helpers import unserialize_model_params, serialize_model_params
+from .helpers import (
+    unserialize_model_params,
+    serialize_model_params,
+    serialize_plan,
+    unserialize_plan,
+    translate_plan,
+)
 import torch as th
 import json
 import logging
@@ -327,7 +333,18 @@ class FLController:
 
         # Register new Plans into the database
         for key, value in client_plans.items():
-            self._plans.register(name=key, value=value, plan_flprocess=fl_process)
+            # Unserialize client plans to make torchscript variant of plan
+            plan = unserialize_plan(value)
+            plan_ops = translate_plan(plan, "default")
+            plan_ts = translate_plan(plan, "torchscript")
+            plan_ops_ser = serialize_plan(plan_ops)
+            plan_ts_ser = serialize_plan(plan_ts)
+            self._plans.register(
+                name=key,
+                value=plan_ops_ser,
+                value_ts=plan_ts_ser,
+                plan_flprocess=fl_process,
+            )
 
         # Register the client/server setup configs
         self._configs.register(config=client_config, server_flprocess_config=fl_process)
