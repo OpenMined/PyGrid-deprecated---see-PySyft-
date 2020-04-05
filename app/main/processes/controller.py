@@ -13,6 +13,8 @@ from ..exceptions import (
     ModelNotFoundError,
     ProcessFoundError,
     FLProcessConflict,
+    PlanInvalidError,
+    PlanTranslationError,
 )
 
 import random
@@ -312,6 +314,25 @@ class FLController:
         if self._processes.contains(name=name, version=version):
             raise FLProcessConflict
 
+        # Convert client plans to specific formats
+        client_plans_converted = {}
+        for idx, plan_ser in client_plans.items():
+            try:
+                plan = unserialize_plan(plan_ser)
+            except:
+                raise PlanInvalidError()
+            try:
+                plan_ops = translate_plan(plan, "default")
+                plan_ts = translate_plan(plan, "torchscript")
+                plan_ops_ser = serialize_plan(plan_ops)
+                plan_ts_ser = serialize_plan(plan_ts)
+            except:
+                raise PlanTranslationError()
+            client_plans_converted[idx] = {
+                "list": plan_ops_ser,
+                "torchscript": plan_ts_ser,
+            }
+
         fl_process = self._processes.register(name=name, version=version)
 
         # Register new model
@@ -332,17 +353,11 @@ class FLController:
         )
 
         # Register new Plans into the database
-        for key, value in client_plans.items():
-            # Unserialize client plans to make torchscript variant of plan
-            plan = unserialize_plan(value)
-            plan_ops = translate_plan(plan, "default")
-            plan_ts = translate_plan(plan, "torchscript")
-            plan_ops_ser = serialize_plan(plan_ops)
-            plan_ts_ser = serialize_plan(plan_ts)
+        for key, value in client_plans_converted.items():
             self._plans.register(
                 name=key,
-                value=plan_ops_ser,
-                value_ts=plan_ts_ser,
+                value=value["list"],
+                value_ts=value["torchscript"],
                 plan_flprocess=fl_process,
             )
 
