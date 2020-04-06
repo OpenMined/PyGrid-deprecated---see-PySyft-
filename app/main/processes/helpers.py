@@ -4,6 +4,7 @@ import syft as sy
 from syft.execution.state import State
 from syft.execution.plan import Plan
 from syft.execution.translation.torchscript import PlanTranslatorTorchscript
+from syft.execution.translation.default import PlanTranslatorDefault
 from syft.serde import protobuf
 from syft_proto.execution.v1.state_pb2 import State as StatePB
 from syft_proto.execution.v1.plan_pb2 import Plan as PlanPB
@@ -58,7 +59,7 @@ def translate_plan(plan: "Plan", variant: str):
     """Translate Plan to specified variant and remove everything else"""
     translators = {
         "torchscript": PlanTranslatorTorchscript,
-        "default": None,
+        "default": PlanTranslatorDefault,
     }
 
     cls = translators.get(variant, None)
@@ -67,14 +68,10 @@ def translate_plan(plan: "Plan", variant: str):
 
     plan_copy = plan.copy()
 
-    if cls is not None:
-        plan_copy.add_translation(cls)
+    plan_copy.add_translation(cls)
 
     for name, cls in translators.items():
         if name != variant:
-            if cls is not None:
-                plan_copy.remove_translation(cls)
-            else:
-                plan_copy.remove_translation()
+            plan_copy.remove_translation(cls)
 
     return plan_copy
