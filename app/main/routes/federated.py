@@ -251,17 +251,16 @@ def auth():
     _auth_token = data["auth_token"]
     model_name = data.get("model_name", None)
 
-    """stub DB vars"""
-    JWT_VERIFY_API = 1  # maybe processes._processes.last()["server_config"].get("JWT_VERIFY_API", None)
-    RSA = False
-    # maybe processes._processes.last(name=model_name)["server_config"].get("JWT_with_RSA", True)
-    if RSA:
-        pub_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAswWWr/kU9Z5kj7KIQEs54B9x1MaEhEp4WDZPJ+PGONfg2tD4BKuGtDl345f4zgx7EPZL7EZRApLq6HxcznVbLleIbyqKkzvR88zHLBaxQ9GBRx+0kH8VqZspmMI/6fDBVm/SDtG1GOAYPwX1zK3DZZFMkkA2v8oGZ3U791jd9gy7S5CxewJrFMcFMStj9x8x3tW07OAdC7/HZpa5zKE2rWN01tytxbsl9/coMNBAfWIWEflhZgRz2+Onp2uDaXez7RNTe4m0+tQlx2FD0Pb7rFvlKwsgziKBReO8wwCQXWqcAPLsIXCOfUZXlBNpvPvp9I4HPEffaHyR1FC2eRoj4hzUibEu0+OQNj7QM5P9KsMV9k4wxURFxsd78rlFF8cnbKwIMf5nB8/FbqL/IyJOggxtntHr1Gum44QnG794GtSQHZNlWKKak2z/u2O++flxfZ9dBBAYWjJYM5kIT+X9NVYbWWryBqupHYipwP8f3vovKWVacOMMm3S0z76O5IDiIp5Gjnsifbnz57FWQok0HrSv8l3QMRPCxi3SjIFyI2ZusFC/4VLy9zZXQe07qI6l7s91UN6W8VW1YUFQ7nLGffkpAd/bLZSOueYQrf5tslQjZf3Jon5C/MkTJ7PGyOUmoAYya2kyKi4izMg/ODRIloVbWjU6tEPWyhzK8VMsXw== root@388da63cf68e"
-        # @TODO: remove when hooked up to DB
-        # maybe processes._processes.last(name=model_name)["server_config"].get("pub_key", None)
-    else:
-        SECRET = "very long a$$ very secret key phrase"  #  TODO:@PRTFW remove after hookup to DB  # maybe processes._processes.last(name=model_name)["server_config"].get("JWT_SECRET", "very long a$$ very secret key phrase")
+    server, _ = process_manager.get_configs(name=model_name)
 
+    """stub DB vars"""
+    JWT_VERIFY_API = server.config.get("JWT_VERIFY_API", None)
+    RSA = server.config.get("JWT_with_RSA", None)
+
+    if RSA:
+        pub_key = server.config.get("pub_key", None)
+    else:
+        SECRET = server.config.get("JWT_SECRET", "very long a$$ very secret key phrase")
     """end stub DB vars"""
 
     HIGH_SECURITY_RISK_NO_AUTH_FLOW = False if JWT_VERIFY_API is not None else True
