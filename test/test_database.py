@@ -276,6 +276,11 @@ class TestDatabase(unittest.TestCase):
             "cycle_length": 8 * 60 * 60,  # 8 hours
             "minimum_upload_speed": 2000,  # 2 mbps
             "minimum_download_speed": 4000,  # 4 mbps
+            "model_name": "testy_mcTeserson",  # @TODO: @IonesioJunior @cereallarceny: do we add this value here as well or do we have a foreignkey look up to the server_config? see this for more detaisl https://github.com/OpenMined/Roadmap/blob/master/web_and_mobile_team/projects/federated_learning.md 2. test and 3. host
+            "JWT_VERIFY_API": "google.com",
+            "JWT_with_RSA": True,
+            "JWT_PUB_KEY": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDAswWWr/kU9Z5kj7KIQEs54B9x1MaEhEp4WDZPJ+PGONfg2tD4BKuGtDl345f4zgx7EPZL7EZRApLq6HxcznVbLleIbyqKkzvR88zHLBaxQ9GBRx+0kH8VqZspmMI/6fDBVm/SDtG1GOAYPwX1zK3DZZFMkkA2v8oGZ3U791jd9gy7S5CxewJrFMcFMStj9x8x3tW07OAdC7/HZpa5zKE2rWN01tytxbsl9/coMNBAfWIWEflhZgRz2+Onp2uDaXez7RNTe4m0+tQlx2FD0Pb7rFvlKwsgziKBReO8wwCQXWqcAPLsIXCOfUZXlBNpvPvp9I4HPEffaHyR1FC2eRoj4hzUibEu0+OQNj7QM5P9KsMV9k4wxURFxsd78rlFF8cnbKwIMf5nB8/FbqL/IyJOggxtntHr1Gum44QnG794GtSQHZNlWKKak2z/u2O++flxfZ9dBBAYWjJYM5kIT+X9NVYbWWryBqupHYipwP8f3vovKWVacOMMm3S0z76O5IDiIp5Gjnsifbnz57FWQok0HrSv8l3QMRPCxi3SjIFyI2ZusFC/4VLy9zZXQe07qI6l7s91UN6W8VW1YUFQ7nLGffkpAd/bLZSOueYQrf5tslQjZf3Jon5C/MkTJ7PGyOUmoAYya2kyKi4izMg/ODRIloVbWjU6tEPWyhzK8VMsXw== root@388da63cf68e",
+            "JWT_SECRET": "very long a$$ very secret key phrase",
         }
 
         server_config = Config(
@@ -322,3 +327,47 @@ class TestDatabase(unittest.TestCase):
 
         self.db.session.add(worker_cycle)
         self.db.session.commit()
+
+        """auth test cases:
+
+           "/federated/authenticate"
+           params refers to values in server_config
+           to generate test cases/assets: colab notebook => https://colab.research.google.com/drive/1HS86sFLvxi-AoeJHUIyonSkM-CkdOh9d
+
+        1. HIGH_SECURITY_RISK_NO_AUTH_FLOW = True
+            params: JWT_VERIFY_API = None
+            API call: do not need to include `auth_token`
+            expect: returns {status: success, worker_id: xxxx}
+
+        2. HIGH_SECURITY_RISK_NO_AUTH_FLOW = False, but no auth_token
+            params: JWT_VERIFY_API = not None
+            API call: no `auth_token'
+            expects: returns {"error": "Authentication is required, please pass an 'auth_token'."}
+
+        3. HIGH_SECURITY_RISK_NO_AUTH_FLOW = False, RSA verification fails
+            params: JWT_VERIFY_API = not None, RSA = True
+            API call: {auth_token: something_encrypted_with_different_private_key} (see colab notebook)
+            expect: returns {"error": "The 'auth_token' you sent is invalid."}
+
+        4. HIGH_SECURITY_RISK_NO_AUTH_FLOW = False, RSA verification succeeds
+            params: JWT_VERIFY_API = not None, RSA = True
+            API call: {auth_token: wisomething_encrypted_with_correct_key} (see colab notebook)
+            expect: same as 1.
+
+        5. HIGH_SECURITY_RISK_NO_AUTH_FLOW = False, HSA verification fails
+            params: JWT_VERIFY_API = not None, RSA = False
+            API call: {auth_token: wisomething_encrypted_with_different_secretPhrase} (see colab notebook)
+            expect: same as 3
+
+        6. HIGH_SECURITY_RISK_NO_AUTH_FLOW = False, HSA verification succeeds
+            params: JWT_VERIFY_API = not None, RSA = False
+            API call: {auth_token: wisomething_encrypted_with_correct_secretPhrase} (see colab notebook)
+            expect: same as 1
+
+        7. 3rd_part_verification fails
+            params: JWT_VERIFY_API = not None, RSA = False
+            API call: same as 6
+            Other_step: change line 324 in app/routes/fedreated.py to .post
+            expect: return {"error": "The 'auth_token' you sent did not pass 3rd party verificaiton."}
+
+        """

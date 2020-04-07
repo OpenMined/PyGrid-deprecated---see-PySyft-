@@ -258,7 +258,7 @@ def auth():
     RSA = server.config.get("JWT_with_RSA", None)
 
     if RSA:
-        pub_key = server.config.get("pub_key", None)
+        pub_key = server.config.get("JWT_PUB_KEY", None)
     else:
         SECRET = server.config.get("JWT_SECRET", "very long a$$ very secret key phrase")
     """end stub DB vars"""
@@ -320,25 +320,30 @@ def auth():
                                 status=status_code,
                                 mimetype="application/json",
                             )
-        external_api_verify_data = {"auth_token": f"{_auth_token}"}
-        verification_result = requests.get(
-            "http://google.com"
-        )  # test with get and google for now. using .post should result in failure
-        # TODO:@MADDIE replace after we have a api to test with `verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))`
-        if verification_result.status_code == 200:
+            external_api_verify_data = {
+                "auth_token": f"{_auth_token}"
+            }  # noqa right now we don't have a way to use this
+            verification_result = requests.get(
+                "http://google.com"
+            )  # test with get and google for now. using .post should result in failure
+            # TODO:@MADDIE replace after we have a api to test with `verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))`
+            if verification_result.status_code == 200:
+                resp = fl_events_auth({"auth_token": _auth_token}, None)
+                response_body = json.loads(resp)["data"]
+            else:
+                status_code = 400
+                return Response(
+                    json.dumps(
+                        {
+                            "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. "
+                        }
+                    ),
+                    status=status_code,
+                    mimetype="application/json",
+                )
+        else:
             resp = fl_events_auth({"auth_token": _auth_token}, None)
             response_body = json.loads(resp)["data"]
-        else:
-            status_code = 400
-            return Response(
-                json.dumps(
-                    {
-                        "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. "
-                    }
-                ),
-                status=status_code,
-                mimetype="application/json",
-            )
     except Exception as e:
         status_code = 401
         response_body = {"error_auth_failed": str(e)}
