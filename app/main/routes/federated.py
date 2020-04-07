@@ -248,7 +248,7 @@ def auth():
     response_body = {}
     status_code = 200
     data = json.loads(request.data)
-    _auth_token = data["auth_token"]
+    _auth_token = data.get("auth_token", None)
     model_name = data.get("model_name", None)
 
     server, _ = process_manager.get_configs(name=model_name)
@@ -263,7 +263,7 @@ def auth():
         SECRET = server.config.get("JWT_SECRET", "very long a$$ very secret key phrase")
     """end stub DB vars"""
 
-    HIGH_SECURITY_RISK_NO_AUTH_FLOW = False if JWT_VERIFY_API is not None else True
+    HIGH_SECURITY_RISK_NO_AUTH_FLOW = True if JWT_VERIFY_API is not None else True
 
     try:
         if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
