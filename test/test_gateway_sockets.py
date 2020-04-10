@@ -14,7 +14,8 @@ import syft as sy
 from syft.serde.serde import serialize, deserialize
 from syft.serde.msgpack import serde
 
-from app.main.processes.helpers import serialize_plan, serialize_model_params
+from app.main.syft_assets.plan_manager import PlanManager
+from app.main.models.model_manager import ModelManager
 
 from test import GATEWAY_WS_URL
 
@@ -93,11 +94,11 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         model.build(th.tensor([1.0, 2]))
 
         # Serialize plans / protocols and model
-        serialized_plan_method_1 = binascii.hexlify(serialize_plan(foo_1)).decode()
-        serialized_plan_method_2 = binascii.hexlify(serialize_plan(foo_2)).decode()
-        serialized_avg_plan = binascii.hexlify(serialize_plan(avg_plan)).decode()
+        serialized_plan_method_1 = binascii.hexlify(PlanManager.serialize_plan(foo_1)).decode()
+        serialized_plan_method_2 = binascii.hexlify(PlanManager.serialize_plan(foo_2)).decode()
+        serialized_avg_plan = binascii.hexlify(PlanManager.serialize_plan(avg_plan)).decode()
         serialized_plan_model = binascii.hexlify(
-            serialize_model_params(model.parameters())
+            ModelManager.serialize_model_params(model.parameters())
         ).decode()
         serialized_protocol_mockup = binascii.hexlify(
             "serialized_protocol_mockup".encode("utf-8")
