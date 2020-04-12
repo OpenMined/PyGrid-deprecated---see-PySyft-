@@ -7,7 +7,6 @@ from ..exceptions import PlanNotFoundError, PlanTranslationError, PlanInvalidErr
 
 # Syft dependencies
 import syft as sy
-from syft.execution.plan import Plan
 from syft.execution.translation.torchscript import PlanTranslatorTorchscript
 from syft.execution.translation.default import PlanTranslatorDefault
 from syft.serde import protobuf
@@ -15,6 +14,7 @@ from syft_proto.execution.v1.plan_pb2 import Plan as PlanPB
 
 # Make fake local worker for serialization
 worker = sy.VirtualWorker(hook=None)
+
 
 class PlanManager:
     def __init__(self):
@@ -43,7 +43,12 @@ class PlanManager:
 
             # Register new Plans into the database
             for key, plan in plans_converted.items():
-                self._plans.register(name=key, value=plan["list"], value_ts=plan["torchscript"], plan_flprocess=process)
+                self._plans.register(
+                    name=key,
+                    value=plan["list"],
+                    value_ts=plan["torchscript"],
+                    plan_flprocess=process,
+                )
         else:
             # Register the average plan into the database
             self._plans.register(value=plans, avg_flprocess=process, is_avg_plan=True)
@@ -88,7 +93,7 @@ class PlanManager:
         self._plans.delete(**kwargs)
 
     @staticmethod
-    def unserialize_plan(bin: bin) -> "Plan":
+    def unserialize_plan(bin: bin) -> "sy.Plan":
         """Unserializes a Plan"""
         pb = PlanPB()
         pb.ParseFromString(bin)
@@ -96,14 +101,14 @@ class PlanManager:
         return plan
 
     @staticmethod
-    def serialize_plan(plan: "Plan") -> bin:
+    def serialize_plan(plan: "sy.Plan") -> bin:
         """Serializes a Plan"""
         pb = protobuf.serde._bufferize(worker, plan)
         serialized_plan = pb.SerializeToString()
         return serialized_plan
 
     @staticmethod
-    def trim_plan(plan: "Plan", variant: str) -> "Plan":
+    def trim_plan(plan: "sy.Plan", variant: str) -> "sy.Plan":
         """Trim Plan to specified variant"""
         translators = {
             "torchscript": PlanTranslatorTorchscript,

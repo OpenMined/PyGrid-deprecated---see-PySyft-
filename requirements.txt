@@ -18,8 +18,7 @@ flask_migrate
 flask_testing
 psycopg2-binary
 jwt
-git+git://github.com/OpenMined/syft-proto@vvm/placeholder-shape#egg=syft_proto
-git+git://github.com/OpenMined/PySyft@vvm/torchscript-plan#egg=syft
+git+https://github.com/OpenMined/PySyft@vvm/torchscript-plan-build#egg=syft
 black
 coverage
 pytest
