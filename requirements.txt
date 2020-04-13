@@ -18,7 +18,7 @@ flask_migrate
 flask_testing
 psycopg2-binary
 jwt
-git+https://github.com/OpenMined/PySyft@vvm/torchscript-plan-build#egg=syft
+git+https://github.com/OpenMined/PySyft@master#egg=syft
 black
 coverage
 pytest
