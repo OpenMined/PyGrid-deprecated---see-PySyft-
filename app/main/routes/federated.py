@@ -75,7 +75,7 @@ def connection_speed_test():
             form = MultipartEncoder(response)
             return Response(form.to_string(), mimetype=form.content_type)
         elif request.method == "POST":  # Otherwise, it's POST method
-            if len(request.files)==1:
+            if len(request.files) == 1:
                 status_code = 200  # Success
             else:
                 raise PyGridError
