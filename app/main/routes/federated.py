@@ -87,7 +87,7 @@ def connection_speed_test():
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
-        json.dumps(response_body), status_code=status_code, mimetype="application/json"
+        json.dumps(response_body), status=status_code, mimetype="application/json"
     )
 
 
