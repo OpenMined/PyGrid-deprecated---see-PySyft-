@@ -1,8 +1,12 @@
 venv: venv/bin/activate
 
-venv/bin/activate: requirements.txt
-	test -e venv/bin/activate || virtualenv venv
-	. venv/bin/activate; pip install -Ur requirements.txt; python setup.py install
+REQ_DIR=pip-dep
+
+reqs: $(REQ_DIR)/requirements.txt $(REQ_DIR)/requirements_dev.txt 
+
+venv/bin/activate: reqs
+	test -e venv/bin/activate || python3 -m venv venv
+	. venv/bin/activate; pip install -Ur $(REQ_DIR)/requirements.txt; python setup.py install
 	touch venv/bin/activate
 
 install_hooks: venv
