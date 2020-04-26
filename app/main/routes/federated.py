@@ -63,12 +63,17 @@ def connection_speed_test():
     try:
         _worker_id = request.args.get("worker_id", None)
         _random = request.args.get("random", None)
+<<<<<<< HEAD
+=======
+        _is_ping = request.args.get("is_ping", None)
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
 
         if not _worker_id or not _random:
             raise PyGridError
 
         # If GET method
         if request.method == "GET":
+<<<<<<< HEAD
             # Download data sample (1MB)
             data_sample = b"x" * 67108864  # 64 Megabyte
             response = {"sample": data_sample}
@@ -79,6 +84,19 @@ def connection_speed_test():
                 status_code = 200  # Success
             else:
                 raise PyGridError
+=======
+            if _is_ping is None:
+                # Download data sample (64MB)
+                data_sample = b"x" * 67108864  # 64 Megabyte
+                response = {"sample": data_sample}
+                form = MultipartEncoder(response)
+                return Response(form.to_string(), mimetype=form.content_type)
+            else:
+                status_code = 200  # Success
+        elif request.method == "POST":  # Otherwise, it's POST method
+            status_code = 200  # Success
+
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
     except PyGridError as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -87,7 +105,11 @@ def connection_speed_test():
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
+<<<<<<< HEAD
         json.dumps(response_body), status_code=status_code, mimetype="application/json"
+=======
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
     )
 
 
