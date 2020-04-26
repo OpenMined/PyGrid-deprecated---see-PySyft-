@@ -21,7 +21,10 @@ services:
                 - GRID_NETWORK_URL=http://gateway:5000
                 - ID=Bob
                 - ADDRESS=http://bob:3000/
+<<<<<<< HEAD
                 - REDISCLOUD_URL=redis://redis:6379
+=======
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
                 - PORT=3000
         depends_on:
                 - "gateway"
@@ -34,7 +37,10 @@ services:
                 - GRID_NETWORK_URL=http://gateway:5000
                 - ID=Alice
                 - ADDRESS=http://alice:3001/
+<<<<<<< HEAD
                 - REDISCLOUD_URL=redis://redis:6379
+=======
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
                 - PORT=3001
         depends_on:
                 - "gateway"
@@ -47,7 +53,10 @@ services:
                 - GRID_NETWORK_URL=http://gateway:5000
                 - ID=Bill
                 - ADDRESS=http://bill:3002/
+<<<<<<< HEAD
                 - REDISCLOUD_URL=redis://redis:6379
+=======
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
                 - PORT=3002
         depends_on:
                 - "gateway"
@@ -60,7 +69,10 @@ services:
                 - GRID_NETWORK_URL=http://gateway:5000
                 - ID=James
                 - ADDRESS=http://james:3003/
+<<<<<<< HEAD
                 - REDISCLOUD_URL=redis://redis:6379
+=======
+>>>>>>> f818247b25df9491cc3dbf87e15e064cbe979148
                 - PORT=3003
         depends_on:
                 - "gateway"
