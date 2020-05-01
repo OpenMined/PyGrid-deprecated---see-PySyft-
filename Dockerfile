@@ -17,3 +17,4 @@ COPY --from=builder root/.local root/.local
 COPY . /app
 WORKDIR /app
 ENTRYPOINT ["sh", "entrypoint.sh"]
+

@@ -27,7 +27,8 @@ jobs:
         python -m pip install --upgrade pip
         sudo apt-get update
         hash -r
-        pip3 install -r requirements.txt > build.log
+        pip3 install -r pip-dep/requirements.txt > build.log
+        pip3 install -r pip-dep/requirements_dev.txt > build.log
         pip3 install flake8
         pip3 install flake8-comprehensions
         pip3 install pep8-naming
