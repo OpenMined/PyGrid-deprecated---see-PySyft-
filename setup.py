@@ -37,7 +37,7 @@ tests_require = ["pytest", "pytest-flake8"]
 setup(
     name="grid",
     version="0.0.0",
-    author="Ionésio Junior, Andrew Trask",
+    author="Ionesio Junior, Andrew Trask",
     author_email="contact@openmined.org",
     description=("A Library for Private, Secure Deep Learning"),
     license="Apache-2.0",
