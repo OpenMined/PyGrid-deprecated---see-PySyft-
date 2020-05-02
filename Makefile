@@ -9,6 +9,7 @@ venv/bin/activate: reqs
 	. venv/bin/activate; pip install -Ur $(REQ_DIR)/requirements.txt; pip install -Ur $(REQ_DIR)/requirements_dev.txt; python setup.py install
 	touch venv/bin/activate
 
+
 install_hooks: venv
 	venv/bin/pre-commit install
 
