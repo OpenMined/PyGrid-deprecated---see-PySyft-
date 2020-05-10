@@ -9,7 +9,6 @@ flask_migrate
 flask_sqlalchemy
 flask_testing
 gevent==1.4.0
-git+https://github.com/OpenMined/PySyft@master#egg=syft
 gunicorn==19.9.0
 itsdangerous==1.1.0
 Jinja2==2.10.1
@@ -18,5 +17,6 @@ MarkupSafe==1.1.1
 psycopg2-binary
 requests==2.22.0
 requests_toolbelt
+syft==0.2.5
 Werkzeug==0.15.3
 
