@@ -39,7 +39,9 @@ setup(
     version="0.0.0",
     author="Ionesio Junior, Andrew Trask",
     author_email="contact@openmined.org",
-    description=("A Library for Private, Secure Deep Learning"),
+    description=(
+        "PyGrid is a peer-to-peer network of data owners and data scientists who can collectively train AI models using PySyft."
+    ),
     license="Apache-2.0",
     keywords="deep learning artificial intelligence privacy secure multi-party computation federated learning differential privacy",
     packages=find_packages(exclude=["docs", "examples", "dist"]),
@@ -47,7 +49,7 @@ setup(
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     url="https://github.com/OpenMined/PyGrid/",
-    install_requires=[core_reqs, "syft"],
+    install_requires=[core_reqs],
     extras_require={"dev": dev_extras},
     dependency_links=core_dependency_links,
     setup_requires=["pytest-runner"],
