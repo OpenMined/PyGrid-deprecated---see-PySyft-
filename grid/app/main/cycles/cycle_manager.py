@@ -189,9 +189,7 @@ class CycleManager:
         max_worker = server_config.get("max_worker", 3)
         received_diffs_exceeds_min_worker = completed_cycles_num >= min_worker
         received_diffs_exceeds_max_worker = completed_cycles_num >= max_worker
-        cycle_ended = (
-            True
-        )  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
 
         # Hmm, I don't think there should be such connection between ready_to_average, max_workers, and received_diffs
         # I thought max_workers just caps total number of simultaneous workers
