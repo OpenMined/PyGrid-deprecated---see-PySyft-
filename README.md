@@ -68,7 +68,8 @@ $ docker build -t openmined/grid-gateway ./gateway/  # Build gateway image
 To start the PyGrid app manually, run:
 
 ```
-python grid.py 
+python setup.py install  # this will install pygrid as a package
+python -m grid <arguments>  # this will start pygrid
 ```
 You can pass the arguments or use environment variables to set the gateway configs.  
 
