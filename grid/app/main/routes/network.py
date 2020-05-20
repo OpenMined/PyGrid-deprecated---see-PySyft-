@@ -280,7 +280,9 @@ def search_dataset_tags():
         response_body["message"] = str(e)
         status_code = 500  # Internal Server Error
 
-    return Response(json.dumps(response_body), status=status_code, mimetype="application/json")
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
 
 
 def _get_model_hosting_nodes(model_id):
