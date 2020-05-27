@@ -1,4 +1,4 @@
-FROM python:3.7-slim as base
+FROM openmined/pysyft-lite as base
 
 FROM base as builder
 
@@ -10,7 +10,7 @@ WORKDIR /app
 RUN pip3 install --user -Ur pip-dep/requirements.txt
 
 
-FROM python:3.7-slim as grid_app
+FROM openmined/pysyft-lite as grid_app
 
 COPY --from=builder root/.local root/.local
 
