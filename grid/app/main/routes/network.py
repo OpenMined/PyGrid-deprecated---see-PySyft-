@@ -3,6 +3,8 @@ from .. import main
 from ..models import model_manager
 from ..network import network_manager
 from ..processes import process_manager
+from ..codes import RESPONSE_MSG
+
 
 # General imports
 import os
@@ -294,7 +296,7 @@ def download_model():
     response_body = {}
     status_code = None
     try:
-        model_id = request.args.get("model_id", None)
+        name = request.args.get("name", None)
         version = request.args.get("version", None)
         checkpoint = request.args.get("checkpoint", None)
 
