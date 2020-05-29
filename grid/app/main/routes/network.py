@@ -7,6 +7,7 @@ from ..codes import RESPONSE_MSG
 
 
 # General imports
+import io
 import os
 import json
 import random
