@@ -1,6 +1,8 @@
 # PyGrid imports
 from .. import main
+from ..models import model_manager
 from ..network import network_manager
+from ..processes import process_manager
 
 # General imports
 import os
@@ -279,6 +281,34 @@ def search_dataset_tags():
     except Exception as e:
         response_body["message"] = str(e)
         status_code = 500  # Internal Server Error
+
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
+
+
+@main.route("/get-model", methods=["GET"])
+def download_model():
+    """Request a download of a model"""
+
+    response_body = {}
+    status_code = None
+    try:
+        model_id = request.args.get("model_id", None)
+        version = request.args.get("version", None)
+        checkpoint = request.args.get("checkpoint", None)
+
+        _fl_process = process_manager.get(name=name, version=version)
+        _model = model_manager.get(fl_process_id=_fl_process.id)
+        _model_checkpoint = model_manager.load(model_id=_model.id, id=checkpoint)
+
+        return send_file(
+            io.BytesIO(_model_checkpoint.values), mimetype="application/octet-stream"
+        )
+
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
