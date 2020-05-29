@@ -291,7 +291,7 @@ def search_dataset_tags():
 
 
 @main.route("/get-model", methods=["GET"])
-def download_model():
+def get_model():
     """Request a download of a model"""
 
     response_body = {}
