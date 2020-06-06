@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from grid.app.main.routes import network
-from grid.app.main.exceptions import PyGridError
+from grid.main.routes import network
+from grid.main.exceptions import PyGridError
 
 
 def test_join_grid_node_bad_request_json(client):
@@ -22,7 +22,7 @@ def test_join_grid_node_bad_request_key_error(client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_join_grid_node_already_registered(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for an already registered node
@@ -35,7 +35,7 @@ def test_join_grid_node_already_registered(mock_network_manager, client):
     assert result.get_json().get("message") == "This ID has already been registered"
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_join_grid_node_internal_server_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 500 for an unknown error condition
@@ -66,7 +66,7 @@ def test_delete_grid_node_bad_request_key_error(client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_join_grid_node_already_registered(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for a node not yet registered
@@ -83,7 +83,7 @@ def test_join_grid_node_already_registered(mock_network_manager, client):
     )
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_delete_grid_node_internal_server_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 500 for an unknown error condition
@@ -98,7 +98,7 @@ def test_delete_grid_node_internal_server_error(mock_network_manager, client):
     assert result.get_json().get("message") == "test"
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_value_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for malformed JSON
@@ -110,7 +110,7 @@ def test_search_encrypted_model_bad_request_value_error(mock_network_manager, cl
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_key_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for missing keys in sent JSON
@@ -122,7 +122,7 @@ def test_search_encrypted_model_bad_request_key_error(mock_network_manager, clie
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_encrypted_model_internal_server_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 500 for an unknown error condition
@@ -137,7 +137,7 @@ def test_search_encrypted_model_internal_server_error(mock_network_manager, clie
     assert result.get_json().get("message") == "test"
 
 
-@patch("grid.app.main.routes.network._get_model_hosting_nodes")
+@patch("grid.main.routes.network._get_model_hosting_nodes")
 def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, client):
     """
     assert that the endpoint returns a 400 for malformed JSON
@@ -158,7 +158,7 @@ def test_search_model_bad_request_key_error(client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network._get_model_hosting_nodes")
+@patch("grid.main.routes.network._get_model_hosting_nodes")
 def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client):
     """
     assert that the endpoint returns a 500 for an unknown error condition
@@ -171,7 +171,7 @@ def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client
     assert result.get_json().get("message") == "test"
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_bad_request_value_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for malformed JSON
@@ -183,7 +183,7 @@ def test_search_bad_request_value_error(mock_network_manager, client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_bad_request_key_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 400 for missing keys in sent JSON
@@ -195,7 +195,7 @@ def test_search_bad_request_key_error(mock_network_manager, client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid.app.main.routes.network.network_manager")
+@patch("grid.main.routes.network.network_manager")
 def test_search_internal_server_error(mock_network_manager, client):
     """
     assert that the endpoint returns a 500 for an unknown error condition

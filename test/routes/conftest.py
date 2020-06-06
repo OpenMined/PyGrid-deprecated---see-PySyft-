@@ -1,6 +1,6 @@
 import pytest
 
-from grid.app import create_app
+from grid import create_app
 
 
 @pytest.fixture
