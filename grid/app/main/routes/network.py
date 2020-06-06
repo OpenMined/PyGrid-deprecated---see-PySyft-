@@ -1,8 +1,13 @@
 # PyGrid imports
 from .. import main
+from ..models import model_manager
 from ..network import network_manager
+from ..processes import process_manager
+from ..codes import RESPONSE_MSG
+
 
 # General imports
+import io
 import os
 import json
 import random
@@ -38,9 +43,12 @@ def join_grid_node():
             status_code = 409
 
     # JSON format not valid.
-    except ValueError or KeyError as e:
+    except (ValueError, KeyError) as e:
         response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
+    except Exception as e:
+        response_body["message"] = str(e)
+        status_code = 500  # Internal Server Error
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
@@ -59,7 +67,7 @@ def get_connected_nodes():
 
 
 @main.route("/delete-node", methods=["DELETE"])
-def delete_grid_note():
+def delete_grid_node():
     """ Delete a grid node at grid network"""
 
     response_body = {"message": None}
@@ -77,9 +85,12 @@ def delete_grid_note():
             status_code = 409
 
     # JSON format not valid.
-    except ValueError or KeyError as e:
+    except (ValueError, KeyError) as e:
         response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
+    except Exception as e:
+        response_body["message"] = str(e)
+        status_code = 500  # Internal Server Error
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
@@ -162,9 +173,12 @@ def search_encrypted_model():
             status_code = 200
 
     # JSON format not valid.
-    except ValueError or KeyError as e:
+    except (ValueError, KeyError) as e:
         response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
+    except Exception as e:
+        response_body["message"] = str(e)
+        status_code = 500  # Internal Server Error
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
@@ -188,9 +202,12 @@ def search_model():
         response_body = match_nodes
         status_code = 200
 
-    except ValueError or KeyError:
+    except (ValueError, KeyError):
         response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
+    except Exception as e:
+        response_body["message"] = str(e)
+        status_code = 500  # Internal Server Error
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
@@ -261,11 +278,44 @@ def search_dataset_tags():
         response_body = match_grid_nodes
         status_code = 200
 
-    except ValueError or KeyError as e:
+    except (ValueError, KeyError) as e:
         response_body["message"] = INVALID_JSON_FORMAT_MESSAGE
         status_code = 400
+    except Exception as e:
+        response_body["message"] = str(e)
+        status_code = 500  # Internal Server Error
 
-    return Response(json.dumps(response_body), status=200, mimetype="application/json")
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
+
+
+@main.route("/get-model", methods=["GET"])
+def get_model():
+    """Request a download of a model"""
+
+    response_body = {}
+    status_code = None
+    try:
+        name = request.args.get("name", None)
+        version = request.args.get("version", None)
+        checkpoint = request.args.get("checkpoint", None)
+
+        _fl_process = process_manager.get(name=name, version=version)
+        _model = model_manager.get(fl_process_id=_fl_process.id)
+        _model_checkpoint = model_manager.load(model_id=_model.id, id=checkpoint)
+
+        return send_file(
+            io.BytesIO(_model_checkpoint.values), mimetype="application/octet-stream"
+        )
+
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
 
 
 def _get_model_hosting_nodes(model_id):
