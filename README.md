@@ -1,4 +1,4 @@
-![foobar-logo](https://raw.githubusercontent.com/OpenMined/design-assets/master/logos/PyGrid/horizontal-primary-trans.png)
+![pygrid-logo](https://raw.githubusercontent.com/OpenMined/design-assets/master/logos/PyGrid/horizontal-primary-trans.png)
 
 ![Tests](https://github.com/OpenMined/GridNode/workflows/Run%20tests/badge.svg)
 ![License](https://img.shields.io/github/license/OpenMined/GridNode)
@@ -68,7 +68,7 @@ Please make sure to update tests as appropriate.
 
 ## Contributors
 
-Please make sure to fill this section in with **all former and current** contributors to the project. [Documentation on how to do this is located here.](https://github.com/all-contributors/all-contributors)
+See the list of [contributors](https://github.com/OpenMined/PyGrid/contributors) who participated in this project.
 
 ## License
 [Apache License 2.0](https://choosealicense.com/licenses/apache-2.0/)
