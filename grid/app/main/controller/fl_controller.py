@@ -118,7 +118,7 @@ class FLController:
         _accepted = (
             (server_config["num_cycles"] == 0)
             or (not _assigned)
-            and _comp_bandwith
+            and _comp_bandwidth
             and _allowed
         )
         if _accepted:
