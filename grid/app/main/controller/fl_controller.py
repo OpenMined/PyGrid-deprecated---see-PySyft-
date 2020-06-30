@@ -33,8 +33,7 @@ class FLController:
                 client_plans : an object containing syft plans.
                 client_protocols : an object containing syft protocols.
                 client_config: the client configurations
-                server_averaging_plan: a function that will instruct PyGrid on how to average model diffs
-                    that are returned from the workers.
+                server_averaging_plan: a function that will instruct PyGrid on how to average model diffs that are returned from the workers.
                 server_config: the server configurations
             Returns:
                 process : FLProcess Instance.
