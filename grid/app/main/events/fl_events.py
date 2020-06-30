@@ -9,12 +9,13 @@ from ..workers import worker_manager
 from ..processes import process_manager
 
 # Generic imports
+import jwt
 import uuid
 import json
-from binascii import unhexlify
-import traceback
 import base64
 import requests
+import traceback
+from binascii import unhexlify
 
 
 # Singleton socket handler
@@ -178,7 +179,7 @@ def authenticate(message: dict, socket) -> str:
     if verification_result["status"] == RESPONSE_MSG.SUCCESS:
         response = assign_worker({"auth_token": _auth_token}, None)
     else:
-        response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
+        response[RESPONSE_MSG.ERROR] = verification_result["error"]
 
     return json.dumps(response)
 
