@@ -54,7 +54,7 @@ class CycleManager:
     def last_participation(self, process: int, worker_id: str):
         """ Retrieve the last time the worker participated from this cycle.
             Args:
-                process_id : Federated Learning Process ID.
+                process: Federated Learning Process.
                 worker_id: Worker's ID.
             Returns:
                 last_participation: last cycle.
@@ -77,7 +77,7 @@ class CycleManager:
     def last(self, fl_process_id: int, version: str = None):
         """ Retrieve the last not completed registered cycle.
             Args:
-                model_id: Model's ID.
+                fl_process_id: Federated Learning Process ID.
                 version: Model's version.
             Returns:
                 cycle: Cycle Instance / None
@@ -189,7 +189,9 @@ class CycleManager:
         max_worker = server_config.get("max_worker", 3)
         received_diffs_exceeds_min_worker = completed_cycles_num >= min_worker
         received_diffs_exceeds_max_worker = completed_cycles_num >= max_worker
-        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
+        cycle_ended = (
+            True
+        )  # check cycle.cycle_time (but we should probably track cycle startime too)
 
         # Hmm, I don't think there should be such connection between ready_to_average, max_workers, and received_diffs
         # I thought max_workers just caps total number of simultaneous workers
