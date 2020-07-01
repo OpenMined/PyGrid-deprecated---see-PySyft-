@@ -160,7 +160,6 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         response = await send_ws_message(auth_msg)
         self.assertEqual(response["data"]["status"], "success")
         worker_id = response["data"].get("worker_id", None)
-        print(worker_id)
         assert worker_id != None
 
         """ 3 - Cycle Request """
