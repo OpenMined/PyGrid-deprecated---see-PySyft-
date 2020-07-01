@@ -94,7 +94,7 @@ def assign_worker(message, socket):
 
 def verify_token(auth_token, model_name):
     server_config, _ = process_manager.get_configs(name=model_name)
-    
+
     """stub DB vars"""
     JWT_VERIFY_API = server_config.get("JWT_VERIFY_API", None)
     RSA = server_config.get("JWT_with_RSA", None)
