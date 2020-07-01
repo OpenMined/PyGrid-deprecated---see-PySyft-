@@ -154,7 +154,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         auth_msg = {
             "type": "federated/authenticate",
             "model_name": "my-federated-model",
-            "model_version": "0.1.0"
+            "model_version": "0.1.0",
         }
 
         # Send worker authentication message
