@@ -252,7 +252,7 @@ def auth():
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
             resp = assign_worker_id({"auth_token": _auth_token}, None)
-            response_body = json.loads(resp)
+            response_body = json.loads(resp)["data"]
 
         elif verification_result["status"] == RESPONSE_MSG.ERROR:
             status_code = 400
@@ -435,8 +435,7 @@ def fl_cycle_application_decision():
                 _accept = True
 
     if _accept:
-        return 
-    onse(
+        return Response(
             json.dumps(
                 {"status": "accepted"}
             ),  # leave out other accpet keys/values for now

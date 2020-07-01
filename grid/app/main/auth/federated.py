@@ -15,6 +15,7 @@ def verify_token(auth_token, model_name, model_version="latest"):
     server_config, _ = process_manager.get_configs(
         name=model_name, version=model_version
     )
+
     auth_config = server_config.get("authentication", None)
 
     HIGH_SECURITY_RISK_NO_AUTH_FLOW = True if auth_config is None else False
@@ -39,7 +40,7 @@ def verify_token(auth_token, model_name, model_version="latest"):
             _algorithm = header["alg"]
 
             try:
-                if secret is not None:
+                if SECRET is not None:
                     payload_str = base64.b64decode(base64Payload)
                     payload = json.loads(payload_str)
                     jwt.decode(payload, SECRET)
