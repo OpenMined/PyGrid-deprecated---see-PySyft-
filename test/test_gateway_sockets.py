@@ -47,7 +47,6 @@ async def get_protocol():
 
 # Gateway WebSockets API Test
 
-
 class GatewaySocketsTest(aiounittest.AsyncTestCase):
     async def test_socket_ping_alive(self):
         response = await send_ws_message({"type": "socket-ping", "data": {}})
@@ -151,13 +150,13 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
         """ 2 - Authentication Request """
 
         # "federated/authenticate" request body
-        auth_msg = {"type": "federated/authenticate"}
+        auth_msg = {"type": "federated/authenticate", "model_name": "my-federated-model"}
 
         # Send worker authentication message
         response = await send_ws_message(auth_msg)
         self.assertEqual(response["data"]["status"], "success")
         worker_id = response["data"].get("worker_id", None)
-
+        print(worker_id)
         assert worker_id != None
 
         """ 3 - Cycle Request """

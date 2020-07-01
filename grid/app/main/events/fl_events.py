@@ -89,20 +89,20 @@ def assign_worker(message, socket):
         response[RESPONSE_MSG.ERROR] = str(e)
 
     response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
-    return json.dumps(response)
+    return response
 
 
 def verify_token(auth_token, model_name):
-    server, _ = process_manager.get_configs(name=model_name)
-
+    server_config, _ = process_manager.get_configs(name=model_name)
+    
     """stub DB vars"""
-    JWT_VERIFY_API = server.config.get("JWT_VERIFY_API", None)
-    RSA = server.config.get("JWT_with_RSA", None)
+    JWT_VERIFY_API = server_config.get("JWT_VERIFY_API", None)
+    RSA = server_config.get("JWT_with_RSA", None)
 
     if RSA:
-        pub_key = server.config.get("pub_key", None)
+        pub_key = server_config.get("pub_key", None)
     else:
-        SECRET = server.config.get("JWT_SECRET", "very long a$$ very secret key phrase")
+        SECRET = server_config.get("JWT_SECRET", "very long a$$ very secret key phrase")
     """end stub DB vars"""
 
     HIGH_SECURITY_RISK_NO_AUTH_FLOW = False if JWT_VERIFY_API is not None else True
