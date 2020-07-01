@@ -66,7 +66,14 @@ def host_federated_training(message: dict, socket) -> str:
     return json.dumps(response)
 
 
-def assign_worker(message, socket):
+def assign_worker_id(message, socket):
+    """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
+        Args:
+            message : Message body sended after token verification.
+            socket: Socket descriptor.
+        Returns:
+            response : String response to the client
+    """
     response = {}
 
     # Create a new worker instance and bind it with the socket connection.
@@ -86,12 +93,11 @@ def assign_worker(message, socket):
         response[CYCLE.STATUS] = RESPONSE_MSG.ERROR
         response[RESPONSE_MSG.ERROR] = str(e)
 
-    response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
     return response
 
 
 def authenticate(message: dict, socket) -> str:
-    """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
+    """ Check the submitted token and assign the worker a new id.
         Args:
             message : Message body sended by some client.
             socket: Socket descriptor.
@@ -101,11 +107,13 @@ def authenticate(message: dict, socket) -> str:
     response = {}
     _auth_token = message.get("auth_token")
     model_name = message.get("model_name", None)
+    model_version = message.get("model_version", None)
 
-    verification_result = verify_token(_auth_token, model_name)
+    verification_result = verify_token(_auth_token, model_name, model_version)
 
     if verification_result["status"] == RESPONSE_MSG.SUCCESS:
-        response = assign_worker({"auth_token": _auth_token}, None)
+        res_data = assign_worker_id({"auth_token": _auth_token}, None)
+        response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: res_data}
     else:
         response[RESPONSE_MSG.ERROR] = verification_result["error"]
 

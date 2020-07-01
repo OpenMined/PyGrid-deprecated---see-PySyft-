@@ -7,7 +7,7 @@ from ..workers import worker_manager
 from ..processes import process_manager
 from ..syft_assets import plans, protocols
 from ..codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ..events.fl_events import report, cycle_request, assign_worker
+from ..events.fl_events import report, cycle_request, assign_worker_id
 from ..auth.federated import verify_token
 from ..exceptions import InvalidRequestKeyError, PyGridError
 
@@ -245,12 +245,13 @@ def auth():
     data = json.loads(request.data)
     _auth_token = data["auth_token"]
     model_name = data.get("model_name", None)
+    model_version = data.get("model_version", None)
 
     try:
-        verification_result = verify_token(_auth_token, model_name)
+        verification_result = verify_token(_auth_token, model_name, model_version)
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
-            resp = assign_worker({"auth_token": _auth_token}, None)
+            resp = assign_worker_id({"auth_token": _auth_token}, None)
             response_body = json.loads(resp)["data"]
 
         elif verification_result["status"] == RESPONSE_MSG.ERROR:

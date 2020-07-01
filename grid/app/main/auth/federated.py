@@ -10,23 +10,23 @@ import base64
 import requests
 
 
-def verify_token(auth_token, model_name):
-    server_config, _ = process_manager.get_configs(name=model_name)
-    auth_config = server_config.get("authentication", {})
+def verify_token(auth_token, model_name, model_version="latest"):
 
-    """stub DB vars"""
-    JWT_VERIFY_API = auth_config.get("endpoint", None)
-    RSA = auth_config.get("JWT_with_RSA", None)
+    server_config, _ = process_manager.get_configs(
+        name=model_name, version=model_version
+    )
+    auth_config = server_config.get("authentication", None)
 
-    if RSA:
-        pub_key = auth_config.get("pub_key", None)
-    else:
-        SECRET = auth_config.get("secret", "very long a$$ very secret key phrase")
-    """end stub DB vars"""
-
-    HIGH_SECURITY_RISK_NO_AUTH_FLOW = False if JWT_VERIFY_API is not None else True
+    HIGH_SECURITY_RISK_NO_AUTH_FLOW = True if auth_config is None else False
 
     if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
+        """stub DB vars"""
+        JWT_VERIFY_API = auth_config.get("endpoint", None)
+
+        pub_key = auth_config.get("pub_key", None)
+        SECRET = auth_config.get("secret", None)
+        """end stub DB vars"""
+
         if auth_token is None:
             return {
                 "error": "Authentication is required, please pass an 'auth_token'.",
@@ -38,44 +38,37 @@ def verify_token(auth_token, model_name):
             header = json.loads(header_str)
             _algorithm = header["alg"]
 
-            if not RSA:
-                payload_str = base64.b64decode(base64Payload)
-                payload = json.loads(payload_str)
-                expected_token = jwt.encode(
-                    payload, SECRET, algorithm=_algorithm
-                ).decode("utf-8")
+            try:
+                if secret is not None:
+                    payload_str = base64.b64decode(base64Payload)
+                    payload = json.loads(payload_str)
+                    jwt.decode(payload, SECRET)
 
-                if expected_token != auth_token:
-                    return {
-                        "error": "The 'auth_token' you sent is invalid.",
-                        "status": RESPONSE_MSG.ERROR,
-                    }
-            else:
-                # we should check if RSA is true there is a pubkey string included during call to `host_federated_training`
-                # here we assume it exists / no redundant check
-                try:
+                if pub_key is not None:
                     jwt.decode(auth_token, pub_key, _algorithm)
 
-                except Exception as e:
-                    if e.__class__.__name__ == "InvalidSignatureError":
-                        return {
-                            "error": "The 'auth_token' you sent is invalid. " + str(e),
-                            "status": RESPONSE_MSG.ERROR,
-                        }
+            except Exception as e:
+                if e.__class__.__name__ == "InvalidSignatureError":
+                    return {
+                        "error": "The 'auth_token' you sent is invalid. " + str(e),
+                        "status": RESPONSE_MSG.ERROR,
+                    }
 
-    external_api_verify_data = {"auth_token": f"{auth_token}"}
-    verification_result = requests.get(
-        "http://google.com"
-    )  # test with get and google for now. using .post should result in failure
-    # TODO:@MADDIE replace after we have a api to test with `verification_result = requests.post(JWT_VERIFY_API, data = json.dumps(external_api_verify_data))`
+            if JWT_VERIFY_API is not None:
+                external_api_verify_data = {"auth_token": f"{auth_token}"}
+                verification_result = requests.post(
+                    JWT_VERIFY_API, data=json.dumps(external_api_verify_data)
+                )
 
-    if verification_result.status_code == 200:
-        return {
-            "auth_token": f"{auth_token}",
-            "status": RESPONSE_MSG.SUCCESS,
-        }
+                if verification_result.status_code != 200:
+                    return {
+                        "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. ",
+                        "status": RESPONSE_MSG.ERROR,
+                    }
+
+            return {
+                "auth_token": f"{auth_token}",
+                "status": RESPONSE_MSG.SUCCESS,
+            }
     else:
-        return {
-            "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. ",
-            "status": RESPONSE_MSG.ERROR,
-        }
+        return {"status": RESPONSE_MSG.SUCCESS}
