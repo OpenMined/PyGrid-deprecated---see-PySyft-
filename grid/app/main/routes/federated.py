@@ -7,7 +7,8 @@ from ..workers import worker_manager
 from ..processes import process_manager
 from ..syft_assets import plans, protocols
 from ..codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ..events.fl_events import report, cycle_request, assign_worker, verify_token
+from ..events.fl_events import report, cycle_request, assign_worker
+from ..auth.federated import verify_token
 from ..exceptions import InvalidRequestKeyError, PyGridError
 
 # General Imports
