@@ -1,2 +1,2 @@
-from .federated import *
+from .sfl.federated import *
 from .general import *

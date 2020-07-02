@@ -2,8 +2,8 @@
 This file exists to provide a route to websocket events.
 """
 # Event module imports
-from .control_events import *
-from .fl_events import *
+from .static.control_events import *
+from .static.fl_events import *
 from .socket_handler import SocketHandler
 
 # PyGrid imports
