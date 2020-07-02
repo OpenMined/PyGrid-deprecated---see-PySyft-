@@ -185,21 +185,16 @@ class CycleManager:
         )
         logging.info("# of diffs: %d" % completed_cycles_num)
 
-        min_worker = server_config.get("min_worker", 3)
-        max_worker = server_config.get("max_worker", 3)
-        received_diffs_exceeds_min_worker = completed_cycles_num >= min_worker
-        received_diffs_exceeds_max_worker = completed_cycles_num >= max_worker
-        cycle_ended = True  # check cycle.cycle_time (but we should probably track cycle startime too)
+        min_diffs = server_config.get("min_diffs", 1)
+        max_diffs = server_config.get("max_diffs", 999999999999)
 
-        # Hmm, I don't think there should be such connection between ready_to_average, max_workers, and received_diffs
-        # I thought max_workers just caps total number of simultaneous workers
-        # 'cycle end' condition should probably depend on cycle_length regardless of number of actual received diffs
-        # another 'cycle end' condition can be based on min_diffs
+        cycle_ended = True if (completed_cycles_num > max_diffs) else False
+
         ready_to_average = (
             True
             if (
-                (received_diffs_exceeds_max_worker or cycle_ended)
-                and received_diffs_exceeds_min_worker
+                (cycle_ended and completed_cycles_num > min_diffs)
+                or (min_diffs is not None and completed_cycles_num >= min_diffs)
             )
             else False
         )
