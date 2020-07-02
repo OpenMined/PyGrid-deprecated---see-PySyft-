@@ -188,12 +188,16 @@ class CycleManager:
         min_diffs = server_config.get("min_diffs", 1)
         max_diffs = server_config.get("max_diffs", 999999999999)
 
-        cycle_ended = True if (completed_cycles_num > max_diffs) else False
+        cycle_ended = (
+            True
+            if (datetime.now() >= cycle.end or completed_cycles_num >= max_diffs)
+            else False
+        )
 
         ready_to_average = (
             True
             if (
-                (cycle_ended and completed_cycles_num > min_diffs)
+                (cycle_ended and completed_cycles_num >= min_diffs)
                 or (min_diffs is not None and completed_cycles_num >= min_diffs)
             )
             else False
