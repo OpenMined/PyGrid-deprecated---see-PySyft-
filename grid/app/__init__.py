@@ -53,7 +53,7 @@ def set_database_config(app, test_config=None, verbose=False):
     db.init_app(app)
 
 
-def create_app(debug=False, n_replica=None, test_config=None):
+def create_app(node_id: str, debug=False, n_replica=None, test_config=None):
     """Create flask application."""
     app = Flask(__name__)
     app.debug = debug
@@ -70,9 +70,14 @@ def create_app(debug=False, n_replica=None, test_config=None):
     sockets = Sockets(app)
 
     # Register app blueprints
-    from .main import main as main_blueprint, ws
+    from .main import main, ws, local_worker, auth, hook
 
-    app.register_blueprint(main_blueprint)
+    # set_node_id(id)
+    local_worker.id = node_id
+    hook.local_worker._known_workers[node_id] = local_worker
+    local_worker.add_worker(hook.local_worker)
+
+    app.register_blueprint(main, url_prefix=r"/")
     sockets.register_blueprint(ws, url_prefix=r"/")
 
     # Set SQLAlchemy configs
@@ -80,6 +85,9 @@ def create_app(debug=False, n_replica=None, test_config=None):
     s = app.app_context().push()
     db.create_all()
     db.session.commit()
+
+    # Set Authentication configs
+    app = auth.set_auth_configs(app)
 
     CORS(app)
 
