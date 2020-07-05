@@ -7,7 +7,7 @@ from ...sfl.workers import worker_manager
 from ...sfl.processes import process_manager
 from ...sfl.syft_assets import plans, protocols
 from ...codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ...events.static.fl_events import report, cycle_request, assign_worker
+from ...events.sfl.fl_events import report, cycle_request, assign_worker
 from ...sfl.auth.federated import verify_token
 from ...exceptions import InvalidRequestKeyError, PyGridError
 
