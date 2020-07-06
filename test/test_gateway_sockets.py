@@ -126,6 +126,20 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
             "cycle_length": 8 * 60 * 60,  # 8 hours
             "minimum_upload_speed": 2,  # 2 mbps
             "minimum_download_speed": 4,  # 4 mbps
+            "authentication": {
+                "secret": "abc",
+                "pub_key": """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0+rhzQe72Sef+wJuxoTO
+Rx/nijb9PpPyb+Rgk0sNN4nB1wkNSKMlaHQkORWY/y5c8qlBF3/WlQUIQIAt1zP1
+wM29GaaDuO3htRL9pjxwWdbX86Sl2CrjR1w0N2jaN+Bz9EZHYasd/0GJWbPTF7j5
+JXrKRgvu+xB5wRRgZV/9gr/AzJHynPnDk95vcbEjPoTZ5dcv/UuMKngceZBex0Ea
+ac+gPRWjh6FkXTiqedbKxrVcHD/72RdmBiTgTpu9a5DbA+vAIWIhj3zfvKQpUY1p
+riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
+0wIDAQAB
+-----END PUBLIC KEY-----
+                    """.strip(),
+            },
         }
 
         # "federated/host-training" request body
@@ -141,20 +155,6 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
                 "averaging_plan": serialized_avg_plan,
                 "client_config": client_config,
                 "server_config": server_config,
-                "authentication": {
-                    "secret": "abc",
-                    "pub_key": """
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0+rhzQe72Sef+wJuxoTO
-Rx/nijb9PpPyb+Rgk0sNN4nB1wkNSKMlaHQkORWY/y5c8qlBF3/WlQUIQIAt1zP1
-wM29GaaDuO3htRL9pjxwWdbX86Sl2CrjR1w0N2jaN+Bz9EZHYasd/0GJWbPTF7j5
-JXrKRgvu+xB5wRRgZV/9gr/AzJHynPnDk95vcbEjPoTZ5dcv/UuMKngceZBex0Ea
-ac+gPRWjh6FkXTiqedbKxrVcHD/72RdmBiTgTpu9a5DbA+vAIWIhj3zfvKQpUY1p
-riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
-0wIDAQAB
------END PUBLIC KEY-----
-                    """.strip(),
-                },
             },
         }
 
