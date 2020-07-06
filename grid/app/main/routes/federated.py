@@ -143,7 +143,7 @@ def download_protocol():
         response_body[RESPONSE_MSG.ERROR] = str(e)
     except Exception as e:
         status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG] = str(e)
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
@@ -256,11 +256,11 @@ def auth():
 
         elif verification_result["status"] == RESPONSE_MSG.ERROR:
             status_code = 400
-            response_body = {"error": verification_result["error"]}
+            response_body[RESPONSE_MSG.ERROR] = verification_result["error"]
 
     except Exception as e:
         status_code = 401
-        response_body = {"error_auth_failed": str(e)}
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"

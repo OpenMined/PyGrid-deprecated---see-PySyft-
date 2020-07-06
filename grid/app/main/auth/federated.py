@@ -8,68 +8,71 @@ import uuid
 import json
 import base64
 import requests
+import logging
 
 
-def verify_token(auth_token, model_name, model_version="latest"):
+def verify_token(auth_token, model_name, model_version=None):
 
-    server_config, _ = process_manager.get_configs(
-        name=model_name, version=model_version
-    )
+    kwargs = {"name": model_name}
+    if model_version:
+        kwargs["version"] = model_version
+    server_config, _ = process_manager.get_configs(**kwargs)
 
-    auth_config = server_config.get("authentication", None)
+    auth_config = server_config.get("authentication", {})
+    endpoint = auth_config.get("endpoint", None)
+    pub_key = auth_config.get("pub_key", None)
+    secret = auth_config.get("secret", None)
 
-    HIGH_SECURITY_RISK_NO_AUTH_FLOW = True if auth_config is None else False
+    auth_enabled = endpoint or pub_key or secret
 
-    if not HIGH_SECURITY_RISK_NO_AUTH_FLOW:
-        """stub DB vars"""
-        JWT_VERIFY_API = auth_config.get("endpoint", None)
-
-        pub_key = auth_config.get("pub_key", None)
-        SECRET = auth_config.get("secret", None)
-        """end stub DB vars"""
-
+    if auth_enabled:
         if auth_token is None:
             return {
                 "error": "Authentication is required, please pass an 'auth_token'.",
                 "status": RESPONSE_MSG.ERROR,
             }
         else:
-            base64Header, base64Payload, signature = auth_token.split(".")
-            header_str = base64.b64decode(base64Header)
-            header = json.loads(header_str)
-            _algorithm = header["alg"]
+            payload = None
+            error = False
 
-            try:
-                if SECRET is not None:
-                    payload_str = base64.b64decode(base64Payload)
-                    payload = json.loads(payload_str)
-                    jwt.decode(payload, SECRET)
+            # Validate `auth_key` with passphrase (HMAC)
+            if secret is not None:
+                try:
+                    payload = jwt.decode(auth_token, secret)
+                except Exception as e:
+                    logging.warning("Token validation against secret failed: " + str(e))
+                    error = True
 
-                if pub_key is not None:
-                    jwt.decode(auth_token, pub_key, _algorithm)
+            # Validate `auth_token` with public key (RSA)
+            if payload is None and pub_key is not None:
+                try:
+                    payload = jwt.decode(auth_token, pub_key)
+                    error = False
+                except Exception as e:
+                    logging.warning("Token validation against public key failed: " + str(e))
+                    error = True
 
-            except Exception as e:
-                if e.__class__.__name__ == "InvalidSignatureError":
-                    return {
-                        "error": "The 'auth_token' you sent is invalid. " + str(e),
-                        "status": RESPONSE_MSG.ERROR,
-                    }
+            if error:
+                return {
+                    "error": "The 'auth_token' you sent is invalid.",
+                    "status": RESPONSE_MSG.ERROR,
+                }
 
-            if JWT_VERIFY_API is not None:
+            if endpoint is not None:
                 external_api_verify_data = {"auth_token": f"{auth_token}"}
                 verification_result = requests.post(
-                    JWT_VERIFY_API, data=json.dumps(external_api_verify_data)
+                    endpoint, data=json.dumps(external_api_verify_data)
                 )
 
                 if verification_result.status_code != 200:
                     return {
-                        "error": "The 'auth_token' you sent did not pass 3rd party verificaiton. ",
+                        "error": "The 'auth_token' you sent did not pass 3rd party validation.",
                         "status": RESPONSE_MSG.ERROR,
                     }
 
             return {
-                "auth_token": f"{auth_token}",
                 "status": RESPONSE_MSG.SUCCESS,
             }
     else:
+        # Authentication is not configured
         return {"status": RESPONSE_MSG.SUCCESS}

@@ -104,19 +104,25 @@ def authenticate(message: dict, socket) -> str:
         Returns:
             response : String response to the client
     """
+    data = message.get("data")
     response = {}
-    _auth_token = message.get("auth_token")
-    model_name = message.get("model_name", None)
-    model_version = message.get("model_version", None)
 
-    verification_result = verify_token(_auth_token, model_name, model_version)
+    try:
+        _auth_token = data.get("auth_token")
+        model_name = data.get("model_name", None)
+        model_version = data.get("model_version", None)
 
-    if verification_result["status"] == RESPONSE_MSG.SUCCESS:
-        res_data = assign_worker_id({"auth_token": _auth_token}, None)
-        response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: res_data}
-    else:
-        response[RESPONSE_MSG.ERROR] = verification_result["error"]
+        verification_result = verify_token(_auth_token, model_name, model_version)
 
+        if verification_result["status"] == RESPONSE_MSG.SUCCESS:
+            response = assign_worker_id({"auth_token": _auth_token}, None)
+        else:
+            response[RESPONSE_MSG.ERROR] = verification_result["error"]
+
+    except Exception as e:
+        response[RESPONSE_MSG.ERROR] = str(e) + '\n' + traceback.format_exc()
+
+    response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
     return json.dumps(response)
 
 

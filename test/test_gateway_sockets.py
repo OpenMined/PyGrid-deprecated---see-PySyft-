@@ -141,6 +141,20 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
                 "averaging_plan": serialized_avg_plan,
                 "client_config": client_config,
                 "server_config": server_config,
+                "authenticate": {
+                    "secret": "abc",
+                    "pub_key": """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0+rhzQe72Sef+wJuxoTO
+Rx/nijb9PpPyb+Rgk0sNN4nB1wkNSKMlaHQkORWY/y5c8qlBF3/WlQUIQIAt1zP1
+wM29GaaDuO3htRL9pjxwWdbX86Sl2CrjR1w0N2jaN+Bz9EZHYasd/0GJWbPTF7j5
+JXrKRgvu+xB5wRRgZV/9gr/AzJHynPnDk95vcbEjPoTZ5dcv/UuMKngceZBex0Ea
+ac+gPRWjh6FkXTiqedbKxrVcHD/72RdmBiTgTpu9a5DbA+vAIWIhj3zfvKQpUY1p
+riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
+0wIDAQAB
+-----END PUBLIC KEY-----
+                    """.strip()
+                }
             },
         }
 
@@ -157,7 +171,28 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
             "model_version": "0.1.0",
         }
 
-        # Send worker authentication message
+        # Send worker authentication message (no token!)
+        response = await send_ws_message(auth_msg)
+        self.assertEqual(response["data"]["error"], "Authentication is required, please pass an 'auth_token'.")
+        worker_id = response["data"].get("worker_id", None)
+        assert worker_id == None
+
+        # Send worker authentication message (invalid token)
+        auth_msg['auth_token'] = 'just kidding!'
+        response = await send_ws_message(auth_msg)
+        self.assertEqual(response["data"]["error"], "The 'auth_token' you sent is invalid.")
+        worker_id = response["data"].get("worker_id", None)
+        assert worker_id != None
+
+        # Send worker authentication message (valid for secret)
+        auth_msg['auth_token'] = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.yYhP2xosmpuyV5aoT8mz7GFESzq3hKSy-CRWC-vYOIU'
+        response = await send_ws_message(auth_msg)
+        self.assertEqual(response["data"]["status"], "success")
+        worker_id = response["data"].get("worker_id", None)
+        assert worker_id != None
+
+        # Send worker authentication message (valid for pub_key)
+        auth_msg['auth_token'] = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.e30.jOleZNk89aGMWhWVpV8UYul94y7rxBJAg4HnhY72y-DrLfxfhnR8b31FOMUcngxcw-N4MaSz5fulYFSTBt9NwIWWDUeAo0MqNMK-M6RRoxYd35k8SHNTIRAk0KnybKHMnTC4Qay3plXcu3FfMpOkX8Relpb8SUO3T1_B6RFqgNPO_l4KlmtXnxXgeFC86qF8b7fFCo8U1UKVUEbqw4JUCW5OmDnSmGxmb9felzASzuM5sO5MOkksuQ0DGVoi6AadhXQ5zB7k2Mj4fjJH7XyauHeuB2xjNM0jhoeR_DAoztvVEW5qx9fu2JfOiM6ZsBguCL7uKg1h1bQq278btHROpA'
         response = await send_ws_message(auth_msg)
         self.assertEqual(response["data"]["status"], "success")
         worker_id = response["data"].get("worker_id", None)
