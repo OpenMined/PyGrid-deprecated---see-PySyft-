@@ -167,8 +167,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         # "federated/authenticate" request body
         auth_msg = {
             "type": "federated/authenticate",
-            "model_name": "my-federated-model",
-            "model_version": "0.1.0",
+            "data": {"model_name": "my-federated-model", "model_version": "0.1.0",},
         }
 
         # Send worker authentication message (no token!)
@@ -181,7 +180,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         assert worker_id == None
 
         # Send worker authentication message (invalid token)
-        auth_msg["auth_token"] = "just kidding!"
+        auth_msg["data"]["auth_token"] = "just kidding!"
         response = await send_ws_message(auth_msg)
         self.assertEqual(
             response["data"]["error"], "The 'auth_token' you sent is invalid."
@@ -190,7 +189,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         assert worker_id != None
 
         # Send worker authentication message (valid for secret)
-        auth_msg[
+        auth_msg["data"][
             "auth_token"
         ] = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.yYhP2xosmpuyV5aoT8mz7GFESzq3hKSy-CRWC-vYOIU"
         response = await send_ws_message(auth_msg)
@@ -199,7 +198,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         assert worker_id != None
 
         # Send worker authentication message (valid for pub_key)
-        auth_msg[
+        auth_msg["data"][
             "auth_token"
         ] = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.e30.jOleZNk89aGMWhWVpV8UYul94y7rxBJAg4HnhY72y-DrLfxfhnR8b31FOMUcngxcw-N4MaSz5fulYFSTBt9NwIWWDUeAo0MqNMK-M6RRoxYd35k8SHNTIRAk0KnybKHMnTC4Qay3plXcu3FfMpOkX8Relpb8SUO3T1_B6RFqgNPO_l4KlmtXnxXgeFC86qF8b7fFCo8U1UKVUEbqw4JUCW5OmDnSmGxmb9felzASzuM5sO5MOkksuQ0DGVoi6AadhXQ5zB7k2Mj4fjJH7XyauHeuB2xjNM0jhoeR_DAoztvVEW5qx9fu2JfOiM6ZsBguCL7uKg1h1bQq278btHROpA"
         response = await send_ws_message(auth_msg)
