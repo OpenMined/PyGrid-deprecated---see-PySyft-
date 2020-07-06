@@ -49,7 +49,9 @@ def verify_token(auth_token, model_name, model_version=None):
                     payload = jwt.decode(auth_token, pub_key)
                     error = False
                 except Exception as e:
-                    logging.warning("Token validation against public key failed: " + str(e))
+                    logging.warning(
+                        "Token validation against public key failed: " + str(e)
+                    )
                     error = True
 
             if error:

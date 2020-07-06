@@ -120,7 +120,7 @@ def authenticate(message: dict, socket) -> str:
             response[RESPONSE_MSG.ERROR] = verification_result["error"]
 
     except Exception as e:
-        response[RESPONSE_MSG.ERROR] = str(e) + '\n' + traceback.format_exc()
+        response[RESPONSE_MSG.ERROR] = str(e) + "\n" + traceback.format_exc()
 
     response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
     return json.dumps(response)
