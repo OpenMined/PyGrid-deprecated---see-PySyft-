@@ -24,7 +24,7 @@ class CycleManager:
         self._cycles = Warehouse(Cycle)
         self._worker_cycles = Warehouse(WorkerCycle)
 
-    def create(self, fl_process_id: str, version: str, cycle_time: int = 2500):
+    def create(self, fl_process_id: str, version: str, cycle_time: int):
         """ Create a new federated learning cycle.
             Args:
                 fl_process_id: FL Process's ID.
@@ -40,7 +40,7 @@ class CycleManager:
             self._cycles.query(fl_process_id=fl_process_id, version=version)
         )
         _now = datetime.now()
-        _end = _now + timedelta(seconds=cycle_time)
+        _end = _now + timedelta(seconds=cycle_time) if cycle_time is not None else None
         _new_cycle = self._cycles.register(
             start=_now,
             end=_end,
