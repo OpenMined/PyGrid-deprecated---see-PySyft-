@@ -186,7 +186,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
             response["data"]["error"], "The 'auth_token' you sent is invalid."
         )
         worker_id = response["data"].get("worker_id", None)
-        assert worker_id != None
+        assert worker_id == None
 
         # Send worker authentication message (valid for secret)
         auth_msg["data"][
