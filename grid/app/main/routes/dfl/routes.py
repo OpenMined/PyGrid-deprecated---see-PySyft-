@@ -27,7 +27,7 @@ from syft.codes import RESPONSE_MSG
 @main.route("/favicon.ico")
 def favicon():
     return send_from_directory(
-        os.path.join(html.root_path, "static"),
+        os.path.join(main.root_path, "static"),
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
