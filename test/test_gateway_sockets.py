@@ -141,7 +141,7 @@ class GatewaySocketsTest(aiounittest.AsyncTestCase):
                 "averaging_plan": serialized_avg_plan,
                 "client_config": client_config,
                 "server_config": server_config,
-                "authenticate": {
+                "authentication": {
                     "secret": "abc",
                     "pub_key": """
 -----BEGIN PUBLIC KEY-----
