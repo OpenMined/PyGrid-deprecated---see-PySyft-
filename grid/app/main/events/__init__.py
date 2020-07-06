@@ -52,13 +52,14 @@ def route_requests(message, socket):
             message_response : message response.
     """
     global routes
+
     if isinstance(message, bytearray):
         return forward_binary_message(message)
-
+    
     try:
         message = json.loads(message)
-        return routes[message[REQUEST_MSG.TYPE_FIELD]](message)
-
+        response =  routes[message[REQUEST_MSG.TYPE_FIELD]](message)
+        return response
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -77,12 +78,9 @@ def socket_api(socket):
         else:
             # Process received message
             response = route_requests(message, socket)
-
             if isinstance(response, bytearray):
                 socket.send(response, binary=True)
             else:
                 socket.send(response)
-
-            socket.send(response)
 
     worker_id = handler.remove(socket)

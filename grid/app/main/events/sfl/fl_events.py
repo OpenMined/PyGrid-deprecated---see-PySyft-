@@ -20,7 +20,7 @@ from binascii import unhexlify
 handler = SocketHandler()
 
 
-def host_federated_training(message: dict, socket) -> str:
+def host_federated_training(message: dict, socket=None) -> str:
     """This will allow for training cycles to begin on end-user devices.
         Args:
             message : Message body sent by some client.
@@ -66,7 +66,7 @@ def host_federated_training(message: dict, socket) -> str:
     return json.dumps(response)
 
 
-def assign_worker(message, socket):
+def assign_worker(message, socket=None):
     response = {}
 
     # Create a new worker instance and bind it with the socket connection.
@@ -90,7 +90,7 @@ def assign_worker(message, socket):
     return response
 
 
-def authenticate(message: dict, socket) -> str:
+def authenticate(message: dict, socket=None) -> str:
     """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
         Args:
             message : Message body sended by some client.
@@ -112,7 +112,7 @@ def authenticate(message: dict, socket) -> str:
     return json.dumps(response)
 
 
-def cycle_request(message: dict, socket) -> str:
+def cycle_request(message: dict, socket=None) -> str:
     """ This event is where the worker is attempting to join an active federated learning cycle.
         Args:
             message : Message body sent by some client.
@@ -160,7 +160,7 @@ def cycle_request(message: dict, socket) -> str:
     return json.dumps(response)
 
 
-def report(message: dict, socket) -> str:
+def report(message: dict, socket=None) -> str:
     """ This method will allow a worker that has been accepted into a cycle
         and finished training a model on their device to upload the resulting model diff.
         Args:
