@@ -180,28 +180,21 @@ class CycleManager:
 
         server_config, _ = process_manager.get_configs(id=cycle.fl_process_id)
         logging.info("server_config: %s" % json.dumps(server_config, indent=2))
-        completed_cycles_num = self._worker_cycles.count(
+
+        received_diffs = self._worker_cycles.count(
             cycle_id=cycle_id, is_completed=True
         )
-        logging.info("# of diffs: %d" % completed_cycles_num)
+        logging.info("# of diffs: %d" % received_diffs)
 
-        min_diffs = server_config.get("min_diffs", 1)
-        max_diffs = server_config.get("max_diffs", 999999999999)
+        min_diffs = server_config.get("min_diffs", None)
+        max_diffs = server_config.get("max_diffs", None)
 
-        cycle_ended = (
-            True
-            if (datetime.now() >= cycle.end or completed_cycles_num >= max_diffs)
-            else False
-        )
-
-        ready_to_average = (
-            True
-            if (
-                (cycle_ended and completed_cycles_num >= min_diffs)
-                or (min_diffs is not None and completed_cycles_num >= min_diffs)
-            )
-            else False
-        )
+        hit_diffs_limit = received_diffs >= max_diffs if max_diffs is not None else False
+        hit_time_limit = datetime.now() >= cycle.end if cycle.end is not None else False
+        no_limits = max_diffs is None and cycle.end is None
+        has_enough_diffs = received_diffs >= min_diffs if min_diffs is not None else True
+        
+        ready_to_average = has_enough_diffs and (no_limits or hit_diffs_limit or hit_time_limit)
 
         no_protocol = True  # only deal with plans for now
 
