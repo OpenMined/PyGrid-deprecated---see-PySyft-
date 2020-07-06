@@ -69,7 +69,7 @@ def init_pygrid_instances(node_infos):
         jobs.append(p)
 
     yield
-    
+
     for job in jobs:
         job.terminate()
 
@@ -92,6 +92,7 @@ def connected_node(hook):
     for node in nodes:
         nodes[node].close()
         time.sleep(0.1)
+
 
 def create_websocket_client(hook, port, id):
     node = NodeClient(hook, "http://localhost:" + port + "/", id=id)
