@@ -41,7 +41,7 @@ class SessionsRepository(object):
         return self.users.get(username)
 
     # Recover user session by session id
-    def get_session_by_id(self, session_id: str):
+    def get_session_by_id(self, session_id: str) -> int:
         """ Retrieve user session registered at session repository.
 
             Args:
