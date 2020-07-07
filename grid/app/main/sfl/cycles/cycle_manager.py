@@ -256,7 +256,7 @@ class CycleManager:
         if iterative_plan:
             diff_avg = raw_diffs[0]
             for i, diff in enumerate(raw_diffs[1:]):
-                diff_avg = avg_plan(avg, diff, i + 1)
+                diff_avg = avg_plan(diff_avg, diff, i + 1)
         else:
             diff_avg = avg_plan(raw_diffs)
 
