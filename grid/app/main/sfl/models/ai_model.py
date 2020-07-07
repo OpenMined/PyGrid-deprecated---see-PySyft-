@@ -1,6 +1,8 @@
-from ... import db
-
+# External imports
 import syft as sy
+
+# Local imports
+from ... import db
 
 
 class Model(db.Model):

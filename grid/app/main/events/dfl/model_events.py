@@ -1,14 +1,14 @@
+# Standard Python imports
 import json
+
+# External imports
 import torch as th
-from flask_login import current_user
-
-
-# PySyft
 import syft as sy
 from syft.codes import RESPONSE_MSG
 from syft.generic.pointers.pointer_tensor import PointerTensor
+from flask_login import current_user
 
-# Dynamic FL imports
+# Local imports
 from ... import local_worker, hook
 from ...dfl.persistence import model_controller
 from ...dfl.persistence.object_storage import recover_objects

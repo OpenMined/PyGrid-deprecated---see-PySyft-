@@ -1,4 +1,21 @@
-# Import PyGrid modules
+# Standard Python Imports
+import io
+import json
+
+# External modules imports
+from requests_toolbelt import MultipartEncoder
+from flask import render_template, Response, request, current_app, send_file
+
+# Dependencies used by req_join endpoint
+# It's a mockup endpoint and should be removed soon.
+from scipy.stats import poisson
+import numpy as np
+from math import floor
+import logging
+from random import random
+
+
+# Local imports
 from ... import main
 from ...sfl.controller import processes
 from ...sfl.cycles import cycle_manager
@@ -10,20 +27,6 @@ from ...codes import RESPONSE_MSG, CYCLE, MSG_FIELD
 from ...events.sfl.fl_events import report, cycle_request, assign_worker_id
 from ...sfl.auth.federated import verify_token
 from ...exceptions import InvalidRequestKeyError, PyGridError
-
-# General Imports
-import io
-import json
-from requests_toolbelt import MultipartEncoder
-from flask import render_template, Response, request, current_app, send_file
-
-# Dependencies used by req_join endpoint
-# It's a mockup endpoint and should be removed soon.
-from scipy.stats import poisson
-import numpy as np
-from math import floor
-import logging
-from random import random
 
 
 @main.route("/federated/cycle-request", methods=["POST"])

@@ -1,7 +1,12 @@
+# Standard Python imports
+import uuid
+
+# External imports
 from flask_login import UserMixin
 import syft as sy
-import uuid
 from syft.grid.authentication.account import AccountCredential
+
+# Local imports
 from ... import hook, local_worker
 
 

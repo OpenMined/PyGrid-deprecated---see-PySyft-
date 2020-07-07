@@ -1,19 +1,18 @@
-# Events module import
-from ..socket_handler import SocketHandler
-
-# PyGrid imports
-from ...exceptions import CycleNotFoundError, MaxCycleLimitExceededError
-from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
-from ...sfl.auth.federated import verify_token
-from ...sfl.workers import worker_manager
-from ...sfl.controller import processes
-
-# Generic imports
+# Standard python imports
 import json
 import uuid
 import base64
 import traceback
 from binascii import unhexlify
+
+
+# Local imports
+from ..socket_handler import SocketHandler
+from ...exceptions import CycleNotFoundError, MaxCycleLimitExceededError
+from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
+from ...sfl.auth.federated import verify_token
+from ...sfl.workers import worker_manager
+from ...sfl.controller import processes
 
 
 # Singleton socket handler

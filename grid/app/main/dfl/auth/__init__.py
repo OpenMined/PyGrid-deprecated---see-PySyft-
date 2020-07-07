@@ -1,8 +1,12 @@
+# Python standard imports
 import json
 import functools
-from flask_login import LoginManager, current_user, UserMixin
-from ... import local_worker
 
+# External imports
+from flask_login import LoginManager, current_user, UserMixin
+
+# Local imports
+from ... import local_worker
 from .user_session import UserSession
 from .session_repository import SessionsRepository
 
@@ -33,15 +37,15 @@ def get_session():
 
 # callback to reload the user object
 @login_manager.user_loader
-def load_user(userid: str) -> UserMixin:
+def load_user(user_id: str) -> UserMixin:
     """ Retrieve user session object from session repository.
 
         Args:
-            userid (str) : User id.
+            user_id (str) : User id.
         Returns:
             user : User Session.
     """
-    return session_repository.get_session_by_id(userid)
+    return session_repository.get_session_by_id(user_id)
 
 
 def authenticated_only(f):

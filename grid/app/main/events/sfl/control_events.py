@@ -1,4 +1,7 @@
+# Standard Python imports
 import json
+
+# Local imports
 from ...codes import MSG_FIELD
 
 

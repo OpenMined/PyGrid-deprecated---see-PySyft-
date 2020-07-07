@@ -1,10 +1,13 @@
+# Standard python
 import json
-from flask_login import login_user
 
-# PyGrid / PySyft imports
+# External modules
+from flask_login import login_user
 from syft.workers.node_client import NodeClient
 from syft.codes import RESPONSE_MSG
 from syft.grid.authentication.account import AccountCredential
+
+# Local imports
 from ...codes import MSG_FIELD
 from ... import local_worker, hook, sy
 from ...dfl.auth import authenticated_only, get_session

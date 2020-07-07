@@ -1,12 +1,15 @@
+# Standard Python imports
 from typing import Union
 
-from .database import db_instance
-
+# External imports
 from syft.serde import serialize, deserialize
 from syft.generic.frameworks.types import FrameworkTensorType
 from syft.generic.tensor import AbstractTensor
 from syft.generic.object_storage import ObjectStore
 from syft.exceptions import ObjectNotFoundError
+
+# Local imports
+from .database import db_instance
 
 
 def set_persistent_mode(redis_db):

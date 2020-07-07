@@ -1,6 +1,9 @@
+# External imports
 from syft.grid.authentication.account import AccountCredential
-from .user_session import UserSession
 from flask_login import UserMixin
+
+# Local imports
+from .user_session import UserSession
 
 
 class SessionsRepository(object):
@@ -38,15 +41,15 @@ class SessionsRepository(object):
         return self.users.get(username)
 
     # Recover user session by session id
-    def get_session_by_id(self, sessionid: str):
+    def get_session_by_id(self, session_id: str):
         """ Retrieve user session registered at session repository.
 
             Args:
-                sessionid (str) : ID of user session.
+                session_id (str) : ID of user session.
             Returns:
                 session : Session instance.
         """
-        return self.users_id_dict.get(sessionid)
+        return self.users_id_dict.get(session_id)
 
     def authenticate(self, payload: dict):
         """ Performs authentication process.

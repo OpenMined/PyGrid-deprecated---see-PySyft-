@@ -1,7 +1,12 @@
+# Standard Python imports
 from typing import Dict
+
+# External imports
 from syft import Plan
 from syft.serde import deserialize
 from syft.codes import RESPONSE_MSG
+
+# Local imports
 from .model_storage import ModelStorage
 from ...codes import MSG_FIELD
 
@@ -105,7 +110,7 @@ class ModelController:
             Args:
                 worker: Worker that owns this model.
             Returns:
-                esponse_msg: Dict response message.
+                response_msg: Dict response message.
         """
         storage = self.get_storage(worker)
         return {RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.MODELS: storage.models}

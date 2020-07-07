@@ -1,9 +1,12 @@
+# Standard Python imports
 import json
-from flask_login import current_user
 
+# External imports
 import syft as sy
 from syft.exceptions import GetNotPermittedError
+from flask_login import current_user
 
+# Local imports
 from ... import local_worker, hook
 from ...dfl.persistence.object_storage import recover_objects
 from ...dfl.auth import authenticated_only, UserSession

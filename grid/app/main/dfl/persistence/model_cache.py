@@ -1,7 +1,11 @@
+# Standard Python imports
 from typing import List
-
 import collections
+
+# External imports
 from syft.serde import deserialize
+
+# Local imports
 from ...codes import MSG_FIELD
 
 

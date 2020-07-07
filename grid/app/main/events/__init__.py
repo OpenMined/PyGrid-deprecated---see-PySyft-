@@ -1,26 +1,22 @@
 """
 This file exists to provide a route to websocket events.
 """
+# Standard Python imports
+import json
 
-# Static FL imports
+# External imports
+from syft.codes import REQUEST_MSG
+
+# Local imports
+from ..codes import *
+from .. import ws
 from .sfl.control_events import *
 from .sfl.fl_events import *
-
-# Dynamic FL imports
 from .dfl.syft_events import *
 from .dfl.model_events import *
 from .dfl.control_events import *
-
 from .socket_handler import SocketHandler
 
-
-# PyGrid/PySyft imports
-from syft.codes import REQUEST_MSG
-from ..codes import *
-from .. import ws
-
-# Generic imports
-import json
 
 # Websocket events routes
 # This structure allows compatibility between javascript applications (syft.js/grid.js) and PyGrid.
