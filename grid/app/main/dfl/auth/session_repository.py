@@ -19,7 +19,7 @@ class SessionsRepository(object):
         self._admin = UserSession(self.__load_node_manager())
         self.save_session(self._admin, self._admin.username())
 
-    def save_session(self, user: UserMixin, key: str):
+    def save_session(self, user: UserMixin, key: str) -> None:
         """ Register new user session at session repository.
 
             Args:
