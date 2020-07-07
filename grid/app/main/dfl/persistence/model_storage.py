@@ -47,7 +47,7 @@ class ModelStorage:
         allow_download: bool,
         allow_remote_inference: bool,
         mpc: bool,
-    ):
+    ) -> bool:
 
         """ Save the desired model at database and load it in cache memory.
             Args:
