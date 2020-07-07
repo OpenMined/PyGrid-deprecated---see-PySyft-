@@ -53,8 +53,17 @@ def set_database_config(app, test_config=None, verbose=False):
     db.init_app(app)
 
 
-def create_app(node_id: str, debug=False, n_replica=None, test_config=None):
-    """Create flask application."""
+def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> Flask:
+    """Create flask application.
+    
+       Args:
+            node_id: ID used to identify this node.
+            debug: debug mode flag.
+            n_replica: Number of model replicas used for fault tolerance purposes.
+            test_config: database test settings.
+       Returns:
+            app : Flask App instance.
+    """
     app = Flask(__name__)
     app.debug = debug
 

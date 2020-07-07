@@ -41,7 +41,7 @@ class UserSession(UserMixin):
         """
         return self.id
 
-    def save_tensor_request(self, request_msg: tuple):
+    def save_tensor_request(self, request_msg: tuple) -> None:
         """ Save tensor request at user's request list.
 
             Args:

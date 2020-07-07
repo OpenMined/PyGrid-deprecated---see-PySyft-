@@ -115,7 +115,7 @@ class ModelController:
         storage = self.get_storage(worker)
         return {RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.MODELS: storage.models}
 
-    def get_storage(self, worker) -> "ModelStorage":
+    def get_storage(self, worker) -> ModelStorage:
         """ Returns the storage instance of an specific worker.
             Args:
                 worker: Owner of this storage.
@@ -128,7 +128,7 @@ class ModelController:
             storage = self._new_storage(worker)
         return storage
 
-    def _new_storage(self, worker) -> "ModelStorage":
+    def _new_storage(self, worker) -> ModelStorage:
         """ Create a new storage instance.
             Args:
                 worker: Worker that will own this instance.

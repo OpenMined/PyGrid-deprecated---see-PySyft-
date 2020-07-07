@@ -45,9 +45,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--id", 
-    dest="node_id", 
-    action="store_true", help="PyGrid Node ID",
+    "--id", dest="node_id", action="store_true", help="PyGrid Node ID",
 )
 parser.set_defaults(use_test_config=False)
 
