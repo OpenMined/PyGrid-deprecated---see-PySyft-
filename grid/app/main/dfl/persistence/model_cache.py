@@ -86,6 +86,6 @@ class ModelCache:
         else:
             return False
 
-    def clear(self):
+    def clear(self) -> None:
         """Clears the cache."""
         self.cache = dict()
