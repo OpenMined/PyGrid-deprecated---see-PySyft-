@@ -7,6 +7,7 @@ from syft.generic.frameworks.types import FrameworkTensorType
 from syft.generic.tensor import AbstractTensor
 from syft.generic.object_storage import ObjectStore
 from syft.exceptions import ObjectNotFoundError
+from syft.workers.base import BaseWorker
 
 # Local imports
 from .database import db_instance
@@ -59,7 +60,7 @@ def set_persistent_mode(redis_db):
     ObjectStore.force_rm_obj = _force_rm_obj
 
 
-def recover_objects(worker):
+def recover_objects(worker) -> BaseWorker:
     """ Retrieves all database objects for a given worker.
         Args:
             worker : Worker Instance.

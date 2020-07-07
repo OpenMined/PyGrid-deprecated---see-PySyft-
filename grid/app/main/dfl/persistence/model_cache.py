@@ -1,9 +1,10 @@
 # Standard Python imports
-from typing import List
+from typing import List, Union
 import collections
 
 # External imports
 from syft.serde import deserialize
+import torch.nn as nn
 
 # Local imports
 from ...codes import MSG_FIELD
@@ -29,7 +30,7 @@ class ModelCache:
         """
         return model_id in self.cache
 
-    def get(self, model_id: str):
+    def get(self, model_id: str) -> Union[nn.Module, None]:
         """Checks the cache for a model. If model not found, returns None.
             Args:
                 model_id (str): Unique id representing the model.

@@ -33,7 +33,7 @@ class UserSession(UserMixin):
             self.node = hook.local_worker._known_workers[user.username]
         self.active = True
 
-    def get_id(self):
+    def get_id(self) -> int:
         """ Get Session ID.
 
             Returns:

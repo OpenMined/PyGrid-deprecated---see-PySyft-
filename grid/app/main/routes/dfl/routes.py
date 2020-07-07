@@ -141,6 +141,11 @@ def list_models():
 @main.route("/serve-model/", methods=["POST"])
 @cross_origin()
 def serve_model():
+    """ Host an AI model Uploading and registering it by an specific ID.
+        
+        Returns:
+            Response : A json structure informing if hosting was succeed.
+    """
     encoding = request.form["encoding"]
     model_id = request.form[MSG_FIELD.MODEL_ID]
     allow_download = request.form[MSG_FIELD.ALLOW_DOWNLOAD] == "True"

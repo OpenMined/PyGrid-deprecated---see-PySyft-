@@ -65,7 +65,7 @@ def host_federated_training(message: dict, socket=None) -> str:
     return json.dumps(response)
 
 
-def assign_worker_id(message, socket=None):
+def assign_worker_id(message: dict, socket=None) -> str:
     """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
         Args:
             message : Message body sended after token verification.
