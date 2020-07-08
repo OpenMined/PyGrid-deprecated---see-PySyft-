@@ -3,7 +3,7 @@ from flask_login import UserMixin
 
 # Local imports
 from .user_session import UserSession
-
+from ...codes import MSG_FIELD
 
 class SessionsRepository(object):
     """ Sessions Repository manages user credentials and different user sessions during websocket/http requests """
@@ -56,7 +56,7 @@ class SessionsRepository(object):
             Returns:
                 session : Returns a user session.
         """
-        key = payload.get(AccountCredential.USERNAME_FIELD)
+        key = payload.get(MSG_FIELD.USERNAME_FIELD)
         session_object = self.users.get(key)
         if session_object:
             if session_object.authenticate(payload):
