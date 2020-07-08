@@ -24,7 +24,12 @@ from ...sfl.workers import worker_manager
 from ...sfl.processes import process_manager
 from ...sfl.syft_assets import plans, protocols
 from ...codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ...events.sfl.fl_events import report, cycle_request, assign_worker_id
+from ...events.sfl.fl_events import (
+    report,
+    cycle_request,
+    assign_worker_id,
+    requires_speed_test,
+)
 from ...sfl.auth.federated import verify_token
 from ...exceptions import InvalidRequestKeyError, PyGridError
 
@@ -255,6 +260,10 @@ def auth():
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
             resp = assign_worker_id({"auth_token": _auth_token}, None)
+            # check if requires speed test
+            resp[MSG_FIELD.REQUIRES_SPEED_TEST] = requires_speed_test(
+                model_name, model_version
+            )
             response_body = json.loads(resp)["data"]
 
         elif verification_result["status"] == RESPONSE_MSG.ERROR:

@@ -11,6 +11,7 @@ from ..socket_handler import SocketHandler
 from ...exceptions import CycleNotFoundError, MaxCycleLimitExceededError
 from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ...sfl.auth.federated import verify_token
+from ...sfl.processes import process_manager
 from ...sfl.workers import worker_manager
 from ...sfl.controller import processes
 
@@ -86,13 +87,35 @@ def assign_worker_id(message: dict, socket=None) -> str:
         # Create worker instance
         worker_manager.create(worker_id)
 
+        requires_speed_test = True
+
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
         response[MSG_FIELD.WORKER_ID] = worker_id
+
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[CYCLE.STATUS] = RESPONSE_MSG.ERROR
         response[RESPONSE_MSG.ERROR] = str(e)
 
     return response
+
+
+def requires_speed_test(model_name, model_version):
+
+    kwargs = {"name": model_name}
+    if model_version is not None:
+        kwargs["version"] = model_version
+
+    server_config, _ = process_manager.get_configs(**kwargs)
+
+    #
+    return (
+        True
+        if (
+            server_config.get("minimum_upload_speed", None) is not None
+            or server_config.get("minimum_download_speed", None) is not None
+        )
+        else False
+    )
 
 
 def authenticate(message: dict, socket=None) -> str:
@@ -115,6 +138,10 @@ def authenticate(message: dict, socket=None) -> str:
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
             response = assign_worker_id({"auth_token": _auth_token}, None)
+            # check if requires speed test
+            response[MSG_FIELD.REQUIRES_SPEED_TEST] = requires_speed_test(
+                model_name, model_version
+            )
         else:
             response[RESPONSE_MSG.ERROR] = verification_result["error"]
 
