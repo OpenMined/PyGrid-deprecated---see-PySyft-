@@ -53,4 +53,3 @@ class CYCLE(object):
 class RESPONSE_MSG(object):
     ERROR = "error"
     SUCCESS = "success"
-

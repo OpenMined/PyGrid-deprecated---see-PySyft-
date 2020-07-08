@@ -9,6 +9,7 @@ import syft as sy
 from ... import hook, local_worker
 from ...codes import MSG_FIELD
 
+
 class UserSession(UserMixin):
 
     NAMESPACE_DNS = "openmined.org"
