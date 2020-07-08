@@ -5,6 +5,7 @@ from flask_login import UserMixin
 from .user_session import UserSession
 from ...codes import MSG_FIELD
 
+
 class SessionsRepository(object):
     """ Sessions Repository manages user credentials and different user sessions during websocket/http requests """
 
