@@ -32,28 +32,26 @@ def set_database_config(app, test_config=None, verbose=False):
     migrate = Migrate(app, db)
     if test_config is None:
         if db_url:
-            app.config.from_mapping(
-                SQLALCHEMY_DATABASE_URI=db_url, SQLALCHEMY_TRACK_MODIFICATIONS=False
-            )
+            app.config.from_mapping(SQLALCHEMY_DATABASE_URI=db_url,
+                                    SQLALCHEMY_TRACK_MODIFICATIONS=False)
         else:
             raise RuntimeError(
                 "Invalid database address : Set DATABASE_URL environment var or add test_config parameter at create_app method."
             )
     else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = test_config["SQLALCHEMY_DATABASE_URI"]
-        app.config["TESTING"] = (
-            test_config["TESTING"] if test_config.get("TESTING") else True
-        )
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_config[
+            "SQLALCHEMY_DATABASE_URI"]
+        app.config["TESTING"] = (test_config["TESTING"]
+                                 if test_config.get("TESTING") else True)
         app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = (
             test_config["SQLALCHEMY_TRACK_MODIFICATIONS"]
-            if test_config.get("SQLALCHEMY_TRACK_MODIFICATIONS")
-            else False
-        )
+            if test_config.get("SQLALCHEMY_TRACK_MODIFICATIONS") else False)
     app.config["VERBOSE"] = verbose
     db.init_app(app)
 
 
-def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> Flask:
+def create_app(node_id: str, debug=False, n_replica=None,
+               test_config=None) -> Flask:
     """Create flask application.
     
        Args:

@@ -12,7 +12,6 @@ from ...core.codes import MSG_FIELD
 
 class ModelCache:
     """Handle models in memory."""
-
     def __init__(self):
         self.cache = dict()
 
@@ -41,13 +40,13 @@ class ModelCache:
             return self.cache.get(model_id)
 
     def save(
-        self,
-        model,
-        model_id: str,
-        allow_download: bool,
-        allow_remote_inference: bool,
-        mpc: bool,
-        serialized: bool = True,
+            self,
+            model,
+            model_id: str,
+            allow_download: bool,
+            allow_remote_inference: bool,
+            mpc: bool,
+            serialized: bool = True,
     ) -> bool:
         """Saves the model to cache. Nothing happens if a model with the same id already exists.
             Args:

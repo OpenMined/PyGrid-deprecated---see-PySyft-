@@ -18,12 +18,10 @@ def get_node_infos(message: dict) -> str:
         Returns:
             response (str) : Response message containing node id.
     """
-    return json.dumps(
-        {
-            RESPONSE_MSG.NODE_ID: local_worker.id,
-            MSG_FIELD.SYFT_VERSION: sy.version.__version__,
-        }
-    )
+    return json.dumps({
+        RESPONSE_MSG.NODE_ID: local_worker.id,
+        MSG_FIELD.SYFT_VERSION: sy.version.__version__,
+    })
 
 
 def authentication(message: dict) -> str:
@@ -38,9 +36,10 @@ def authentication(message: dict) -> str:
     # If it was authenticated
     if user:
         login_user(user)
-        return json.dumps(
-            {RESPONSE_MSG.SUCCESS: "True", RESPONSE_MSG.NODE_ID: user.worker.id}
-        )
+        return json.dumps({
+            RESPONSE_MSG.SUCCESS: "True",
+            RESPONSE_MSG.NODE_ID: user.worker.id
+        })
     else:
         return json.dumps({RESPONSE_MSG.ERROR: "Invalid username/password!"})
 
@@ -54,7 +53,9 @@ def connect_grid_nodes(message: dict) -> str:
             response (str) : response message.
     """
     if message["id"] not in local_worker._known_workers:
-        worker = DynamicFLClient(hook, address=message["address"], id=message["id"])
+        worker = DynamicFLClient(hook,
+                                 address=message["address"],
+                                 id=message["id"])
     return json.dumps({"status": "Succesfully connected."})
 
 

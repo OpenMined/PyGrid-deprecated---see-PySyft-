@@ -85,7 +85,5 @@ class UserSession(UserMixin):
         candidate_username = payload.get(MSG_FIELD.USERNAME_FIELD)
         candidate_password = payload.get(MSG_FIELD.PASSWORD_FIELD)
         if candidate_username and candidate_password:
-            return (
-                self.user.password == candidate_password
-                and self.user.username == candidate_username
-            )
+            return (self.user.password == candidate_password
+                    and self.user.username == candidate_username)

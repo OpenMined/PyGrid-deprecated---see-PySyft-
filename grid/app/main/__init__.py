@@ -13,7 +13,6 @@ hook.local_worker.is_client_worker = False
 main = Blueprint("main", __name__)
 ws = Blueprint(r"ws", __name__)
 
-
 from .. import db, executor
 from .dfl import auth
 from . import routes, events

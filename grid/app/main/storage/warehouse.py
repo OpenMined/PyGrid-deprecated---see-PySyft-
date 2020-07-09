@@ -37,7 +37,8 @@ class Warehouse:
             Return:
                 count: Count of object instances.
         """
-        query = db.session.query(func.count(self._schema.id)).filter_by(**kwargs)
+        query = db.session.query(func.count(
+            self._schema.id)).filter_by(**kwargs)
         return int(query.scalar())
 
     def first(self, **kwargs):
@@ -56,11 +57,8 @@ class Warehouse:
             Return:
                 object: Last object instance.
         """
-        return (
-            self._schema.query.filter_by(**kwargs)
-            .order_by(self._schema.id.desc())
-            .first()
-        )
+        return (self._schema.query.filter_by(**kwargs).order_by(
+            self._schema.id.desc()).first())
 
     def contains(self, **kwargs):
         """ Check if the object id already exists in the database.

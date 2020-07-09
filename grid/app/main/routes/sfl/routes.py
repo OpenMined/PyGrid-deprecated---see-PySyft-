@@ -14,7 +14,6 @@ from math import floor
 import logging
 from random import random
 
-
 # Local imports
 from ... import main
 from ...sfl.controller import processes
@@ -50,7 +49,9 @@ def worker_cycle_request():
         response_body = json.loads(response_body)[MSG_FIELD.DATA]
 
     response_body = json.dumps(response_body)
-    return Response(response_body, status=status_code, mimetype="application/json")
+    return Response(response_body,
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/speed-test", methods=["GET", "POST"])
@@ -87,9 +88,9 @@ def connection_speed_test():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/report", methods=["POST"])
@@ -113,7 +114,9 @@ def report_diff():
         response_body = json.loads(response_body)[MSG_FIELD.DATA]
 
     response_body = json.dumps(response_body)
-    return Response(response_body, status=status_code, mimetype="application/json")
+    return Response(response_body,
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/get-protocol", methods=["GET"])
@@ -148,9 +151,9 @@ def download_protocol():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/get-model", methods=["GET"])
@@ -175,9 +178,8 @@ def download_model():
 
         _last_checkpoint = model_manager.load(model_id=model_id)
 
-        return send_file(
-            io.BytesIO(_last_checkpoint.values), mimetype="application/octet-stream"
-        )
+        return send_file(io.BytesIO(_last_checkpoint.values),
+                         mimetype="application/octet-stream")
 
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
@@ -189,9 +191,9 @@ def download_model():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/get-plan", methods=["GET"])
@@ -223,7 +225,8 @@ def download_plan():
         else:
             response_body = _plan.value
 
-        return send_file(io.BytesIO(response_body), mimetype="application/octet-stream")
+        return send_file(io.BytesIO(response_body),
+                         mimetype="application/octet-stream")
 
     except InvalidRequestKeyError as e:
         status_code = 401  # Unauthorized
@@ -235,9 +238,9 @@ def download_plan():
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/federated/authenticate", methods=["POST"])
@@ -251,7 +254,8 @@ def auth():
     model_version = data.get("model_version", None)
 
     try:
-        verification_result = verify_token(_auth_token, model_name, model_version)
+        verification_result = verify_token(_auth_token, model_name,
+                                           model_version)
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
             resp = assign_worker_id({"auth_token": _auth_token}, None)
@@ -265,9 +269,9 @@ def auth():
         status_code = 401
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")
 
 
 @main.route("/req_join", methods=["GET"])
@@ -309,29 +313,25 @@ def fl_cycle_application_decision():
         "minimum_upload_speed": 2000,  # 2 mbps
         "minimum_download_speed": 4000,  # 4 mbps
     }
-
     """  end of variable stubs """
 
     _server_config = dummy_server_config
 
     up_speed_check = up_speed > _server_config["minimum_upload_speed"]
     down_speed_check = down_speed > _server_config["minimum_download_speed"]
-    cycle_valid_check = (
-        (
-            last_participation + _server_config["do_not_reuse_workers_until_cycle"]
-            >= _cycle.get(
-                "cycle_sequence", 99999
-            )  # this should reuturn current cycle sequence number
-        )
-        * (_cycle.get("cycle_sequence", 99999) <= _server_config["num_cycles"])
-        * (_cycle.cycle_time > MINIMUM_CYCLE_TIME_LEFT)
-        * (worker_id not in _cycle._workers)
-    )
+    cycle_valid_check = ((
+        last_participation + _server_config["do_not_reuse_workers_until_cycle"]
+        >= _cycle.get(
+            "cycle_sequence",
+            99999)  # this should reuturn current cycle sequence number
+    ) * (_cycle.get("cycle_sequence", 99999) <= _server_config["num_cycles"]) *
+                         (_cycle.cycle_time > MINIMUM_CYCLE_TIME_LEFT) *
+                         (worker_id not in _cycle._workers))
 
     if up_speed_check * down_speed_check * cycle_valid_check:
         if _server_config["pool_selection"] == "iterate" and len(
-            _cycle._workers
-        ) < _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE):
+                _cycle._workers) < _server_config["max_workers"] * (
+                    1 + EXPECTED_FAILURE_RATE):
             """ first come first serve selection mode """
             _accept = True
         elif _server_config["pool_selection"] == "random":
@@ -365,7 +365,8 @@ def fl_cycle_application_decision():
             """
 
             # time base units = 1 hr, assumes lambda_actual and lambda_approx have the same unit as T_left
-            k_prime = _server_config["max_workers"] * (1 + EXPECTED_FAILURE_RATE)
+            k_prime = _server_config["max_workers"] * (1 +
+                                                       EXPECTED_FAILURE_RATE)
             T_left = _cycle.get("cycle_time", 0)
 
             # TODO: remove magic number = 5 below... see block comment above re: how
@@ -376,7 +377,6 @@ def fl_cycle_application_decision():
             # @hyperparam: valid_range => (0, 1) | (+) => more certainty to have completed cycle, (-) => more efficient use of worker as computational resource
             confidence = 0.95  # P(K>=k')
             pois = lambda l: poisson.sf(k_prime, l) - confidence
-
             """
             _bisect_approximator because:
                 - solving for lambda given P(K>=k') has no algebraic solution (that I know of) => need approxmiation
@@ -399,7 +399,8 @@ def fl_cycle_application_decision():
                     mid = floor((L + R) / 2)
                     if pois(arr[mid]) > 0 and pois(arr[mid]) < search_tolerance:
                         return mid
-                    elif pois(arr[mid]) > 0 and pois(arr[mid]) > search_tolerance:
+                    elif pois(arr[mid]) > 0 and pois(
+                            arr[mid]) > search_tolerance:
                         R = mid - 1
                     else:
                         L = mid + 1
@@ -412,23 +413,20 @@ def fl_cycle_application_decision():
             """
             if k_prime < 50:
                 lambda_approx = np.argmin(
-                    [abs(pois(x)) for x in range(floor(k_prime * 3))]
-                )
+                    [abs(pois(x)) for x in range(floor(k_prime * 3))])
             else:
                 lambda_approx = _bisect_approximator(range(floor(k_prime * 3)))
 
             rej_prob = (
                 (1 - lambda_approx / lambda_actual)
-                if lambda_actual > lambda_approx
-                else 0  # don't reject if we expect to be short on worker requests
+                if lambda_actual > lambda_approx else
+                0  # don't reject if we expect to be short on worker requests
             )
 
             # additional security:
-            if (
-                k_prime > 50
-                and abs(poisson.sf(k_prime, lambda_approx) - confidence)
-                > _search_tolerance
-            ):
+            if (k_prime > 50
+                    and abs(poisson.sf(k_prime, lambda_approx) - confidence) >
+                    _search_tolerance):
                 """something went wrong, fall back to safe default"""
                 rej_prob = 0.1
                 WARN = "_bisect_approximator failed unexpectedly, reset rej_prob to default"
@@ -439,18 +437,16 @@ def fl_cycle_application_decision():
 
     if _accept:
         return Response(
-            json.dumps(
-                {"status": "accepted"}
-            ),  # leave out other accpet keys/values for now
+            json.dumps({"status": "accepted"
+                        }),  # leave out other accpet keys/values for now
             status=200,
             mimetype="application/json",
         )
 
     # reject by default
     return Response(
-        json.dumps(
-            {"status": "rejected"}
-        ),  # leave out other accpet keys/values for now
+        json.dumps({"status":
+                    "rejected"}),  # leave out other accpet keys/values for now
         status=400,
         mimetype="application/json",
     )
@@ -469,16 +465,16 @@ def get_model():
 
         _fl_process = process_manager.get(name=name, version=version)
         _model = model_manager.get(fl_process_id=_fl_process.id)
-        _model_checkpoint = model_manager.load(model_id=_model.id, id=checkpoint)
+        _model_checkpoint = model_manager.load(model_id=_model.id,
+                                               id=checkpoint)
 
-        return send_file(
-            io.BytesIO(_model_checkpoint.values), mimetype="application/octet-stream"
-        )
+        return send_file(io.BytesIO(_model_checkpoint.values),
+                         mimetype="application/octet-stream")
 
     except Exception as e:
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
-    return Response(
-        json.dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return Response(json.dumps(response_body),
+                    status=status_code,
+                    mimetype="application/json")

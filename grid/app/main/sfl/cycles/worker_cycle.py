@@ -1,7 +1,6 @@
 # Standard python imports
 import datetime
 
-
 # Local imports
 from ... import db
 

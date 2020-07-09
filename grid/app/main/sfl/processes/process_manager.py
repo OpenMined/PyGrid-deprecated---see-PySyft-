@@ -14,12 +14,12 @@ class ProcessManager:
         self._configs = Warehouse(Config)
 
     def create(
-        self,
-        client_config,
-        client_plans,
-        client_protocols,
-        server_config,
-        server_avg_plan,
+            self,
+            client_config,
+            client_plans,
+            client_protocols,
+            server_config,
+            server_avg_plan,
     ):
         """ Register a new federated learning process
             Args:
@@ -55,7 +55,8 @@ class ProcessManager:
         plans.register(fl_process, client_plans, avg_plan=False)
 
         # Register the client setup configs
-        self._configs.register(config=client_config, server_flprocess_config=fl_process)
+        self._configs.register(config=client_config,
+                               server_flprocess_config=fl_process)
 
         # Register the server setup configs
         self._configs.register(
@@ -81,10 +82,12 @@ class ProcessManager:
             raise ProcessNotFoundError
 
         # Server configs
-        server = self._configs.first(fl_process_id=_process.id, is_server_config=True)
+        server = self._configs.first(fl_process_id=_process.id,
+                                     is_server_config=True)
 
         # Client configs
-        client = self._configs.first(fl_process_id=_process.id, is_server_config=False)
+        client = self._configs.first(fl_process_id=_process.id,
+                                     is_server_config=False)
 
         return (server.config, client.config)
 
@@ -125,7 +128,10 @@ class ProcessManager:
             raise ProtocolNotFoundError
 
         # Build a protocol dictionary
-        protocol_dict = {_protocol.name: _protocol.id for _protocol in _protocols}
+        protocol_dict = {
+            _protocol.name: _protocol.id
+            for _protocol in _protocols
+        }
 
         return protocol_dict
 

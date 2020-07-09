@@ -17,7 +17,6 @@ from .dfl.model_events import *
 from .dfl.control_events import *
 from .socket_handler import SocketHandler
 
-
 # Websocket events routes
 # This structure allows compatibility between javascript applications (syft.js/grid.js) and PyGrid.
 routes = {
@@ -34,7 +33,6 @@ routes = {
     REQUEST_MSG.LIST_MODELS: get_models,
     REQUEST_MSG.AUTHENTICATE: authentication,
 }
-
 
 handler = SocketHandler()
 

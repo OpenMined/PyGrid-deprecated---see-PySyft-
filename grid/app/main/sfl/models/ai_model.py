@@ -19,9 +19,9 @@ class Model(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     version = db.Column(db.String())
     checkpoints = db.relationship("ModelCheckPoint", backref="model")
-    fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
-    )
+    fl_process_id = db.Column(db.BigInteger,
+                              db.ForeignKey("__fl_process__.id"),
+                              unique=True)
 
     def __str__(self):
         return f"<Model  id: {self.id}, version: {self.version}>"

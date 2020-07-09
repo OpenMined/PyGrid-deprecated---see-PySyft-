@@ -49,6 +49,7 @@ def syft_command(message: dict) -> str:
         Returns:
             response (str) : Node response.
     """
-    response = local_worker._message_router[message["msg_type"]](message["content"])
+    response = local_worker._message_router[message["msg_type"]](
+        message["content"])
     payload = sy.serde.serialize(response, force_no_serialization=True)
     return json.dumps({"type": "command-response", "response": payload})

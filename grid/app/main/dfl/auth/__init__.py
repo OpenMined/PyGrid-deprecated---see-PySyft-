@@ -56,7 +56,6 @@ def authenticated_only(f):
         Returns:
             response : Function result.
     """
-
     @functools.wraps(f)
     def wrapped(*args, **kwargs):
         if not current_user.is_authenticated:

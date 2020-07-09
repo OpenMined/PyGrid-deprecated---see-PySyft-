@@ -5,7 +5,6 @@ import base64
 import traceback
 from binascii import unhexlify
 
-
 # Local imports
 from ..socket_handler import SocketHandler
 from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError
@@ -13,7 +12,6 @@ from ...core.codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ...sfl.auth.federated import verify_token
 from ...sfl.workers import worker_manager
 from ...sfl.controller import processes
-
 
 # Singleton socket handler
 handler = SocketHandler()
@@ -32,18 +30,18 @@ def host_federated_training(message: dict, socket=None) -> str:
 
     try:
         # Retrieve JSON values
-        serialized_model = unhexlify(
-            data.get(MSG_FIELD.MODEL, None).encode()
-        )  # Only one
+        serialized_model = unhexlify(data.get(MSG_FIELD.MODEL,
+                                              None).encode())  # Only one
         serialized_client_plans = {
-            k: unhexlify(v.encode()) for k, v in data.get(CYCLE.PLANS, {}).items()
+            k: unhexlify(v.encode())
+            for k, v in data.get(CYCLE.PLANS, {}).items()
         }  # 1 or *
         serialized_client_protocols = {
-            k: unhexlify(v.encode()) for k, v in data.get(CYCLE.PROTOCOLS, {}).items()
+            k: unhexlify(v.encode())
+            for k, v in data.get(CYCLE.PROTOCOLS, {}).items()
         }  # 0 or *
         serialized_avg_plan = unhexlify(
-            data.get(CYCLE.AVG_PLAN, None).encode()
-        )  # Only one
+            data.get(CYCLE.AVG_PLAN, None).encode())  # Only one
         client_config = data.get(CYCLE.CLIENT_CONFIG, None)  # Only one
         server_config = data.get(CYCLE.SERVER_CONFIG, None)  # Only one
 
@@ -60,7 +58,10 @@ def host_federated_training(message: dict, socket=None) -> str:
     except Exception as e:  # Retrieve exception messages such as missing JSON fields.
         response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
 
-    response = {MSG_FIELD.TYPE: FL_EVENTS.HOST_FL_TRAINING, MSG_FIELD.DATA: response}
+    response = {
+        MSG_FIELD.TYPE: FL_EVENTS.HOST_FL_TRAINING,
+        MSG_FIELD.DATA: response
+    }
 
     return json.dumps(response)
 
@@ -111,7 +112,8 @@ def authenticate(message: dict, socket=None) -> str:
         model_name = data.get("model_name", None)
         model_version = data.get("model_version", None)
 
-        verification_result = verify_token(_auth_token, model_name, model_version)
+        verification_result = verify_token(_auth_token, model_name,
+                                           model_version)
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
             response = assign_worker_id({"auth_token": _auth_token}, None)
@@ -121,7 +123,10 @@ def authenticate(message: dict, socket=None) -> str:
     except Exception as e:
         response[RESPONSE_MSG.ERROR] = str(e) + "\n" + traceback.format_exc()
 
-    response = {MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE, MSG_FIELD.DATA: response}
+    response = {
+        MSG_FIELD.TYPE: FL_EVENTS.AUTHENTICATE,
+        MSG_FIELD.DATA: response
+    }
     return json.dumps(response)
 
 
@@ -169,7 +174,10 @@ def cycle_request(message: dict, socket=None) -> str:
         response[CYCLE.STATUS] = CYCLE.REJECTED
         response[RESPONSE_MSG.ERROR] = str(e) + traceback.format_exc()
 
-    response = {MSG_FIELD.TYPE: FL_EVENTS.CYCLE_REQUEST, MSG_FIELD.DATA: response}
+    response = {
+        MSG_FIELD.TYPE: FL_EVENTS.CYCLE_REQUEST,
+        MSG_FIELD.DATA: response
+    }
     return json.dumps(response)
 
 

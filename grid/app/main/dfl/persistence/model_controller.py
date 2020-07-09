@@ -23,13 +23,13 @@ class ModelController:
         self.model_storages = dict()
 
     def save(
-        self,
-        worker,
-        serialized_model: bytes,
-        model_id: str,
-        allow_download: bool,
-        allow_remote_inference: bool,
-        mpc: bool = False,
+            self,
+            worker,
+            serialized_model: bytes,
+            model_id: str,
+            allow_download: bool,
+            allow_remote_inference: bool,
+            mpc: bool = False,
     ) -> Dict:
         """ Map and Save the desired model at database/cache.
             If persistent mode isn't enable, this model will be saved in cache memory.
@@ -52,9 +52,8 @@ class ModelController:
             }
 
         # Saves a copy in the database
-        storage.save_model(
-            serialized_model, model_id, allow_download, allow_remote_inference, mpc
-        )
+        storage.save_model(serialized_model, model_id, allow_download,
+                           allow_remote_inference, mpc)
         return {
             RESPONSE_MSG.SUCCESS: True,
             "message": "Model saved with id: " + model_id,

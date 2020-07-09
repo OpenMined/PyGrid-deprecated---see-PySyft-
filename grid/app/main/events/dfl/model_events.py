@@ -85,19 +85,21 @@ def run_inference(message: dict) -> str:
     if not current_user.worker._objects:
         recover_objects(current_user.worker)
 
-    response = model_controller.get(current_user.worker, message[MSG_FIELD.MODEL_ID])
+    response = model_controller.get(current_user.worker,
+                                    message[MSG_FIELD.MODEL_ID])
 
     if response[RESPONSE_MSG.SUCCESS]:
 
         # If model exists but not allow remote inferences
         if not response[MSG_FIELD.PROPERTIES][MSG_FIELD.ALLOW_REMOTE_INFERENCE]:
-            return json.dumps(
-                {
-                    MSG_FIELD.SUCCESS: False,
-                    "not_allowed": True,
-                    RESPONSE_MSG.ERROR: "You're not allowed to run inferences on this model.",
-                }
-            )
+            return json.dumps({
+                MSG_FIELD.SUCCESS:
+                False,
+                "not_allowed":
+                True,
+                RESPONSE_MSG.ERROR:
+                "You're not allowed to run inferences on this model.",
+            })
 
         model = response[MSG_FIELD.PROPERTIES][MSG_FIELD.MODEL]
 
@@ -115,7 +117,8 @@ def run_inference(message: dict) -> str:
         model_output = model(data)
 
         # It the model is a plan, it'll receive a tensor wrapper as a model_output.
-        while model_output.is_wrapper or isinstance(model_output, PointerTensor):
+        while model_output.is_wrapper or isinstance(model_output,
+                                                    PointerTensor):
             model_output = model_output.get()
 
         if isinstance(model_output, tuple):
@@ -125,8 +128,9 @@ def run_inference(message: dict) -> str:
 
         # We can now remove data from the objects
         del data
-        return json.dumps(
-            {RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.INFERENCE_RESULT: predictions}
-        )
+        return json.dumps({
+            RESPONSE_MSG.SUCCESS: True,
+            RESPONSE_MSG.INFERENCE_RESULT: predictions
+        })
     else:
         return json.dumps(response)

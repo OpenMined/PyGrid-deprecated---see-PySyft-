@@ -14,18 +14,17 @@ from datetime import datetime
 
 class FLController:
     """ This class implements controller design pattern over the federated learning processes. """
-
     def __init__(self):
         pass
 
     def create_process(
-        self,
-        model,
-        client_plans,
-        client_config,
-        server_config,
-        server_averaging_plan,
-        client_protocols=None,
+            self,
+            model,
+            client_plans,
+            client_config,
+            server_config,
+            server_averaging_plan,
+            client_protocols=None,
     ):
         """ Register a new federated learning process
             Args:
@@ -94,8 +93,7 @@ class FLController:
             _fl_process = process_manager.last(name=name)
 
         server_config, client_config = process_manager.get_configs(
-            name=name, version=version
-        )
+            name=name, version=version)
 
         # Retrieve the last cycle used by this fl process/ version
         _cycle = cycle_manager.last(_fl_process.id, None)
@@ -115,12 +113,8 @@ class FLController:
         #     >= _cycle.sequence
         # )
 
-        _accepted = (
-            (server_config["num_cycles"] == 0)
-            or (not _assigned)
-            and _comp_bandwidth
-            and _allowed
-        )
+        _accepted = ((server_config["num_cycles"] == 0)
+                     or (not _assigned) and _comp_bandwidth and _allowed)
         if _accepted:
             # Assign
             # 1 - Generate new request key
@@ -129,13 +123,13 @@ class FLController:
             _worker_cycle = cycle_manager.assign(worker, _cycle, key)
 
             # Create a plan dictionary
-            _plans = process_manager.get_plans(
-                fl_process_id=_fl_process.id, is_avg_plan=False
-            )
+            _plans = process_manager.get_plans(fl_process_id=_fl_process.id,
+                                               is_avg_plan=False)
 
             # Create a protocol dictionary
             try:
-                _protocols = process_manager.get_protocols(fl_process_id=_fl_process.id)
+                _protocols = process_manager.get_protocols(
+                    fl_process_id=_fl_process.id)
             except ProtocolNotFoundError:
                 # Protocols are optional
                 _protocols = {}
@@ -154,8 +148,7 @@ class FLController:
             }
         else:
             n_completed_cycles = cycle_manager.count(
-                fl_process_id=_fl_process.id, is_completed=True
-            )
+                fl_process_id=_fl_process.id, is_completed=True)
 
             _max_cycles = server_config["num_cycles"]
 

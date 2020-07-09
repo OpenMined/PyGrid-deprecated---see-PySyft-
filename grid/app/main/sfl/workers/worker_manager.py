@@ -57,7 +57,7 @@ class WorkerManager:
 
         # Check bandwidth
         _comp_bandwidth = (
-            _worker.avg_upload > server_config["minimum_upload_speed"]
-        ) and (_worker.avg_download > server_config["minimum_download_speed"])
+            _worker.avg_upload > server_config["minimum_upload_speed"]) and (
+                _worker.avg_download > server_config["minimum_download_speed"])
 
         return _comp_bandwidth
