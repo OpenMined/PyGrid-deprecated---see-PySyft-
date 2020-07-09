@@ -36,13 +36,13 @@ class PlanManager:
                     plan_tfjs = self.trim_plan(plan, "tfjs")
                     plan_ops_ser = self.serialize_plan(plan_ops)
                     plan_ts_ser = self.serialize_plan(plan_ts)
-                    plan_ts_ser = self.serialize_plan(plan_tfjs)
+                    plan_tfjs_ser = self.serialize_plan(plan_tfjs)
                 except:
                     raise PlanTranslationError()
                 plans_converted[idx] = {
                     "list": plan_ops_ser,
                     "torchscript": plan_ts_ser,
-                    "tfjs": plan_ts_ser,
+                    "tfjs": plan_tfjs_ser,
                 }
 
             # Register new Plans into the database
@@ -115,19 +115,37 @@ class PlanManager:
     @staticmethod
     def trim_plan(plan: "sy.Plan", variant: str) -> "sy.Plan":
         """Trim Plan to specified variant"""
-        translators = {
+
+        type_translators = {
             "torchscript": PlanTranslatorTorchscript,
-            "tfjs": PlanTranslatorTfjs,
             "default": PlanTranslatorDefault,
         }
 
-        if variant not in translators:
+        fw_translators = {
+            "tfjs": PlanTranslatorTfjs,
+        }
+
+        if (
+            variant not in type_translators
+            and variant not in fw_translators
+        ):
             raise PlanTranslationError
 
         plan_copy = plan.copy()
 
-        for name, cls in translators.items():
-            if name != variant:
-                plan_copy.remove_translation(cls)
+        if variant in type_translators:
+            for name, cls in type_translators.items():
+                if name != variant:
+                    plan_copy.remove_translation(cls)
+
+        if variant in fw_translators:
+            # First, leave only default translation
+            for name, cls in type_translators.items():
+                if name != 'default':
+                    plan_copy.remove_translation(cls)
+            # Set actions to be specific type
+            plan_copy.base_framework = variant
+            # Remove other actions
+            plan_copy.roles = None
 
         return plan_copy
