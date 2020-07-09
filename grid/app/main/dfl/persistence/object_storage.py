@@ -14,9 +14,10 @@ from .database import db_instance
 
 
 def set_persistent_mode(redis_db):
-    """ Update/Overwrite PySyft ObjectStore to work in a persistent mode.
-        Args:
-            redis_db : Redis database instance.
+    """Update/Overwrite PySyft ObjectStore to work in a persistent mode.
+
+    Args:
+        redis_db : Redis database instance.
     """
 
     # Updated methods
@@ -62,11 +63,12 @@ def set_persistent_mode(redis_db):
 
 
 def recover_objects(worker) -> BaseWorker:
-    """ Retrieves all database objects for a given worker.
-        Args:
-            worker : Worker Instance.
-        Returns:
-            worker: Updated worker instance.
+    """Retrieves all database objects for a given worker.
+
+    Args:
+        worker : Worker Instance.
+    Returns:
+        worker: Updated worker instance.
     """
     if db_instance():
         raw_objs = db_instance().hgetall(worker.id)

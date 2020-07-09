@@ -20,18 +20,20 @@ class WorkerManager:
         return new_worker
 
     def delete(self, **kwargs):
-        """ Remove a registered worker.
-            Args:
-                worker_id: Id used identify the desired worker.
+        """Remove a registered worker.
+
+        Args:
+            worker_id: Id used identify the desired worker.
         """
         self._workers.delete(**kwargs)
 
     def get(self, **kwargs):
-        """ Retrieve the desired worker.
-            Args:
-                worker_id: Id used to identify the desired worker.
-            Returns:
-                worker: worker Instance or None if it wasn't found.
+        """Retrieve the desired worker.
+
+        Args:
+            worker_id: Id used to identify the desired worker.
+        Returns:
+            worker: worker Instance or None if it wasn't found.
         """
         _worker = self._workers.first(**kwargs)
 
@@ -41,16 +43,18 @@ class WorkerManager:
         return self._workers.first(**kwargs)
 
     def update(self, worker):
-        """ Update Workers Attributes. """
+        """Update Workers Attributes."""
         return self._workers.update()
 
     def is_eligible(self, worker_id: str, server_config: dict):
-        """ Check if Worker is eligible to join in an new cycle by using its bandwidth statistics.
-            Args:
-                worker_id : Worker's ID.
-                server_config : FL Process Server Config.
-            Returns:
-                result: Boolean flag.
+        """Check if Worker is eligible to join in an new cycle by using its
+        bandwidth statistics.
+
+        Args:
+            worker_id : Worker's ID.
+            server_config : FL Process Server Config.
+        Returns:
+            result: Boolean flag.
         """
         _worker = self._workers.first(id=worker_id)
 

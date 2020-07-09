@@ -30,7 +30,8 @@ from ...sfl.workers import worker_manager
 
 @main.route("/federated/cycle-request", methods=["POST"])
 def worker_cycle_request():
-    """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
+    """" This endpoint is where the worker is attempting to join an active
+    federated learning cycle."""
     response_body = {}
     status_code = None
 
@@ -56,7 +57,7 @@ def worker_cycle_request():
 
 @main.route("/federated/speed-test", methods=["GET", "POST"])
 def connection_speed_test():
-    """ Connection speed test. """
+    """Connection speed test."""
     response_body = {}
     status_code = None
 
@@ -95,7 +96,8 @@ def connection_speed_test():
 
 @main.route("/federated/report", methods=["POST"])
 def report_diff():
-    """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
+    """Allows reporting of (agg/non-agg) model diff after worker completes a
+    cycle."""
     response_body = {}
     status_code = None
 
@@ -121,7 +123,7 @@ def report_diff():
 
 @main.route("/federated/get-protocol", methods=["GET"])
 def download_protocol():
-    """Request a download of a protocol"""
+    """Request a download of a protocol."""
 
     response_body = {}
     status_code = None
@@ -158,7 +160,7 @@ def download_protocol():
 
 @main.route("/federated/get-model", methods=["GET"])
 def download_model():
-    """Request a download of a model"""
+    """Request a download of a model."""
 
     response_body = {}
     status_code = None
@@ -198,7 +200,7 @@ def download_model():
 
 @main.route("/federated/get-plan", methods=["GET"])
 def download_plan():
-    """Request a download of a plan"""
+    """Request a download of a plan."""
 
     response_body = {}
     status_code = None
@@ -245,7 +247,7 @@ def download_plan():
 
 @main.route("/federated/authenticate", methods=["POST"])
 def auth():
-    """uses JWT (HSA/RSA) to authenticate"""
+    """uses JWT (HSA/RSA) to authenticate."""
     response_body = {}
     status_code = 200
     data = json.loads(request.data)
@@ -276,12 +278,12 @@ def auth():
 
 @main.route("/req_join", methods=["GET"])
 def fl_cycle_application_decision():
-    """
-        use the temporary req_join endpoint to mockup:
-        - reject if worker does not satisfy 'minimum_upload_speed' and/or 'minimum_download_speed'
-        - is a part of current or recent cycle according to 'do_not_reuse_workers_until_cycle'
-        - selects according to pool_selection
-        - is under max worker (with some padding to account for expected percent of workers so do not report successfully)
+    """use the temporary req_join endpoint to mockup:
+
+    - reject if worker does not satisfy 'minimum_upload_speed' and/or 'minimum_download_speed'
+    - is a part of current or recent cycle according to 'do_not_reuse_workers_until_cycle'
+    - selects according to pool_selection
+    - is under max worker (with some padding to account for expected percent of workers so do not report successfully)
     """
 
     # parse query strings (for now), eventually this will be parsed from the request body
@@ -332,36 +334,36 @@ def fl_cycle_application_decision():
         if _server_config["pool_selection"] == "iterate" and len(
                 _cycle._workers) < _server_config["max_workers"] * (
                     1 + EXPECTED_FAILURE_RATE):
-            """ first come first serve selection mode """
+            """first come first serve selection mode."""
             _accept = True
         elif _server_config["pool_selection"] == "random":
-            """
-                probabilistic model for rejection rate:
-                    - model the rate of worker's request to join as lambda in a poisson process
-                    - set probabilistic reject rate such that we can expect enough workers will request to join and be accepted
-                        - between now and ETA till end of _server_config['cycle_length']
-                        - such that we can expect (,say with 95% confidence) successful completion of the cycle
-                        - while accounting for EXPECTED_FAILURE_RATE (% of workers that join cycle but never successfully report diff)
+            """probabilistic model for rejection rate:
 
-                EXPECTED_FAILURE_RATE = moving average with exponential decay based on historical data (maybe: noised up weights for security)
+                - model the rate of worker's request to join as lambda in a poisson process
+                - set probabilistic reject rate such that we can expect enough workers will request to join and be accepted
+                    - between now and ETA till end of _server_config['cycle_length']
+                    - such that we can expect (,say with 95% confidence) successful completion of the cycle
+                    - while accounting for EXPECTED_FAILURE_RATE (% of workers that join cycle but never successfully report diff)
 
-                k' = max_workers * (1+EXPECTED_FAILURE_RATE) # expected failure adjusted max_workers = var: k_prime
+            EXPECTED_FAILURE_RATE = moving average with exponential decay based on historical data (maybe: noised up weights for security)
 
-                T_left = T_cycle_end - T_now # how much time is left (in the same unit as below)
+            k' = max_workers * (1+EXPECTED_FAILURE_RATE) # expected failure adjusted max_workers = var: k_prime
 
-                normalized_lambda_actual = (recent) historical rate of request / unit time
+            T_left = T_cycle_end - T_now # how much time is left (in the same unit as below)
 
-                lambda' = number of requests / unit of time that would satisfy the below equation
+            normalized_lambda_actual = (recent) historical rate of request / unit time
 
-                probability of receiving at least k' requests per unit time:
-                    P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
+            lambda' = number of requests / unit of time that would satisfy the below equation
 
-                var: lambda_approx = lambda' * T_left
+            probability of receiving at least k' requests per unit time:
+                P(K>=k') = 0.95 = e ^ ( - lambda' * T_left) * ( lambda' * T_left) ^ k' / k'! = 1 - P(K<k')
 
-                solve for lambda':
-                    use numerical approximation (newton's method) or just repeatedly call prob = poisson.sf(x, lambda') via scipy
+            var: lambda_approx = lambda' * T_left
 
-                reject_probability = 1 - lambda_approx / (normalized_lambda_actual * T_left)
+            solve for lambda':
+                use numerical approximation (newton's method) or just repeatedly call prob = poisson.sf(x, lambda') via scipy
+
+            reject_probability = 1 - lambda_approx / (normalized_lambda_actual * T_left)
             """
 
             # time base units = 1 hr, assumes lambda_actual and lambda_approx have the same unit as T_left
@@ -390,7 +392,8 @@ def fl_cycle_application_decision():
             _search_tolerance = 0.01
 
             def _bisect_approximator(arr, search_tolerance=_search_tolerance):
-                """ uses binary search to find lambda_actual within search_tolerance"""
+                """uses binary search to find lambda_actual within
+                search_tolerance."""
                 n = len(arr)
                 L = 0
                 R = n - 1
@@ -427,7 +430,7 @@ def fl_cycle_application_decision():
             if (k_prime > 50
                     and abs(poisson.sf(k_prime, lambda_approx) - confidence) >
                     _search_tolerance):
-                """something went wrong, fall back to safe default"""
+                """something went wrong, fall back to safe default."""
                 rej_prob = 0.1
                 WARN = "_bisect_approximator failed unexpectedly, reset rej_prob to default"
                 logging.exception(WARN)  # log error
@@ -454,7 +457,7 @@ def fl_cycle_application_decision():
 
 @main.route("/get-model", methods=["GET"])
 def get_model():
-    """Request a download of a model"""
+    """Request a download of a model."""
 
     response_body = {}
     status_code = None

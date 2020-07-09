@@ -1,7 +1,6 @@
 #!/bin/env python
-"""
-    Grid Gateway is a Flask based application used to manage / monitor / control and route grid workers remotely.
-"""
+"""Grid Gateway is a Flask based application used to manage / monitor / control
+and route grid workers remotely."""
 import argparse
 import os
 import sys

@@ -1,6 +1,4 @@
-"""
-    All Gateway routes (REST API).
-"""
+"""All Gateway routes (REST API)."""
 from flask import render_template
 
 from .. import main
@@ -8,5 +6,5 @@ from .. import main
 
 @main.route("/", methods=["GET"])
 def index():
-    """ Main Page. """
+    """Main Page."""
     return render_template("index.html")

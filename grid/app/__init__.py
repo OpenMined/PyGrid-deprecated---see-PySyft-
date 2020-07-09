@@ -18,16 +18,16 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 def set_database_config(app, test_config=None, verbose=False):
-    """ Set configs to use SQL Alchemy library.
+    """Set configs to use SQL Alchemy library.
 
-        Args:
-            app: Flask application.
-            test_config : Dictionary containing SQLAlchemy configs for test purposes.
-            verbose : Level of flask application verbosity.
-        Returns:
-            app: Flask application.
-        Raises:
-            RuntimeError : If DATABASE_URL or test_config didn't initialized, RuntimeError exception will be raised.
+    Args:
+        app: Flask application.
+        test_config : Dictionary containing SQLAlchemy configs for test purposes.
+        verbose : Level of flask application verbosity.
+    Returns:
+        app: Flask application.
+    Raises:
+        RuntimeError : If DATABASE_URL or test_config didn't initialized, RuntimeError exception will be raised.
     """
     db_url = os.environ.get("DATABASE_URL")
     migrate = Migrate(app, db)
@@ -54,14 +54,14 @@ def set_database_config(app, test_config=None, verbose=False):
 def create_app(node_id: str, debug=False, n_replica=None,
                test_config=None) -> Flask:
     """Create flask application.
-    
-       Args:
-            node_id: ID used to identify this node.
-            debug: debug mode flag.
-            n_replica: Number of model replicas used for fault tolerance purposes.
-            test_config: database test settings.
-       Returns:
-            app : Flask App instance.
+
+    Args:
+         node_id: ID used to identify this node.
+         debug: debug mode flag.
+         n_replica: Number of model replicas used for fault tolerance purposes.
+         test_config: database test settings.
+    Returns:
+         app : Flask App instance.
     """
     app = Flask(__name__)
     app.debug = debug

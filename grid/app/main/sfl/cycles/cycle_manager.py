@@ -24,13 +24,14 @@ class CycleManager:
         self._worker_cycles = Warehouse(WorkerCycle)
 
     def create(self, fl_process_id: str, version: str, cycle_time: int):
-        """ Create a new federated learning cycle.
-            Args:
-                fl_process_id: FL Process's ID.
-                version: Version (?)
-                cycle_time: Remaining time to finish this cycle.
-            Returns:
-                fd_cycle: Cycle Instance.
+        """Create a new federated learning cycle.
+
+        Args:
+            fl_process_id: FL Process's ID.
+            version: Version (?)
+            cycle_time: Remaining time to finish this cycle.
+        Returns:
+            fd_cycle: Cycle Instance.
         """
         _new_cycle = None
 
@@ -51,12 +52,13 @@ class CycleManager:
         return _new_cycle
 
     def last_participation(self, process: int, worker_id: str):
-        """ Retrieve the last time the worker participated from this cycle.
-            Args:
-                process: Federated Learning Process.
-                worker_id: Worker's ID.
-            Returns:
-                last_participation: last cycle.
+        """Retrieve the last time the worker participated from this cycle.
+
+        Args:
+            process: Federated Learning Process.
+            worker_id: Worker's ID.
+        Returns:
+            last_participation: last cycle.
         """
         _cycles = self._cycles.query(fl_process_id=process.id)
 
@@ -73,12 +75,13 @@ class CycleManager:
         return last
 
     def last(self, fl_process_id: int, version: str = None):
-        """ Retrieve the last not completed registered cycle.
-            Args:
-                fl_process_id: Federated Learning Process ID.
-                version: Model's version.
-            Returns:
-                cycle: Cycle Instance / None
+        """Retrieve the last not completed registered cycle.
+
+        Args:
+            fl_process_id: Federated Learning Process ID.
+            version: Model's version.
+        Returns:
+            cycle: Cycle Instance / None
         """
         if version:
             _cycle = self._cycles.last(fl_process_id=fl_process_id,
@@ -94,19 +97,21 @@ class CycleManager:
         return _cycle
 
     def delete(self, **kwargs):
-        """ Delete a registered Cycle.
-            Args:
-                model_id: Model's ID.
+        """Delete a registered Cycle.
+
+        Args:
+            model_id: Model's ID.
         """
         self._cycles.delete(**kwargs)
 
     def is_assigned(self, worker_id: str, cycle_id: str):
-        """ Check if a workers is already assigned to an specific cycle.
-            Args:
-                worker_id : Worker's ID.
-                cycle_id : Cycle's ID.
-            Returns:
-                result : Boolean Flag.
+        """Check if a workers is already assigned to an specific cycle.
+
+        Args:
+            worker_id : Worker's ID.
+            cycle_id : Cycle's ID.
+        Returns:
+            result : Boolean Flag.
         """
         return self._worker_cycles.first(worker_id=worker_id,
                                          cycle_id=cycle_id) != None
@@ -119,15 +124,16 @@ class CycleManager:
         return _worker_cycle
 
     def validate(self, worker_id: str, cycle_id: str, request_key: str):
-        """ Validate Worker's request key.
-            Args:
-                worker_id: Worker's ID.
-                cycle_id: Cycle's ID.
-                request_key: Worker's request key.
-            Returns:
-                result: Boolean flag
-            Raises:
-                CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
+        """Validate Worker's request key.
+
+        Args:
+            worker_id: Worker's ID.
+            cycle_id: Cycle's ID.
+            request_key: Worker's request key.
+        Returns:
+            result: Boolean flag
+        Raises:
+            CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
         """
         _worker_cycle = self._worker_cycles.first(worker_id=worker_id,
                                                   cycle_id=cycle_id)
@@ -168,7 +174,7 @@ class CycleManager:
                       _worker_cycle.cycle_id)
 
     def complete_cycle(self, cycle_id: str):
-        """Checks if the cycle is completed and runs plan avg"""
+        """Checks if the cycle is completed and runs plan avg."""
         logging.info("running complete_cycle for cycle_id: %s" % cycle_id)
         cycle = self._cycles.first(id=cycle_id)
         logging.info("found cycle: %s" % str(cycle))
@@ -206,16 +212,16 @@ class CycleManager:
             self._average_plan_diffs(server_config, cycle)
 
     def _average_plan_diffs(self, server_config: dict, cycle):
-        """ skeleton code
-                Plan only
-                - get cycle
-                - track how many has reported successfully
-                - get diffs: list of (worker_id, diff_from_this_worker) on cycle._diffs
-                - check if we have enough diffs? vs. max_worker
-                - if enough diffs => average every param (by turning tensors into python matrices => reduce th.add => torch.div by number of diffs)
-                - save as new model value => M_prime (save params new values)
-                - create new cycle & new checkpoint
-                at this point new workers can join because a cycle for a model exists
+        """skeleton code Plan only.
+
+        - get cycle
+        - track how many has reported successfully
+        - get diffs: list of (worker_id, diff_from_this_worker) on cycle._diffs
+        - check if we have enough diffs? vs. max_worker
+        - if enough diffs => average every param (by turning tensors into python matrices => reduce th.add => torch.div by number of diffs)
+        - save as new model value => M_prime (save params new values)
+        - create new cycle & new checkpoint
+        at this point new workers can join because a cycle for a model exists
         """
         logging.info("start diffs averaging!")
         logging.info("cycle: %s" % str(cycle))

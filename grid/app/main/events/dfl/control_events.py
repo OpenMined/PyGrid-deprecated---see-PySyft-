@@ -13,10 +13,10 @@ from ...dfl.auth import authenticated_only, get_session
 
 
 def get_node_infos(message: dict) -> str:
-    """ Returns node id.
+    """Returns node id.
 
-        Returns:
-            response (str) : Response message containing node id.
+    Returns:
+        response (str) : Response message containing node id.
     """
     return json.dumps({
         RESPONSE_MSG.NODE_ID: local_worker.id,
@@ -25,12 +25,12 @@ def get_node_infos(message: dict) -> str:
 
 
 def authentication(message: dict) -> str:
-    """ Receive user credentials and performs user authentication.
+    """Receive user credentials and performs user authentication.
 
-        Args:
-            message (dict) : Dict data structure containing user credentials.
-        Returns:
-            response (str) : Authentication response message.
+    Args:
+        message (dict) : Dict data structure containing user credentials.
+    Returns:
+        response (str) : Authentication response message.
     """
     user = get_session().authenticate(message)
     # If it was authenticated
@@ -45,12 +45,12 @@ def authentication(message: dict) -> str:
 
 
 def connect_grid_nodes(message: dict) -> str:
-    """ Connect remote grid nodes between each other.
+    """Connect remote grid nodes between each other.
 
-        Args:
-            message (dict) :  Dict data structure containing node_id, node address and user credentials(optional).
-        Returns:
-            response (str) : response message.
+    Args:
+        message (dict) :  Dict data structure containing node_id, node address and user credentials(optional).
+    Returns:
+        response (str) : response message.
     """
     if message["id"] not in local_worker._known_workers:
         worker = DynamicFLClient(hook,
@@ -61,5 +61,5 @@ def connect_grid_nodes(message: dict) -> str:
 
 @authenticated_only
 def socket_ping(message: dict) -> str:
-    """ Ping request to check node's health state. """
+    """Ping request to check node's health state."""
     return json.dumps({"alive": "True"})

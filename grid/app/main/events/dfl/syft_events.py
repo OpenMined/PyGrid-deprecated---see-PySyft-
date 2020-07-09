@@ -14,12 +14,12 @@ from ...dfl.persistence.object_storage import recover_objects
 
 @authenticated_only
 def forward_binary_message(message: bin) -> bin:
-    """ Forward binary syft messages to user's workers.
+    """Forward binary syft messages to user's workers.
 
-        Args:
-            message (bin) : PySyft binary message.
-        Returns:
-            response (bin) : PySyft binary response.
+    Args:
+        message (bin) : PySyft binary message.
+    Returns:
+        response (bin) : PySyft binary response.
     """
     try:
         ## If worker is empty, load previous database tensors.
@@ -42,12 +42,12 @@ def forward_binary_message(message: bin) -> bin:
 
 @authenticated_only
 def syft_command(message: dict) -> str:
-    """ Forward JSON syft messages to user's workers.
+    """Forward JSON syft messages to user's workers.
 
-        Args:
-            message (dict) : Dictionary data structure containing PySyft message.
-        Returns:
-            response (str) : Node response.
+    Args:
+        message (dict) : Dictionary data structure containing PySyft message.
+    Returns:
+        response (str) : Node response.
     """
     response = local_worker._message_router[message["msg_type"]](
         message["content"])

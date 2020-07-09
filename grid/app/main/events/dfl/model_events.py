@@ -19,12 +19,12 @@ from ...dfl.persistence.object_storage import recover_objects
 
 @authenticated_only
 def host_model(message: dict) -> str:
-    """ Save/Store a model into database.
+    """Save/Store a model into database.
 
-        Args:
-            message (dict) : Dict containing a serialized model and model's metadata.
-        Response:
-            response (str) : Node's response.
+    Args:
+        message (dict) : Dict containing a serialized model and model's metadata.
+    Response:
+        response (str) : Node's response.
     """
     encoding = message["encoding"]
     model_id = message[MSG_FIELD.MODEL_ID]
@@ -50,12 +50,12 @@ def host_model(message: dict) -> str:
 
 @authenticated_only
 def delete_model(message: dict) -> str:
-    """ Delete a model previously stored at database.
+    """Delete a model previously stored at database.
 
-        Args:
-            message (dict) : Model's id.
-        Returns:
-            response (str) : Node's response.
+    Args:
+        message (dict) : Model's id.
+    Returns:
+        response (str) : Node's response.
     """
     model_id = message[MSG_FIELD.MODEL_ID]
     result = model_controller.delete(current_user.worker, model_id)
@@ -64,10 +64,10 @@ def delete_model(message: dict) -> str:
 
 @authenticated_only
 def get_models(message: dict) -> str:
-    """ Get a list of stored models.
+    """Get a list of stored models.
 
-        Returns:
-            response (str) : List of models stored at this node.
+    Returns:
+        response (str) : List of models stored at this node.
     """
     model_list = model_controller.models(current_user.worker)
     return json.dumps(model_list)
@@ -75,12 +75,12 @@ def get_models(message: dict) -> str:
 
 @authenticated_only
 def run_inference(message: dict) -> str:
-    """ Run dataset inference with a specifc model stored in this node.
+    """Run dataset inference with a specifc model stored in this node.
 
-        Args:
-            message (dict) : Serialized dataset, model id and dataset's metadata.
-        Returns:
-            response (str) : Model's inference.
+    Args:
+        message (dict) : Serialized dataset, model id and dataset's metadata.
+    Returns:
+        response (str) : Model's inference.
     """
     ## If worker is empty, load previous database tensors.
     if not current_user.worker._objects:

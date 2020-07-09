@@ -1,6 +1,4 @@
-"""
-This file exists to provide a route to websocket events.
-"""
+"""This file exists to provide a route to websocket events."""
 # Standard Python imports
 import json
 
@@ -37,12 +35,13 @@ handler = SocketHandler()
 
 
 def route_requests(message, socket):
-    """ Handle a message from websocket connection and route them to the desired method.
+    """Handle a message from websocket connection and route them to the desired
+    method.
 
-        Args:
-            message : message received.
-        Returns:
-            message_response : message response.
+    Args:
+        message : message received.
+    Returns:
+        message_response : message response.
     """
     global routes
 
@@ -59,10 +58,10 @@ def route_requests(message, socket):
 
 @ws.route("/")
 def socket_api(socket):
-    """ Handle websocket connections and receive their messages.
+    """Handle websocket connections and receive their messages.
 
-        Args:
-            socket : websocket instance.
+    Args:
+        socket : websocket instance.
     """
     while not socket.closed:
         message = socket.receive()

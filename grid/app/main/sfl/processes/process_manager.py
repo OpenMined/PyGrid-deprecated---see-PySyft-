@@ -68,13 +68,14 @@ class ProcessManager:
         return fl_process
 
     def get_configs(self, **kwargs):
-        """ Return FL Process Configs.
-            Args:
-                query: Query attributes used to identify and retrieve the FL Process.
-            Returns:
-                configs (Tuple) : Tuple of Process Configs (Server, Client)
-            Raises:
-                ProcessFoundError (PyGridError) : If FL Process not found.
+        """Return FL Process Configs.
+
+        Args:
+            query: Query attributes used to identify and retrieve the FL Process.
+        Returns:
+            configs (Tuple) : Tuple of Process Configs (Server, Client)
+        Raises:
+            ProcessFoundError (PyGridError) : If FL Process not found.
         """
         _process = self._processes.last(**kwargs)
 
@@ -92,13 +93,14 @@ class ProcessManager:
         return (server.config, client.config)
 
     def get_plans(self, **kwargs):
-        """ Return FL Process Plans.
-            Args:
-                query: Query attributes used to identify and retrieve the Plans.
-            Returns:
-                plans (Dict) : Dict of Plans
-            Raises:
-                PlanNotFoundError (PyGridError) : If Plan not found.
+        """Return FL Process Plans.
+
+        Args:
+            query: Query attributes used to identify and retrieve the Plans.
+        Returns:
+            plans (Dict) : Dict of Plans
+        Raises:
+            PlanNotFoundError (PyGridError) : If Plan not found.
         """
         _plans = plans.get(**kwargs)
 
@@ -114,13 +116,14 @@ class ProcessManager:
         return plans.first(**kwargs)
 
     def get_protocols(self, **kwargs):
-        """ Return FL Process Protocols.
-            Args:
-                query: Query attributes used to identify and retrieve the FL Process.
-            Returns:
-                plans (Dict) : Dict of Protocols
-            Raises:
-                ProtocolNotFoundError (PyGridError) : If Protocol not found.
+        """Return FL Process Protocols.
+
+        Args:
+            query: Query attributes used to identify and retrieve the FL Process.
+        Returns:
+            plans (Dict) : Dict of Protocols
+        Raises:
+            ProtocolNotFoundError (PyGridError) : If Protocol not found.
         """
         _protocols = protocols.get(**kwargs)
 
@@ -136,13 +139,14 @@ class ProcessManager:
         return protocol_dict
 
     def get(self, **kwargs):
-        """ Retrieve the desired federated learning process.
-            Args:
-                query : query used to identify the desired process.
-            Returns:
-                process : FLProcess Instance or None if it wasn't found.
-            Raises:
-                ProcessNotFoundError (PyGridError) : If Process not found.
+        """Retrieve the desired federated learning process.
+
+        Args:
+            query : query used to identify the desired process.
+        Returns:
+            process : FLProcess Instance or None if it wasn't found.
+        Raises:
+            ProcessNotFoundError (PyGridError) : If Process not found.
         """
         _process = self._processes.query(**kwargs)
 
@@ -152,13 +156,14 @@ class ProcessManager:
         return _process
 
     def first(self, **kwargs):
-        """ Retrieve the desired federated learning process.
-            Args:
-                query : query used to identify the desired process.
-            Returns:
-                process : FLProcess Instance or None if it wasn't found.
-            Raises:
-                ProcessNotFoundError (PyGridError) : If Process not found.
+        """Retrieve the desired federated learning process.
+
+        Args:
+            query : query used to identify the desired process.
+        Returns:
+            process : FLProcess Instance or None if it wasn't found.
+        Raises:
+            ProcessNotFoundError (PyGridError) : If Process not found.
         """
         _process = self._processes.first(**kwargs)
 
@@ -168,13 +173,14 @@ class ProcessManager:
         return _process
 
     def last(self, **kwargs):
-        """ Retrieve the desired federated learning process.
-            Args:
-                query : query used to identify the desired process.
-            Returns:
-                process : FLProcess Instance or None if it wasn't found.
-            Raises:
-                ProcessNotFound (PyGridError) : If Process not found.
+        """Retrieve the desired federated learning process.
+
+        Args:
+            query : query used to identify the desired process.
+        Returns:
+            process : FLProcess Instance or None if it wasn't found.
+        Raises:
+            ProcessNotFound (PyGridError) : If Process not found.
         """
         _process = self._processes.last(**kwargs)
 
@@ -184,8 +190,9 @@ class ProcessManager:
         return _process
 
     def delete(self, **kwargs):
-        """ Delete a registered Process.
-            Args:
-                model_id: Model's ID.
+        """Delete a registered Process.
+
+        Args:
+            model_id: Model's ID.
         """
         self._processes.delete(**kwargs)
