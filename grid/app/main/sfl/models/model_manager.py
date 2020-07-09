@@ -1,14 +1,14 @@
 # PyGrid imports
-from ..models.ai_model import Model, ModelCheckPoint
-from ...storage.warehouse import Warehouse
-from ...core.exceptions import ModelNotFoundError
-
 # Syft dependencies
 import syft as sy
+from syft.execution.placeholder import PlaceHolder
 from syft.execution.state import State
 from syft.serde import protobuf
 from syft_proto.execution.v1.state_pb2 import State as StatePB
-from syft.execution.placeholder import PlaceHolder
+
+from ...core.exceptions import ModelNotFoundError
+from ...storage.warehouse import Warehouse
+from ..models.ai_model import Model, ModelCheckPoint
 
 
 class ModelManager:

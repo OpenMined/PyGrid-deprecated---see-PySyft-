@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from grid.app.main.routes.sfl import routes
 from grid.app.main.core.exceptions import PyGridError
+from grid.app.main.routes.sfl import routes
 
 
 def test_worker_cycle_request_bad_request_json(client):

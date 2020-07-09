@@ -1,9 +1,9 @@
 # Standard Python imports
 import uuid
 
+import syft as sy
 # External imports
 from flask_login import UserMixin
-import syft as sy
 
 # Local imports
 from ... import hook, local_worker

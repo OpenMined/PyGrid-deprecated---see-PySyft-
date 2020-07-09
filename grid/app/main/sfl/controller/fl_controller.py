@@ -1,15 +1,15 @@
 # Database object controllers
-from ..processes import process_manager
-from ..cycles import cycle_manager
-from ..models import model_manager
-from ..workers import worker_manager
-from ...core.codes import MSG_FIELD, CYCLE
-from ...core.exceptions import ProtocolNotFoundError
-
 # Generic imports
 import hashlib
 import uuid
 from datetime import datetime
+
+from ...core.codes import CYCLE, MSG_FIELD
+from ...core.exceptions import ProtocolNotFoundError
+from ..cycles import cycle_manager
+from ..models import model_manager
+from ..processes import process_manager
+from ..workers import worker_manager
 
 
 class FLController:

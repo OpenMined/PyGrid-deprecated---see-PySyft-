@@ -1,31 +1,31 @@
 # Standard Python Imports
 import io
 import json
+import logging
+from math import floor
+from random import random
 
-# External modules imports
-from requests_toolbelt import MultipartEncoder
-from flask import render_template, Response, request, current_app, send_file
-
+import numpy as np
+from flask import Response, current_app, render_template, request, send_file
 # Dependencies used by req_join endpoint
 # It's a mockup endpoint and should be removed soon.
 from scipy.stats import poisson
-import numpy as np
-from math import floor
-import logging
-from random import random
+
+# External modules imports
+from requests_toolbelt import MultipartEncoder
 
 # Local imports
 from ... import main
+from ...core.codes import CYCLE, MSG_FIELD, RESPONSE_MSG
+from ...core.exceptions import InvalidRequestKeyError, PyGridError
+from ...events.sfl.fl_events import assign_worker_id, cycle_request, report
+from ...sfl.auth.federated import verify_token
 from ...sfl.controller import processes
 from ...sfl.cycles import cycle_manager
 from ...sfl.models import model_manager
-from ...sfl.workers import worker_manager
 from ...sfl.processes import process_manager
 from ...sfl.syft_assets import plans, protocols
-from ...core.codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ...events.sfl.fl_events import report, cycle_request, assign_worker_id
-from ...sfl.auth.federated import verify_token
-from ...core.exceptions import InvalidRequestKeyError, PyGridError
+from ...sfl.workers import worker_manager
 
 
 @main.route("/federated/cycle-request", methods=["POST"])

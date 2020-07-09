@@ -1,14 +1,14 @@
 # Python standard imports
-import json
 import functools
+import json
 
 # External imports
-from flask_login import LoginManager, current_user, UserMixin
+from flask_login import LoginManager, UserMixin, current_user
 
 # Local imports
 from ... import local_worker
-from .user_session import UserSession
 from .session_repository import SessionsRepository
+from .user_session import UserSession
 
 SESSION_TYPES = [UserSession]
 session_repository = None

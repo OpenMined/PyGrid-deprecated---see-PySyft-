@@ -3,17 +3,18 @@ import json
 
 # External imports
 import torch as th
+
 import syft as sy
+from flask_login import current_user
 from syft.codes import RESPONSE_MSG
 from syft.generic.pointers.pointer_tensor import PointerTensor
-from flask_login import current_user
 
 # Local imports
-from ... import local_worker, hook
-from ...dfl.persistence import model_controller
-from ...dfl.persistence.object_storage import recover_objects
+from ... import hook, local_worker
 from ...core.codes import MSG_FIELD
 from ...dfl.auth import authenticated_only
+from ...dfl.persistence import model_controller
+from ...dfl.persistence.object_storage import recover_objects
 
 
 @authenticated_only

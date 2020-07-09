@@ -1,12 +1,12 @@
 # Standard Python imports
 from typing import Union
 
-# External imports
-from syft.serde import serialize, deserialize
-from syft.generic.frameworks.types import FrameworkTensorType
-from syft.generic.abstract.tensor import AbstractTensor
-from syft.generic.object_storage import ObjectStore
 from syft.exceptions import ObjectNotFoundError
+from syft.generic.abstract.tensor import AbstractTensor
+from syft.generic.frameworks.types import FrameworkTensorType
+from syft.generic.object_storage import ObjectStore
+# External imports
+from syft.serde import deserialize, serialize
 from syft.workers.base import BaseWorker
 
 # Local imports

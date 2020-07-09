@@ -7,14 +7,13 @@ import json
 # External imports
 from syft.codes import REQUEST_MSG
 
-# Local imports
-from ..core.codes import *
 from .. import ws
+from ..core.codes import *
+from .dfl.control_events import *
+from .dfl.model_events import *
+from .dfl.syft_events import *
 from .sfl.control_events import *
 from .sfl.fl_events import *
-from .dfl.syft_events import *
-from .dfl.model_events import *
-from .dfl.control_events import *
 from .socket_handler import SocketHandler
 
 # Websocket events routes

@@ -3,13 +3,13 @@ import json
 
 # External imports
 import syft as sy
-from syft.exceptions import GetNotPermittedError
 from flask_login import current_user
+from syft.exceptions import GetNotPermittedError
 
 # Local imports
-from ... import local_worker, hook
+from ... import hook, local_worker
+from ...dfl.auth import UserSession, authenticated_only
 from ...dfl.persistence.object_storage import recover_objects
-from ...dfl.auth import authenticated_only, UserSession
 
 
 @authenticated_only

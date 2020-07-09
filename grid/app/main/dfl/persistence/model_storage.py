@@ -1,14 +1,14 @@
 # Standard Python imports
-from typing import List, Dict, Union
 import hashlib
+from typing import Dict, List, Union
 
 # External imports
-from syft.serde import serialize, deserialize
+from syft.serde import deserialize, serialize
 
+from ...core.codes import MSG_FIELD
 # Local imports
 from .database import db_instance
 from .model_cache import ModelCache
-from ...core.codes import MSG_FIELD
 
 
 class ModelStorage:

@@ -3,12 +3,12 @@ from typing import Dict
 
 # External imports
 from syft import Plan
-from syft.serde import deserialize
 from syft.codes import RESPONSE_MSG
+from syft.serde import deserialize
 
+from ...core.codes import MSG_FIELD
 # Local imports
 from .model_storage import ModelStorage
-from ...core.codes import MSG_FIELD
 
 
 class ModelController:

@@ -3,12 +3,12 @@ import json
 
 # External modules
 from flask_login import login_user
-from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from syft.codes import RESPONSE_MSG
+from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 
+from ... import hook, local_worker, sy
 # Local imports
 from ...core.codes import MSG_FIELD
-from ... import local_worker, hook, sy
 from ...dfl.auth import authenticated_only, get_session
 
 

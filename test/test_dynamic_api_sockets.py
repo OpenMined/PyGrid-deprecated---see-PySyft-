@@ -1,16 +1,14 @@
-import unittest
 import time
-import pytest
+import unittest
 from random import randint, sample
+from test import IDS, PORTS, conftest, worker_ports
 
-import syft as sy
+import numpy as np
+import pytest
 import torch as th
 import torch.nn.functional as F
-import numpy as np
 
-from test import PORTS, IDS, worker_ports
-from test import conftest
-
+import syft as sy
 
 hook = sy.TorchHook(th)
 

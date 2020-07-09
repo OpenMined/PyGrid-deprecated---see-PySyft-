@@ -1,10 +1,11 @@
 # Standard Python imports
-from typing import List, Union
 import collections
+from typing import List, Union
+
+import torch.nn as nn
 
 # External imports
 from syft.serde import deserialize
-import torch.nn as nn
 
 # Local imports
 from ...core.codes import MSG_FIELD

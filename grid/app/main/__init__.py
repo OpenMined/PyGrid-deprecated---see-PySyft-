@@ -1,7 +1,11 @@
+import torch as th
 from flask import Blueprint
 
 import syft as sy
-import torch as th
+
+from .. import db, executor
+from . import events, routes
+from .dfl import auth
 
 # Avoid Pytorch deadlock issues
 th.set_num_threads(1)
@@ -12,7 +16,3 @@ hook.local_worker.is_client_worker = False
 
 main = Blueprint("main", __name__)
 ws = Blueprint(r"ws", __name__)
-
-from .. import db, executor
-from .dfl import auth
-from . import routes, events

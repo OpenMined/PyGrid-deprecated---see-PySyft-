@@ -1,22 +1,21 @@
 # Cycle module imports
-from .cycle import Cycle
-from .worker_cycle import WorkerCycle
-
-# PyGrid modules
-from ...storage.warehouse import Warehouse
-from ...core.exceptions import CycleNotFoundError
-from ..tasks.cycle import complete_cycle, run_task_once
-from ..models import model_manager
-from ..processes import process_manager
-
+import json
+import logging
+import random
 # Generic imports
 from datetime import datetime, timedelta
 from functools import reduce
 
 import torch as th
-import json
-import logging
-import random
+
+from ...core.exceptions import CycleNotFoundError
+# PyGrid modules
+from ...storage.warehouse import Warehouse
+from ..models import model_manager
+from ..processes import process_manager
+from ..tasks.cycle import complete_cycle, run_task_once
+from .cycle import Cycle
+from .worker_cycle import WorkerCycle
 
 
 class CycleManager:

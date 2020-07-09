@@ -1,9 +1,8 @@
 # workers module imports
-from .worker import Worker
-
+from ...core.exceptions import WorkerNotFoundError
 # PyGrid imports
 from ...storage.warehouse import Warehouse
-from ...core.exceptions import WorkerNotFoundError
+from .worker import Worker
 
 
 class WorkerManager:

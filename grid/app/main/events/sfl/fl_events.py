@@ -1,17 +1,17 @@
 # Standard python imports
-import json
-import uuid
 import base64
+import json
 import traceback
+import uuid
 from binascii import unhexlify
 
+from ...core.codes import CYCLE, FL_EVENTS, MSG_FIELD, RESPONSE_MSG
+from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError
+from ...sfl.auth.federated import verify_token
+from ...sfl.controller import processes
+from ...sfl.workers import worker_manager
 # Local imports
 from ..socket_handler import SocketHandler
-from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError
-from ...core.codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
-from ...sfl.auth.federated import verify_token
-from ...sfl.workers import worker_manager
-from ...sfl.controller import processes
 
 # Singleton socket handler
 handler = SocketHandler()

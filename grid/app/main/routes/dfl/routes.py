@@ -3,22 +3,19 @@ This file exists to provide one common place for all grid node http requests.
 """
 
 import json
-import sys
 import os
+import sys
 
-from flask import render_template
-from flask import Response
-from flask import request, send_from_directory
+from flask import Response, render_template, request, send_from_directory
 
 import syft as sy
-from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from flask_cors import cross_origin
-
-from ... import main, local_worker
-
-from ...dfl.persistence import model_controller
-from ...core.codes import MSG_FIELD
 from syft.codes import RESPONSE_MSG
+from syft.grid.clients.dynamic_fl_client import DynamicFLClient
+
+from ... import local_worker, main
+from ...core.codes import MSG_FIELD
+from ...dfl.persistence import model_controller
 
 # ======= WEB ROUTES ======
 
