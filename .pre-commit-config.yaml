@@ -19,15 +19,6 @@ repos:
     rev: v1.1.0
     hooks:
     -   id: python-use-type-annotations
--   repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.30.0
-    hooks:
-    -   id: yapf
-        name: yapf
-        entry: yapf
-        language: python
-        'types': [python]
-        args: ["--verbose", "--in-place", "--recursive", "grid", "--style='{based_on_style: pep8, indent_width: 4, column_limit: 80}"]
 -   repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.0.5
     hooks:
