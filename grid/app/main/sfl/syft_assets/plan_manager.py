@@ -3,7 +3,7 @@ from .plan import Plan
 
 # PyGrid imports
 from ...storage.warehouse import Warehouse
-from ...exceptions import PlanNotFoundError, PlanTranslationError, PlanInvalidError
+from ...core.exceptions import PlanNotFoundError, PlanTranslationError, PlanInvalidError
 
 # Syft dependencies
 import syft as sy

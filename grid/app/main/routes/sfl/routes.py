@@ -26,7 +26,7 @@ from ...sfl.syft_assets import plans, protocols
 from ...core.codes import RESPONSE_MSG, CYCLE, MSG_FIELD
 from ...events.sfl.fl_events import report, cycle_request, assign_worker_id
 from ...sfl.auth.federated import verify_token
-from ...exceptions import InvalidRequestKeyError, PyGridError
+from ...core.exceptions import InvalidRequestKeyError, PyGridError
 
 
 @main.route("/federated/cycle-request", methods=["POST"])

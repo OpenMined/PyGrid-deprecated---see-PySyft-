@@ -4,7 +4,7 @@ from .worker_cycle import WorkerCycle
 
 # PyGrid modules
 from ...storage.warehouse import Warehouse
-from ...exceptions import CycleNotFoundError
+from ...core.exceptions import CycleNotFoundError
 from ..tasks.cycle import complete_cycle, run_task_once
 from ..models import model_manager
 from ..processes import process_manager

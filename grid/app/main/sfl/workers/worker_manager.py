@@ -3,7 +3,7 @@ from .worker import Worker
 
 # PyGrid imports
 from ...storage.warehouse import Warehouse
-from ...exceptions import WorkerNotFoundError
+from ...core.exceptions import WorkerNotFoundError
 
 
 class WorkerManager:

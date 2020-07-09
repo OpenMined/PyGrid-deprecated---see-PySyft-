@@ -4,7 +4,7 @@ from ..cycles import cycle_manager
 from ..models import model_manager
 from ..workers import worker_manager
 from ...core.codes import MSG_FIELD, CYCLE
-from ...exceptions import ProtocolNotFoundError
+from ...core.exceptions import ProtocolNotFoundError
 
 # Generic imports
 import hashlib

@@ -3,7 +3,7 @@ from .protocol import Protocol
 
 # PyGrid imports
 from ...storage.warehouse import Warehouse
-from ...exceptions import ProtocolNotFoundError
+from ...core.exceptions import ProtocolNotFoundError
 
 
 class ProtocolManager:

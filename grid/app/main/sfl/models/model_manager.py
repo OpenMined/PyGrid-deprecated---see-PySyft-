@@ -1,7 +1,7 @@
 # PyGrid imports
 from ..models.ai_model import Model, ModelCheckPoint
 from ...storage.warehouse import Warehouse
-from ...exceptions import ModelNotFoundError
+from ...core.exceptions import ModelNotFoundError
 
 # Syft dependencies
 import syft as sy
