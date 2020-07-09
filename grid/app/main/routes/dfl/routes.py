@@ -17,7 +17,7 @@ from flask_cors import cross_origin
 from ... import main, local_worker
 
 from ...dfl.persistence import model_controller
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 from syft.codes import RESPONSE_MSG
 
 
@@ -142,7 +142,7 @@ def list_models():
 @cross_origin()
 def serve_model():
     """ Host an AI model Uploading and registering it by an specific ID.
-        
+
         Returns:
             Response : A json structure informing if hosting was succeed.
     """

@@ -9,7 +9,7 @@ from binascii import unhexlify
 # Local imports
 from ..socket_handler import SocketHandler
 from ...exceptions import CycleNotFoundError, MaxCycleLimitExceededError
-from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
+from ...core.codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
 from ...sfl.auth.federated import verify_token
 from ...sfl.workers import worker_manager
 from ...sfl.controller import processes

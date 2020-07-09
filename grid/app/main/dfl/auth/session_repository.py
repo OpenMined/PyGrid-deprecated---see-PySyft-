@@ -3,7 +3,7 @@ from flask_login import UserMixin
 
 # Local imports
 from .user_session import UserSession
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 
 
 class SessionsRepository(object):

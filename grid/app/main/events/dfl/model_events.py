@@ -12,7 +12,7 @@ from flask_login import current_user
 from ... import local_worker, hook
 from ...dfl.persistence import model_controller
 from ...dfl.persistence.object_storage import recover_objects
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 from ...dfl.auth import authenticated_only
 
 

@@ -8,7 +8,7 @@ from syft.codes import RESPONSE_MSG
 
 # Local imports
 from .model_storage import ModelStorage
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 
 
 class ModelController:

@@ -3,7 +3,7 @@ from ..processes import process_manager
 from ..cycles import cycle_manager
 from ..models import model_manager
 from ..workers import worker_manager
-from ...codes import MSG_FIELD, CYCLE
+from ...core.codes import MSG_FIELD, CYCLE
 from ...exceptions import ProtocolNotFoundError
 
 # Generic imports

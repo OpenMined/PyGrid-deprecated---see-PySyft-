@@ -7,7 +7,7 @@ import syft as sy
 
 # Local imports
 from ... import hook, local_worker
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 
 
 class UserSession(UserMixin):

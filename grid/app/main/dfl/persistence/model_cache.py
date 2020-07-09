@@ -7,7 +7,7 @@ from syft.serde import deserialize
 import torch.nn as nn
 
 # Local imports
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 
 
 class ModelCache:

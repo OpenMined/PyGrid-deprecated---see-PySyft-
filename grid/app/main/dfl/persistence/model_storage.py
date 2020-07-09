@@ -8,7 +8,7 @@ from syft.serde import serialize, deserialize
 # Local imports
 from .database import db_instance
 from .model_cache import ModelCache
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 
 
 class ModelStorage:

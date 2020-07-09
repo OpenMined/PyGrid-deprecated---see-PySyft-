@@ -7,7 +7,7 @@ from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from syft.codes import RESPONSE_MSG
 
 # Local imports
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 from ... import local_worker, hook, sy
 from ...dfl.auth import authenticated_only, get_session
 

@@ -8,7 +8,7 @@ import json
 from syft.codes import REQUEST_MSG
 
 # Local imports
-from ..codes import *
+from ..core.codes import *
 from .. import ws
 from .sfl.control_events import *
 from .sfl.fl_events import *
