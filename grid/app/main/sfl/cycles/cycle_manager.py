@@ -37,10 +37,10 @@ class CycleManager:
 
         # Retrieve a list of cycles using the same model_id/version
         sequence_number = len(
-            self._cycles.query(fl_process_id=fl_process_id, version=version))
+            self._cycles.query(fl_process_id=fl_process_id, version=version)
+        )
         _now = datetime.now()
-        _end = _now + timedelta(
-            seconds=cycle_time) if cycle_time is not None else None
+        _end = _now + timedelta(seconds=cycle_time) if cycle_time is not None else None
         _new_cycle = self._cycles.register(
             start=_now,
             end=_end,
@@ -67,8 +67,9 @@ class CycleManager:
             return last
 
         for cycle in _cycles:
-            worker_cycle = self._worker_cycles.first(cycle_id=cycle.id,
-                                                     worker_id=worker_id)
+            worker_cycle = self._worker_cycles.first(
+                cycle_id=cycle.id, worker_id=worker_id
+            )
             if worker_cycle and cycle.sequence > last:
                 last = cycle.sequence
 
@@ -84,12 +85,11 @@ class CycleManager:
             cycle: Cycle Instance / None
         """
         if version:
-            _cycle = self._cycles.last(fl_process_id=fl_process_id,
-                                       version=version,
-                                       is_completed=False)
+            _cycle = self._cycles.last(
+                fl_process_id=fl_process_id, version=version, is_completed=False
+            )
         else:
-            _cycle = self._cycles.last(fl_process_id=fl_process_id,
-                                       is_completed=False)
+            _cycle = self._cycles.last(fl_process_id=fl_process_id, is_completed=False)
 
         if not _cycle:
             raise CycleNotFoundError
@@ -113,13 +113,12 @@ class CycleManager:
         Returns:
             result : Boolean Flag.
         """
-        return self._worker_cycles.first(worker_id=worker_id,
-                                         cycle_id=cycle_id) != None
+        return self._worker_cycles.first(worker_id=worker_id, cycle_id=cycle_id) != None
 
     def assign(self, worker, cycle, hash_key: str):
-        _worker_cycle = self._worker_cycles.register(worker=worker,
-                                                     cycle=cycle,
-                                                     request_key=hash_key)
+        _worker_cycle = self._worker_cycles.register(
+            worker=worker, cycle=cycle, request_key=hash_key
+        )
 
         return _worker_cycle
 
@@ -135,8 +134,9 @@ class CycleManager:
         Raises:
             CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
         """
-        _worker_cycle = self._worker_cycles.first(worker_id=worker_id,
-                                                  cycle_id=cycle_id)
+        _worker_cycle = self._worker_cycles.first(
+            worker_id=worker_id, cycle_id=cycle_id
+        )
 
         if not _worker_cycle:
             raise CycleNotFoundError
@@ -157,8 +157,9 @@ class CycleManager:
            Raises:
                 ProcessLookupError : If Not found any relation between the worker/cycle.
         """
-        _worker_cycle = self._worker_cycles.first(worker_id=worker_id,
-                                                  request_key=request_key)
+        _worker_cycle = self._worker_cycles.first(
+            worker_id=worker_id, request_key=request_key
+        )
 
         if not _worker_cycle:
             raise ProcessLookupError
@@ -170,8 +171,7 @@ class CycleManager:
 
         # Run cycle end task async to we don't block report request
         # (for prod we probably should be replace this with Redis queue + separate worker)
-        run_task_once("complete_cycle", complete_cycle, self,
-                      _worker_cycle.cycle_id)
+        run_task_once("complete_cycle", complete_cycle, self, _worker_cycle.cycle_id)
 
     def complete_cycle(self, cycle_id: str):
         """Checks if the cycle is completed and runs plan avg."""
@@ -186,23 +186,24 @@ class CycleManager:
         server_config, _ = process_manager.get_configs(id=cycle.fl_process_id)
         logging.info("server_config: %s" % json.dumps(server_config, indent=2))
 
-        received_diffs = self._worker_cycles.count(cycle_id=cycle_id,
-                                                   is_completed=True)
+        received_diffs = self._worker_cycles.count(cycle_id=cycle_id, is_completed=True)
         logging.info("# of diffs: %d" % received_diffs)
 
         min_diffs = server_config.get("min_diffs", None)
         max_diffs = server_config.get("max_diffs", None)
 
-        hit_diffs_limit = (received_diffs >= max_diffs
-                           if max_diffs is not None else False)
-        hit_time_limit = datetime.now(
-        ) >= cycle.end if cycle.end is not None else False
+        hit_diffs_limit = (
+            received_diffs >= max_diffs if max_diffs is not None else False
+        )
+        hit_time_limit = datetime.now() >= cycle.end if cycle.end is not None else False
         no_limits = max_diffs is None and cycle.end is None
-        has_enough_diffs = (received_diffs >= min_diffs
-                            if min_diffs is not None else True)
+        has_enough_diffs = (
+            received_diffs >= min_diffs if min_diffs is not None else True
+        )
 
-        ready_to_average = has_enough_diffs and (no_limits or hit_diffs_limit
-                                                 or hit_time_limit)
+        ready_to_average = has_enough_diffs and (
+            no_limits or hit_diffs_limit or hit_time_limit
+        )
 
         no_protocol = True  # only deal with plans for now
 
@@ -232,26 +233,27 @@ class CycleManager:
         logging.info("model id: %d" % model_id)
         _checkpoint = model_manager.load(model_id=model_id)
         logging.info("current checkpoint: %s" % str(_checkpoint))
-        model_params = model_manager.unserialize_model_params(
-            _checkpoint.values)
-        logging.info("model params shapes: %s" %
-                     str([p.shape for p in model_params]))
+        model_params = model_manager.unserialize_model_params(_checkpoint.values)
+        logging.info("model params shapes: %s" % str([p.shape for p in model_params]))
 
-        reports_to_average = self._worker_cycles.query(cycle_id=cycle.id,
-                                                       is_completed=True)
+        reports_to_average = self._worker_cycles.query(
+            cycle_id=cycle.id, is_completed=True
+        )
         diffs = [
             model_manager.unserialize_model_params(report.diff)
             for report in reports_to_average
         ]
 
-        raw_diffs = [[diff[model_param] for diff in diffs]
-                     for model_param in range(len(model_params))]
+        raw_diffs = [
+            [diff[model_param] for diff in diffs]
+            for model_param in range(len(model_params))
+        ]
 
-        logging.info("raw diffs lengths: %s" %
-                     str([len(row) for row in raw_diffs]))
+        logging.info("raw diffs lengths: %s" % str([len(row) for row in raw_diffs]))
 
-        avg_plan = process_manager.get_plan(fl_process_id=cycle.fl_process_id,
-                                            is_avg_plan=True)
+        avg_plan = process_manager.get_plan(
+            fl_process_id=cycle.fl_process_id, is_avg_plan=True
+        )
 
         # check if the uploaded avg plan is iterative or not
         iterative_plan = server_config.get("iterative_plan", False)
@@ -270,12 +272,13 @@ class CycleManager:
             model_param - diff_param
             for model_param, diff_param in zip(model_params, diff_avg)
         ]
-        logging.info("_updated_model_params shapes: %s" %
-                     str([p.shape for p in _updated_model_params]))
+        logging.info(
+            "_updated_model_params shapes: %s"
+            % str([p.shape for p in _updated_model_params])
+        )
 
         # make new checkpoint
-        serialized_params = model_manager.serialize_model_params(
-            _updated_model_params)
+        serialized_params = model_manager.serialize_model_params(_updated_model_params)
         _new_checkpoint = model_manager.save(model_id, serialized_params)
         logging.info("new checkpoint: %s" % str(_new_checkpoint))
 
@@ -284,7 +287,8 @@ class CycleManager:
         self._cycles.update()
 
         completed_cycles_num = self._cycles.count(
-            fl_process_id=cycle.fl_process_id, is_completed=True)
+            fl_process_id=cycle.fl_process_id, is_completed=True
+        )
         logging.info("completed_cycles_num: %d" % completed_cycles_num)
         max_cycles = server_config.get("num_cycles")
         if completed_cycles_num < max_cycles:

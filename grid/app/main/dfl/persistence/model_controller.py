@@ -53,8 +53,9 @@ class ModelController:
             }
 
         # Saves a copy in the database
-        storage.save_model(serialized_model, model_id, allow_download,
-                           allow_remote_inference, mpc)
+        storage.save_model(
+            serialized_model, model_id, allow_download, allow_remote_inference, mpc
+        )
         return {
             RESPONSE_MSG.SUCCESS: True,
             "message": "Model saved with id: " + model_id,

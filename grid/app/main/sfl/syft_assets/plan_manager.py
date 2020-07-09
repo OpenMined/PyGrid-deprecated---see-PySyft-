@@ -51,9 +51,7 @@ class PlanManager:
                 )
         else:
             # Register the average plan into the database
-            self._plans.register(value=plans,
-                                 avg_flprocess=process,
-                                 is_avg_plan=True)
+            self._plans.register(value=plans, avg_flprocess=process, is_avg_plan=True)
 
     def get(self, **kwargs):
         """Retrieve the desired plans.

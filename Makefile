@@ -37,6 +37,7 @@ test: venv
 	)
 
 format:
+	black --verbose ${PYTHON_MODULE_PATH}
 	isort --verbose ${PYTHON_MODULE_PATH}
 	docformatter --in-place --recursive ${PYTHON_MODULE_PATH}
 

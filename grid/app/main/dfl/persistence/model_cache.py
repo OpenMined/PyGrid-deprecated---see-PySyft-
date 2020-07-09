@@ -12,6 +12,7 @@ from ...core.codes import MSG_FIELD
 
 class ModelCache:
     """Handle models in memory."""
+
     def __init__(self):
         self.cache = dict()
 

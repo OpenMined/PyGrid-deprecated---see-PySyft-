@@ -23,9 +23,7 @@ class FLProcess(db.Model):
     name = db.Column(db.String())
     version = db.Column(db.String())
     model = db.relationship("Model", backref="flprocess", uselist=False)
-    averaging_plan = db.relationship("Plan",
-                                     backref="avg_flprocess",
-                                     uselist=False)
+    averaging_plan = db.relationship("Plan", backref="avg_flprocess", uselist=False)
     plans = db.relationship("Plan", backref="plan_flprocess")
     protocols = db.relationship("Protocol", backref="protocol_flprocess")
     server_config = db.relationship("Config", backref="server_flprocess_config")

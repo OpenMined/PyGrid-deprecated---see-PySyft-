@@ -34,8 +34,7 @@ def set_persistent_mode(redis_db):
     def _force_rm_obj(self, remote_key: Union[str, int]):
         if remote_key in self._objects:
             obj = self._objects[remote_key]
-            if hasattr(obj, "child") and hasattr(obj.child,
-                                                 "garbage_collect_data"):
+            if hasattr(obj, "child") and hasattr(obj.child, "garbage_collect_data"):
                 obj.child.garbage_collect_data = True
             del self._objects[remote_key]
         redis_db.hdel(self.id, remote_key)

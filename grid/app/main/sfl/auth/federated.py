@@ -29,8 +29,7 @@ def verify_token(auth_token, model_name, model_version=None):
     if auth_enabled:
         if auth_token is None:
             return {
-                "error":
-                "Authentication is required, please pass an 'auth_token'.",
+                "error": "Authentication is required, please pass an 'auth_token'.",
                 "status": RESPONSE_MSG.ERROR,
             }
         else:
@@ -42,8 +41,7 @@ def verify_token(auth_token, model_name, model_version=None):
                 try:
                     payload = jwt.decode(auth_token, secret)
                 except Exception as e:
-                    logging.warning("Token validation against secret failed: " +
-                                    str(e))
+                    logging.warning("Token validation against secret failed: " + str(e))
                     error = True
 
             # Validate `auth_token` with public key (RSA)
@@ -53,7 +51,8 @@ def verify_token(auth_token, model_name, model_version=None):
                     error = False
                 except Exception as e:
                     logging.warning(
-                        "Token validation against public key failed: " + str(e))
+                        "Token validation against public key failed: " + str(e)
+                    )
                     error = True
 
             if error:
@@ -65,12 +64,12 @@ def verify_token(auth_token, model_name, model_version=None):
             if endpoint is not None:
                 external_api_verify_data = {"auth_token": f"{auth_token}"}
                 verification_result = requests.post(
-                    endpoint, data=json.dumps(external_api_verify_data))
+                    endpoint, data=json.dumps(external_api_verify_data)
+                )
 
                 if verification_result.status_code != 200:
                     return {
-                        "error":
-                        "The 'auth_token' you sent did not pass 3rd party validation.",
+                        "error": "The 'auth_token' you sent did not pass 3rd party validation.",
                         "status": RESPONSE_MSG.ERROR,
                     }
 

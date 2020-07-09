@@ -13,6 +13,7 @@ from .model_cache import ModelCache
 
 class ModelStorage:
     """Manage all models hosted by an specific worker."""
+
     def __init__(self, worker):
         self.worker = worker
         self.cache = ModelCache()
@@ -103,18 +104,16 @@ class ModelStorage:
             raw_data = db_instance().hgetall(key)
 
             # Decode binary keys
-            raw_data = {
-                key.decode("utf-8"): value
-                for key, value in raw_data.items()
-            }
+            raw_data = {key.decode("utf-8"): value for key, value in raw_data.items()}
 
             # Decode binary values
             raw_data[MSG_FIELD.ALLOW_DOWNLOAD] = bool(
-                int(raw_data[MSG_FIELD.ALLOW_DOWNLOAD].decode("utf-8")))
+                int(raw_data[MSG_FIELD.ALLOW_DOWNLOAD].decode("utf-8"))
+            )
             raw_data[MSG_FIELD.ALLOW_REMOTE_INFERENCE] = bool(
-                int(raw_data[MSG_FIELD.ALLOW_REMOTE_INFERENCE].decode("utf-8")))
-            raw_data[MSG_FIELD.MPC] = bool(
-                int(raw_data[MSG_FIELD.MPC].decode("utf-8")))
+                int(raw_data[MSG_FIELD.ALLOW_REMOTE_INFERENCE].decode("utf-8"))
+            )
+            raw_data[MSG_FIELD.MPC] = bool(int(raw_data[MSG_FIELD.MPC].decode("utf-8")))
 
             # Save model in cache
             self.cache.save(
@@ -164,8 +163,7 @@ class ModelStorage:
         if not db_instance():
             return self.cache.contains(model_id)
         else:
-            return self.cache.contains(model_id) or bool(
-                db_instance().hgetall(key))
+            return self.cache.contains(model_id) or bool(db_instance().hgetall(key))
 
     def _generate_hash_key(self, primary_key: str = "") -> str:
         """To improve performance our queries will be made by hashkeys

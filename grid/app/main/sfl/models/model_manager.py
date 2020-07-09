@@ -36,8 +36,9 @@ class ModelManager:
         """
 
         # checkpoints_count = self._model_checkpoints.count(model_id=model_id)
-        new_checkpoint = self._model_checkpoints.register(model_id=model_id,
-                                                          values=data)
+        new_checkpoint = self._model_checkpoints.register(
+            model_id=model_id, values=data
+        )
         return new_checkpoint
 
     def load(self, **kwargs):
@@ -69,9 +70,9 @@ class ModelManager:
     @staticmethod
     def serialize_model_params(params):
         """Serializes list of tensors into State/protobuf."""
-        model_params_state = State(state_placeholders=[
-            PlaceHolder().instantiate(param) for param in params
-        ], )
+        model_params_state = State(
+            state_placeholders=[PlaceHolder().instantiate(param) for param in params],
+        )
 
         # make fake local worker for serialization
         worker = sy.VirtualWorker(hook=None)

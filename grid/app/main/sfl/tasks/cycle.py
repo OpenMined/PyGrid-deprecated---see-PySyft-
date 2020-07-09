@@ -16,11 +16,13 @@ def run_task_once(name, func, *args):
         try:
             executor.submit_stored(name, func, *args)
         except Exception as e:
-            logging.error("Failed to start new thread: %s %s" %
-                          (str(e), traceback.format_exc()))
+            logging.error(
+                "Failed to start new thread: %s %s" % (str(e), traceback.format_exc())
+            )
     else:
         logging.warning(
-            "Skipping %s execution because previous one is not finished" % name)
+            "Skipping %s execution because previous one is not finished" % name
+        )
 
 
 def complete_cycle(cycle_manager, cycle_id):
@@ -29,6 +31,7 @@ def complete_cycle(cycle_manager, cycle_id):
         cycle_manager.complete_cycle(cycle_id)
         return True
     except Exception as e:
-        logging.error("Error in complete_cycle task: %s %s" %
-                      (str(e), traceback.format_exc()))
+        logging.error(
+            "Error in complete_cycle task: %s %s" % (str(e), traceback.format_exc())
+        )
         return e

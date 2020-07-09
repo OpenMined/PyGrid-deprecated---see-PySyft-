@@ -12,9 +12,7 @@ class ProtocolManager:
     def register(self, process, protocols: dict):
         # Register new Protocols into the database
         for key, value in protocols.items():
-            self._protocols.register(name=key,
-                                     value=value,
-                                     protocol_flprocess=process)
+            self._protocols.register(name=key, value=value, protocol_flprocess=process)
 
     def get(self, **kwargs):
         """Retrieve the desired protocol.

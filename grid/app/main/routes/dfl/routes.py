@@ -38,25 +38,22 @@ def list_models_with_details():
     models = list()
     for id in model_ids:
         model = model_controller.get(local_worker, id)
-        model_data = model_controller.get(local_worker,
-                                          id)[MSG_FIELD.PROPERTIES]
-        models.append({
-            "id":
-            id,
-            MSG_FIELD.SIZE:
-            "{}KB".format(sys.getsizeof(model_data[MSG_FIELD.MODEL]) / 1000),
-            MSG_FIELD.ALLOW_DOWNLOAD:
-            model_data[MSG_FIELD.ALLOW_DOWNLOAD],
-            MSG_FIELD.ALLOW_REMOTE_INFERENCE:
-            model_data[MSG_FIELD.ALLOW_REMOTE_INFERENCE],
-            MSG_FIELD.MPC:
-            model_data[MSG_FIELD.MPC],
-        })
+        model_data = model_controller.get(local_worker, id)[MSG_FIELD.PROPERTIES]
+        models.append(
+            {
+                "id": id,
+                MSG_FIELD.SIZE: "{}KB".format(
+                    sys.getsizeof(model_data[MSG_FIELD.MODEL]) / 1000
+                ),
+                MSG_FIELD.ALLOW_DOWNLOAD: model_data[MSG_FIELD.ALLOW_DOWNLOAD],
+                MSG_FIELD.ALLOW_REMOTE_INFERENCE: model_data[
+                    MSG_FIELD.ALLOW_REMOTE_INFERENCE
+                ],
+                MSG_FIELD.MPC: model_data[MSG_FIELD.MPC],
+            }
+        )
     return Response(
-        json.dumps({
-            RESPONSE_MSG.SUCCESS: True,
-            RESPONSE_MSG.MODELS: models
-        }),
+        json.dumps({RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.MODELS: models}),
         status=200,
         mimetype="application/json",
     )
@@ -71,10 +68,7 @@ def identity():
     """
 
     return Response(
-        json.dumps({
-            RESPONSE_MSG.SUCCESS: True,
-            "identity": local_worker.id
-        }),
+        json.dumps({RESPONSE_MSG.SUCCESS: True, "identity": local_worker.id}),
         status=200,
         mimetype="application/json",
     )
@@ -89,17 +83,15 @@ def show_status():
         Response : Status of node
     """
 
-    connected_workers = filter(lambda x: isinstance(x, DynamicFLClient),
-                               local_worker._known_workers.values())
+    connected_workers = filter(
+        lambda x: isinstance(x, DynamicFLClient), local_worker._known_workers.values()
+    )
     ids = map(lambda x: x.id, connected_workers)
 
     status = "OpenGrid"
 
     return Response(
-        json.dumps({
-            RESPONSE_MSG.SUCCESS: True,
-            "status": status
-        }),
+        json.dumps({RESPONSE_MSG.SUCCESS: True, "status": status}),
         status=200,
         mimetype="application/json",
     )
@@ -112,13 +104,12 @@ def list_workers():
     Returns:
         Response : List of node's ids.
     """
-    connected_workers = filter(lambda x: isinstance(x, DynamicFLClient),
-                               local_worker._known_workers.values())
+    connected_workers = filter(
+        lambda x: isinstance(x, DynamicFLClient), local_worker._known_workers.values()
+    )
     ids = map(lambda x: x.id, connected_workers)
     response_body = {RESPONSE_MSG.SUCCESS: True, "workers": list(ids)}
-    return Response(json.dumps(response_body),
-                    status=200,
-                    mimetype="application/json")
+    return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
 
 # ======= WEB ROUTES END ======
@@ -152,18 +143,15 @@ def serve_model():
     encoding = request.form["encoding"]
     model_id = request.form[MSG_FIELD.MODEL_ID]
     allow_download = request.form[MSG_FIELD.ALLOW_DOWNLOAD] == "True"
-    allow_remote_inference = request.form[
-        MSG_FIELD.ALLOW_REMOTE_INFERENCE] == "True"
+    allow_remote_inference = request.form[MSG_FIELD.ALLOW_REMOTE_INFERENCE] == "True"
     mpc = request.form[MSG_FIELD.MPC] == "True"
 
     if request.files:
         # If model is large, receive it by a stream channel
         try:
-            serialized_model = request.files[MSG_FIELD.MODEL].read().decode(
-                "utf-8")
+            serialized_model = request.files[MSG_FIELD.MODEL].read().decode("utf-8")
         except UnicodeDecodeError:
-            serialized_model = request.files[MSG_FIELD.MODEL].read().decode(
-                "latin-1")
+            serialized_model = request.files[MSG_FIELD.MODEL].read().decode("latin-1")
     else:
         # If model is small, receive it by a standard json
         serialized_model = request.form[MSG_FIELD.MODEL]
@@ -182,13 +170,9 @@ def serve_model():
     )
 
     if response[RESPONSE_MSG.SUCCESS]:
-        return Response(json.dumps(response),
-                        status=200,
-                        mimetype="application/json")
+        return Response(json.dumps(response), status=200, mimetype="application/json")
     else:
-        return Response(json.dumps(response),
-                        status=409,
-                        mimetype="application/json")
+        return Response(json.dumps(response), status=409, mimetype="application/json")
 
 
 @main.route("/dataset-tags", methods=["GET"])
@@ -207,9 +191,9 @@ def get_available_tags():
         if obj.tags:
             available_tags.update(set(obj.tags))
 
-    return Response(json.dumps(list(available_tags)),
-                    status=200,
-                    mimetype="application/json")
+    return Response(
+        json.dumps(list(available_tags)), status=200, mimetype="application/json"
+    )
 
 
 @main.route("/search-encrypted-models", methods=["POST"])
@@ -253,8 +237,7 @@ def search_encrypted_models():
                 if obj.crypto_provider:
                     crypto_provider = [
                         obj.crypto_provider.id,
-                        local_worker._known_workers.get(
-                            obj.crypto_provider.id).address,
+                        local_worker._known_workers.get(obj.crypto_provider.id).address,
                     ]
 
             response = {
@@ -269,9 +252,9 @@ def search_encrypted_models():
     else:
         response = {RESPONSE_MSG.ERROR: "Invalid payload format"}
         response_status = 400
-    return Response(json.dumps(response),
-                    status=response_status,
-                    mimetype="application/json")
+    return Response(
+        json.dumps(response), status=response_status, mimetype="application/json"
+    )
 
 
 @main.route("/search", methods=["POST"])
@@ -291,9 +274,7 @@ def search_dataset_tags():
     if len(results):
         body_response["content"] = True
 
-    return Response(json.dumps(body_response),
-                    status=200,
-                    mimetype="application/json")
+    return Response(json.dumps(body_response), status=200, mimetype="application/json")
 
 
 # ======= REST API END =======
