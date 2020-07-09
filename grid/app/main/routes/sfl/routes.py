@@ -16,7 +16,7 @@ from random import random
 
 
 # Local imports
-from ... import main
+from ... import static
 from ...sfl.controller import processes
 from ...sfl.cycles import cycle_manager
 from ...sfl.models import model_manager
@@ -29,7 +29,7 @@ from ...sfl.auth.federated import verify_token
 from ...exceptions import InvalidRequestKeyError, PyGridError
 
 
-@main.route("/federated/cycle-request", methods=["POST"])
+@static.route("/federated/cycle-request", methods=["POST"])
 def worker_cycle_request():
     """" This endpoint is where the worker is attempting to join an active federated learning cycle. """
     response_body = {}
@@ -53,7 +53,7 @@ def worker_cycle_request():
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
-@main.route("/federated/speed-test", methods=["GET", "POST"])
+@static.route("/federated/speed-test", methods=["GET", "POST"])
 def connection_speed_test():
     """ Connection speed test. """
     response_body = {}
@@ -92,7 +92,7 @@ def connection_speed_test():
     )
 
 
-@main.route("/federated/report", methods=["POST"])
+@static.route("/federated/report", methods=["POST"])
 def report_diff():
     """Allows reporting of (agg/non-agg) model diff after worker completes a cycle"""
     response_body = {}
@@ -116,7 +116,7 @@ def report_diff():
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
-@main.route("/federated/get-protocol", methods=["GET"])
+@static.route("/federated/get-protocol", methods=["GET"])
 def download_protocol():
     """Request a download of a protocol"""
 
@@ -153,7 +153,7 @@ def download_protocol():
     )
 
 
-@main.route("/federated/get-model", methods=["GET"])
+@static.route("/federated/get-model", methods=["GET"])
 def download_model():
     """Request a download of a model"""
 
@@ -194,7 +194,7 @@ def download_model():
     )
 
 
-@main.route("/federated/get-plan", methods=["GET"])
+@static.route("/federated/get-plan", methods=["GET"])
 def download_plan():
     """Request a download of a plan"""
 
@@ -242,7 +242,7 @@ def download_plan():
     )
 
 
-@main.route("/federated/authenticate", methods=["POST"])
+@static.route("/federated/authenticate", methods=["POST"])
 def auth():
     """uses JWT (HSA/RSA) to authenticate"""
     response_body = {}
@@ -272,7 +272,7 @@ def auth():
     )
 
 
-@main.route("/req_join", methods=["GET"])
+@static.route("/req_join", methods=["GET"])
 def fl_cycle_application_decision():
     """
         use the temporary req_join endpoint to mockup:
@@ -458,7 +458,7 @@ def fl_cycle_application_decision():
     )
 
 
-@main.route("/get-model", methods=["GET"])
+@static.route("/get-model", methods=["GET"])
 def get_model():
     """Request a download of a model"""
 

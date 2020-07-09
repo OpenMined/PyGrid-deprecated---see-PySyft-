@@ -1,3 +1,6 @@
+from . import static
+
+
 class MSG_FIELD:
     TYPE = "type"
     DATA = "data"
@@ -25,11 +28,11 @@ class WEBRTC_EVENTS(object):
     JOIN_ROOM = "webrtc: join-room"
 
 
-class FL_EVENTS(object):
-    HOST_FL_TRAINING = "federated/host-training"
-    REPORT = "federated/report"
-    AUTHENTICATE = "federated/authenticate"
-    CYCLE_REQUEST = "federated/cycle-request"
+class STATIC_FL_EVENTS(object):
+    HOST_FL_TRAINING = "{}/federated/host-training".format(static.url_prefix)
+    REPORT = "{}/federated/report".format(static.url_prefix)
+    AUTHENTICATE = "{}/federated/authenticate".format(static.url_prefix)
+    CYCLE_REQUEST = "{}/federated/cycle-request".format(static.url_prefix)
 
 
 class CYCLE(object):

@@ -1,5 +1,5 @@
 # PyGrid imports
-from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
+from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, STATIC_FL_EVENTS
 from ..processes import process_manager
 
 # Generic imports
@@ -72,9 +72,7 @@ def verify_token(auth_token, model_name, model_version=None):
                         "status": RESPONSE_MSG.ERROR,
                     }
 
-            return {
-                "status": RESPONSE_MSG.SUCCESS,
-            }
+            return {"status": RESPONSE_MSG.SUCCESS}
     else:
         # Authentication is not configured
         return {"status": RESPONSE_MSG.SUCCESS}

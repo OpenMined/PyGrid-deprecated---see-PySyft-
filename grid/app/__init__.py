@@ -55,7 +55,7 @@ def set_database_config(app, test_config=None, verbose=False):
 
 def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> Flask:
     """Create flask application.
-    
+
        Args:
             node_id: ID used to identify this node.
             debug: debug mode flag.
@@ -78,15 +78,18 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
     app.config["N_REPLICA"] = n_replica
     sockets = Sockets(app)
 
-    # Register app blueprints
-    from .main import main, ws, local_worker, auth, hook
+    from .main import main, static, dynamic, ws, local_worker, auth, hook
 
     # set_node_id(id)
     local_worker.id = node_id
     hook.local_worker._known_workers[node_id] = local_worker
     local_worker.add_worker(hook.local_worker)
 
+    # Register app blueprints
     app.register_blueprint(main, url_prefix=r"/")
+    app.register_blueprint(static, url_prefix=r"/static")
+    app.register_blueprint(dynamic, url_prefix=r"/dynamic")
+
     sockets.register_blueprint(ws, url_prefix=r"/")
 
     # Set SQLAlchemy configs

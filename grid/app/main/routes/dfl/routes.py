@@ -14,7 +14,8 @@ import syft as sy
 from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from flask_cors import cross_origin
 
-from ... import main, local_worker
+from ... import dynamic
+from ... import local_worker
 
 from ...dfl.persistence import model_controller
 from ...codes import MSG_FIELD
@@ -24,16 +25,16 @@ from syft.codes import RESPONSE_MSG
 # ======= WEB ROUTES ======
 
 
-@main.route("/favicon.ico")
+@dynamic.route("/favicon.ico")
 def favicon():
     return send_from_directory(
-        os.path.join(main.root_path, "static"),
+        os.path.join(dynamic.root_path, "static"),
         "favicon.ico",
         mimetype="image/vnd.microsoft.icon",
     )
 
 
-@main.route("/detailed_models_list/")
+@dynamic.route("/detailed_models_list/")
 def list_models_with_details():
     """ Generates a detailed list of models currently saved at the worker
 
@@ -65,7 +66,7 @@ def list_models_with_details():
     )
 
 
-@main.route("/identity/")
+@dynamic.route("/identity/")
 def identity():
     """ Generates a response with the name of this node.
 
@@ -80,7 +81,7 @@ def identity():
     )
 
 
-@main.route("/status/")
+@dynamic.route("/status/")
 def show_status():
     """ Generates a response with the status of this node.
         if the nodes is connected to workers, the status is online
@@ -103,7 +104,7 @@ def show_status():
     )
 
 
-@main.route("/workers/")
+@dynamic.route("/workers/")
 def list_workers():
     """ Generates a list of remote nodes directly connected to this node.
 
@@ -123,7 +124,7 @@ def list_workers():
 # ======= REST API =======
 
 
-@main.route("/models/", methods=["GET"])
+@dynamic.route("/models/", methods=["GET"])
 @cross_origin()
 def list_models():
     """Generates a list of models currently saved at the worker
@@ -138,11 +139,11 @@ def list_models():
     )
 
 
-@main.route("/serve-model/", methods=["POST"])
+@dynamic.route("/serve-model/", methods=["POST"])
 @cross_origin()
 def serve_model():
     """ Host an AI model Uploading and registering it by an specific ID.
-        
+
         Returns:
             Response : A json structure informing if hosting was succeed.
     """
@@ -181,7 +182,7 @@ def serve_model():
         return Response(json.dumps(response), status=409, mimetype="application/json")
 
 
-@main.route("/dataset-tags", methods=["GET"])
+@dynamic.route("/dataset-tags", methods=["GET"])
 @cross_origin()
 def get_available_tags():
     """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains.
@@ -201,7 +202,7 @@ def get_available_tags():
     )
 
 
-@main.route("/search-encrypted-models", methods=["POST"])
+@dynamic.route("/search-encrypted-models", methods=["POST"])
 @cross_origin()
 def search_encrypted_models():
     """ Check if exist some encrypted model hosted on this node using a specific model_id, if found,
@@ -263,7 +264,7 @@ def search_encrypted_models():
     )
 
 
-@main.route("/search", methods=["POST"])
+@dynamic.route("/search", methods=["POST"])
 @cross_origin()
 def search_dataset_tags():
     """ Search for a specific dataset tag stored at this node. """

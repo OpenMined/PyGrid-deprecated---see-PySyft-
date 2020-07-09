@@ -9,7 +9,7 @@ def test_worker_cycle_request_bad_request_json(client):
     assert that the endpoint returns a 400 for malformed JSON
     """
     result = client.post(
-        "/federated/cycle-request", data="{bad", content_type="application/json"
+        "/static/federated/cycle-request", data="{bad", content_type="application/json"
     )
     assert result.status_code == 400
     assert result.get_json().get("error") == (
@@ -24,7 +24,7 @@ def test_worker_cycle_request_bad_request_pygrid(mock_cycle_request, client):
     """
     mock_cycle_request.side_effect = PyGridError("test")
 
-    result = client.post("/federated/cycle-request", json={"test": "data"})
+    result = client.post("/static/federated/cycle-request", json={"test": "data"})
 
     assert result.status_code == 400
     assert result.get_json().get("error") == "test"
@@ -37,7 +37,7 @@ def test_worker_cycle_request_internal_server_error(mock_cycle_request, client):
     """
     mock_cycle_request.side_effect = RuntimeError("test")
 
-    result = client.post("/federated/cycle-request", json={"test": "data"})
+    result = client.post("/static/federated/cycle-request", json={"test": "data"})
 
     assert result.status_code == 500
     assert result.get_json().get("error") == "test"
@@ -48,7 +48,7 @@ def test_report_diff_bad_request_json(client):
     assert that the endpoint returns a 400 for malformed JSON
     """
     result = client.post(
-        "/federated/report", data="{bad", content_type="application/json"
+        "/static/federated/report", data="{bad", content_type="application/json"
     )
     assert result.status_code == 400
     assert result.get_json().get("error") == (
@@ -63,7 +63,7 @@ def test_report_diff_bad_request_pygrid(mock_report, client):
     """
     mock_report.side_effect = PyGridError("test")
 
-    result = client.post("/federated/report", json={"test": "data"})
+    result = client.post("/static/federated/report", json={"test": "data"})
 
     assert result.status_code == 400
     assert result.get_json().get("error") == "test"
@@ -76,7 +76,7 @@ def test_report_diff_internal_server_error(mock_report, client):
     """
     mock_report.side_effect = RuntimeError("test")
 
-    result = client.post("/federated/report", json={"test": "data"})
+    result = client.post("/static/federated/report", json={"test": "data"})
 
     assert result.status_code == 500
     assert result.get_json().get("error") == "test"
