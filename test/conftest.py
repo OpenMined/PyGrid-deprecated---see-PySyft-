@@ -6,10 +6,9 @@ from multiprocessing import Process
 
 import pytest
 import requests
+import syft
 import torch
 from gevent import pywsgi
-
-import syft
 from geventwebsocket.handler import WebSocketHandler
 from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from syft.grid.public_grid import PublicGridNetwork
@@ -19,7 +18,7 @@ from . import GATEWAY_PORT, GATEWAY_URL, IDS, PORTS
 
 @pytest.fixture()
 def start_proc():  # pragma: no cover
-    """ helper function for spinning up a websocket participant """
+    """helper function for spinning up a websocket participant."""
 
     def _start_proc(participant, kwargs):
         def target():

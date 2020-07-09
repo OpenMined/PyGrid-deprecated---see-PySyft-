@@ -12,7 +12,7 @@ def read(fname):
 
 
 def get_requirements(req_file):
-    """Read requirements file and return packages and git repos separately"""
+    """Read requirements file and return packages and git repos separately."""
     requirements = []
     dependency_links = []
     lines = read(req_file).split("\n")

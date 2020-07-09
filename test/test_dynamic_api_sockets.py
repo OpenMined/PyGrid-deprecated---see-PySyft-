@@ -5,10 +5,9 @@ from test import IDS, PORTS, conftest, worker_ports
 
 import numpy as np
 import pytest
-import torch as th
-import torch.nn.functional as F
-
 import syft as sy
+import torch as th
+from torch.nn import functional as F
 
 hook = sy.TorchHook(th)
 

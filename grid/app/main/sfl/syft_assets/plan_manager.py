@@ -117,7 +117,7 @@ class PlanManager:
 
     @staticmethod
     def trim_plan(plan: "sy.Plan", variant: str) -> "sy.Plan":
-        """Trim Plan to specified variant"""
+        """Trim Plan to specified variant."""
 
         type_translators = {
             "torchscript": PlanTranslatorTorchscript,

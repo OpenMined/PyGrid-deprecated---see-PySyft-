@@ -5,8 +5,8 @@ from random import randint
 
 import pytest
 from flask import Flask
-
 from flask_sqlalchemy import SQLAlchemy
+
 from grid.app.main import db
 from grid.app.main.sfl.cycles.cycle import Cycle
 from grid.app.main.sfl.cycles.worker_cycle import WorkerCycle
@@ -18,7 +18,6 @@ from grid.app.main.sfl.syft_assets.protocol import Protocol
 from grid.app.main.sfl.workers.worker import Worker
 
 sys.path.append(".")
-
 
 
 app = Flask(__name__)
