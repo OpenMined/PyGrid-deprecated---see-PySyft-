@@ -1,7 +1,6 @@
+import syft as sy
 import torch as th
 from flask import Blueprint
-
-import syft as sy
 
 from .. import db, executor
 from . import events, routes

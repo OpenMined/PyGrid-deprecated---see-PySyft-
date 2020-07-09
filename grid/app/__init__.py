@@ -2,7 +2,6 @@ import logging
 import os
 
 from flask import Flask
-
 from flask_cors import CORS
 from flask_executor import Executor
 from flask_migrate import Migrate
@@ -51,7 +50,9 @@ def set_database_config(app, test_config=None, verbose=False):
     db.init_app(app)
 
 
-def create_app(node_id: str, debug=False, n_replica=None,
+def create_app(node_id: str,
+               debug=False,
+               n_replica=None,
                test_config=None) -> Flask:
     """Create flask application.
 
@@ -78,7 +79,7 @@ def create_app(node_id: str, debug=False, n_replica=None,
     sockets = Sockets(app)
 
     # Register app blueprints
-    from .main import main, ws, local_worker, auth, hook
+    from .main import auth, hook, local_worker, main, ws
 
     # set_node_id(id)
     local_worker.id = node_id

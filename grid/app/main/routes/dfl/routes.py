@@ -5,9 +5,8 @@ import json
 import os
 import sys
 
-from flask import Response, render_template, request, send_from_directory
-
 import syft as sy
+from flask import Response, render_template, request, send_from_directory
 from flask_cors import cross_origin
 from syft.codes import RESPONSE_MSG
 from syft.grid.clients.dynamic_fl_client import DynamicFLClient

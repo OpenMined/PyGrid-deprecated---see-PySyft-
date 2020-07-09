@@ -14,12 +14,12 @@ class ProcessManager:
         self._configs = Warehouse(Config)
 
     def create(
-            self,
-            client_config,
-            client_plans,
-            client_protocols,
-            server_config,
-            server_avg_plan,
+        self,
+        client_config,
+        client_plans,
+        client_protocols,
+        server_config,
+        server_avg_plan,
     ):
         """ Register a new federated learning process
             Args:

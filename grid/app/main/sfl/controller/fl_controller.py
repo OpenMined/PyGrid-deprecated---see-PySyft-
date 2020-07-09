@@ -19,13 +19,13 @@ class FLController:
         pass
 
     def create_process(
-            self,
-            model,
-            client_plans,
-            client_config,
-            server_config,
-            server_averaging_plan,
-            client_protocols=None,
+        self,
+        model,
+        client_plans,
+        client_config,
+        server_config,
+        server_averaging_plan,
+        client_protocols=None,
     ):
         """ Register a new federated learning process
             Args:

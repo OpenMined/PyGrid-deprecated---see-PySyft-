@@ -1,10 +1,9 @@
 # Standard Python imports
 import json
 
+import syft as sy
 # External imports
 import torch as th
-
-import syft as sy
 from flask_login import current_user
 from syft.codes import RESPONSE_MSG
 from syft.generic.pointers.pointer_tensor import PointerTensor

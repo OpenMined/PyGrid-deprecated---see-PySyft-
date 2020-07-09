@@ -23,13 +23,13 @@ class ModelController:
         self.model_storages = dict()
 
     def save(
-            self,
-            worker,
-            serialized_model: bytes,
-            model_id: str,
-            allow_download: bool,
-            allow_remote_inference: bool,
-            mpc: bool = False,
+        self,
+        worker,
+        serialized_model: bytes,
+        model_id: str,
+        allow_download: bool,
+        allow_remote_inference: bool,
+        mpc: bool = False,
     ) -> Dict:
         """Map and Save the desired model at database/cache.
 

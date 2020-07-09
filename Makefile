@@ -1,6 +1,8 @@
-venv: venv/bin/activate
-
+# Global environment variables.
 REQ_DIR=pip-dep
+PYTHON_MODULE_PATH=grid
+
+venv: venv/bin/activate
 
 reqs: $(REQ_DIR)/requirements.txt $(REQ_DIR)/requirements_dev.txt
 
@@ -33,6 +35,11 @@ test: venv
 		python setup.py install; \
 		venv/bin/coverage run -m pytest test;\
 	)
+
+format:
+	yapf --verbose --in-place --recursive ${PYTHON_MODULE_PATH} --style='{based_on_style: pep8, indent_width:4, column_limit:80}'
+	isort --verbose ${PYTHON_MODULE_PATH}
+	docformatter --in-place --recursive ${PYTHON_MODULE_PATH}
 
 clean:
 	rm -rf venv

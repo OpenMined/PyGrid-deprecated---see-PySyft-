@@ -6,7 +6,6 @@ import os
 import sys
 
 from gevent import pywsgi
-
 from geventwebsocket.handler import WebSocketHandler
 
 from .app import create_app

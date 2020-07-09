@@ -41,12 +41,12 @@ class ModelStorage:
         return self.cache.models
 
     def save_model(
-            self,
-            serialized_model: bytes,
-            model_id: str,
-            allow_download: bool,
-            allow_remote_inference: bool,
-            mpc: bool,
+        self,
+        serialized_model: bytes,
+        model_id: str,
+        allow_download: bool,
+        allow_remote_inference: bool,
+        mpc: bool,
     ) -> bool:
         """Save the desired model at database and load it in cache memory.
 

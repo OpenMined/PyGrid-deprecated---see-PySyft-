@@ -2,10 +2,9 @@
 import collections
 from typing import List, Union
 
-import torch.nn as nn
-
 # External imports
 from syft.serde import deserialize
+from torch import nn as nn
 
 # Local imports
 from ...core.codes import MSG_FIELD
@@ -44,13 +43,13 @@ class ModelCache:
             return self.cache.get(model_id)
 
     def save(
-            self,
-            model,
-            model_id: str,
-            allow_download: bool,
-            allow_remote_inference: bool,
-            mpc: bool,
-            serialized: bool = True,
+        self,
+        model,
+        model_id: str,
+        allow_download: bool,
+        allow_remote_inference: bool,
+        mpc: bool,
+        serialized: bool = True,
     ) -> bool:
         """Saves the model to cache.
 
