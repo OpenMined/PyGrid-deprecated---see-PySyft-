@@ -37,7 +37,7 @@ test: venv
 	)
 
 format:
-	yapf --verbose --in-place --recursive ${PYTHON_MODULE_PATH} --style='{based_on_style: pep8, indent_width:4, column_limit:80}'
+	yapf --verbose --in-place --recursive ${PYTHON_MODULE_PATH} --style='{based_on_style: pep8, indent_width: 4, column_limit:80}'
 	isort --verbose ${PYTHON_MODULE_PATH}
 	docformatter --in-place --recursive ${PYTHON_MODULE_PATH}
 
