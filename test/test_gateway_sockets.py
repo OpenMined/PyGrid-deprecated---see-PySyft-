@@ -142,9 +142,9 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
             },
         }
 
-        # "federated/host-training" request body
+        # "static/federated/host-training" request body
         host_training_message = {
-            "type": "federated/host-training",
+            "type": "static/federated/host-training",
             "data": {
                 "model": serialized_plan_model,
                 "plans": {
@@ -164,10 +164,10 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
 
         """ 2 - Authentication Request """
 
-        # "federated/authenticate" request body
+        # "static/federated/authenticate" request body
         auth_msg = {
-            "type": "federated/authenticate",
-            "data": {"model_name": "my-federated-model", "model_version": "0.1.0",},
+            "type": "static/federated/authenticate",
+            "data": {"model_name": "my-federated-model", "model_version": "0.1.0"},
         }
 
         # Send worker authentication message (no token!)
@@ -207,7 +207,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         assert worker_id != None
 
         """ 3 - Cycle Request """
-        # "federated/cycle-request" request body
+        # "static/federated/cycle-request" request body
         req_cycle_msg = {
             "worker_id": worker_id,
             "model": "my-federated-model",
@@ -217,7 +217,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
             "upload": 23.7,
         }
 
-        message = {"type": "federated/cycle-request", "data": req_cycle_msg}
+        message = {"type": "static/federated/cycle-request", "data": req_cycle_msg}
 
         # Send worker authentication message
         response = await send_ws_message(message)
