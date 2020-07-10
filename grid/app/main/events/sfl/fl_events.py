@@ -137,7 +137,7 @@ def authenticate(message: dict, socket=None) -> str:
         verification_result = verify_token(_auth_token, model_name, model_version)
 
         if verification_result["status"] == RESPONSE_MSG.SUCCESS:
-            response = assign_worker_id({"auth_token": _auth_token}, None)
+            response = assign_worker_id({"auth_token": _auth_token}, socket)
             # check if requires speed test
             response[MSG_FIELD.REQUIRES_SPEED_TEST] = requires_speed_test(
                 model_name, model_version
