@@ -225,6 +225,8 @@ def download_plan():
 
         if receive_operations_as == "torchscript":
             response_body = _plan.value_ts
+        elif receive_operations_as == "tfjs":
+            response_body = _plan.value_tfjs
         else:
             response_body = _plan.value
 
@@ -462,4 +464,32 @@ def fl_cycle_application_decision():
         ),  # leave out other accpet keys/values for now
         status=400,
         mimetype="application/json",
+    )
+
+
+@main.route("/get-model", methods=["GET"])
+def get_model():
+    """Request a download of a model"""
+
+    response_body = {}
+    status_code = None
+    try:
+        name = request.args.get("name", None)
+        version = request.args.get("version", None)
+        checkpoint = request.args.get("checkpoint", None)
+
+        _fl_process = process_manager.get(name=name, version=version)
+        _model = model_manager.get(fl_process_id=_fl_process.id)
+        _model_checkpoint = model_manager.load(model_id=_model.id, id=checkpoint)
+
+        return send_file(
+            io.BytesIO(_model_checkpoint.values), mimetype="application/octet-stream"
+        )
+
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
     )

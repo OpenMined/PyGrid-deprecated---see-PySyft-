@@ -12,6 +12,8 @@ class MSG_FIELD:
     SIZE = "model_size"
     SYFT_VERSION = "syft_version"
     REQUIRES_SPEED_TEST = "requires_speed_test"
+    USERNAME_FIELD = "username"
+    PASSWORD_FIELD = "password"
 
 
 class CONTROL_EVENTS(object):
