@@ -10,6 +10,7 @@ from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError
 from ...sfl.auth.federated import verify_token
 from ...sfl.controller import processes
 from ...sfl.workers import worker_manager
+
 # Local imports
 from ..socket_handler import SocketHandler
 
