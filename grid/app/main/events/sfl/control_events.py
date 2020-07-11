@@ -5,6 +5,6 @@ import json
 from ...core.codes import MSG_FIELD
 
 
-def socket_ping(message: dict, socket) -> str:
+def socket_ping(message: dict) -> str:
     """Ping request to check node's health state."""
     return json.dumps({MSG_FIELD.ALIVE: "True"})
