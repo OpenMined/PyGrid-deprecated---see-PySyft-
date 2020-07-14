@@ -2,7 +2,6 @@
 import json
 import logging
 import random
-
 # Generic imports
 from datetime import datetime, timedelta
 from functools import reduce
@@ -10,7 +9,6 @@ from functools import reduce
 import torch as th
 
 from ...core.exceptions import CycleNotFoundError
-
 # PyGrid modules
 from ...storage.warehouse import Warehouse
 from ..models import model_manager

@@ -2,7 +2,6 @@
 import json
 
 import syft as sy
-
 # External imports
 import torch as th
 from flask_login import current_user

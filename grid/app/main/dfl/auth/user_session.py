@@ -2,7 +2,6 @@
 import uuid
 
 import syft as sy
-
 # External imports
 from flask_login import UserMixin
 

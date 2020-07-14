@@ -2,7 +2,6 @@
 from flask_login import UserMixin
 
 from ...core.codes import MSG_FIELD
-
 # Local imports
 from .user_session import UserSession
 

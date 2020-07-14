@@ -1,11 +1,6 @@
 # Processes module imports
-from ...core.exceptions import (
-    FLProcessConflict,
-    PlanNotFoundError,
-    ProcessNotFoundError,
-    ProtocolNotFoundError,
-)
-
+from ...core.exceptions import (FLProcessConflict, PlanNotFoundError,
+                                ProcessNotFoundError, ProtocolNotFoundError)
 # PyGrid imports
 from ...storage.warehouse import Warehouse
 from ..syft_assets import plans, protocols
