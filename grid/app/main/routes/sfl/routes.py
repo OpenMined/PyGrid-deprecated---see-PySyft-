@@ -7,8 +7,10 @@ from random import random
 
 import numpy as np
 from flask import Response, current_app, render_template, request, send_file
+
 # External modules imports
 from requests_toolbelt import MultipartEncoder
+
 # Dependencies used by req_join endpoint
 # It's a mockup endpoint and should be removed soon.
 from scipy.stats import poisson

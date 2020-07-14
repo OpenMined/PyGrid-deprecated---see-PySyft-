@@ -1,5 +1,6 @@
 # Syft assets module imports
 from ...core.exceptions import ProtocolNotFoundError
+
 # PyGrid imports
 from ...storage.warehouse import Warehouse
 from .protocol import Protocol
