@@ -15,13 +15,13 @@ class Model(db.Model):
         fl_process_id (Integer, ForeignKey) : FLProcess Foreign Key.
     """
 
-    __tablename__ = "__model__"
+    __tablename__ = "static__model__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     version = db.Column(db.String())
     checkpoints = db.relationship("ModelCheckPoint", backref="model")
     fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("__fl_process__.id"), unique=True
+        db.BigInteger, db.ForeignKey("static__fl_process__.id"), unique=True
     )
 
     def __str__(self):
@@ -37,13 +37,13 @@ class ModelCheckPoint(db.Model):
         model_id (String, Foreign Key): Model's ID.
     """
 
-    __tablename__ = "__model_checkpoint__"
+    __tablename__ = "static__model_checkpoint__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     values = db.Column(db.LargeBinary)
     number = db.Column(db.Integer)
     alias = db.Column(db.String)
-    model_id = db.Column(db.String, db.ForeignKey("__model__.id"))
+    model_id = db.Column(db.String, db.ForeignKey("static__model__.id"))
 
     @property
     def object(self):

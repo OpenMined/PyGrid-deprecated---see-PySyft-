@@ -12,13 +12,13 @@ class Protocol(db.Model):
         fl_process_id (Integer, Foreign Key) : Reference to FL Process.
     """
 
-    __tablename__ = "__protocol__"
+    __tablename__ = "static__protocol__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String())
     value = db.Column(db.LargeBinary)
     value_ts = db.Column(db.LargeBinary)
-    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("__fl_process__.id"))
+    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("static__fl_process__.id"))
 
     def __str__(self):
         return f"<Protocol id: {self.id}, values: {self.value}, torchscript: {self.value_ts}>"

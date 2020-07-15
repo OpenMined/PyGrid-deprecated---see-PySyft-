@@ -15,12 +15,12 @@ class WorkerCycle(db.Model):
         request_key (String): unique token that permits downloading specific Plans, Protocols, etc.
     """
 
-    __tablename__ = "__worker_cycle__"
+    __tablename__ = "static__worker_cycle__"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     request_key = db.Column(db.String())
-    cycle_id = db.Column(db.BigInteger, db.ForeignKey("__cycle__.id"))
-    worker_id = db.Column(db.String, db.ForeignKey("__worker__.id"))
+    cycle_id = db.Column(db.BigInteger, db.ForeignKey("static__cycle__.id"))
+    worker_id = db.Column(db.String, db.ForeignKey("static__worker__.id"))
     started_at = db.Column(db.DateTime(), default=datetime.datetime.utcnow())
     is_completed = db.Column(db.Boolean(), default=False)
     completed_at = db.Column(db.DateTime())
