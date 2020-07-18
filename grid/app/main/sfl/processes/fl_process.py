@@ -17,7 +17,7 @@ class FLProcess(db.Model):
         cycles [Cycles]: FL Cycles.
     """
 
-    __tablename__ = "static__fl_process__"
+    __tablename__ = "static_fl_process_"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String())
