@@ -19,7 +19,7 @@ class Cycle(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     start = db.Column(db.DateTime())
     end = db.Column(db.DateTime())
-    sequence = db.Column(db.BigInteger())
+    sequence = db.Column(db.Integer())
     version = db.Column(db.String())
     worker_cycles = db.relationship("WorkerCycle", backref="cycle")
     fl_process_id = db.Column(db.Integer, db.ForeignKey("static_fl_process_.id"))
