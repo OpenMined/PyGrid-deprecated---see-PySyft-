@@ -106,14 +106,13 @@ class CycleManager:
         """
         self._cycles.delete(**kwargs)
 
-    def is_assigned(self, worker_id: str, cycle_id: str):
-        """Check if a workers is already assigned to an specific cycle.
-
-        Args:
-            worker_id : Worker's ID.
-            cycle_id : Cycle's ID.
-        Returns:
-            result : Boolean Flag.
+    def is_assigned(self, worker_id: str, cycle_id: int):
+        """ Check if a workers is already assigned to an specific cycle.
+            Args:
+                worker_id : Worker's ID.
+                cycle_id : Cycle's ID.
+            Returns:
+                result : Boolean Flag.
         """
         return self._worker_cycles.first(worker_id=worker_id, cycle_id=cycle_id) != None
 
@@ -124,17 +123,16 @@ class CycleManager:
 
         return _worker_cycle
 
-    def validate(self, worker_id: str, cycle_id: str, request_key: str):
-        """Validate Worker's request key.
-
-        Args:
-            worker_id: Worker's ID.
-            cycle_id: Cycle's ID.
-            request_key: Worker's request key.
-        Returns:
-            result: Boolean flag
-        Raises:
-            CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
+    def validate(self, worker_id: str, cycle_id: int, request_key: str):
+        """ Validate Worker's request key.
+            Args:
+                worker_id: Worker's ID.
+                cycle_id: Cycle's ID.
+                request_key: Worker's request key.
+            Returns:
+                result: Boolean flag
+            Raises:
+                CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
         """
         _worker_cycle = self._worker_cycles.first(
             worker_id=worker_id, cycle_id=cycle_id
@@ -177,8 +175,8 @@ class CycleManager:
         # (for prod we probably should be replace this with Redis queue + separate worker)
         run_task_once("complete_cycle", complete_cycle, self, _worker_cycle.cycle_id)
 
-    def complete_cycle(self, cycle_id: str):
-        """Checks if the cycle is completed and runs plan avg."""
+    def complete_cycle(self, cycle_id: int):
+        """Checks if the cycle is completed and runs plan avg"""
         logging.info("running complete_cycle for cycle_id: %s" % cycle_id)
         cycle = self._cycles.first(id=cycle_id)
         logging.info("found cycle: %s" % str(cycle))
