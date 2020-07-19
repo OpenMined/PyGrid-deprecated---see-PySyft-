@@ -21,7 +21,7 @@ class Model(db.Model):
     version = db.Column(db.String())
     checkpoints = db.relationship("ModelCheckPoint", backref="model")
     fl_process_id = db.Column(
-        db.BigInteger, db.ForeignKey("static_fl_process_.id"), unique=True
+        db.Integer, db.ForeignKey("static_fl_process_.id"), unique=True
     )
 
     def __str__(self):

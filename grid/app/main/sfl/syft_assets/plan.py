@@ -21,7 +21,7 @@ class Plan(db.Model):
     value_ts = db.Column(db.LargeBinary)
     value_tfjs = db.Column(db.LargeBinary)
     is_avg_plan = db.Column(db.Boolean, default=False)
-    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("static_fl_process_.id"))
+    fl_process_id = db.Column(db.Integer, db.ForeignKey("static_fl_process_.id"))
 
     def __str__(self):
         return (

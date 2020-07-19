@@ -22,7 +22,7 @@ class Cycle(db.Model):
     sequence = db.Column(db.BigInteger())
     version = db.Column(db.String())
     worker_cycles = db.relationship("WorkerCycle", backref="cycle")
-    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("static_fl_process_.id"))
+    fl_process_id = db.Column(db.Integer, db.ForeignKey("static_fl_process_.id"))
     is_completed = db.Column(db.Boolean, default=False)
 
     def __str__(self):

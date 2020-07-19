@@ -26,15 +26,14 @@ class CycleManager:
         self._cycles = Warehouse(Cycle)
         self._worker_cycles = Warehouse(WorkerCycle)
 
-    def create(self, fl_process_id: str, version: str, cycle_time: int):
-        """Create a new federated learning cycle.
-
-        Args:
-            fl_process_id: FL Process's ID.
-            version: Version (?)
-            cycle_time: Remaining time to finish this cycle.
-        Returns:
-            fd_cycle: Cycle Instance.
+    def create(self, fl_process_id: int, version: str, cycle_time: int):
+        """ Create a new federated learning cycle.
+            Args:
+                fl_process_id: FL Process's ID.
+                version: Version (?)
+                cycle_time: Remaining time to finish this cycle.
+            Returns:
+                fd_cycle: Cycle Instance.
         """
         _new_cycle = None
 

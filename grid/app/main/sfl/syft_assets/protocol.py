@@ -18,7 +18,7 @@ class Protocol(db.Model):
     name = db.Column(db.String())
     value = db.Column(db.LargeBinary)
     value_ts = db.Column(db.LargeBinary)
-    fl_process_id = db.Column(db.BigInteger, db.ForeignKey("static_fl_process_.id"))
+    fl_process_id = db.Column(db.Integer, db.ForeignKey("static_fl_process_.id"))
 
     def __str__(self):
         return f"<Protocol id: {self.id}, values: {self.value}, torchscript: {self.value_ts}>"
