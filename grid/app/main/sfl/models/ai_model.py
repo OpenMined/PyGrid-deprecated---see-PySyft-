@@ -43,7 +43,7 @@ class ModelCheckPoint(db.Model):
     values = db.Column(db.LargeBinary)
     number = db.Column(db.Integer)
     alias = db.Column(db.String)
-    model_id = db.Column(db.String, db.ForeignKey("static_model_.id"))
+    model_id = db.Column(db.Integer, db.ForeignKey("static_model_.id"))
 
     @property
     def object(self):
