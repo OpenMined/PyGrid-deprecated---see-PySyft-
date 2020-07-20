@@ -85,7 +85,7 @@ class Warehouse:
         db.session.commit()
 
     def modify(self, query, values):
-        """Modifies one or many records"""
+        """Modifies one or many records."""
         self._schema.query.filter_by(**query).update(values)
         db.session.commit()
 
