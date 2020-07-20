@@ -1,7 +1,6 @@
 # PyGrid imports
-from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, STATIC_FL_EVENTS
+from ...core.codes import MSG_FIELD, RESPONSE_MSG, CYCLE, STATIC_FL_EVENTS
 from ..processes import process_manager
-from ...core.codes import RESPONSE_MSG
 from ..processes import process_manager
 
 # Generic imports

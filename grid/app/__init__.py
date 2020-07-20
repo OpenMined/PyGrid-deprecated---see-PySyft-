@@ -56,15 +56,6 @@ def set_database_config(app, test_config=None, verbose=False):
 def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> Flask:
     """Create flask application.
 
-<<<<<<< HEAD
-       Args:
-            node_id: ID used to identify this node.
-            debug: debug mode flag.
-            n_replica: Number of model replicas used for fault tolerance purposes.
-            test_config: database test settings.
-       Returns:
-            app : Flask App instance.
-=======
     Args:
          node_id: ID used to identify this node.
          debug: debug mode flag.
@@ -72,7 +63,6 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
          test_config: database test settings.
     Returns:
          app : Flask App instance.
->>>>>>> origin/dev
     """
     app = Flask(__name__)
     app.debug = debug
@@ -88,12 +78,10 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
     app.config["N_REPLICA"] = n_replica
     sockets = Sockets(app)
 
-<<<<<<< HEAD
     from .main import main, static, dynamic, ws, local_worker, auth, hook
-=======
+
     # Register app blueprints
     from .main import auth, hook, local_worker, main, ws
->>>>>>> origin/dev
 
     # set_node_id(id)
     local_worker.id = node_id

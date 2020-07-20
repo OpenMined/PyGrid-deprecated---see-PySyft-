@@ -14,7 +14,7 @@ from flask_cors import cross_origin
 from ... import dynamic
 from ... import local_worker
 from ...dfl.persistence import model_controller
-from ...codes import MSG_FIELD
+from ...core.codes import MSG_FIELD
 from ... import local_worker, main
 from ...core.codes import MSG_FIELD
 from ...dfl.persistence import model_controller
@@ -139,17 +139,10 @@ def list_models():
 @dynamic.route("/serve-model/", methods=["POST"])
 @cross_origin()
 def serve_model():
-<<<<<<< HEAD
-    """ Host an AI model Uploading and registering it by an specific ID.
-
-        Returns:
-            Response : A json structure informing if hosting was succeed.
-=======
     """Host an AI model Uploading and registering it by an specific ID.
 
     Returns:
         Response : A json structure informing if hosting was succeed.
->>>>>>> origin/dev
     """
     encoding = request.form["encoding"]
     model_id = request.form[MSG_FIELD.MODEL_ID]
