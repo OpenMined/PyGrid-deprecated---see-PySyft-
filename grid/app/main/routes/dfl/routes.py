@@ -1,26 +1,23 @@
-"""
-This file exists to provide one common place for all grid node http requests.
-"""
+"""This file exists to provide one common place for all grid node http
+requests."""
 
 import json
-import sys
 import os
-
-from flask import render_template
-from flask import Response
-from flask import request, send_from_directory
+import sys
 
 import syft as sy
+from syft.codes import RESPONSE_MSG
 from syft.grid.clients.dynamic_fl_client import DynamicFLClient
+from flask import Response, render_template, request, send_from_directory
 from flask_cors import cross_origin
 
 from ... import dynamic
 from ... import local_worker
-
 from ...dfl.persistence import model_controller
 from ...codes import MSG_FIELD
-from syft.codes import RESPONSE_MSG
-
+from ... import local_worker, main
+from ...core.codes import MSG_FIELD
+from ...dfl.persistence import model_controller
 
 # ======= WEB ROUTES ======
 
@@ -36,10 +33,10 @@ def favicon():
 
 @dynamic.route("/detailed_models_list/")
 def list_models_with_details():
-    """ Generates a detailed list of models currently saved at the worker
+    """Generates a detailed list of models currently saved at the worker.
 
-        Returns:
-            Response : List of models (and their properties) stored at this node.
+    Returns:
+        Response : List of models (and their properties) stored at this node.
     """
     model_ids = model_controller.models(local_worker)["models"]
     models = list()
@@ -68,10 +65,10 @@ def list_models_with_details():
 
 @dynamic.route("/identity/")
 def identity():
-    """ Generates a response with the name of this node.
+    """Generates a response with the name of this node.
 
-        Returns:
-            Response : Name of node
+    Returns:
+        Response : Name of node
     """
 
     return Response(
@@ -83,11 +80,11 @@ def identity():
 
 @dynamic.route("/status/")
 def show_status():
-    """ Generates a response with the status of this node.
-        if the nodes is connected to workers, the status is online
+    """Generates a response with the status of this node. if the nodes is
+    connected to workers, the status is online.
 
-        Returns:
-            Response : Status of node
+    Returns:
+        Response : Status of node
     """
 
     connected_workers = filter(
@@ -106,10 +103,10 @@ def show_status():
 
 @dynamic.route("/workers/")
 def list_workers():
-    """ Generates a list of remote nodes directly connected to this node.
+    """Generates a list of remote nodes directly connected to this node.
 
-        Returns:
-            Response : List of node's ids.
+    Returns:
+        Response : List of node's ids.
     """
     connected_workers = filter(
         lambda x: isinstance(x, DynamicFLClient), local_worker._known_workers.values()
@@ -127,10 +124,10 @@ def list_workers():
 @dynamic.route("/models/", methods=["GET"])
 @cross_origin()
 def list_models():
-    """Generates a list of models currently saved at the worker
+    """Generates a list of models currently saved at the worker.
 
-       Returns:
-            Response : List of model's ids stored at this node.
+    Returns:
+         Response : List of model's ids stored at this node.
     """
     return Response(
         json.dumps(model_controller.models(local_worker)),
@@ -142,10 +139,17 @@ def list_models():
 @dynamic.route("/serve-model/", methods=["POST"])
 @cross_origin()
 def serve_model():
+<<<<<<< HEAD
     """ Host an AI model Uploading and registering it by an specific ID.
 
         Returns:
             Response : A json structure informing if hosting was succeed.
+=======
+    """Host an AI model Uploading and registering it by an specific ID.
+
+    Returns:
+        Response : A json structure informing if hosting was succeed.
+>>>>>>> origin/dev
     """
     encoding = request.form["encoding"]
     model_id = request.form[MSG_FIELD.MODEL_ID]
@@ -185,10 +189,11 @@ def serve_model():
 @dynamic.route("/dataset-tags", methods=["GET"])
 @cross_origin()
 def get_available_tags():
-    """ Returns all tags stored in this node. Can be very useful to know what datasets this node contains.
+    """Returns all tags stored in this node. Can be very useful to know what
+    datasets this node contains.
 
-        Returns:
-            Response : List of dataset tags stored at this node.
+    Returns:
+        Response : List of dataset tags stored at this node.
     """
     available_tags = set()
     objs = local_worker._objects
@@ -205,9 +210,8 @@ def get_available_tags():
 @dynamic.route("/search-encrypted-models", methods=["POST"])
 @cross_origin()
 def search_encrypted_models():
-    """ Check if exist some encrypted model hosted on this node using a specific model_id, if found,
-        return JSON with a list of workers/crypto_provider.
-    """
+    """Check if exist some encrypted model hosted on this node using a specific
+    model_id, if found, return JSON with a list of workers/crypto_provider."""
     try:
         body = json.loads(request.data)
     except json.decoder.JSONDecodeError:
@@ -267,7 +271,7 @@ def search_encrypted_models():
 @dynamic.route("/search", methods=["POST"])
 @cross_origin()
 def search_dataset_tags():
-    """ Search for a specific dataset tag stored at this node. """
+    """Search for a specific dataset tag stored at this node."""
     body = json.loads(request.data)
 
     # Invalid body

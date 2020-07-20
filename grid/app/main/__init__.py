@@ -1,7 +1,8 @@
-from flask import Blueprint
-
 import syft as sy
 import torch as th
+from flask import Blueprint
+
+from .. import db, executor
 
 # Avoid Pytorch deadlock issues
 th.set_num_threads(1)
@@ -15,7 +16,5 @@ static = Blueprint("static", __name__)
 dynamic = Blueprint("dynamic", __name__)
 ws = Blueprint(r"ws", __name__)
 
-
-from .. import db, executor
+from . import events, routes
 from .dfl import auth
-from . import routes, events
