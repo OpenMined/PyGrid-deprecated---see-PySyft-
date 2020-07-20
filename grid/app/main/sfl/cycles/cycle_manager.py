@@ -27,13 +27,14 @@ class CycleManager:
         self._worker_cycles = Warehouse(WorkerCycle)
 
     def create(self, fl_process_id: int, version: str, cycle_time: int):
-        """ Create a new federated learning cycle.
-            Args:
-                fl_process_id: FL Process's ID.
-                version: Version (?)
-                cycle_time: Remaining time to finish this cycle.
-            Returns:
-                fd_cycle: Cycle Instance.
+        """Create a new federated learning cycle.
+
+        Args:
+            fl_process_id: FL Process's ID.
+            version: Version (?)
+            cycle_time: Remaining time to finish this cycle.
+        Returns:
+            fd_cycle: Cycle Instance.
         """
         _new_cycle = None
 
@@ -107,12 +108,13 @@ class CycleManager:
         self._cycles.delete(**kwargs)
 
     def is_assigned(self, worker_id: str, cycle_id: int):
-        """ Check if a workers is already assigned to an specific cycle.
-            Args:
-                worker_id : Worker's ID.
-                cycle_id : Cycle's ID.
-            Returns:
-                result : Boolean Flag.
+        """Check if a workers is already assigned to an specific cycle.
+
+        Args:
+            worker_id : Worker's ID.
+            cycle_id : Cycle's ID.
+        Returns:
+            result : Boolean Flag.
         """
         return self._worker_cycles.first(worker_id=worker_id, cycle_id=cycle_id) != None
 
@@ -124,15 +126,16 @@ class CycleManager:
         return _worker_cycle
 
     def validate(self, worker_id: str, cycle_id: int, request_key: str):
-        """ Validate Worker's request key.
-            Args:
-                worker_id: Worker's ID.
-                cycle_id: Cycle's ID.
-                request_key: Worker's request key.
-            Returns:
-                result: Boolean flag
-            Raises:
-                CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
+        """Validate Worker's request key.
+
+        Args:
+            worker_id: Worker's ID.
+            cycle_id: Cycle's ID.
+            request_key: Worker's request key.
+        Returns:
+            result: Boolean flag
+        Raises:
+            CycleNotFoundError (PyGridError) : If not found any relation between the worker and cycle.
         """
         _worker_cycle = self._worker_cycles.first(
             worker_id=worker_id, cycle_id=cycle_id
@@ -176,7 +179,7 @@ class CycleManager:
         run_task_once("complete_cycle", complete_cycle, self, _worker_cycle.cycle_id)
 
     def complete_cycle(self, cycle_id: int):
-        """Checks if the cycle is completed and runs plan avg"""
+        """Checks if the cycle is completed and runs plan avg."""
         logging.info("running complete_cycle for cycle_id: %s" % cycle_id)
         cycle = self._cycles.first(id=cycle_id)
         logging.info("found cycle: %s" % str(cycle))

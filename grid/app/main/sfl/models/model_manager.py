@@ -28,12 +28,13 @@ class ModelManager:
         return _model_obj
 
     def save(self, model_id: int, data: bin):
-        """ Create a new model checkpoint.
-            Args:
-                model_id: Model ID.
-                data: Model data.
-            Returns:
-                model_checkpoint: ModelCheckpoint instance.
+        """Create a new model checkpoint.
+
+        Args:
+            model_id: Model ID.
+            data: Model data.
+        Returns:
+            model_checkpoint: ModelCheckpoint instance.
         """
 
         checkpoints_count = self._model_checkpoints.count(model_id=model_id)

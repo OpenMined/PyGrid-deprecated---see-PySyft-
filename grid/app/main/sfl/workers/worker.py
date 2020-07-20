@@ -7,9 +7,9 @@ class Worker(db.Model):
     Columns:
         id (String, Primary Key): Worker's ID.
         format_preference (String): either "list" or "ts"
-        ping (Int): Ping rate.
-        avg_download (Int): Download rate.
-        avg_upload (Int): Upload rate.
+        ping (Float): Ping rate.
+        avg_download (Float): Download rate.
+        avg_upload (Float): Upload rate.
         worker_cycles (WorkerCycle): Relationship between workers and cycles (One to many).
     """
 
@@ -17,9 +17,9 @@ class Worker(db.Model):
 
     id = db.Column(db.String, primary_key=True)
     format_preference = db.Column(db.String())
-    ping = db.Column(db.BigInteger)
-    avg_download = db.Column(db.BigInteger)
-    avg_upload = db.Column(db.BigInteger)
+    ping = db.Column(db.Float)
+    avg_download = db.Column(db.Float)
+    avg_upload = db.Column(db.Float)
     worker_cycle = db.relationship("WorkerCycle", backref="worker")
 
     def __str__(self):
