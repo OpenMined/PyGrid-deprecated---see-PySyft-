@@ -14,6 +14,7 @@ from test import conftest
 
 hook = sy.TorchHook(th)
 
+
 @pytest.mark.skip
 def test_host_plan_not_allowed_to_run_ops(connected_node):
     hook.local_worker.is_client_worker = False
@@ -44,6 +45,7 @@ def test_host_plan_not_allowed_to_run_ops(connected_node):
         bob.run_remote_inference(model_id="not_allowed", data=th.tensor([1.0, 2]))
 
     hook.local_worker.is_client_worker = True
+
 
 @pytest.mark.skip
 def test_host_plan_model(connected_node):
