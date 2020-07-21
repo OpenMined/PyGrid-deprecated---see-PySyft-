@@ -7,8 +7,10 @@ from random import random
 
 import numpy as np
 from flask import Response, current_app, render_template, request, send_file
+
 # External modules imports
 from requests_toolbelt import MultipartEncoder
+
 # Dependencies used by req_join endpoint
 # It's a mockup endpoint and should be removed soon.
 from scipy.stats import poisson
@@ -16,8 +18,7 @@ from scipy.stats import poisson
 # Local imports
 from ... import main
 from ...core.codes import CYCLE, MSG_FIELD, RESPONSE_MSG
-from ...core.exceptions import (InvalidRequestKeyError, ModelNotFoundError,
-                                PyGridError)
+from ...core.exceptions import InvalidRequestKeyError, ModelNotFoundError, PyGridError
 from ...events.sfl.fl_events import assign_worker_id, cycle_request, report
 from ...sfl.auth.federated import verify_token
 from ...sfl.controller import processes

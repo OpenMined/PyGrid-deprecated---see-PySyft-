@@ -37,8 +37,8 @@ test: venv
 	)
 
 format:
-	black --verbose .
 	isort --verbose .
+	black --verbose .
 	docformatter --in-place --recursive .
 
 clean:

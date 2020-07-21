@@ -2,8 +2,9 @@ import abc
 
 from syft import Plan
 
-from ..sfl.processes import \
-    ProcessManager  # TODO: Should we move ProcessManager to core submodule?
+from ..sfl.processes import (
+    ProcessManager,
+)  # TODO: Should we move ProcessManager to core submodule?
 
 
 class FLManager(metaclass=abc.ABCMeta):

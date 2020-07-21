@@ -2,6 +2,7 @@
 import logging
 
 from ...core.exceptions import WorkerNotFoundError
+
 # PyGrid imports
 from ...storage.warehouse import Warehouse
 from .worker import Worker
