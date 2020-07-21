@@ -25,7 +25,7 @@ class WEBRTC_EVENTS(object):
     JOIN_ROOM = "webrtc: join-room"
 
 
-class STATIC_FL_EVENTS(object):
+class MODEL_CENTRIC_FL_EVENTS(object):
     HOST_FL_TRAINING = "static/federated/host-training"
     REPORT = "static/federated/report"
     AUTHENTICATE = "static/federated/authenticate"

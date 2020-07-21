@@ -78,7 +78,7 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
     app.config["N_REPLICA"] = n_replica
     sockets = Sockets(app)
 
-    from .main import main, static, dynamic, ws, local_worker, auth, hook
+    from .main import main, model_centric, data_centric, ws, local_worker, auth, hook
 
     # Register app blueprints
     from .main import auth, hook, local_worker, main, ws
@@ -90,8 +90,8 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
 
     # Register app blueprints
     app.register_blueprint(main, url_prefix=r"/")
-    app.register_blueprint(static, url_prefix=r"/static")
-    app.register_blueprint(dynamic, url_prefix=r"/dynamic")
+    app.register_blueprint(model_centric, url_prefix=r"/model_centric")
+    app.register_blueprint(data_centric, url_prefix=r"/data_centric")
 
     sockets.register_blueprint(ws, url_prefix=r"/")
 
