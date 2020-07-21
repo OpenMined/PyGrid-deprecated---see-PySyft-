@@ -7,9 +7,6 @@ from random import random
 
 import numpy as np
 from flask import Response, current_app, render_template, request, send_file
-
-import numpy as np
-from flask import Response, current_app, render_template, request, send_file
 # External modules imports
 from requests_toolbelt import MultipartEncoder
 # Dependencies used by req_join endpoint
@@ -19,7 +16,8 @@ from scipy.stats import poisson
 # Local imports
 from ... import main
 from ...core.codes import CYCLE, MSG_FIELD, RESPONSE_MSG
-from ...core.exceptions import InvalidRequestKeyError, PyGridError
+from ...core.exceptions import (InvalidRequestKeyError, ModelNotFoundError,
+                                PyGridError)
 from ...events.sfl.fl_events import assign_worker_id, cycle_request, report
 from ...sfl.auth.federated import verify_token
 from ...sfl.controller import processes
@@ -28,10 +26,6 @@ from ...sfl.models import model_manager
 from ...sfl.processes import process_manager
 from ...sfl.syft_assets import plans, protocols
 from ...sfl.workers import worker_manager
-from ...core.codes import RESPONSE_MSG, CYCLE, MSG_FIELD
-from ...events.sfl.fl_events import report, cycle_request, assign_worker_id
-from ...sfl.auth.federated import verify_token
-from ...core.exceptions import InvalidRequestKeyError, PyGridError, ModelNotFoundError
 
 
 @main.route("/federated/cycle-request", methods=["POST"])
