@@ -81,7 +81,6 @@ class TestDatabase(unittest.TestCase):
     def testCreateWorker(self):
         worker = Worker(
             id=randint(0, BIG_INT),
-            format_preference="list",
             ping=randint(0, 100),
             avg_download=randint(0, 100),
             avg_upload=randint(0, 100),
@@ -304,7 +303,6 @@ class TestDatabase(unittest.TestCase):
 
         worker = Worker(
             id=randint(0, BIG_INT),
-            format_preference="list",
             ping=randint(0, 100),
             avg_download=randint(0, 100),
             avg_upload=randint(0, 100),
