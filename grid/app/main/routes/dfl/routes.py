@@ -21,16 +21,6 @@ from ...dfl.persistence import model_controller
 
 # ======= WEB ROUTES ======
 
-
-@data_centric.route("/favicon.ico")
-def favicon():
-    return send_from_directory(
-        os.path.join(dynamic.root_path, "static"),
-        "favicon.ico",
-        mimetype="image/vnd.microsoft.icon",
-    )
-
-
 @data_centric.route("/detailed_models_list/")
 def list_models_with_details():
     """Generates a detailed list of models currently saved at the worker.
