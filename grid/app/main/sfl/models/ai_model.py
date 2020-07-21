@@ -33,25 +33,25 @@ class ModelCheckPoint(db.Model):
 
     Columns:
         id (Integer, Primary Key): Checkpoint ID.
-        values (Binary): Value of the model at a given checkpoint.
+        value (Binary): Value of the model at a given checkpoint.
         model_id (String, Foreign Key): Model's ID.
     """
 
     __tablename__ = "static_model_checkpoint_"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    values = db.Column(db.LargeBinary)
+    value = db.Column(db.LargeBinary)
     number = db.Column(db.Integer)
     alias = db.Column(db.String)
     model_id = db.Column(db.Integer, db.ForeignKey("static_model_.id"))
 
     @property
     def object(self):
-        return sy.serde.deserialize(self.values)
+        return sy.serde.deserialize(self.value)
 
     @object.setter
     def object(self):
-        self.data = sy.serde.serialize(self.values)
+        self.data = sy.serde.serialize(self.value)
 
     def __str__(self):
         return f"<CheckPoint id: {self.id}, number: {self.number}, alias: {self.alias}, model_id: {self.model_id}>"
