@@ -12,7 +12,7 @@ class Worker(db.Model):
         worker_cycles (WorkerCycle): Relationship between workers and cycles (One to many).
     """
 
-    __tablename__ = "static_worker_"
+    __tablename__ = "static_worker"
 
     id = db.Column(db.String, primary_key=True)
     ping = db.Column(db.Float)
