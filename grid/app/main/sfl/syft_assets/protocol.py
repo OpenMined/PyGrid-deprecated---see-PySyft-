@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class Protocol(db.Model):
+class Protocol(BaseModel):
     """Protocol table that represents Syft Protocols.
 
     Columns:

@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class Worker(db.Model):
+class Worker(BaseModel):
     """Web / Mobile worker table.
 
     Columns:

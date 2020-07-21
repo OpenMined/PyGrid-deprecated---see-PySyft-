@@ -2,10 +2,10 @@
 import datetime
 
 # Local imports
-from ... import db
+from ... import db, BaseModel
 
 
-class WorkerCycle(db.Model):
+class WorkerCycle(BaseModel):
     """Relation between Workers and Cycles.
 
     Columns:

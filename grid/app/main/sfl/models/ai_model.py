@@ -2,10 +2,10 @@
 import syft as sy
 
 # Local imports
-from ... import db
+from ... import db, BaseModel
 
 
-class Model(db.Model):
+class Model(BaseModel):
     """Model table that represents the AI Models.
 
     Columns:
@@ -28,7 +28,7 @@ class Model(db.Model):
         return f"<Model  id: {self.id}, version: {self.version}>"
 
 
-class ModelCheckPoint(db.Model):
+class ModelCheckPoint(BaseModel):
     """Model's save points.
 
     Columns:

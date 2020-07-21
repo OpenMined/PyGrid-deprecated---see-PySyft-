@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class Cycle(db.Model):
+class Cycle(BaseModel):
     """Cycle table.
 
     Columns:

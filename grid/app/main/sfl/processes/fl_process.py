@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class FLProcess(db.Model):
+class FLProcess(BaseModel):
     """Federated Learning Process table.
 
     Columns:

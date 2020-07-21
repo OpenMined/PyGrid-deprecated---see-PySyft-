@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class Plan(db.Model):
+class Plan(BaseModel):
     """Plan table that represents Syft Plans.
 
     Columns:

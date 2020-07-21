@@ -1,7 +1,7 @@
-from ... import db
+from ... import db, BaseModel
 
 
-class Config(db.Model):
+class Config(BaseModel):
     """Configs table.
 
     Columns:
