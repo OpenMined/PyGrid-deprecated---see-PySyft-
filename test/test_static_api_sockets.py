@@ -257,7 +257,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         }
 
         host_training_message = {
-            "type": "federated/host-training",
+            "type": "model_centric/host-training",
             "data": {
                 "model": serialized_plan_model,
                 "plans": {
@@ -275,7 +275,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         await send_ws_message(host_training_message)
 
         auth_msg = {
-            "type": "federated/authenticate",
+            "type": "model_centric/authenticate",
             "data": {"model_name": "my-federated-model-2", "model_version": "0.1.0",},
         }
 
@@ -306,7 +306,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         }
 
         host_training_message = {
-            "type": "federated/host-training",
+            "type": "model_centric/host-training",
             "data": {
                 "model": serialized_plan_model,
                 "plans": {
@@ -324,7 +324,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         await send_ws_message(host_training_message)
 
         auth_msg = {
-            "type": "federated/authenticate",
+            "type": "model_centric/authenticate",
             "data": {"model_name": "my-federated-model-3", "model_version": "0.1.0",},
         }
 
