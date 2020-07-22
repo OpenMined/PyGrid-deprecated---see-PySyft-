@@ -1,20 +1,19 @@
 # Standard python imports
-import json
-import uuid
 import base64
+import json
 import traceback
+import uuid
 from binascii import unhexlify
 
-
-# Local imports
-from ..socket_handler import SocketHandler
-from ...exceptions import CycleNotFoundError, MaxCycleLimitExceededError
-from ...codes import MSG_FIELD, RESPONSE_MSG, CYCLE, FL_EVENTS
+from ...core.codes import CYCLE, FL_EVENTS, MSG_FIELD, RESPONSE_MSG
+from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError
 from ...sfl.auth.federated import verify_token
 from ...sfl.processes import process_manager
 from ...sfl.workers import worker_manager
 from ...sfl.controller import processes
 
+# Local imports
+from ..socket_handler import SocketHandler
 
 # Singleton socket handler
 handler = SocketHandler()
@@ -22,11 +21,12 @@ handler = SocketHandler()
 
 def host_federated_training(message: dict, socket=None) -> str:
     """This will allow for training cycles to begin on end-user devices.
-        Args:
-            message : Message body sent by some client.
-            socket: Socket descriptor.
-        Returns:
-            response : String response to the client
+
+    Args:
+        message : Message body sent by some client.
+        socket: Socket descriptor.
+    Returns:
+        response : String response to the client
     """
     data = message[MSG_FIELD.DATA]
     response = {}
@@ -67,12 +67,14 @@ def host_federated_training(message: dict, socket=None) -> str:
 
 
 def assign_worker_id(message: dict, socket=None) -> str:
-    """ New workers should receive a unique worker ID after authenticate on PyGrid platform.
-        Args:
-            message : Message body sended after token verification.
-            socket: Socket descriptor.
-        Returns:
-            response : String response to the client
+    """New workers should receive a unique worker ID after authenticate on
+    PyGrid platform.
+
+    Args:
+        message : Message body sended after token verification.
+        socket: Socket descriptor.
+    Returns:
+        response : String response to the client
     """
     response = {}
 
@@ -119,12 +121,13 @@ def requires_speed_test(model_name, model_version):
 
 
 def authenticate(message: dict, socket=None) -> str:
-    """ Check the submitted token and assign the worker a new id.
-        Args:
-            message : Message body sended by some client.
-            socket: Socket descriptor.
-        Returns:
-            response : String response to the client
+    """Check the submitted token and assign the worker a new id.
+
+    Args:
+        message : Message body sended by some client.
+        socket: Socket descriptor.
+    Returns:
+        response : String response to the client
     """
     data = message.get("data")
     response = {}
@@ -153,12 +156,14 @@ def authenticate(message: dict, socket=None) -> str:
 
 
 def cycle_request(message: dict, socket=None) -> str:
-    """ This event is where the worker is attempting to join an active federated learning cycle.
-        Args:
-            message : Message body sent by some client.
-            socket: Socket descriptor.
-        Returns:
-            response : String response to the client
+    """This event is where the worker is attempting to join an active federated
+    learning cycle.
+
+    Args:
+        message : Message body sent by some client.
+        socket: Socket descriptor.
+    Returns:
+        response : String response to the client
     """
     data = message[MSG_FIELD.DATA]
     response = {}
@@ -201,13 +206,15 @@ def cycle_request(message: dict, socket=None) -> str:
 
 
 def report(message: dict, socket=None) -> str:
-    """ This method will allow a worker that has been accepted into a cycle
-        and finished training a model on their device to upload the resulting model diff.
-        Args:
-            message : Message body sent by some client.
-            socket: Socket descriptor.
-        Returns:
-            response : String response to the client
+    """This method will allow a worker that has been accepted into a cycle and
+    finished training a model on their device to upload the resulting model
+    diff.
+
+    Args:
+        message : Message body sent by some client.
+        socket: Socket descriptor.
+    Returns:
+        response : String response to the client
     """
     data = message[MSG_FIELD.DATA]
     response = {}
