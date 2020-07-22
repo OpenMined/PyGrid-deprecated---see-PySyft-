@@ -26,10 +26,10 @@ class WEBRTC_EVENTS(object):
 
 
 class MODEL_CENTRIC_FL_EVENTS(object):
-    HOST_FL_TRAINING = "static/federated/host-training"
-    REPORT = "static/federated/report"
-    AUTHENTICATE = "static/federated/authenticate"
-    CYCLE_REQUEST = "static/federated/cycle-request"
+    HOST_FL_TRAINING = "model_centric/host-training"
+    REPORT = "model_centric/report"
+    AUTHENTICATE = "model_centric/authenticate"
+    CYCLE_REQUEST = "model_centric/cycle-request"
 
 
 class CYCLE(object):

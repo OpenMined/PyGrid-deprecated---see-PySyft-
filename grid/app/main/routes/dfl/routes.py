@@ -6,20 +6,17 @@ import os
 import sys
 
 import syft as sy
-from syft.codes import RESPONSE_MSG
-from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from flask import Response, render_template, request, send_from_directory
 from flask_cors import cross_origin
+from syft.codes import RESPONSE_MSG
+from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 
-from ... import dynamic
-from ... import local_worker
-from ...dfl.persistence import model_controller
-from ...core.codes import MSG_FIELD
-from ... import local_worker, main
+from ... import data_centric, local_worker, main
 from ...core.codes import MSG_FIELD
 from ...dfl.persistence import model_controller
 
 # ======= WEB ROUTES ======
+
 
 @data_centric.route("/detailed_models_list/")
 def list_models_with_details():
