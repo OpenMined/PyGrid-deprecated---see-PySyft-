@@ -16,9 +16,8 @@ from requests_toolbelt import MultipartEncoder
 from scipy.stats import poisson
 
 # Local imports
-from ... import main
+from ... import main, model_centric
 from ...core.codes import CYCLE, MSG_FIELD, RESPONSE_MSG
-from ...core.exceptions import InvalidRequestKeyError, PyGridError
 from ...sfl.auth.federated import verify_token
 from ...sfl.controller import processes
 from ...sfl.cycles import cycle_manager
@@ -32,11 +31,10 @@ from ...events.sfl.fl_events import (
     requires_speed_test,
 )
 from ...sfl.workers import worker_manager
-from ...sfl.auth.federated import verify_token
 from ...core.exceptions import InvalidRequestKeyError, PyGridError, ModelNotFoundError
 
 
-@main.route("/federated/cycle-request", methods=["POST"])
+@model_centric.route("/cycle-request", methods=["POST"])
 def worker_cycle_request():
     """" This endpoint is where the worker is attempting to join an active
     federated learning cycle."""
@@ -61,7 +59,7 @@ def worker_cycle_request():
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
-@main.route("/federated/speed-test", methods=["GET", "POST"])
+@model_centric.route("/speed-test", methods=["GET", "POST"])
 def connection_speed_test():
     """Connection speed test."""
     response_body = {}
@@ -100,7 +98,7 @@ def connection_speed_test():
     )
 
 
-@main.route("/federated/report", methods=["POST"])
+@model_centric.route("/report", methods=["POST"])
 def report_diff():
     """Allows reporting of (agg/non-agg) model diff after worker completes a
     cycle."""
@@ -125,7 +123,7 @@ def report_diff():
     return Response(response_body, status=status_code, mimetype="application/json")
 
 
-@main.route("/federated/get-protocol", methods=["GET"])
+@model_centric.route("/get-protocol", methods=["GET"])
 def download_protocol():
     """Request a download of a protocol."""
 
@@ -162,7 +160,7 @@ def download_protocol():
     )
 
 
-@main.route("/federated/get-model", methods=["GET"])
+@model_centric.route("/get-model", methods=["GET"])
 def download_model():
     """Request a download of a model."""
 
@@ -203,7 +201,7 @@ def download_model():
     )
 
 
-@main.route("/federated/get-plan", methods=["GET"])
+@model_centric.route("/get-plan", methods=["GET"])
 def download_plan():
     """Request a download of a plan."""
 
@@ -251,7 +249,7 @@ def download_plan():
     )
 
 
-@main.route("/federated/authenticate", methods=["POST"])
+@model_centric.route("/authenticate", methods=["POST"])
 def auth():
     """uses JWT (HSA/RSA) to authenticate."""
     response_body = {}
@@ -285,7 +283,7 @@ def auth():
     )
 
 
-@main.route("/req_join", methods=["GET"])
+@model_centric.route("/req_join", methods=["GET"])
 def fl_cycle_application_decision():
     """use the temporary req_join endpoint to mockup:
 
@@ -470,7 +468,7 @@ def fl_cycle_application_decision():
     )
 
 
-@main.route("/get-model", methods=["GET"])
+@model_centric.route("/get-model", methods=["GET"])
 def get_model():
     """Request a download of a model."""
 
