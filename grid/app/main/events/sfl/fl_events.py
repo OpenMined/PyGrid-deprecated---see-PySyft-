@@ -6,7 +6,11 @@ import uuid
 from binascii import unhexlify
 
 from ...core.codes import CYCLE, MODEL_CENTRIC_FL_EVENTS, MSG_FIELD, RESPONSE_MSG
-from ...core.exceptions import CycleNotFoundError, MaxCycleLimitExceededError, PyGridError
+from ...core.exceptions import (
+    CycleNotFoundError,
+    MaxCycleLimitExceededError,
+    PyGridError,
+)
 from ...sfl.auth.federated import verify_token
 from ...sfl.processes import process_manager
 from ...sfl.workers import worker_manager
@@ -197,7 +201,9 @@ def cycle_request(message: dict, socket=None) -> str:
             if request_field in data:
                 value = data.get(request_field)
                 if not isinstance(value, (float, int)) or value < 0:
-                    raise PyGridError(f"'{request_field}' needs to be a positive number")
+                    raise PyGridError(
+                        f"'{request_field}' needs to be a positive number"
+                    )
                 setattr(worker, db_field, float(value))
             elif requires_speed_fields:
                 # Require fields to present when FL model has speed req's
