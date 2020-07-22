@@ -309,7 +309,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
                 "version": "0.1.0",
                 "ping": 1,
                 "download": 5,
-                "upload": 5
+                "upload": 5,
             },
         }
         response = await send_ws_message(cycle_req)
