@@ -4,7 +4,7 @@ FROM base as builder
 
 RUN apt-get update
 RUN apt-get install -y git python3-pip python3-dev
-COPY ./pip-dep /app/pip-dep
+COPY requirements.txt /app/pip-dep
 
 WORKDIR /app
 RUN pip3 install --user -Ur pip-dep/requirements.txt
@@ -17,4 +17,3 @@ COPY --from=builder root/.local root/.local
 COPY . /app
 WORKDIR /app
 ENTRYPOINT ["sh", "entrypoint.sh"]
-
