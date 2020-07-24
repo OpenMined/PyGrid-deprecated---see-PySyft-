@@ -10,6 +10,7 @@ from ..utils.wrappers import threaded
 
 class Worker(object):
     """Worker class for running PySyft models for training and inference."""
+
     def __init__(self, id: str, socket):
         """
         Args:
@@ -73,10 +74,8 @@ class Worker(object):
             time.sleep(WORKER_PROPERTIES.HEALTH_CHECK_INTERVAL)
 
     def update_node_infos(self, message):
-        """
-        Update information for the connected nodes, hosted models and datasets as well as
-        information on CPU and memory usage.
-        """
+        """Update information for the connected nodes, hosted models and
+        datasets as well as information on CPU and memory usage."""
         if self.__begin:
             end = time.time()
             self._ping = (end - self.__begin) * 1000

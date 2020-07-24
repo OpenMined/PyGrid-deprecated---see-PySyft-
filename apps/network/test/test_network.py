@@ -4,18 +4,14 @@ from gridnetwork.routes import network
 
 
 def test_join_grid_node_bad_request_json(client):
-    """
-    assert that the endpoint returns a 400 for malformed JSON
-    """
+    """assert that the endpoint returns a 400 for malformed JSON."""
     result = client.post("/join", data="{bad", content_type="application/json")
     assert result.status_code == 400
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
 def test_join_grid_node_bad_request_key_error(client):
-    """
-    assert that the endpoint returns a 400 for missing keys in sent JSON
-    """
+    """assert that the endpoint returns a 400 for missing keys in sent JSON."""
     result = client.post("/join", json={"test": "data"})
     assert result.status_code == 400
     assert result.get_json().get("message") == ("Invalid JSON format.")
@@ -23,9 +19,8 @@ def test_join_grid_node_bad_request_key_error(client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_join_grid_node_already_registered(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for an already registered node
-    """
+    """assert that the endpoint returns a 400 for an already registered
+    node."""
     mock_network_manager.register_new_node.return_value = False
 
     result = client.post("/join", json={"node-id": "data", "node-address": "data"})
@@ -36,9 +31,8 @@ def test_join_grid_node_already_registered(mock_network_manager, client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_join_grid_node_internal_server_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_network_manager.register_new_node.side_effect = RuntimeError("test")
 
     result = client.post("/join", json={"node-id": "data", "node-address": "data"})
@@ -48,18 +42,14 @@ def test_join_grid_node_internal_server_error(mock_network_manager, client):
 
 
 def test_delete_grid_node_bad_request_json(client):
-    """
-    assert that the endpoint returns a 400 for malformed JSON
-    """
+    """assert that the endpoint returns a 400 for malformed JSON."""
     result = client.delete("/delete-node", data="{bad", content_type="application/json")
     assert result.status_code == 400
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
 def test_delete_grid_node_bad_request_key_error(client):
-    """
-    assert that the endpoint returns a 400 for missing keys in sent JSON
-    """
+    """assert that the endpoint returns a 400 for missing keys in sent JSON."""
     result = client.delete("/delete-node", json={"test": "data"})
     assert result.status_code == 400
     assert result.get_json().get("message") == ("Invalid JSON format.")
@@ -67,9 +57,7 @@ def test_delete_grid_node_bad_request_key_error(client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_join_grid_node_already_registered(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for a node not yet registered
-    """
+    """assert that the endpoint returns a 400 for a node not yet registered."""
     mock_network_manager.delete_node.return_value = False
 
     result = client.delete(
@@ -84,9 +72,8 @@ def test_join_grid_node_already_registered(mock_network_manager, client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_delete_grid_node_internal_server_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_network_manager.delete_node.side_effect = RuntimeError("test")
 
     result = client.delete(
@@ -99,9 +86,7 @@ def test_delete_grid_node_internal_server_error(mock_network_manager, client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_value_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for malformed JSON
-    """
+    """assert that the endpoint returns a 400 for malformed JSON."""
     mock_network_manager.connected_nodes.side_effect = ValueError()
 
     result = client.post("/search-encrypted-model")
@@ -111,9 +96,7 @@ def test_search_encrypted_model_bad_request_value_error(mock_network_manager, cl
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_key_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for missing keys in sent JSON
-    """
+    """assert that the endpoint returns a 400 for missing keys in sent JSON."""
     mock_network_manager.connected_nodes.side_effect = KeyError()
 
     result = client.post("/search-encrypted-model")
@@ -123,9 +106,8 @@ def test_search_encrypted_model_bad_request_key_error(mock_network_manager, clie
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_encrypted_model_internal_server_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_network_manager.connected_nodes.side_effect = RuntimeError("test")
 
     result = client.post(
@@ -138,9 +120,7 @@ def test_search_encrypted_model_internal_server_error(mock_network_manager, clie
 
 @patch("gridnetwork.routes.network._get_model_hosting_nodes")
 def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, client):
-    """
-    assert that the endpoint returns a 400 for malformed JSON
-    """
+    """assert that the endpoint returns a 400 for malformed JSON."""
     mock_get_model_hosting_nodes.side_effect = ValueError()
 
     result = client.post("/search-model")
@@ -149,9 +129,7 @@ def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, clie
 
 
 def test_search_model_bad_request_key_error(client):
-    """
-    assert that the endpoint returns a 400 for missing keys in sent JSON
-    """
+    """assert that the endpoint returns a 400 for missing keys in sent JSON."""
     result = client.post("/search-model")
     assert result.status_code == 400
     assert result.get_json().get("message") == ("Invalid JSON format.")
@@ -159,9 +137,8 @@ def test_search_model_bad_request_key_error(client):
 
 @patch("gridnetwork.routes.network._get_model_hosting_nodes")
 def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_get_model_hosting_nodes.side_effect = RuntimeError("test")
 
     result = client.post("/search-model", json={"model_id": "data"})
@@ -172,9 +149,7 @@ def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_bad_request_value_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for malformed JSON
-    """
+    """assert that the endpoint returns a 400 for malformed JSON."""
     mock_network_manager.connected_nodes.side_effect = ValueError()
 
     result = client.post("/search", data="{bad", content_type="application/json")
@@ -184,9 +159,7 @@ def test_search_bad_request_value_error(mock_network_manager, client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_bad_request_key_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for missing keys in sent JSON
-    """
+    """assert that the endpoint returns a 400 for missing keys in sent JSON."""
     mock_network_manager.connected_nodes.side_effect = KeyError()
 
     result = client.post("/search", json={})
@@ -196,9 +169,8 @@ def test_search_bad_request_key_error(mock_network_manager, client):
 
 @patch("gridnetwork.routes.network.network_manager")
 def test_search_internal_server_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_network_manager.connected_nodes.side_effect = RuntimeError("test")
 
     result = client.post("/search", json={})
@@ -206,26 +178,27 @@ def test_search_internal_server_error(mock_network_manager, client):
     assert result.status_code == 500
     assert result.get_json().get("message") == "test"
 
+
 @patch("gridnetwork.routes.network.network_manager")
 def test_choose_encrypted_model_host_value_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 400 for value error
-    """
+    """assert that the endpoint returns a 400 for value error."""
     mock_network_manager.connected_nodes.return_value = {}
 
     result = client.get("/choose-encrypted-model-host")
-    
+
     assert result.status_code == 400
     assert len(result.get_json()) == 0
 
+
 @patch("gridnetwork.routes.network.network_manager")
-def test_choose_encrypted_model_host_internal_server_error(mock_network_manager, client):
-    """
-    assert that the endpoint returns a 500 for an unknown error condition
-    """
+def test_choose_encrypted_model_host_internal_server_error(
+    mock_network_manager, client
+):
+    """assert that the endpoint returns a 500 for an unknown error
+    condition."""
     mock_network_manager.connected_nodes.side_effect = RuntimeError("test")
 
     result = client.get("/choose-encrypted-model-host")
-    
+
     assert result.status_code == 500
     assert result.get_json().get("message") == "test"

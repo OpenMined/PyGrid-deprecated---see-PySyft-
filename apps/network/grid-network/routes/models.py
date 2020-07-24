@@ -9,7 +9,8 @@ socket_handler = SocketHandler()
 
 @http.route("/models", methods=["GET"])
 def get_models():
-    """Return a response object containing all the models on all the nodes in the network."""
+    """Return a response object containing all the models on all the nodes in
+    the network."""
     try:
         response = {}
         models = []

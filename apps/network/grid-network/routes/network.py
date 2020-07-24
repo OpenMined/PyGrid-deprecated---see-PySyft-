@@ -21,7 +21,8 @@ INVALID_JSON_FORMAT_MESSAGE = (
 @http.route("/join", methods=["POST"])
 def join_grid_node():
     """Register a new grid node at grid network.
-        TODO: Add Authentication process.
+
+    TODO: Add Authentication process.
     """
 
     response_body = {"message": None}
@@ -52,7 +53,8 @@ def join_grid_node():
 
 @http.route("/connected-nodes", methods=["GET"])
 def get_connected_nodes():
-    """Return a response object containing a list of all the connected nodes."""
+    """Return a response object containing a list of all the connected
+    nodes."""
     grid_nodes = network_manager.connected_nodes()
     return Response(
         json.dumps({"grid-nodes": list(grid_nodes.keys())}),
@@ -94,8 +96,9 @@ def delete_grid_node():
 
 @http.route("/choose-encrypted-model-host", methods=["GET"])
 def choose_encrypted_model_host():
-    """Choose grid nodes to host an encrypted model (currently the choice is random)."""
-     
+    """Choose grid nodes to host an encrypted model (currently the choice is
+    random)."""
+
     hosts_info = []
     response_body = {"message": None}
     status_code = None
@@ -117,12 +120,14 @@ def choose_encrypted_model_host():
     # If grid network doesn't have enough grid nodes
     except ValueError:
         response_body = hosts_info
-        status_code = 400        
+        status_code = 400
     except Exception as e:
         response_body["message"] = str(e)
         status_code = 500  # Internal Server Error
 
-    return Response(json.dumps(response_body), status=status_code, mimetype="application/json")
+    return Response(
+        json.dumps(response_body), status=status_code, mimetype="application/json"
+    )
 
 
 @http.route("/choose-model-host", methods=["GET"])
@@ -150,10 +155,8 @@ def choose_model_host():
 
 @http.route("/search-encrypted-model", methods=["POST"])
 def search_encrypted_model():
-    """
-    Search for an encrypted plan model in the grid network and, if found,
-    return host id, host address, and SMPC workers information.
-    """
+    """Search for an encrypted plan model in the grid network and, if found,
+    return host id, host address, and SMPC workers information."""
 
     response_body = {"message": None}
     status_code = None
@@ -257,10 +260,8 @@ def available_tags():
 
 @http.route("/search", methods=["POST"])
 def search_dataset_tags():
-    """
-    Search for information on all known nodes and return a list of the nodes
-    containing the desired data tag.
-    """
+    """Search for information on all known nodes and return a list of the nodes
+    containing the desired data tag."""
 
     response_body = {"message": None}
     status_code = None
@@ -301,7 +302,7 @@ def search_dataset_tags():
 
 
 def _get_model_hosting_nodes(model_id):
-    """ Search all nodes if they are currently hosting the model.
+    """Search all nodes if they are currently hosting the model.
 
     Args:
         model_id: ID of the model.

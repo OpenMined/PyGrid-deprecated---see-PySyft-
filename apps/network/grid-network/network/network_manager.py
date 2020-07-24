@@ -2,15 +2,18 @@ from .nodes import db, GridNodes
 
 
 class NetworkManager:
-    """NetworkManager registers, deletes, and retrives grid nodes in the PyGrid network."""
+    """NetworkManager registers, deletes, and retrives grid nodes in the PyGrid
+    network."""
+
     def __init__(self):
         pass
 
     def register_new_node(self, node_id, node_address):
-        """ Register a new grid node in the grid network.
-            Args:
-                node_id (str): Grid Node ID.
-                node_address (str): Grid Node Address.
+        """Register a new grid node in the grid network.
+
+        Args:
+            node_id (str): Grid Node ID.
+            node_address (str): Grid Node Address.
         """
         registered = False
         if node_id not in self.connected_nodes().keys():
@@ -21,11 +24,11 @@ class NetworkManager:
         return registered
 
     def delete_node(self, node_id, node_address):
-        """ Delete a grid node in the grid network.
+        """Delete a grid node in the grid network.
 
-            Args:
-                node_id (str): Grid Node ID.
-                node_address (str): Grid Node Address.
+        Args:
+            node_id (str): Grid Node ID.
+            node_address (str): Grid Node Address.
         """
         deleted = False
         if node_id in self.connected_nodes().keys():
@@ -39,10 +42,10 @@ class NetworkManager:
         return deleted
 
     def connected_nodes(self):
-        """ Retrieve all grid nodes connected in the grid network.
+        """Retrieve all grid nodes connected in the grid network.
 
-            Returns:
-                dict: Connected grid nodes in the key-value pair of node_id: node_address.
+        Returns:
+            dict: Connected grid nodes in the key-value pair of node_id: node_address.
         """
         nodes = GridNodes.query.all()
         nodes_dict = {}

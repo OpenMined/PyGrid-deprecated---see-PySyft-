@@ -72,7 +72,6 @@ def create_app(debug=False, secret_key=DEFAULT_SECRET_KEY, db_config=None) -> Fl
 
     Returns:
         app (Flask): flask application
-
     """
     app = Flask(__name__)
     app.debug = debug
@@ -106,7 +105,6 @@ def raise_grid(host: str, port: int, **kwargs):
         (tuple) tuple containing
             app (Flask): flask application
             server (pywsgi.WSGIServer): webserver
-
     """
     app = create_app(**kwargs)
     server = pywsgi.WSGIServer((host, port), app, handler_class=WebSocketHandler)

@@ -46,9 +46,9 @@ def register_node(message, socket):
 def forward(message, socket):
     """Forward message to a specific node.
 
-        Args:
-            message (dict): The message which contains the ID of the node to be forwarded to.
-            socket: Socket descriptor of the node to which the message is forwarded.
+    Args:
+        message (dict): The message which contains the ID of the node to be forwarded to.
+        socket: Socket descriptor of the node to which the message is forwarded.
     """
     try:
         time.sleep(1)

@@ -8,8 +8,7 @@ def app():
     BASEDIR = os.path.dirname(os.path.dirname(__file__))
     db_path = "sqlite:///" + BASEDIR + "/databaseGridNetwork.db"
 
-    yield create_app(debug=True,
-                      db_config={"SQLALCHEMY_DATABASE_URI": db_path})
+    yield create_app(debug=True, db_config={"SQLALCHEMY_DATABASE_URI": db_path})
 
     os.remove(BASEDIR + "/databaseGridNetwork.db")
 

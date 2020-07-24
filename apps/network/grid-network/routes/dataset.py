@@ -9,7 +9,8 @@ socket_handler = SocketHandler()
 
 @http.route("/datasets", methods=["GET"])
 def get_datasets():
-    """Return a response object with all the nodes in the network and their hosted datasets."""
+    """Return a response object with all the nodes in the network and their
+    hosted datasets."""
     try:
         response = {}
 

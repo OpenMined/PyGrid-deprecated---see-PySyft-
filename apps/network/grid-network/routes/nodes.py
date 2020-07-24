@@ -9,7 +9,8 @@ socket_handler = SocketHandler()
 
 @http.route("/node/<id>")
 def node_infos(id):
-    """Return a response object containing the information of a node with a given ID."""
+    """Return a response object containing the information of a node with a
+    given ID."""
     try:
         worker = socket_handler.get(id)
         response = {}
