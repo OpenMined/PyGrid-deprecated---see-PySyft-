@@ -7,7 +7,7 @@ from flask_executor import Executor
 from flask_migrate import Migrate
 from flask_sockets import Sockets
 from flask_sqlalchemy import SQLAlchemy
-from version import __version__
+from .version import __version__
 
 # Default secret key used only for testing / development
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
