@@ -27,12 +27,11 @@ jobs:
         python -m pip install --upgrade pip
         sudo apt-get update
         hash -r
-        pip3 install -r pip-dep/requirements.txt > build.log
+        pip3 install -r apps/node/requirements.txt > build.log
         pip3 install -r pip-dep/requirements_dev.txt > build.log
         pip3 install flake8
         pip3 install flake8-comprehensions
         pip3 install pep8-naming
-        python setup.py install
 
     - name: Lint with flake8
       run: |
@@ -49,7 +48,8 @@ jobs:
 
     - name: Test with pytest
       run: |
-        coverage run -m pytest -v test
+        cd apps/node/
+        coverage run -m pytest -v tests
 
   deploy:
     runs-on: ubuntu-latest
