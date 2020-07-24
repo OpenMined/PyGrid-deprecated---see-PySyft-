@@ -50,6 +50,8 @@ jobs:
       run: |
         cd apps/node/
         coverage run -m pytest -v tests
+        cd ../network/
+        coverage run -m pytest -v tests
 
   deploy:
     runs-on: ubuntu-latest
