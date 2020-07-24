@@ -58,9 +58,9 @@ It will download the latest openmined's docker images and start a grid platform 
 **PS:** Feel free to increase/decrease the number of initial PyGrid nodes ***(you can do this by changing the docker-compose.yml file)***.
 
 ### 1.3 - Build your own images (Optional)
+This will re-build `openmined/grid-gateway` image from the workspace and start gateway and node containers re-created from scratch.
 ```
-$ docker build -t openmined/grid-node ./app/websocket/  # Build PyGrid node image
-$ docker build -t openmined/grid-gateway ./gateway/  # Build gateway image
+$ docker-compose up --build --force-recreate
 ```
 
 
