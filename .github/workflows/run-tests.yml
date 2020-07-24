@@ -48,9 +48,14 @@ jobs:
 
     - name: Test with pytest
       run: |
+        # Run GridNode unit tests
         cd apps/node/
         coverage run -m pytest -v tests
+        # Run GridNetwork unit tests
         cd ../network/
+        coverage run -m pytest -v tests
+        # Run Integration tests
+        cd ../..
         coverage run -m pytest -v tests
 
   deploy:
