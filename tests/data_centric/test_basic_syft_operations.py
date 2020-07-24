@@ -1,7 +1,7 @@
 import time
 import unittest
 from random import randint, sample
-from test import IDS, PORTS, conftest, worker_ports
+from tests import IDS, PORTS, conftest, worker_ports
 
 import numpy as np
 import pytest

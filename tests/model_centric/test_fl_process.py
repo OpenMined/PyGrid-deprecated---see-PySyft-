@@ -1,6 +1,6 @@
 import binascii
 import json
-from test import GATEWAY_WS_URL
+from tests import GATEWAY_WS_URL
 from uuid import UUID
 
 import aiounittest
@@ -12,8 +12,8 @@ from torch import nn as nn
 from torch import optim as optim
 from torch.nn import functional as F
 
-from grid.app.main.sfl.models.model_manager import ModelManager
-from grid.app.main.sfl.syft_assets.plan_manager import PlanManager
+from apps.node.grid_node.app.main.sfl.models.model_manager import ModelManager
+from apps.node.grid_node.app.main.sfl.syft_assets.plan_manager import PlanManager
 
 hook = sy.TorchHook(th)
 

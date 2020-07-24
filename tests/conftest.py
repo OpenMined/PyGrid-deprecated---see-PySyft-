@@ -43,7 +43,7 @@ def init_pygrid_instances(node_infos):
 
     def setUpPyGrid(port, node_id):
         os.environ["SECRET_KEY"] = "Secretkeyhere"
-        from grid.app import create_app
+        from apps.node.grid_node.app import create_app
 
         db_path = "sqlite:///:memory:"
         app = create_app(
