@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from grid_network.routes import network
 
+
 @patch("grid_network.routes.network.network_manager")
 def test_choose_encrypted_model_host_value_error(mock_network_manager, client):
     """assert that the endpoint returns a 400 for value error."""

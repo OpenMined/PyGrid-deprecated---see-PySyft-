@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from grid_network.routes import network
 
+
 def test_delete_grid_node_bad_request_json(client):
     """assert that the endpoint returns a 400 for malformed JSON."""
     result = client.delete("/delete-node", data="{bad", content_type="application/json")

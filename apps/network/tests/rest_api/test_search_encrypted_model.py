@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from grid_network.routes import network
 
+
 @patch("grid_network.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_value_error(mock_network_manager, client):
     """assert that the endpoint returns a 400 for malformed JSON."""

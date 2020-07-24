@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from grid_network.routes import network
 
+
 @patch("grid_network.routes.network._get_model_hosting_nodes")
 def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, client):
     """assert that the endpoint returns a 400 for malformed JSON."""
@@ -29,4 +30,3 @@ def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client
 
     assert result.status_code == 500
     assert result.get_json().get("message") == "test"
-

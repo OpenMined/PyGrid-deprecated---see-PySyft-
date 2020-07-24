@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from grid_network.routes import network
 
+
 def test_join_grid_node_bad_request_json(client):
     """assert that the endpoint returns a 400 for malformed JSON."""
     result = client.post("/join", data="{bad", content_type="application/json")
@@ -26,8 +27,6 @@ def test_join_grid_node_already_registered(mock_network_manager, client):
 
     assert result.status_code == 409
     assert result.get_json().get("message") == "This ID has already been registered"
-
-
 
 
 @patch("grid_network.routes.network.network_manager")
