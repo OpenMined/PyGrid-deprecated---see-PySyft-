@@ -46,7 +46,7 @@ jobs:
 
     - name: Test Grid Network
       run: |
-        cd ../network/
+        cd ./apps/network/
 
         # Install dependencies
         poetry install
@@ -62,6 +62,7 @@ jobs:
 
     - name: Run Integration Tests
       run: |
+        cd ./apps/node/
         # Run Integration tests
         poetry run coverage run -m pytest -v ../../tests
 
