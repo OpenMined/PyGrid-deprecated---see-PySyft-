@@ -29,6 +29,7 @@ jobs:
         poetry_version: 1.0
         workdir: ./apps/node
         command: install
+
     - name: Install Grid Network dependencies
       uses: hericlesme/PyPoetry@master
       with:
@@ -36,40 +37,54 @@ jobs:
         poetry_version: 1.0
         workdir: ./apps/network
         command: install
+
     - name: Lint with flake8
-      run: |
-        python -m pip install --upgrade pip
-        sudo apt-get update
-        hash -r 
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: .
+        args: flake8 --config=.flake8 --exclude src/syft .
 
-        pip3 install flake8
-        pip3 install flake8-comprehensions
-        pip3 install pep8-naming
-        pip3 install black
-        pip3 install docformatter
-        pip3 install coverage pytest
-        # stop the build if there are Python syntax errors or undefined
-        # names
-        flake8 --config=.flake8 --exclude src/syft .
-        black --check --verbose --exclude src/syft .
-        docformatter --check --recursive .
-        # exit-zero treats all errors as warnings.
-        # diverting from the standard 79 character line length in
-        # accordance with this:
-        # https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds
-        flake8 . --count --exit-zero --statistics --select=E,F,W,C90
+    - name: Run Black
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: .
+        args: black --check --verbose --exclude src/syft .
 
-    - name: Test with pytest
-      run: |
-        # Run GridNode unit tests
-        cd apps/node/
-        coverage run -m pytest -v tests
-        # Run GridNetwork unit tests
-        cd ../network/
-        coverage run -m pytest -v tests
-        # Run Integration tests
-        cd ../..
-        coverage run -m pytest -v tests
+    - name: Run Docformatter
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: .
+        args: docformatter --check --recursive .
+
+    - name: Grid Node unit tests
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: ./apps/node
+        args: coverage run -m pytest -v tests
+
+    - name: Grid Network unit tests
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: ./apps/network
+        args: coverage run -m pytest -v tests
+
+    - name: Integration tests
+      uses: abatilo/actions-poetry@v1.8.1
+      with:
+        python_version: ${{ matrix.python-version }}
+        poetry_version: 1.0
+        working_directory: .
+        args: coverage run -m pytest -v tests
 
   deploy:
     runs-on: ubuntu-latest
