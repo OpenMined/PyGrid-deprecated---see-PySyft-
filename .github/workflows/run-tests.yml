@@ -23,68 +23,64 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Grid Node dependencies 
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/node
-        args: install
+        working_directory: apps/node
+        command: install
 
     - name: Install Grid Network dependencies
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/network
-        args: install
+        working_directory: apps/network
+        command: install
 
     - name: Lint with flake8
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: .
-        args: flake8 --config=.flake8 --exclude src/syft .
+        command: run flake8 --config=.flake8 --exclude src/syft .
 
     - name: Run Black
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: .
-        args: black --check --verbose --exclude src/syft .
+        command: run black --check --verbose --exclude src/syft .
 
     - name: Run Docformatter
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: .
-        args: docformatter --check --recursive .
+        command: run docformatter --check --recursive .
 
     - name: Grid Node unit tests
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/node
-        args: coverage run -m pytest -v tests
+        working_directory: apps/node
+        command: run coverage run -m pytest -v tests
 
     - name: Grid Network unit tests
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/network
-        args: coverage run -m pytest -v tests
+        working_directory: apps/network
+        command: run coverage run -m pytest -v tests
 
     - name: Integration tests
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@0.0.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: .
-        args: coverage run -m pytest -v tests
+        command: run coverage run -m pytest -v tests
 
   deploy:
     runs-on: ubuntu-latest
