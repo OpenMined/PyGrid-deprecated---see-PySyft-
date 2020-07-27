@@ -27,16 +27,16 @@ jobs:
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        workdir: ./apps/node
-        command: install
+        working_directory: ./apps/node
+        args: install
 
     - name: Install Grid Network dependencies
       uses: abatilo/actions-poetry@v1.8.1
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        workdir: ./apps/network
-        command: install
+        working_directory: ./apps/network
+        args: install
 
     - name: Lint with flake8
       uses: abatilo/actions-poetry@v1.8.1
