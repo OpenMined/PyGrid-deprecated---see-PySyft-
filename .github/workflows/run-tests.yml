@@ -47,7 +47,7 @@ jobs:
         pip3 install pep8-naming
         pip3 install black
         pip3 install docformatter
-
+        pip3 install coverage pytest
         # stop the build if there are Python syntax errors or undefined
         # names
         flake8 --config=.flake8 --exclude src/syft .
