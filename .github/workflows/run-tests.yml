@@ -35,8 +35,17 @@ jobs:
         # Install dependencies
         poetry install
 
+        #Flake check
+        poetry run flake8 --config=.flake8 .
+
+        #Run black
+        poetry run black --check --verbose --exclude src/syft .
+
+        # Run docformatter
+        poetry run docformatter --check --recursive .
+
         # Run unit tests
-        coverage run -m pytest -v tests
+        poetry run coverage run -m pytest -v tests
 
     - name: Test Grid Network
       run: |
@@ -45,24 +54,22 @@ jobs:
         # Install dependencies
         poetry install
 
+        #Flake check
+        poetry run flake8 --config=.flake8 .
+
+        #Run black
+        poetry run black --check --verbose --exclude src/syft .
+
+        # Run docformatter
+        poetry run docformatter --check --recursive .
+
         # Run unit tests
-        coverage run -m pytest -v tests
+        poetry run coverage run -m pytest -v tests
 
     - name: Run Integration Tests
       run: |
-        cd ../..
-
-        #Flake check
-        flake8 --config=.flake8 .
-
-        #Run black
-        black --check --verbose --exclude src/syft .
-        
-        # Run docformatter
-        docformatter --check --recursive .
-
         # Run Integration tests
-        coverage run -m pytest -v tests
+        poetry run coverage run -m pytest -v ../../tests
 
   deploy:
     runs-on: ubuntu-latest
