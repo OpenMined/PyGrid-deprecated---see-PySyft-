@@ -27,7 +27,7 @@ jobs:
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: apps/node
+        workdir: apps/node
         command: install
 
     - name: Install Grid Network dependencies
@@ -35,7 +35,7 @@ jobs:
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: apps/network
+        workdir: apps/network
         command: install
 
     - name: Lint with flake8
@@ -64,7 +64,7 @@ jobs:
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: apps/node
+        workdir: apps/node
         command: run coverage run -m pytest -v tests
 
     - name: Grid Network unit tests
@@ -72,7 +72,7 @@ jobs:
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: apps/network
+        workdir: apps/network
         command: run coverage run -m pytest -v tests
 
     - name: Integration tests
