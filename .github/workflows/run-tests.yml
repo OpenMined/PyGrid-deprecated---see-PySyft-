@@ -30,7 +30,7 @@ jobs:
 
     - name: Test Grid Node
       run: |
-        cd /apps/node
+        cd ./apps/node/
         
         # Install dependencies
         poetry install
@@ -40,7 +40,7 @@ jobs:
 
     - name: Test Grid Network
       run: |
-        cd ../network
+        cd ../network/
 
         # Install dependencies
         poetry install
