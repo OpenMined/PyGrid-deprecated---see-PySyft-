@@ -23,21 +23,28 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Grid Node dependencies 
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@master
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/node
+        workdir: ./apps/node
         args: install
     - name: Install Grid Network dependencies
-      uses: abatilo/actions-poetry@v1.8.1
+      uses: hericlesme/PyPoetry@master
       with:
         python_version: ${{ matrix.python-version }}
         poetry_version: 1.0
-        working_directory: ./apps/network
+        workdir: ./apps/network
         args: install
     - name: Lint with flake8
       run: |
+        python -m pip install --upgrade pip
+        sudo apt-get update
+        hash -r 
+
+        pip3 install flake8
+        pip3 install flake8-comprehensions
+        pip3 install pep8-naming
         # stop the build if there are Python syntax errors or undefined
         # names
         flake8 --config=.flake8 --exclude src/syft .
