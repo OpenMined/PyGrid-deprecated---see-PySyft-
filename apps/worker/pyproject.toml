@@ -1,8 +1,9 @@
 [tool.poetry]
-name = "openmined.worker"
+name = "openmined.gridworker"
 version = "0.1.0"
 description = "PyGrid Worker"
-authors = ["Ionesio Junior <ionesiojr@gmail.com>"]
+authors = ["OpenMined <contact@openmined.org>"]
+license = "Apache-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"

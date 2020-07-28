@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "openmined.network"
+name = "openmined.gridnetwork"
 version = "0.1.0"
 description = "PyGrid Network"
-authors = ["Your Name <you@example.com>"]
+authors = ["OpenMined <contact@openmined.org>"]
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
@@ -16,8 +16,6 @@ requests = "^2.24.0"
 idna = "^2.10"
 Flask-SQLAlchemy = "^2.4.4"
 Flask-Migrate = "^2.5.3"
-
-
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

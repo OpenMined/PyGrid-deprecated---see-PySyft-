@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "openmined.node"
+name = "openmined.gridnode"
 version = "0.1.0"
-description = "PyGridNode"
-authors = ["Your Name <you@example.com>"]
+description = "PyGrid Node"
+authors = ["OpenMined <contact@openmined.org>"]
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
@@ -24,7 +24,6 @@ psycopg2-binary = "^2.8.5"
 requests-toolbelt = "^0.9.1"
 syft = "^0.2.7"
 redis = "^3.5.3"
-
 
 [tool.poetry.dev-dependencies]
 aiounittest = "^1.4.0"
