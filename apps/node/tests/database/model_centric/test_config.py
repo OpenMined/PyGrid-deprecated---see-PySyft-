@@ -5,7 +5,7 @@ from . import BIG_INT
 from .presets.config import configs
 
 from random import randint
-from grid_node.app.main.sfl.processes.config import Config
+from src.app.main.sfl.processes.config import Config
 
 sys.path.append(".")
 

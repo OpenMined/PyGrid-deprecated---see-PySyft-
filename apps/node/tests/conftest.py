@@ -1,7 +1,7 @@
 import pytest
 
-from grid_node.app.main import db, BaseModel
-from grid_node.app import create_app
+from src.app.main import db, BaseModel
+from src.app import create_app
 
 
 @pytest.fixture(scope="function", autouse=True)

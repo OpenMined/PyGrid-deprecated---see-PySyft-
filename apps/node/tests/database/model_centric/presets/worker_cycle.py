@@ -2,7 +2,7 @@ from random import randint
 
 from .. import BIG_INT
 
-from grid_node.app.main.sfl.workers.worker import Worker
+from src.app.main.sfl.workers.worker import Worker
 
 WORKERS = [
     Worker(

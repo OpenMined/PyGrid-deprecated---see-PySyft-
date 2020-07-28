@@ -15,7 +15,7 @@ from .presets.fl_process import (
 
 from random import randint
 
-from grid_node.app.main.sfl.processes.fl_process import FLProcess
+from src.app.main.sfl.processes.fl_process import FLProcess
 
 
 sys.path.append(".")

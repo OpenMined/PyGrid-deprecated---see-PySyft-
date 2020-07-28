@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
-from grid_network.routes import network
+from src.routes import network
 
 
-@patch("grid_network.routes.network._get_model_hosting_nodes")
+@patch("src.routes.network._get_model_hosting_nodes")
 def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, client):
     """assert that the endpoint returns a 400 for malformed JSON."""
     mock_get_model_hosting_nodes.side_effect = ValueError()
@@ -20,7 +20,7 @@ def test_search_model_bad_request_key_error(client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid_network.routes.network._get_model_hosting_nodes")
+@patch("src.routes.network._get_model_hosting_nodes")
 def test_search_model_internal_server_error(mock_get_model_hosting_nodes, client):
     """assert that the endpoint returns a 500 for an unknown error
     condition."""

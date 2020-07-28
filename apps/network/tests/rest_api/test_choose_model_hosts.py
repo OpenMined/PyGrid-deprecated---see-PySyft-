@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
-from grid_network.routes import network
+from src.routes import network
 
 
-@patch("grid_network.routes.network.network_manager")
+@patch("src.routes.network.network_manager")
 def test_choose_encrypted_model_host_value_error(mock_network_manager, client):
     """assert that the endpoint returns a 400 for value error."""
     mock_network_manager.connected_nodes.return_value = {}
@@ -14,7 +14,7 @@ def test_choose_encrypted_model_host_value_error(mock_network_manager, client):
     assert len(result.get_json()) == 0
 
 
-@patch("grid_network.routes.network.network_manager")
+@patch("src.routes.network.network_manager")
 def test_choose_encrypted_model_host_internal_server_error(
     mock_network_manager, client
 ):

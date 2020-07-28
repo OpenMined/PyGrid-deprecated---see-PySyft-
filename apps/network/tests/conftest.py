@@ -1,6 +1,6 @@
 import pytest
 import os
-from grid_network import create_app
+from src import create_app
 
 
 @pytest.fixture(scope="function", autouse=True)

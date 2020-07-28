@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from grid_network.routes import network
+from src.routes import network
 
 
 def test_delete_grid_node_bad_request_json(client):
@@ -17,7 +17,7 @@ def test_delete_grid_node_bad_request_key_error(client):
     assert result.get_json().get("message") == ("Invalid JSON format.")
 
 
-@patch("grid_network.routes.network.network_manager")
+@patch("src.routes.network.network_manager")
 def test_delete_grid_node_not_registered(mock_network_manager, client):
     """assert that the endpoint returns a 400 for a node not yet registered."""
     mock_network_manager.delete_node.return_value = False
@@ -32,7 +32,7 @@ def test_delete_grid_node_not_registered(mock_network_manager, client):
     )
 
 
-@patch("grid_network.routes.network.network_manager")
+@patch("src.routes.network.network_manager")
 def test_delete_grid_node_internal_server_error(mock_network_manager, client):
     """assert that the endpoint returns a 500 for an unknown error
     condition."""

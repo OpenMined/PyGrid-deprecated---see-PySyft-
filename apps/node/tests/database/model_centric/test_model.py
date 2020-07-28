@@ -5,7 +5,7 @@ from . import BIG_INT
 from .presets.model import MODEL_ATTRIBUTES
 
 from random import randint
-from grid_node.app.main.sfl.models.ai_model import Model, ModelCheckPoint
+from src.app.main.sfl.models.ai_model import Model, ModelCheckPoint
 
 sys.path.append(".")
 

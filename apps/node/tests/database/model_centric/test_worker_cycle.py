@@ -17,8 +17,8 @@ from .presets.worker_cycle import WORKERS
 
 from random import randint
 
-from grid_node.app.main.sfl.processes.fl_process import FLProcess
-from grid_node.app.main.sfl.cycles.worker_cycle import WorkerCycle
+from src.app.main.sfl.processes.fl_process import FLProcess
+from src.app.main.sfl.cycles.worker_cycle import WorkerCycle
 
 sys.path.append(".")
 

@@ -5,7 +5,7 @@ from . import BIG_INT
 from .presets.worker import worker_metrics
 
 from random import randint
-from grid_node.app.main.sfl.workers.worker import Worker
+from src.app.main.sfl.workers.worker import Worker
 
 sys.path.append(".")
 

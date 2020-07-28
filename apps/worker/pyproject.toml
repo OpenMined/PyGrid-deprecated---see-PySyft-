@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "PyGrid Worker"
 authors = ["OpenMined <contact@openmined.org>"]
 license = "Apache-2.0"
+packages = [{ include = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.7"
