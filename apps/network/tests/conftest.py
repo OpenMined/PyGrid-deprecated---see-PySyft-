@@ -1,5 +1,5 @@
 import pytest
-import os
+
 from ..src import create_app
 
 

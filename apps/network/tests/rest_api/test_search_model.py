@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from src.routes import network
-
 
 @patch("src.routes.network._get_model_hosting_nodes")
 def test_search_model_bad_request_value_error(mock_get_model_hosting_nodes, client):

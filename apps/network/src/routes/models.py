@@ -1,8 +1,9 @@
-from .. import http
-from ..events import SocketHandler
+import json
 
 from flask import Response
-import json
+
+from .. import http
+from ..events import SocketHandler
 
 socket_handler = SocketHandler()
 

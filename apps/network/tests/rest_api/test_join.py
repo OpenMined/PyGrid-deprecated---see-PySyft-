@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from src.routes import network
-
 
 def test_join_grid_node_bad_request_json(client):
     """assert that the endpoint returns a 400 for malformed JSON."""

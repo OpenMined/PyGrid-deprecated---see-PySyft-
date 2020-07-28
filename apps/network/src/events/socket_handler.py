@@ -1,7 +1,5 @@
-import queue
-
-from ..workers import Worker
 from ..codes import WORKER_PROPERTIES
+from ..workers import Worker
 
 
 class Singleton(type):

@@ -1,8 +1,10 @@
-from .. import http
-from ..events.socket_handler import SocketHandler
-from ..codes import MSG_FIELD
-from flask import Response
 import json
+
+from flask import Response
+
+from .. import http
+from ..codes import MSG_FIELD
+from ..events.socket_handler import SocketHandler
 
 socket_handler = SocketHandler()
 

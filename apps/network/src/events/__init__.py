@@ -1,9 +1,9 @@
-from .. import ws
-from ..codes import MSG_FIELD, GRID_EVENTS
-
-from .socket_handler import SocketHandler
-from .network import *
 import json
+
+from .. import ws
+from ..codes import GRID_EVENTS
+from .network import *
+from .socket_handler import SocketHandler
 
 socket_handler = SocketHandler()
 
