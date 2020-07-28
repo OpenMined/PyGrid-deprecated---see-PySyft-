@@ -3,7 +3,7 @@ name: Run tests
 on:
   push:
     branches:
-      - master
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -17,7 +17,7 @@ jobs:
         if: github.event.pull_request.merged
         uses: actions/checkout@v1
         with:
-          ref: master
+          ref: dev
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
       - name: Build images
