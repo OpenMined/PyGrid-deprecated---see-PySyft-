@@ -37,25 +37,23 @@ def node_infos():
     return zip(IDS, PORTS)
 
 
+def setUpPyGrid(port, node_id):
+    os.environ["SECRET_KEY"] = "Secretkeyhere"
+    from apps.node.src.app import create_app
+
+    db_path = "sqlite:///:memory:"
+    app = create_app(
+        debug=True,
+        node_id=node_id,
+        n_replica=1,
+        test_config={"SQLALCHEMY_DATABASE_URI": db_path},
+    )
+
+    server = pywsgi.WSGIServer(("", int(port)), app, handler_class=WebSocketHandler)
+    server.serve_forever()
+
 @pytest.fixture(scope="session", autouse=True)
 def init_pygrid_instances(node_infos):
-    BASEDIR = os.path.dirname(os.path.dirname(__file__))
-
-    def setUpPyGrid(port, node_id):
-        os.environ["SECRET_KEY"] = "Secretkeyhere"
-        from apps.node.src.app import create_app
-
-        db_path = "sqlite:///:memory:"
-        app = create_app(
-            debug=True,
-            node_id=node_id,
-            n_replica=1,
-            test_config={"SQLALCHEMY_DATABASE_URI": db_path},
-        )
-
-        server = pywsgi.WSGIServer(("", int(port)), app, handler_class=WebSocketHandler)
-        server.serve_forever()
-
     jobs = []
 
     # Init Grid Nodes

@@ -1,3 +1,5 @@
+#!/bin/env python
+
 """Run webserver."""
 
 import argparse
