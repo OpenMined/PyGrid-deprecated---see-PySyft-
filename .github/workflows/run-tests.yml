@@ -3,6 +3,7 @@ name: Run tests
 on:
   push:
     branches:
+      - master
       - dev
   pull_request:
     types: [opened, synchronize, reopened]
@@ -97,8 +98,8 @@ jobs:
       - name: Build images
         run: |
           sudo apt install gcc
-          docker build . --file ./app/websocket/Dockerfile --tag openmined/grid-node:latest
-          docker build . --file ./gateway/Dockerfile --tag openmined/grid-gateway:latest
+          docker build . --file ./apps/node/Dockerfile --tag openmined/grid-node:latest
+          docker build . --file ./apps/network/Dockerfile --tag openmined/grid-gateway:latest
       - name: Push images
         run: |
           docker push openmined/grid-node:latest
