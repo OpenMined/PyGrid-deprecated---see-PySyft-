@@ -91,7 +91,7 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
 
     # Register app blueprints
     app.register_blueprint(main, url_prefix=r"/")
-    app.register_blueprint(model_centric, url_prefix=r"/model_centric")
+    app.register_blueprint(model_centric, url_prefix=r"/model-centric")
     app.register_blueprint(data_centric, url_prefix=r"/data_centric")
 
     sockets.register_blueprint(ws, url_prefix=r"/")
