@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from src.routes import network
-
 
 @patch("src.routes.network.network_manager")
 def test_choose_encrypted_model_host_value_error(mock_network_manager, client):

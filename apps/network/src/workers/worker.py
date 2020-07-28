@@ -1,10 +1,10 @@
-import time
 import json
-import requests
 import re
-import asyncio
+import time
 
-from ..codes import MSG_FIELD, GRID_EVENTS, NODE_EVENTS, WORKER_PROPERTIES
+import requests
+
+from ..codes import MSG_FIELD, NODE_EVENTS, WORKER_PROPERTIES
 from ..utils.wrappers import threaded
 
 
@@ -13,10 +13,10 @@ class Worker(object):
 
     def __init__(self, id: str, socket):
         """
-        Args:
-            id: ID of the worker.
-            socket: Socket descriptor used to send/receive messages.
-        """
+    Args:
+        id: ID of the worker.
+        socket: Socket descriptor used to send/receive messages.
+    """
         self._id = id
         self._socket = socket
         self._ping = 0

@@ -1,14 +1,15 @@
 # PyGrid imports
-from .. import http
-from ..network import network_manager
+import json
 
 # General imports
 import os
-import json
 import random
-import requests
-from flask import render_template, Response, request, current_app, send_file
 
+import requests
+from flask import Response, current_app, request
+
+from .. import http
+from ..network import network_manager
 
 # Store all grid nodes that are registered in the grid network
 grid_nodes = {}

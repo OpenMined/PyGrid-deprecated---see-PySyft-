@@ -1,9 +1,9 @@
-import threading
 import json
+import threading
 import time
 
-from .socket_handler import SocketHandler
 from ..codes import MSG_FIELD
+from .socket_handler import SocketHandler
 
 socket_handler = SocketHandler()
 

@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from src.routes import network
-
 
 @patch("src.routes.network.network_manager")
 def test_search_encrypted_model_bad_request_value_error(mock_network_manager, client):

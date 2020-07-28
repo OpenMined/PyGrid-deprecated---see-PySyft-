@@ -1,4 +1,4 @@
-from .nodes import db, GridNodes
+from .nodes import GridNodes, db
 
 
 class NetworkManager:
