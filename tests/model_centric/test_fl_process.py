@@ -1,6 +1,6 @@
 import binascii
 import json
-from tests import GATEWAY_WS_URL
+from tests import NETWORK_WS_URL
 from uuid import UUID
 
 import aiounittest
@@ -22,7 +22,7 @@ hook = sy.TorchHook(th)
 
 async def send_ws_message(data):
     try:
-        async with websockets.connect(GATEWAY_WS_URL) as websocket:
+        async with websockets.connect(NETWORK_WS_URL) as websocket:
             await websocket.send(json.dumps(data))
             message = await websocket.recv()
             if message:

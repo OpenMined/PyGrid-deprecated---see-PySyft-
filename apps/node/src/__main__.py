@@ -1,6 +1,6 @@
 #!/bin/env python
 
-"""Grid Gateway is a Flask based application used to manage / monitor / control
+"""Grid Network is a Flask based application used to manage / monitor / control
 and route grid workers remotely."""
 
 import argparse
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.start_local_db:
-        db_path = "sqlite:///databaseGateway.db"
+        db_path = "sqlite:///databasenetwork.db"
         app = create_app(
             node_id=args.id,
             debug=False,

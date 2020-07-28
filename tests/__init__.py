@@ -1,6 +1,6 @@
-GATEWAY_PORT = "3003"
-GATEWAY_URL = "http://localhost:{}".format(GATEWAY_PORT)
-GATEWAY_WS_URL = "ws://localhost:{}".format(GATEWAY_PORT)
+NETWORK_PORT = "3003"
+NETWORK_URL = "http://localhost:{}".format(NETWORK_PORT)
+NETWORK_WS_URL = "ws://localhost:{}".format(NETWORK_PORT)
 
 PORTS = ["3000", "3001", "3002", "3003"]
 IDS = ["bob", "alice", "james", "dan"]

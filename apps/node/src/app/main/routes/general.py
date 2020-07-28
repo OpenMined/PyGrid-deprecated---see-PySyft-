@@ -1,4 +1,4 @@
-"""All Gateway routes (REST API)."""
+"""All Network routes (REST API)."""
 from flask import render_template
 
 from .. import main

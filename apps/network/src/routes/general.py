@@ -1,4 +1,4 @@
-"""All Gateway routes (REST API)."""
+"""All Network routes (REST API)."""
 from .. import http
 
 

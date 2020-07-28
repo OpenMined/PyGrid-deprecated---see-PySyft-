@@ -13,7 +13,7 @@ from geventwebsocket.handler import WebSocketHandler
 from syft.grid.clients.dynamic_fl_client import DynamicFLClient
 from syft.grid.public_grid import PublicGridNetwork
 
-from . import GATEWAY_PORT, GATEWAY_URL, IDS, PORTS
+from . import NETWORK_PORT, NETWORK_URL, IDS, PORTS
 
 
 @pytest.fixture()

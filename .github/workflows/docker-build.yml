@@ -16,7 +16,7 @@ jobs:
         if: github.repository == 'OpenMined/PyGrid'
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: openmined/grid-gateway
+          name: openmined/grid-network
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           cache: ${{ github.event_name != 'schedule' }}
