@@ -2,7 +2,7 @@ import pytest
 import sys
 from . import BIG_INT
 from random import randint
-from grid_node.app.main.sfl.syft_assets.plan import Plan
+from src.app.main.sfl.syft_assets.plan import Plan
 
 
 sys.path.append(".")

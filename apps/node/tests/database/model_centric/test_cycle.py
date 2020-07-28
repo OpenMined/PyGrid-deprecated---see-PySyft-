@@ -5,7 +5,7 @@ from . import BIG_INT
 from .presets.cycle import CYCLE_ATTRIBUTES
 
 from random import randint
-from grid_node.app.main.sfl.cycles.cycle import Cycle
+from src.app.main.sfl.cycles.cycle import Cycle
 
 sys.path.append(".")
 

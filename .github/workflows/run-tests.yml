@@ -3,13 +3,12 @@ name: Run tests
 on:
   push:
     branches:
-    - dev
+      - dev
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -17,54 +16,55 @@ jobs:
         python-version: [3.7]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install Poetry
-      run: |
-        pip install --upgrade pip
-        pip install poetry==1.0
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Test Grid Node
-      run: |
-        cd ./apps/node/
-        
-        # Install dependencies
-        poetry install
+      - name: Install Poetry
+        run: |
+          pip install --upgrade pip
+          pip install poetry==1.0
 
-        #Run black
-        poetry run black --check --verbose --exclude src/syft .
+      - name: Test Grid Node
+        run: |
+          cd ./apps/node/
 
-        # Run docformatter
-        poetry run docformatter --check --recursive .
+          # Install dependencies
+          poetry install
 
-        # Run unit tests
-        poetry run coverage run -m pytest -v tests
+          # Run black
+          poetry run black --check --verbose --exclude src/syft .
 
-    - name: Test Grid Network
-      run: |
-        cd ./apps/network/
+          # Run docformatter
+          poetry run docformatter --check --recursive .
 
-        # Install dependencies
-        poetry install
+          # Run unit tests
+          poetry run coverage run -m pytest -v tests
 
-        #Run black
-        poetry run black --check --verbose --exclude src/syft .
+      - name: Test Grid Network
+        run: |
+          cd ./apps/network/
 
-        # Run docformatter
-        poetry run docformatter --check --recursive .
+          # Install dependencies
+          poetry install
 
-        # Run unit tests
-        poetry run coverage run -m pytest -v tests
+          # Run black
+          poetry run black --check --verbose --exclude src/syft .
 
-    - name: Run Integration Tests
-      run: |
-        cd ./apps/node/
-        # Run Integration tests
-        poetry run coverage run -m pytest -v ../../tests
+          # Run docformatter
+          poetry run docformatter --check --recursive .
+
+          # Run unit tests
+          poetry run coverage run -m pytest -v tests
+
+      - name: Run Integration Tests
+        run: |
+          cd ./apps/node/
+
+          # Run Integration tests
+          poetry run coverage run -m pytest -v ../../tests
 
   deploy:
     runs-on: ubuntu-latest
