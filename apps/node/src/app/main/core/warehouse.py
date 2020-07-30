@@ -1,8 +1,7 @@
 # PyGrid imports
 # Generic imports
+from apps.node.src.app.main import db
 from sqlalchemy import func
-
-from .. import db
 
 
 class Warehouse:
