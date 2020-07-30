@@ -28,3 +28,6 @@ test_flask_grid_server.db
 # Sphinx documentation
 docs/_build/
 
+# Terraform
+.terraform
+terraform.tfvars
