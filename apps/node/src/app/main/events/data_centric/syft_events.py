@@ -3,8 +3,9 @@ import json
 
 # External imports
 import syft as sy
-from flask_login import current_user
 from syft.exceptions import GetNotPermittedError
+
+from flask_login import current_user
 
 # Local imports
 from ... import hook, local_worker

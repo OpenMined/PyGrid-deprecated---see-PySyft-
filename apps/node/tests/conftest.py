@@ -1,7 +1,6 @@
 import pytest
-
-from src.app.main import db, BaseModel
 from src.app import create_app
+from src.app.main import BaseModel, db
 
 
 @pytest.fixture(scope="function", autouse=True)

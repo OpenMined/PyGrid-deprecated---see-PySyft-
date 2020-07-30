@@ -7,9 +7,10 @@ import sys
 
 import syft as sy
 from flask import Response, render_template, request, send_from_directory
-from flask_cors import cross_origin
 from syft.codes import RESPONSE_MSG
 from syft.grid.clients.data_centric_fl_client import DataCentricFLClient
+
+from flask_cors import cross_origin
 
 from ... import data_centric_routes, local_worker
 from ...core.codes import MSG_FIELD

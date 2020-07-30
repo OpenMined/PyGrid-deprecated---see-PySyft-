@@ -4,9 +4,10 @@ import json
 import logging
 import uuid
 
+import requests
+
 # Generic imports
 import jwt
-import requests
 
 from ...core.codes import CYCLE, MODEL_CENTRIC_FL_EVENTS, MSG_FIELD, RESPONSE_MSG
 from ..processes import process_manager

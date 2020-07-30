@@ -1,10 +1,11 @@
 # Standard python
 import json
 
-# External modules
-from flask_login import login_user
 from syft.codes import RESPONSE_MSG
 from syft.grid.clients.data_centric_fl_client import DataCentricFLClient
+
+# External modules
+from flask_login import login_user
 
 from ... import hook, local_worker, sy
 
