@@ -4,7 +4,7 @@ from .. import db
 class Role(db.Model):
     __tablename__ = "role"
 
-    id = db.Column(db.String(), primary_key=True)
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String())
     can_edit_settings = db.Column(db.Boolean())
     can_create_users = db.Column(db.Boolean())

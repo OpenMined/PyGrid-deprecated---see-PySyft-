@@ -67,7 +67,6 @@ def seed_db():
     """Adds Administrator and Owner Roles to database."""
     global db
     new_user = Role(
-        id=1,
         name="Administrator",
         can_edit_settings=False,
         can_create_users=False,
@@ -76,7 +75,6 @@ def seed_db():
     )
     db.session.add(new_user)
     new_user = Role(
-        id=2,
         name="Owner",
         can_edit_settings=True,
         can_create_users=True,

@@ -3,11 +3,8 @@ from random import randint
 
 import pytest
 
-from . import BIG_INT
 from src.users.role import Role
 from .presets.role import role_metrics
-
-sys.path.append(".")
 
 
 @pytest.mark.parametrize(
@@ -23,7 +20,6 @@ def test_create_role_object(
     database,
 ):
     role = Role(
-        id=randint(0, BIG_INT),
         name=name,
         can_edit_settings=can_edit_settings,
         can_create_users=can_create_users,
