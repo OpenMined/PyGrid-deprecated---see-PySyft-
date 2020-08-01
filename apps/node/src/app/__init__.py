@@ -19,12 +19,15 @@ db = SQLAlchemy()
 executor = Executor()
 logging.getLogger().setLevel(logging.INFO)
 
+
 class BaseModel(db.Model, AllFeaturesMixin):
     __abstract__ = True
     pass
 
+
 # Tables must be created after db has been created
 from .main.users import Role
+
 
 def set_database_config(app, test_config=None, verbose=False):
     """Set configs to use SQL Alchemy library.
@@ -65,51 +68,50 @@ def set_database_config(app, test_config=None, verbose=False):
 
 def seed_db():
     global db
-    
-    new_role = Role(
-      name="User",
-      can_triage_jobs=False,
-      can_edit_settings=False,
-      can_create_users=False,
-      can_create_groups=False,
-      can_edit_roles=False,
-      can_manage_infrastructure=False
-    )
-    db.session.add(new_role) 
-    
-    new_role = Role(
-      name="Compliance Officer",
-      can_triage_jobs=True,
-      can_edit_settings=False,
-      can_create_users=False,
-      can_create_groups=False,
-      can_edit_roles=False,
-      can_manage_infrastructure=False
-    )
-    db.session.add(new_role)
- 
-    new_role = Role(
-      name="Administrator",
-      can_triage_jobs=True,
-      can_edit_settings=True,
-      can_create_users=True,
-      can_create_groups=True,
-      can_edit_roles=False,
-      can_manage_infrastructure=False
-    )
-    db.session.add(new_role)
- 
-    new_role = Role(
-      name="Owner",
-      can_triage_jobs=True,
-      can_edit_settings=True,
-      can_create_users=True,
-      can_create_groups=True,
-      can_edit_roles=True,
-      can_manage_infrastructure=True
-    )
-    db.session.add(new_role) 
 
+    new_role = Role(
+        name="User",
+        can_triage_jobs=False,
+        can_edit_settings=False,
+        can_create_users=False,
+        can_create_groups=False,
+        can_edit_roles=False,
+        can_manage_infrastructure=False,
+    )
+    db.session.add(new_role)
+
+    new_role = Role(
+        name="Compliance Officer",
+        can_triage_jobs=True,
+        can_edit_settings=False,
+        can_create_users=False,
+        can_create_groups=False,
+        can_edit_roles=False,
+        can_manage_infrastructure=False,
+    )
+    db.session.add(new_role)
+
+    new_role = Role(
+        name="Administrator",
+        can_triage_jobs=True,
+        can_edit_settings=True,
+        can_create_users=True,
+        can_create_groups=True,
+        can_edit_roles=False,
+        can_manage_infrastructure=False,
+    )
+    db.session.add(new_role)
+
+    new_role = Role(
+        name="Owner",
+        can_triage_jobs=True,
+        can_edit_settings=True,
+        can_create_users=True,
+        can_create_groups=True,
+        can_edit_roles=True,
+        can_manage_infrastructure=True,
+    )
+    db.session.add(new_role)
 
 
 def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> Flask:
