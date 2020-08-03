@@ -11,8 +11,4 @@ class User(db.Model):
     role = db.Column(db.Integer, db.ForeignKey("role.id"))
 
     def __str__(self):
-        return (
-            f"<User id: {self.id}, email: {self.email}, "
-            f"hashed_password: {self.hashed_password}, "
-            f"salt: {self.salt}, role: {self.role}>"
-        )
+        return f"<User id: {self.id}, email: {self.email}, role: {self.role}>"
