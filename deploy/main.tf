@@ -9,7 +9,7 @@ provider "aws" {
 
 # Create Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block       = "10.0.0.0/16"  #TODO: Move it to variables.tf
   instance_tenancy = "default"
 
   tags = {
@@ -48,7 +48,7 @@ resource "aws_route_table" "route-table" {
 # Create subnet for webservers
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = "10.0.1.0/24"  #TODO: Move it to variables.tf
 
   tags = {
     Name = "main-subnet"
@@ -120,9 +120,9 @@ resource "aws_eip" "one" {
 }
 
 resource "aws_instance" "webserver-instance" {
-  ami           = "ami-00f6a0c18edb19300"
+  ami           = var.amis[var.aws_region]
   instance_type = "t2.micro"
-  key_name      = "openmined_pygrid"
+  # key_name      = "openmined_pygrid"
 
   network_interface {
     device_index         = 0
