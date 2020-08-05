@@ -1,5 +1,1 @@
-group_metrics = [
-    ("SysAdmins"),
-    ("Data Analysts"),
-    ("Hardware Owners")
-]
+group_metrics = [("SysAdmins"), ("Data Analysts"), ("Hardware Owners")]

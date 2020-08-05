@@ -9,4 +9,3 @@ class Group(BaseModel):
 
     def __str__(self):
         return f"<Group id: {self.id}, name: {self.name}>"
-
