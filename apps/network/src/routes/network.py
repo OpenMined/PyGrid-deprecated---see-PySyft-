@@ -168,7 +168,7 @@ def search_encrypted_model():
         for node in grid_nodes:
             try:
                 response = requests.post(
-                    os.path.join(grid_nodes[node], "search-encrypted-models"),
+                    os.path.join(grid_nodes[node], "/data-centric/search-encrypted-models"),
                     data=request.data,
                 )
             except requests.exceptions.ConnectionError:
@@ -232,7 +232,7 @@ def available_models():
     models = set()
     for node in grid_nodes:
         try:
-            response = requests.get(grid_nodes[node] + "/models/").content
+            response = requests.get(grid_nodes[node] + "/data-centric/models/").content
         except requests.exceptions.ConnectionError:
             continue
         response = json.loads(response)
@@ -249,7 +249,7 @@ def available_tags():
     tags = set()
     for node in grid_nodes:
         try:
-            response = requests.get(grid_nodes[node] + "/dataset-tags").content
+            response = requests.get(grid_nodes[node] + "/data-centric/dataset-tags").content
         except requests.exceptions.ConnectionError:
             continue
         response = json.loads(response)
@@ -276,7 +276,7 @@ def search_dataset_tags():
         for node in grid_nodes:
             try:
                 response = requests.post(
-                    grid_nodes[node] + "/search",
+                    grid_nodes[node] + "/data-centric/search",
                     data=json.dumps({"query": body["query"]}),
                 ).content
             except requests.exceptions.ConnectionError:
@@ -296,7 +296,8 @@ def search_dataset_tags():
     except Exception as e:
         response_body["message"] = str(e)
         status_code = 500  # Internal Server Error
-
+    
+    print("Response body: ", response_body)
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
     )
@@ -315,7 +316,7 @@ def _get_model_hosting_nodes(model_id):
     match_nodes = []
     for node in grid_nodes:
         try:
-            response = requests.get(grid_nodes[node] + "/models/").content
+            response = requests.get(grid_nodes[node] + "/data-centric/models/").content
         except requests.exceptions.ConnectionError:
             continue
         response = json.loads(response)
