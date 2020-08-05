@@ -1,6 +1,0 @@
-aws_region="eu-west-2"
-
-aws_credintials = {
-    access_key = "XXXXXXXXXXXXXXXXXXXX"
-    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-}

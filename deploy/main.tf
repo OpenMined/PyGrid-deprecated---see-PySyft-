@@ -104,7 +104,6 @@ resource "aws_security_group" "web" {
 }
 
 # Create network interface
-
 resource "aws_network_interface" "webserver" {
   subnet_id       = aws_subnet.main.id
   private_ips     = ["10.0.1.50"]
@@ -112,7 +111,7 @@ resource "aws_network_interface" "webserver" {
 }
 
 
-# Assign elastic IP to the network interfface
+# Assign elastic IP to the network interface
 resource "aws_eip" "one" {
   vpc                       = true
   network_interface         = aws_network_interface.webserver.id
