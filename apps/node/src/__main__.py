@@ -35,7 +35,7 @@ parser.add_argument(
     "--network",
     type=str,
     help="Grid Network address, e.g. --network=0.0.0.0:5000. Default is os.environ.get('NETWORK',None).",
-    default=os.environ.get("NETWORK",None),
+    default=os.environ.get("NETWORK", None),
 )
 
 parser.add_argument(
@@ -76,11 +76,10 @@ if __name__ == "__main__":
     _address = "http://{}:{}".format(args.host, args.port)
     if _address and _network:
         requests.post(
-                os.path.join(_network, "join"),
-                data=json.dumps(
-                    {"node-id": args.id,
-                     "node-address": "{}".format(_address)}
-                    ),
+            os.path.join(_network, "join"),
+            data=json.dumps(
+                {"node-id": args.id, "node-address": "{}".format(_address)}
+            ),
         )
 
     server = pywsgi.WSGIServer(
@@ -94,11 +93,10 @@ else:
     _network = os.environ.get("NETWORK", None)
     if _address and _network:
         requests.post(
-                os.path.join(_network, "join"),
-                data=json.dumps(
-                    {"node-id": node_id,
-                     "node-address": "{}".format(_address)}
-                ),
+            os.path.join(_network, "join"),
+            data=json.dumps(
+                {"node-id": node_id, "node-address": "{}".format(_address)}
+            ),
         )
 
     app = create_app(node_id=node_id, debug=False, n_replica=num_replicas)
