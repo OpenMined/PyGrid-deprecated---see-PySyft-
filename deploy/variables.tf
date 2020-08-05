@@ -11,11 +11,3 @@ variable "amis" {
     "us-east-1"  = "ami-0ac80df6eff0e70b5" # N. Virginia, Ubuntu AMI
   }
 }
-
-variable "aws_credintials" {
-  default = {
-    access_key = "XXXXXXXXXXXXXXXXXXXX"
-    secret_key = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
-  type = map
-}
