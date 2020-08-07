@@ -15,7 +15,7 @@ def mask_payload_fast(self, payload):
 
     # Select the type size in bytes
     if len(payload) % 8 == 0:
-        dt = numpy.dtype("<Q8")
+        dt = numpy.dtype("<Q")
     else:
         dt = numpy.dtype("B")
 
