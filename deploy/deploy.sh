@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# Simple Web Server for testing the deployment
+## For debugging
+# redirect stdout/stderr to a file
+exec &> log.out
+
+
+echo 'Simple Web Server for testing the deployment'
 sudo apt update -y
 sudo apt install apache2 -y
 sudo systemctl start apache2
@@ -10,17 +15,27 @@ echo """
 </h1>
 """ | sudo tee /var/www/html/index.html
 
-## Docker & Docker-Compose installation
+echo 'Setup Miniconda environment'
 
-sudo apt-get remove docker docker-engine docker.io containerd runc # Uninstall old versions
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+sudo bash miniconda.sh -b -p miniconda
+sudo rm miniconda.sh
+sudo export PATH=/miniconda/bin:$PATH > ~/.bashrc
+sudo conda init bash
+sudo source ~/.bashrc
+conda create -y -n pygrid python=3.7
+conda activate pygrid
 
-sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+echo 'Install poetry...'
+sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+sudo source $HOME/.poetry/env
 
+echo 'Install GCC'
+sudo apt-get install python3-dev -y
+sudo apt-get install libevent-dev -y
+sudo apt-get install gcc -y
 
-### Clonning PyGrid
+echo 'Clonning PyGrid'
 
 git clone https://github.com/OpenMined/PyGrid
 cd PyGrid
@@ -32,4 +47,7 @@ sudo echo """
 127.0.0.1 james
 """ >> /etc/hosts
 
-sudo docker-compose up
+echo 'Start PyGrid Node'
+cd apps/node
+poetry install
+nohup ./run.sh --id bob --port 5000 --start_local_db
