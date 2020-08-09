@@ -20,15 +20,16 @@ echo 'Setup Miniconda environment'
 sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 sudo bash miniconda.sh -b -p miniconda
 sudo rm miniconda.sh
-sudo export PATH=/miniconda/bin:$PATH > ~/.bashrc
-sudo conda init bash
-sudo source ~/.bashrc
+export PATH=/miniconda/bin:$PATH > ~/.bashrc
+conda init bash
+source ~/.bashrc
 conda create -y -n pygrid python=3.7
 conda activate pygrid
 
 echo 'Install poetry...'
-sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-sudo source $HOME/.poetry/env
+pip install poetry
+# sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+# source $HOME/.poetry/env
 
 echo 'Install GCC'
 sudo apt-get install python3-dev -y
