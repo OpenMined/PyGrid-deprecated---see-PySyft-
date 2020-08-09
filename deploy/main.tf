@@ -1,13 +1,14 @@
 # Configure the AWS Provider
 provider "aws" {
-  version    = "~> 2.0"
-  region     = var.aws_region
+  version                 = "~> 2.0"
+  region                  = var.aws_region
+  shared_credentials_file = "$HOME/.aws/credentials"
 }
 
 
 # Create Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
-  cidr_block       = "10.0.0.0/16"  #TODO: Move it to variables.tf
+  cidr_block       = "10.0.0.0/16" #TODO: Move it to variables.tf
   instance_tenancy = "default"
 
   tags = {
@@ -46,7 +47,7 @@ resource "aws_route_table" "route-table" {
 # Create subnet for webservers
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24"  #TODO: Move it to variables.tf
+  cidr_block = "10.0.1.0/24" #TODO: Move it to variables.tf
 
   tags = {
     Name = "main-subnet"
