@@ -12,5 +12,4 @@ class User(BaseModel):
     role = db.Column(db.Integer, db.ForeignKey("role.id"))
 
     def __str__(self):
-        return (f"<User id: {self.id}, email: {self.email}, "
-                f"role: {self.role}>")
+        return f"<User id: {self.id}, email: {self.email}, " f"role: {self.role}>"

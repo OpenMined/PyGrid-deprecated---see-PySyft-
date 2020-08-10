@@ -9,5 +9,4 @@ class UserGroup(BaseModel):
     group = db.Column(db.Integer, db.ForeignKey("group.id"))
 
     def __str__(self):
-        return (f"<UserGroup id: {self.id}, user: {self.user}, "
-                f"group: {self.group}>")
+        return f"<UserGroup id: {self.id}, user: {self.user}, " f"group: {self.group}>"
