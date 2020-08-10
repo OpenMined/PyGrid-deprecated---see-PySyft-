@@ -140,8 +140,8 @@ You can pass the arguments or use environment variables to set the network confi
 
 **Environment Variables**
 
-- `GRID_NETWORK_PORT` - Port to run server on
-- `GRID_NETWORK_HOST` - The Network host
+- `GRID_PORT` - Port to run server on
+- `GRID_HOST` - The Network host
 - `NUM_REPLICAS` - Number of replicas to provide fault tolerance to model hosting
 - `DATABASE_URL` - The Node database URL
 - `SECRET_KEY` - The secret key
@@ -152,7 +152,7 @@ To start the PyGrid Network manually, run:
 
 ```
 cd apps/network
-./run.sh --port 5000 --start_local_db
+./run.sh --port 7000 --start_local_db
 ```
 
 You can pass the arguments or use environment variables to set the network configs.
@@ -160,14 +160,14 @@ You can pass the arguments or use environment variables to set the network confi
 **Arguments**
 
 - `-h, --help` - Shows the help message and exit
-- `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
+- `-p [PORT], --port [PORT]` - Port to run server on (default: 7000)
 - `--host [HOST]` - The Network host
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
 **Environment Variables**
 
-- `GRID_NETWORK_PORT` - Port to run server on
-- `GRID_NETWORK_HOST` - The Network host
+- `GRIDNETWORK_WS_PORT` - Port to run server on
+- `GRIDNETWORK_WS_HOST` - The Network host
 - `DATABASE_URL` - The Network database URL
 - `SECRET_KEY` - The secret key
 

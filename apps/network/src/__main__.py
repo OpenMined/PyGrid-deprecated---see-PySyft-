@@ -17,8 +17,8 @@ required.add_argument(
     "--port",
     "-p",
     type=int,
-    help="Port number of the socket.io server, e.g. --port=8777. Default is os.environ.get('GRIDNETWORK_WS_PORT', None).",
-    default=os.environ.get("GRIDNETWORK_WS_PORT", None),
+    help="Port number of the socket.io server, e.g. --port=7000. Default is os.environ.get('GRIDNETWORK_WS_PORT', 7000).",
+    default=os.environ.get("GRIDNETWORK_WS_PORT", 7000),
     required=True,
 )
 

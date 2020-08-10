@@ -20,8 +20,8 @@ parser.add_argument(
     "--port",
     "-p",
     type=int,
-    help="Port number of the socket server, e.g. --port=8777. Default is os.environ.get('GRID_PORT', None).",
-    default=os.environ.get("GRID_PORT", None),
+    help="Port number of the socket server, e.g. --port=5000. Default is os.environ.get('GRID_PORT', 5000).",
+    default=os.environ.get("GRID_PORT", 5000),
 )
 
 parser.add_argument(
@@ -34,7 +34,7 @@ parser.add_argument(
 parser.add_argument(
     "--network",
     type=str,
-    help="Grid Network address, e.g. --network=0.0.0.0:5000. Default is os.environ.get('NETWORK',None).",
+    help="Grid Network address, e.g. --network=0.0.0.0:7000. Default is os.environ.get('NETWORK',None).",
     default=os.environ.get("NETWORK", None),
 )
 
