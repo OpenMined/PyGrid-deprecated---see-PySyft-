@@ -133,15 +133,15 @@ You can pass the arguments or use environment variables to set the network confi
 
 - `-h, --help` - Shows the help message and exit
 - `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
-- `--host [HOST]` - The Network host
+- `--host [HOST]` - The Node host
 - `--num_replicas [NUM]` - The number of replicas to provide fault tolerance to model hosting
 - `--id [ID]` - The ID of the Node
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
 **Environment Variables**
 
-- `GRID_PORT` - Port to run server on
-- `GRID_HOST` - The Network host
+- `GRID_NODE_PORT` - Port to run server on
+- `GRID_NODE_HOST` - The Node host
 - `NUM_REPLICAS` - Number of replicas to provide fault tolerance to model hosting
 - `DATABASE_URL` - The Node database URL
 - `SECRET_KEY` - The secret key
@@ -166,8 +166,8 @@ You can pass the arguments or use environment variables to set the network confi
 
 **Environment Variables**
 
-- `GRIDNETWORK_WS_PORT` - Port to run server on
-- `GRIDNETWORK_WS_HOST` - The Network host
+- `GRID_NETWORK_PORT` - Port to run server on
+- `GRID_NETWORK_HOST` - The Network host
 - `DATABASE_URL` - The Network database URL
 - `SECRET_KEY` - The secret key
 
