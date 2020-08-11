@@ -36,19 +36,12 @@ sudo apt-get install python3-dev -y
 sudo apt-get install libevent-dev -y
 sudo apt-get install gcc -y
 
-echo 'Clonning PyGrid'
+echo 'Cloning PyGrid'
 
 git clone https://github.com/OpenMined/PyGrid
 cd PyGrid
-sudo echo """
-127.0.0.1 network
-127.0.0.1 bob
-127.0.0.1 alice
-127.0.0.1 bill
-127.0.0.1 james
-""" >> /etc/hosts
 
-echo 'Start PyGrid Node'
-cd apps/node
+echo 'Start PyGrid Network'
+cd apps/network
 poetry install
-nohup ./run.sh --id bob --port 5000 --start_local_db
+nohup ./run.sh --port 5000 --start_local_db
