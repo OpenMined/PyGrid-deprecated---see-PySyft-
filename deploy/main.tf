@@ -1,6 +1,6 @@
 # Configure the AWS Provider
 provider "aws" {
-  version                 = "~> 2.0"
+  version                 = "~> 3.0"
   region                  = var.aws_region
   shared_credentials_file = "$HOME/.aws/credentials"
 }
@@ -8,7 +8,7 @@ provider "aws" {
 
 # Create Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
-  cidr_block       = "10.0.0.0/16" #TODO: Move it to variables.tf
+  cidr_block       =  var.vpc_cidr_block
   instance_tenancy = "default"
 
   tags = {
@@ -26,7 +26,7 @@ resource "aws_internet_gateway" "gw" {
 }
 
 # Create Route Table
-resource "aws_route_table" "route-table" {
+resource "aws_route_table" "route_table" {
   vpc_id = aws_vpc.main.id
 
   route { # Default Route to GW
@@ -47,7 +47,7 @@ resource "aws_route_table" "route-table" {
 # Create subnet for webservers
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "10.0.1.0/24" #TODO: Move it to variables.tf
+  cidr_block = var.subnet_cidr_block
 
   tags = {
     Name = "main-subnet"
@@ -57,7 +57,7 @@ resource "aws_subnet" "main" {
 # Associate subnet with the route table
 resource "aws_route_table_association" "rta" {
   subnet_id      = aws_subnet.main.id
-  route_table_id = aws_route_table.route-table.id
+  route_table_id = aws_route_table.route_table.id
 }
 
 # Create security group
@@ -78,6 +78,14 @@ resource "aws_security_group" "web" {
     description = "HTTP"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "PyGrid Network"
+    from_port   = 5000
+    to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
