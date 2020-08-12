@@ -9,12 +9,12 @@ services:
       - DATABASE_URL=sqlite:///databasenetwork.db
     ports:
       - 5000:5000
-  bob:
+  alice:
     image: openmined/grid-node:production
     build: ./apps/node
     environment:
-      - NODE_ID=Bob
-      - ADDRESS=http://bob:3000/
+      - NODE_ID=Alice
+      - ADDRESS=http://alice:3000/
       - PORT=3000
       - NETWORK=http://network:5000
       - DATABASE_URL=sqlite:///databasenode.db
@@ -22,12 +22,13 @@ services:
       - 'network'
     ports:
       - 3000:3000
-  alice:
+
+  bob:
     image: openmined/grid-node:production
     build: ./apps/node
     environment:
-      - NODE_ID=Alice
-      - ADDRESS=http://alice:3001/
+      - NODE_ID=Bob
+      - ADDRESS=http://bob:3001/
       - PORT=3001
       - NETWORK=http://network:5000
       - DATABASE_URL=sqlite:///databasenode.db
@@ -35,12 +36,13 @@ services:
       - 'network'
     ports:
       - 3001:3001
-  bill:
+
+  charlie:
     image: openmined/grid-node:production
     build: ./apps/node
     environment:
-      - NODE_ID=Bill
-      - ADDRESS=http://bill:3002/
+      - NODE_ID=Charlie
+      - ADDRESS=http://charlie:3002/
       - PORT=3002
       - NETWORK=http://network:5000
       - DATABASE_URL=sqlite:///databasenode.db
@@ -48,12 +50,12 @@ services:
       - 'network'
     ports:
       - 3002:3002
-  james:
+  dan:
     image: openmined/grid-node:production
     build: ./apps/node
     environment:
-      - NODE_ID=James
-      - ADDRESS=http://james:3003/
+      - NODE_ID=Dan
+      - ADDRESS=http://dan:3003/
       - PORT=3003
       - NETWORK=http://network:5000
       - DATABASE_URL=sqlite:///databasenode.db
