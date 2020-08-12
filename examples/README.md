@@ -8,8 +8,7 @@ These tutorials are organized as follows:
  - **model-centric**. Go here if you want to use PyGrid plattform from a model-centric perspective. See this [link](https://github.com/OpenMined/PyGrid#data-centric-fl) for more detail (_comming soon_).
 
 ## How to Run This Tutorial?
-Very easy! Make sure you have [PySyft](https://github.com/OpenMined/PySyft#installation) and [docker-compose](https://docs.docker.com/compose/install/) installed. 
-
+Very easy! Make sure you have [PySyft](https://github.com/OpenMined/PySyft#installation) and [docker-compose](https://docs.docker.com/compose/install/) installed. Make sure you edit your hosts files according to [this](https://github.com/OpenMined/PyGrid#1-setting-the-your-hostfile)
 If you already have these requirements installed, just clone this repo and run **`docker-compose up`** from root PyGrid folder. In this way, you make sure you have latest changes.
 
 If you want, you can create your own docker-compose using built in images from [docker-hub](https://hub.docker.com/u/openmined) for your own purposes.
