@@ -1,4 +1,5 @@
-NETWORK_PORT = "5000"
+GRID_NETWORK_PORT = "5000"
+NETWORK_PORT = "3003"
 NETWORK_URL = "http://localhost:{}".format(NETWORK_PORT)
 NETWORK_WS_URL = "ws://localhost:{}".format(NETWORK_PORT)
 
