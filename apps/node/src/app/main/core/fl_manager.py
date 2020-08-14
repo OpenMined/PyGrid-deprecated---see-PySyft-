@@ -7,7 +7,7 @@ from ..model_centric.processes import ProcessManager
 
 
 class FLManager(metaclass=abc.ABCMeta):
-    """Abstract Federated Learning Manager for both Static and Dynamic
+    """Abstract Federated Learning Manager for both Model and Data Centric
     Federated Learning."""
 
     def __init__(self, fl_type: str) -> None:
