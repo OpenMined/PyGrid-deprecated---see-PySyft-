@@ -19,7 +19,6 @@ class FLManager(metaclass=abc.ABCMeta):
         super().__init__()
         self._fl_type = fl_type
 
-
     def _generate_hash_key(self, primary_key: str) -> str:
         return hashlib.sha256(primary_key.encode()).hexdigest()
 

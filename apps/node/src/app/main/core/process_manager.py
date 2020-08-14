@@ -2,6 +2,7 @@ import abc
 
 from .warehouse import Warehouse
 
+
 class ProcessManager(metaclass=abc.ABCMeta):
     """Abstract Process Manager for both Model and Data Centric
      Federated Learning."""
