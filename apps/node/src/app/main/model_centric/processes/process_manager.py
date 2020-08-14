@@ -7,7 +7,7 @@ from ...core.exceptions import (
 )
 
 # PyGrid imports
-from ...storage.warehouse import Warehouse
+from ...core.warehouse import Warehouse
 from ..syft_assets import plans, protocols
 from .config import Config
 from .fl_process import FLProcess

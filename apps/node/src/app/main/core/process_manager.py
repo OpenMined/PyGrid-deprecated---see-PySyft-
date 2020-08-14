@@ -2,9 +2,10 @@ import abc
 
 from .warehouse import Warehouse
 
+
 class ProcessManager(metaclass=abc.ABCMeta):
-    """Abstract Process Manager for both Model and Data Centric
-     Federated Learning."""
+    """Abstract Process Manager for both Model and Data Centric Federated
+    Learning."""
 
     def __init__(self, FLProcess, Config) -> None:
         self._processes = Warehouse(FLProcess)

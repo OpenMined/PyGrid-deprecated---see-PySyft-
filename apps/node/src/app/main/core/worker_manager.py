@@ -6,11 +6,11 @@ from .exceptions import WorkerNotFoundError
 
 # PyGrid imports
 from .warehouse import Warehouse
+
 # from .worker import Worker
 
 
 class WorkerManager(metaclass=abc.ABCMeta):
-
     def __init__(self, worker: "Worker") -> None:
         self._workers = Warehouse(worker)
 

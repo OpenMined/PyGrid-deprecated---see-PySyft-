@@ -4,6 +4,7 @@ import syft as sy
 # Local imports
 from ... import BaseModel, db
 
+
 class Model(BaseModel):
     """Model table that represents the AI Models.
 
