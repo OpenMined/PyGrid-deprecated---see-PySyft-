@@ -117,6 +117,9 @@ docker build . --file ./apps/node/Dockerfile --tag openmined/grid-node:mybuildna
 
 #### Running a Node
 
+> ##### Installation
+> First install [`poetry`](https://python-poetry.org/docs/) and run `poetry install` in `apps/node`
+
 To start the PyGrid Node manually, run:
 
 ```
@@ -130,15 +133,15 @@ You can pass the arguments or use environment variables to set the network confi
 
 - `-h, --help` - Shows the help message and exit
 - `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
-- `--host [HOST]` - The Network host
+- `--host [HOST]` - The Node host
 - `--num_replicas [NUM]` - The number of replicas to provide fault tolerance to model hosting
 - `--id [ID]` - The ID of the Node
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
 **Environment Variables**
 
-- `GRID_NETWORK_PORT` - Port to run server on
-- `GRID_NETWORK_HOST` - The Network host
+- `GRID_NODE_PORT` - Port to run server on
+- `GRID_NODE_HOST` - The Node host
 - `NUM_REPLICAS` - Number of replicas to provide fault tolerance to model hosting
 - `DATABASE_URL` - The Node database URL
 - `SECRET_KEY` - The secret key
@@ -149,7 +152,7 @@ To start the PyGrid Network manually, run:
 
 ```
 cd apps/network
-./run.sh --port 5000 --start_local_db
+./run.sh --port 7000 --start_local_db
 ```
 
 You can pass the arguments or use environment variables to set the network configs.
@@ -157,7 +160,7 @@ You can pass the arguments or use environment variables to set the network confi
 **Arguments**
 
 - `-h, --help` - Shows the help message and exit
-- `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
+- `-p [PORT], --port [PORT]` - Port to run server on (default: 7000)
 - `--host [HOST]` - The Network host
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
