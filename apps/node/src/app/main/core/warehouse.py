@@ -1,6 +1,6 @@
 # PyGrid imports
 # Generic imports
-from src.app import db
+from .. import db
 from sqlalchemy import func
 
 
