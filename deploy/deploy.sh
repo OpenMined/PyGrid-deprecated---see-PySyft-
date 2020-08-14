@@ -28,8 +28,6 @@ conda activate pygrid
 
 echo 'Install poetry...'
 pip install poetry
-# sudo curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-# source $HOME/.poetry/env
 
 echo 'Install GCC'
 sudo apt-get install python3-dev -y
@@ -37,11 +35,30 @@ sudo apt-get install libevent-dev -y
 sudo apt-get install gcc -y
 
 echo 'Cloning PyGrid'
-
 git clone https://github.com/OpenMined/PyGrid
-cd PyGrid
 
-echo 'Start PyGrid Network'
-cd apps/network
-poetry install
-nohup ./run.sh --port 5000 --start_local_db
+
+while IFS=, read -r id port
+do
+    echo "Start PyGrid $id on port $port"
+
+    if [[ "$id" == *"network"* ]]; then
+        echo "Running $id"
+        cd /PyGrid/apps/network
+        poetry install
+        nohup ./run.sh --port $port --start_local_db
+
+    elif [[ "$id" == *"node"* ]]; then
+        echo "Running $id"
+        cd /PyGrid/apps/node
+        poetry install
+        ./run.sh --id $id --port $port --start_local_db
+
+    elif [[ "$id" == *"worker"* ]]; then
+        echo "Starting Worker"
+        cd /PyGrid/apps/worker
+        poetry install
+    else
+        echo "Only Network, Nodes, & Workers"
+    fi
+done < /pygrid.txt
