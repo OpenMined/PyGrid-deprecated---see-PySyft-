@@ -142,20 +142,23 @@ resource "aws_eip" "one" {
   depends_on                = [aws_internet_gateway.gw]
 }
 
-resource "aws_instance" "webserver-instance" {
+
+resource "aws_instance" "webserver_instance" {
+  for_each      = var.vm_names
   ami           = var.amis[var.aws_region]
   instance_type = "t2.micro"
   # key_name      = "openmined_pygrid"
 
-  network_interface {
-    device_index         = 0
-    network_interface_id = aws_network_interface.webserver.id
+  provisioner "remote-exec" {
+    inline = [
+      "echo ${each.key},${each.value} >> pygrid.txt"
+    ]
   }
 
   user_data = file("deploy.sh")
 
   tags = {
-    Name = "OpenMinedWebServer"
+    Name = each.key
   }
 }
 
