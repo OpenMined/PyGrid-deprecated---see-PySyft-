@@ -1,6 +1,6 @@
 # PyGrid imports
 # Generic imports
-from apps.node.src.app.main import db
+from src.app import db
 from sqlalchemy import func
 
 
