@@ -8,7 +8,7 @@ provider "aws" {
 
 # Create Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
-  cidr_block       =  var.vpc_cidr_block
+  cidr_block       = var.vpc_cidr_block
   instance_tenancy = "default"
 
   tags = {
@@ -83,9 +83,25 @@ resource "aws_security_group" "web" {
   }
 
   ingress {
-    description = "PyGrid Network"
+    description = "PyGrid Nodes"
     from_port   = 5000
-    to_port     = 5000
+    to_port     = 5999
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "PyGrid Workers"
+    from_port   = 6000
+    to_port     = 6999
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "PyGrid Networks"
+    from_port   = 7000
+    to_port     = 7999
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
