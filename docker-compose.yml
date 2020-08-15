@@ -63,3 +63,12 @@ services:
       - 'network'
     ports:
       - 3003:3003
+
+  jupyter:
+    image: openmined/pysyft-notebook
+    depends_on:
+      - 'dan'
+    ports:
+      - 8888:8888
+    volumes:
+      - ./examples:/workspace/examples
