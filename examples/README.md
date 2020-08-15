@@ -3,13 +3,13 @@
 In this step-by-step tutorial series, you'll learn how PyGrid can be used to bring Privacy and Decentralizacion to a more realistic scenario, i.e., when data lives in a completely isolated environment. This tutorial series is continually updated with new features as they are implemented, and is designed for complete beginners.
 
 These tutorials are organized as follows:
- - **getting-started**. Go here if you have never heard about PyGrid, you'll learn the basics concepts (_comming soon_) . 
+ - **getting-started**. Go here if you have never heard about PyGrid, you'll learn the basics concepts (_comming soon_) .
  - **data-centric**. Go here if you want to use PyGrid plattform from a data-centric perspective. See this [link](https://github.com/OpenMined/PyGrid#model-centric-fl) for more detail (_in progress_).
  - **model-centric**. Go here if you want to use PyGrid plattform from a model-centric perspective. See this [link](https://github.com/OpenMined/PyGrid#data-centric-fl) for more detail (_comming soon_).
 
 ## How to Run This Tutorial?
-Very easy! Make sure you have [PySyft](https://github.com/OpenMined/PySyft#installation) and [docker-compose](https://docs.docker.com/compose/install/) installed and edit your hosts files according to [this](https://github.com/OpenMined/PyGrid#1-setting-the-your-hostfile)
-If you already have these requirements installed, just clone this repo and run **`docker-compose up`** from root PyGrid folder. In this way, you make sure you have latest changes.
+Very easy! Make sure you have [PySyft](https://github.com/OpenMined/PySyft#installation) and [docker-compose](https://docs.docker.com/compose/install/) installed.
+If you already have these requirements installed, just clone this repo and run **`docker-compose up`** from root PyGrid folder. Notebooks can be run from deployed jupyter notebbok.
 
 If you want, you can create your own docker-compose using built in images from [docker-hub](https://hub.docker.com/u/openmined) for your own purposes.
 
