@@ -1,11 +1,10 @@
-import papermill as pm
-import nbformat
-from .. import worker_ports, GRID_NETWORK_PORT
-import pytest
 import os
-
-
 from pathlib import Path
+
+import nbformat
+import papermill as pm
+
+from .. import GRID_NETWORK_PORT, worker_ports
 
 dir_path = Path(os.path.dirname(os.path.realpath(__file__)))
 examples_path = dir_path.parent.parent
@@ -20,7 +19,7 @@ def test_notebooks_mnist_01():
     )
     res = pm.execute_notebook(
         str(notebook_mnist_01),
-        "/dev/null",
+        os.devnull,
         dict(
             alice_address=("http://localhost:" + worker_ports["alice"]),
             bob_address=("http://localhost:" + worker_ports["bob"]),
@@ -37,7 +36,7 @@ def test_notebooks_mnist_02():
 
     res = pm.execute_notebook(
         str(notebook_mnist_02),
-        "/dev/null",
+        os.devnull,
         dict(
             grid_address="http://localhost:" + GRID_NETWORK_PORT, N_EPOCHS=2, N_TEST=2
         ),
