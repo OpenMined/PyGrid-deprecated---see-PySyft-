@@ -27,3 +27,8 @@ repos:
           - --remove-kernel-metadata
           - --pin-patterns
           - "[pin];[donotremove]"
+
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: 'v5.4.2'  # Use the revision sha / tag you want to point at
+    hooks:
+      - id: isort
