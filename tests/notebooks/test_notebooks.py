@@ -1,8 +1,9 @@
 import papermill as pm
 import nbformat
-from .. import worker_ports
+from .. import worker_ports, GRID_NETWORK_PORT
 import pytest
 import os
+
 
 from pathlib import Path
 
@@ -13,28 +14,33 @@ data_centric_mnist_path = examples_path.joinpath("examples", "data-centric", "mn
 
 
 def test_notebooks_mnist_01():
-    """Test if notebook run"""
+    """Test if notebook r"""
     notebook_mnist_01 = data_centric_mnist_path.joinpath(
         "01-FL-mnist-populate-a-grid-node.ipynb"
     )
     res = pm.execute_notebook(
         str(notebook_mnist_01),
         "/dev/null",
-        dict(alice_port=worker_ports["alice"], bob_port=worker_ports["bob"]),
+        dict(
+            alice_address=("http://localhost:" + worker_ports["alice"]),
+            bob_address=("http://localhost:" + worker_ports["bob"]),
+        ),
     )
 
     assert isinstance(res, nbformat.notebooknode.NotebookNode)
 
 
-@pytest.mark.skip(reason="notebook not developed")
 def test_notebooks_mnist_02():
-    notebook_mnist_02 = (
-        "../PyGrid/examples/data-centric/mnist/02-FL-mnist-train-model.ipynb"
+    notebook_mnist_02 = data_centric_mnist_path.joinpath(
+        "02-FL-mnist-train-model.ipynb"
     )
+
     res = pm.execute_notebook(
-        notebook_mnist_02,
+        str(notebook_mnist_02),
         "/dev/null",
-        dict(alice_port=worker_ports["alice"], bob_port=worker_ports["bob"]),
+        dict(
+            grid_address="http://localhost:" + GRID_NETWORK_PORT, N_EPOCHS=2, N_TEST=2
+        ),
     )
 
     assert isinstance(res, nbformat.notebooknode.NotebookNode)
