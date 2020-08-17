@@ -8,8 +8,9 @@ provider "aws" {
 
 # Create Virtual Private Cloud (VPC)
 resource "aws_vpc" "main" {
-  cidr_block       = var.vpc_cidr_block
-  instance_tenancy = "default"
+  cidr_block           = var.vpc_cidr_block
+  instance_tenancy     = "default"
+  enable_dns_hostnames = true
 
   tags = {
     Name = "main-vpc"
@@ -158,6 +159,7 @@ resource "aws_instance" "webserver_instance" {
 }
 
 
-output "server_public_ip" {
-  value = aws_eip.one.public_ip
+output "instance_id_list" {
+  value = zipmap(values(aws_instance.webserver_instance)[*].tags.Name,
+  values(aws_instance.webserver_instance)[*].public_ip)
 }
