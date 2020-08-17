@@ -61,4 +61,4 @@ do
     else
         echo "Only Network, Nodes, & Workers"
     fi
-done < /pygrid.txt
+done < /home/ubuntu/pygrid.txt
