@@ -126,28 +126,23 @@ resource "aws_security_group" "web" {
   }
 }
 
-# Create network interface
-resource "aws_network_interface" "webserver" {
-  subnet_id       = aws_subnet.main.id
-  private_ips     = ["10.0.1.50"]
-  security_groups = ["${aws_security_group.web.id}"]
-}
-
-
-# Assign elastic IP to the network interface
-resource "aws_eip" "one" {
-  vpc                       = true
-  network_interface         = aws_network_interface.webserver.id
-  associate_with_private_ip = "10.0.1.50"
-  depends_on                = [aws_internet_gateway.gw]
-}
-
-
 resource "aws_instance" "webserver_instance" {
   for_each      = var.vm_names
   ami           = var.amis[var.aws_region]
-  instance_type = "t2.micro"
-  # key_name      = "openmined_pygrid"
+  instance_type = var.instance_type
+  key_name      = var.key_name
+
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.web.id]
+  subnet_id                   = aws_subnet.main.id
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    host        = self.public_ip
+    private_key = file(var.private_key)
+    timeout     = "2m"
+  }
 
   provisioner "remote-exec" {
     inline = [
