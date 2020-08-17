@@ -27,11 +27,11 @@ module "lambda" {
 
   function_name = "pygrid-node"
   description   = "Node hosted by UCSF"
-  handler       = "wsgi.app"        #TODO: change this -------------------------------
+  handler       = "wsgi.app"
   runtime       = "python3.6"
   publish       = true # To automate increasing versions
 
-  source_path = "../../apps/node/src/"  #TODO: change this -------------------------------
+  source_path = "../../apps/node/src/"
 
 #   tags = {
 #     Name = ""
@@ -81,6 +81,13 @@ module "aurora" {
   instance_type = "db.r4.large"
 
   enable_http_endpoint = true   # Enable Data API
+
+  apply_immediately               = true
+  skip_final_snapshot             = true
+  storage_encrypted               = true
+
+  db_parameter_group_name         = var.db_parameter_group_name
+  db_cluster_parameter_group_name = var.db_cluster_parameter_group_name
 
   scaling_configuration = {
     auto_pause               = true
