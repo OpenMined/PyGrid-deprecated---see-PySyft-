@@ -3,6 +3,21 @@ variable "aws_region" {
   type    = string
 }
 
+variable "key_name" {
+  default = "openmined_pygrid"
+  type    = string
+}
+
+variable "private_key" {
+  default = "~/openmined_pygrid.pem"
+  type    = string
+}
+
+variable "instance_type" {
+  default = "t2.micro"
+  type    = string
+}
+
 variable "vpc_cidr_block" {
   default = "10.0.0.0/16"
   type    = string
