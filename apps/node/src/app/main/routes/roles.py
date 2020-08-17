@@ -1,9 +1,10 @@
 from json import dumps, loads
+import logging
 
 from flask import Response, request
 from syft.codes import RESPONSE_MSG
 
-from ..core.exceptions import InvalidRequestKeyError, PyGridError
+from ..core.exceptions import RoleNotFoundError
 from .. import main_routes
 from ..database import Role
 from ... import BaseModel, db
@@ -50,10 +51,16 @@ def get_role(id):
     response_body = {}
 
     try:
-        # TODO except missing row in db
         role = db.session.query(Role).get(id)
+        if role is None:
+            raise RoleNotFoundError
+
         response_body = to_json(role)
         response_body = {RESPONSE_MSG.SUCCESS: True, "role": to_json(role)}
+    except RoleNotFoundError as e:
+        status_code = 404
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        logging.warning("Role not found in get-role", exc_info=e)
     except (TypeError, PyGridError, json.decoder.JSONDecodeError) as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -70,9 +77,17 @@ def get_role(id):
 def get_all_roles():
     status_code = 200  # Success
     response_body = {}
-    roles = db.session.query(Role).all()
-    roles = [to_json(r) for r in roles]
-    response_body = {RESPONSE_MSG.SUCCESS: True, "roles": roles}
+
+    try:
+        roles = db.session.query(Role).all()
+        roles = [to_json(r) for r in roles]
+        response_body = {RESPONSE_MSG.SUCCESS: True, "roles": roles}
+    except (TypeError, PyGridError, json.decoder.JSONDecodeError) as e:
+        status_code = 400  # Bad Request
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+    except Exception as e:
+        status_code = 500  # Internal Server Error
+        response_body[RESPONSE_MSG.ERROR] = str(e)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -87,11 +102,18 @@ def put_role(id):
 
     try:
         role = db.session.query(Role).get(id)
+        if role is None:
+            raise RoleNotFoundError
+
         for key, value in body.items():
             setattr(role, key, value)
 
         db.session.commit()
         response_body = {RESPONSE_MSG.SUCCESS: True, "role": to_json(role)}
+    except RoleNotFoundError as e:
+        status_code = 404
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        logging.warning("Role not found in put-role", exc_info=e)
     except (TypeError, PyGridError, json.decoder.JSONDecodeError) as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
@@ -111,9 +133,15 @@ def delete_role(id):
 
     try:
         role = db.session.query(Role).get(id)
+        if role is None:
+            raise RoleNotFoundError
         db.session.delete(role)
         db.session.commit()
         response_body = {RESPONSE_MSG.SUCCESS: True}
+    except RoleNotFoundError as e:
+        status_code = 404
+        response_body[RESPONSE_MSG.ERROR] = str(e)
+        logging.warning("Role not found in delete-role", exc_info=e)
     except (TypeError, PyGridError, json.decoder.JSONDecodeError) as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
