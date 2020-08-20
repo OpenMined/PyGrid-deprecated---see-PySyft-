@@ -22,3 +22,13 @@ def cli(config, out):
     """
     click.echo(click.style(f"Welcome to OpenMined CLI!", fg=COLORS.green, bold=True))
     json.dump(vars(config), out)
+
+
+@cli.command()
+@click.option("--name", prompt="Your name", help="The person to greet.")
+@pass_config
+def hello(config, name):
+    click.echo(f"Hello {click.style(name, fg=COLORS.red)}!")
+    config.name = name
+
+
