@@ -32,3 +32,16 @@ def hello(config, name):
     config.name = name
 
 
+@cli.command()
+@click.option(
+    "--provider",
+    prompt="Cloud Provider: ",
+    default="AWS",
+    type=click.Choice(["AWS", "GCP", "AZURE"], case_sensitive=False),
+    help="The Cloud Provider for the deployment",
+)
+@pass_config
+def deploy(config, provider):
+    click.echo(f"Deployment...")
+    config.provider = provider
+    click.echo(config)
