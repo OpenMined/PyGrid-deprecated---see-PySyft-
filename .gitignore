@@ -32,6 +32,7 @@ docs/_build/
 
 # Local .terraform directories
 **/.terraform/*
+**/**/builds/*
 
 # .tfstate files
 *.tfstate
@@ -63,8 +64,4 @@ override.tf.json
 
 # Ignore CLI configuration files
 .terraformrc
-<<<<<<< HEAD
 terraform.rc
-=======
-terraform.rc
->>>>>>> upstream/dev
