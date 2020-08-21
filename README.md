@@ -173,12 +173,12 @@ You can pass the arguments or use environment variables to set the network confi
 
 ## PyGrid CLI
 
-OpenMined PyGrid CLi is used for Infrastructure Management to deploy various PyGrid components to various cloud providers ([AWS](https://aws.amazon.com/), [GCP](https://cloud.google.com/), [Azure](https://azure.microsoft.com/)).
+OpenMined PyGrid CLI is used for Infrastructure Management to deploy various PyGrid components to various cloud providers ([AWS](https://aws.amazon.com/), [GCP](https://cloud.google.com/), [Azure](https://azure.microsoft.com/)).
 
-To get started, install the CLi first through this command:
+To get started, install the CLI first through this command:
 
 ```shell
-pip install -e apps/cli
+pip install -e .
 ```
 
 ### Running CLI
