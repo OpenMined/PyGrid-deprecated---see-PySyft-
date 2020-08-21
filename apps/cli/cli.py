@@ -8,9 +8,9 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
-@click.option("--out", default="config.json", type=click.File("w"))
+@click.option("--output-file", default="config.json")
 @pass_config
-def cli(config, out):
+def cli(config, output_file):
     """
     OpenMined CLI for Infrastructure Management
 
@@ -21,7 +21,7 @@ def cli(config, out):
     >>> pygrid deploy network --provider azure
     """
     click.echo(click.style(f"Welcome to OpenMined CLI!", fg=COLORS.green, bold=True))
-    json.dump(vars(config), out)
+    config.output_file = output_file
 
 
 @cli.command()
@@ -44,4 +44,11 @@ def hello(config, name):
 def deploy(config, provider):
     click.echo(f"Deployment...")
     config.provider = provider
-    click.echo(config)
+
+
+@cli.resultcallback()
+@pass_config
+def logging(config, results, **kwargs):
+    click.echo(f"Writing resutls to {config.output_file}")
+    with open(config.output_file, "w", encoding="utf-8") as f:
+        json.dump(vars(config), f)
