@@ -20,7 +20,9 @@ def cli(config, output_file):
 
     >>> pygrid deploy network --provider azure
     """
-    click.echo(click.style(f"Welcome to OpenMined CLI!", fg=COLORS.green, bold=True))
+    click.echo(
+        click.style(f"Welcome to OpenMined PyGrid CLI!", fg=COLORS.green, bold=True)
+    )
     config.output_file = output_file
 
 
