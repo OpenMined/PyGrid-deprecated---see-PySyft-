@@ -17,12 +17,11 @@ from ..database import Role, User
 from ... import BaseModel, db
 
 
-def to_json(model):
+def model_to_json(model):
     """Returns a JSON representation of an SQLAlchemy-backed object."""
     json = {}
-
-    for col in model._sa_class_manager.mapper.mapped_table.columns:
-        json[col.name] = getattr(model, col.name)
+    for col in model.__mapper__.attrs.keys():
+        json[col] = getattr(model, col)
 
     return json
 
@@ -47,10 +46,10 @@ def identify_user(request):
 def create_role():
     status_code = 200  # Success
     response_body = {}
-    body = loads(request.data)
 
     try:
 
+        body = loads(request.data)
         usr, usr_role = identify_user(request)
         if not usr_role.can_edit_roles:
             raise AuthorizationError
@@ -58,7 +57,7 @@ def create_role():
         new_role = Role(**body)
         db.session.add(new_role)
         db.session.commit()
-        response_body = {RESPONSE_MSG.SUCCESS: True, "role": to_json(new_role)}
+        response_body = {RESPONSE_MSG.SUCCESS: True, "role": model_to_json(new_role)}
 
     except AuthorizationError as e:
         status_code = 403  # Unathorized
@@ -95,8 +94,8 @@ def get_role(id):
         if role is None:
             raise RoleNotFoundError
 
-        response_body = to_json(role)
-        response_body = {RESPONSE_MSG.SUCCESS: True, "role": to_json(role)}
+        response_body = model_to_json(role)
+        response_body = {RESPONSE_MSG.SUCCESS: True, "role": model_to_json(role)}
 
     except AuthorizationError as e:
         status_code = 403  # Unathorized
@@ -130,7 +129,7 @@ def get_all_roles():
             raise AuthorizationError
 
         roles = db.session.query(Role).all()
-        roles = [to_json(r) for r in roles]
+        roles = [model_to_json(r) for r in roles]
         response_body = {RESPONSE_MSG.SUCCESS: True, "roles": roles}
 
     except AuthorizationError as e:
@@ -157,10 +156,10 @@ def get_all_roles():
 def put_role(id):
     status_code = 200  # Success
     response_body = {}
-    body = loads(request.data)
 
     try:
 
+        body = loads(request.data)
         usr, usr_role = identify_user(request)
         if not usr_role.can_edit_roles:
             raise AuthorizationError
@@ -173,7 +172,7 @@ def put_role(id):
             setattr(role, key, value)
 
         db.session.commit()
-        response_body = {RESPONSE_MSG.SUCCESS: True, "role": to_json(role)}
+        response_body = {RESPONSE_MSG.SUCCESS: True, "role": model_to_json(role)}
 
     except AuthorizationError as e:
         status_code = 403  # Unathorized
