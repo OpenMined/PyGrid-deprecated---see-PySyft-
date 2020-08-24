@@ -2,12 +2,6 @@
 #   Layer with all dependencies, except Syft
 ############################################
 
-resource "aws_s3_bucket_object" "lambda_dependencies" {
-  bucket = "my-bucket-with-lambda-dependencies-2"
-  key    = "${filemd5("lambda-layers/all-dep/all-dep.zip")}.zip"
-  source = "lambda-layers/all-dep/all-dep.zip"
-}
-
 module "lambda_layer_all_dependencies" {
   source = "terraform-aws-modules/lambda/aws"
 
@@ -19,7 +13,7 @@ module "lambda_layer_all_dependencies" {
 
   create_package = false
   s3_existing_package = {
-    bucket = "my-bucket-with-lambda-dependencies-2"
+    bucket = "my-bucket-with-lambda-node-dependencies"
     key    = aws_s3_bucket_object.lambda_dependencies.id
   }
 }
