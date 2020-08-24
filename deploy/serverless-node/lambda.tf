@@ -14,10 +14,10 @@ module "lambda" {
   source_path = local.function_path
   handler     = local.function_handler
 
-//  layers = [
-//    module.lambda_layer_all_dependencies.this_lambda_layer_arn,
-//    "arn:aws:lambda:us-east-1:934676248949:layer:pytorchv1-py36:1",  # pytorch 1.1.0, py3.6
-//  ]
+  layers = [
+    module.lambda_layer_all_dependencies.this_lambda_layer_arn,
+    "arn:aws:lambda:us-east-1:934676248949:layer:pytorchv1-py36:1",  # pytorch 1.1.0, py3.6
+  ]
 
   #   tags = {
   #     Name = ""
