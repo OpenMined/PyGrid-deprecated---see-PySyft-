@@ -64,3 +64,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+/deploy/serverless-network/lambda-layers/all-dep/python/
+/deploy/serverless-network/lambda-layers/all-dep/all-dep.zip
+/deploy/serverless-network/builds/
