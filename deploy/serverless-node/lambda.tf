@@ -1,6 +1,6 @@
 locals {
   function_path    = "../../apps/node/src/"
-  function_handler = "wsgi.app"
+  function_handler = "deploy.app"
 }
 
 module "lambda" {
@@ -10,13 +10,12 @@ module "lambda" {
   description   = "Node hosted by UCSF"
   publish       = true    # To automate increasing versions
 
-  runtime     = "python3.7"
+  runtime     = "python3.6"
   source_path = local.function_path
   handler     = local.function_handler
 
   layers = [
     module.lambda_layer_all_dependencies.this_lambda_layer_arn,
-    "arn:aws:lambda:us-east-1:934676248949:layer:pytorchv1-py36:1",  # pytorch 1.1.0, py3.6
   ]
 
   #   tags = {

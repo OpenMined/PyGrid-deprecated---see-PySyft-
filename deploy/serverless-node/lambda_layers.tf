@@ -15,7 +15,7 @@ module "lambda_layer_all_dependencies" {
 
   layer_name          = "lambda-layer-all-dependencies"
   description         = "Lambda layer with all dependencies except Syft(deployed from S3)"
-  compatible_runtimes = ["python3.7"]
+  compatible_runtimes = ["python3.6"]
 
   create_package = false
   s3_existing_package = {

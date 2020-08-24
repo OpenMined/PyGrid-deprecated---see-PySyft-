@@ -14,7 +14,7 @@ papermill==2.0.0
 psycopg2-binary==2.8.5
 pyjwt==1.7.1
 redis==3.5.3
-requests==2.22.0requests-toolbelt==0.9.1
+requests-toolbelt==0.9.1
 sqlalchemy_mixins==1.2.1
 sqlalchemy_utils==0.36.8
 wsaccel==0.6.2
