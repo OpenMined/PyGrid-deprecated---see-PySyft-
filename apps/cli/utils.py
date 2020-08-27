@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import click
+
 
 class Config(SimpleNamespace):
     def __init__(self, **kwargs):
@@ -26,3 +28,7 @@ COLORS = SimpleNamespace(
         "bright_white": "bright_white",
     }
 )
+
+
+def colored(text, color=COLORS.green, bold=True):
+    return click.style(text, fg=color, bold=bold)
