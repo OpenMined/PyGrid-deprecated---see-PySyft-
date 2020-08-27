@@ -11,8 +11,7 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 @click.option("--output-file", default="config.json")
 @pass_config
 def cli(config, output_file):
-    """
-    OpenMined CLI for Infrastructure Management
+    """OpenMined CLI for Infrastructure Management.
 
     Example:
 
@@ -26,15 +25,7 @@ def cli(config, output_file):
     config.output_file = output_file
 
 
-@cli.command()
-@click.option("--name", prompt="Your name", help="The person to greet.")
-@pass_config
-def hello(config, name):
-    click.echo(f"Hello {click.style(name, fg=COLORS.red)}!")
-    config.name = name
-
-
-@cli.command()
+@cli.group()
 @click.option(
     "--provider",
     prompt="Cloud Provider: ",
@@ -44,13 +35,38 @@ def hello(config, name):
 )
 @pass_config
 def deploy(config, provider):
-    click.echo(f"Deployment...")
+    click.echo(
+        f"Starting the deployment on {click.style(provider, fg=COLORS.green, bold=True)}..."
+    )
     config.provider = provider
+
+    # Deployment Keys
+    config.id_key = click.prompt(
+        f"Please enter a your cloud deployment {click.style('id', fg=COLORS.red, bold=True)} key",
+        type=str,
+    )
+    config.secret_key = click.prompt(
+        f"Please enter a your cloud deployment {click.style('secret', fg=COLORS.red, bold=True)} key",
+        type=str,
+    )
+
+    ## Websockets
+    if click.confirm(f"Will you need to support Websockets?"):
+        if config.provider.lower() != "aws":
+            config.deployment_type = "serverfull"
+        elif click.confirm(f"Do you want to deploy serverless?"):
+            config.deployment_type = "serverless"
+
+    elif click.confirm(f"Do you want to deploy serverless?"):
+        click.echo("we are going to serverless deployment!")
+        config.deployment_type = "serverless"
 
 
 @cli.resultcallback()
 @pass_config
 def logging(config, results, **kwargs):
-    click.echo(f"Writing resutls to {config.output_file}")
+    click.echo(f"Writing configs to {config.output_file}")
+    config.id_key = "X" * len(config.id_key)
+    config.secret_key = "X" * len(config.secret_key)
     with open(config.output_file, "w", encoding="utf-8") as f:
         json.dump(vars(config), f)
