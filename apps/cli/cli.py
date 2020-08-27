@@ -62,6 +62,20 @@ def deploy(config, provider):
         config.deployment_type = "serverless"
 
 
+@deploy.command()
+@pass_config
+def node(config):
+    click.echo(f"Node Deployment")
+    config.app = "Node"
+
+
+@deploy.command()
+@pass_config
+def network(config):
+    click.echo(f"Network Deployment")
+    config.app = "Network"
+
+
 @cli.resultcallback()
 @pass_config
 def logging(config, results, **kwargs):
