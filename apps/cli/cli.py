@@ -2,7 +2,7 @@ import json
 
 import click
 
-from .utils import COLORS, Config
+from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
@@ -19,9 +19,7 @@ def cli(config, output_file):
 
     >>> pygrid deploy network --provider azure
     """
-    click.echo(
-        click.style(f"Welcome to OpenMined PyGrid CLI!", fg=COLORS.green, bold=True)
-    )
+    click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
     config.output_file = output_file
 
 
@@ -35,19 +33,19 @@ def cli(config, output_file):
 )
 @pass_config
 def deploy(config, provider):
-    click.echo(
-        f"Starting the deployment on {click.style(provider, fg=COLORS.green, bold=True)}..."
-    )
+    click.echo(f"Starting the deployment on {colored(provider)}...")
     config.provider = provider
 
     # Deployment Keys
     config.id_key = click.prompt(
-        f"Please enter a your cloud deployment {click.style('id', fg=COLORS.red, bold=True)} key",
+        f"Please enter a your cloud deployment {colored('id')} key",
         type=str,
+        hide_input=True,
     )
     config.secret_key = click.prompt(
-        f"Please enter a your cloud deployment {click.style('secret', fg=COLORS.red, bold=True)} key",
+        f"Please enter a your cloud deployment {colored('secret')} key",
         type=str,
+        hide_input=True,
     )
 
     ## Websockets
