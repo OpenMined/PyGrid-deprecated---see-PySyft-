@@ -10,6 +10,10 @@ from flask import Response, render_template, request, send_from_directory
 from flask_cors import cross_origin
 from syft.codes import RESPONSE_MSG
 from syft.grid.clients.data_centric_fl_client import DataCentricFLClient
+from syft.serde import serialize, deserialize
+from syft.exceptions import EmptyCryptoPrimitiveStoreError
+from syft.exceptions import GetNotPermittedError
+from syft.exceptions import ResponseSignatureError
 
 from ... import data_centric_routes, local_worker
 from ...core.codes import MSG_FIELD
@@ -108,6 +112,29 @@ def list_workers():
 # ======= WEB ROUTES END ======
 
 # ======= REST API =======
+
+
+@data_centric_routes.route("/syft/", methods=["POST"])
+@cross_origin()
+def syft_commands():
+    try:
+        encoding = request.form["encoding"]
+        if request.files:
+            serialized_msg = request.files["payload"].read().decode(self.encoding)
+        else:
+            serialized_msg = request.form["payload"]
+
+        # Encode the model accordingly
+        serialized_msg = serialized_msg.encode(encoding)
+
+        response = local_worker._recv_msg(serialized_msg)
+
+        decoded_response = response.decode(encoding)
+    except (EmptyCryptoPrimitiveStoreError, ResponseSignatureError,) as e:
+        decoded_response = serialize(e)
+        decoded_response = decoded_response.decode(encoding)
+    response = {"payload": decoded_response}
+    return Response(json.dumps(response), status=200, mimetype="application/json")
 
 
 @data_centric_routes.route("/models/", methods=["GET"])
