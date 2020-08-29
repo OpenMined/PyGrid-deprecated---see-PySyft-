@@ -8,9 +8,7 @@ These tutorials are organized as follows:
  - **/model-centric** - Go here if you want to use PyGrid plattform from a model-centric perspective. See this [link](https://github.com/OpenMined/PyGrid#model-centric-fl) for more detail (_comming soon_).
 
 ## Running the examples
-Make sure you have [docker-compose](https://docs.docker.com/compose/install/) installed. We have prepared some images with everything installed that will help you to run the tutorials.
-If you already have this requirement, clone this repo, run **`docker-compose up`** from root PyGrid folder and make click to the address where Jupyter is running (it is printed) . Notebooks can be run from [Jupyter Notebook](https://jupyter.readthedocs.io/en/latest/running.html).
-
+Make sure you have [docker-compose](https://docs.docker.com/compose/install/) installed. We have prepared docker images that will install all the dependencies and help you run the PyGrid tutorials.Once you have `docker-compose` installed, clone this repository and run **`docker-compose up`** from your PyGrid root directory, after which you should see the address to the active Jupyter Notebook printed in your console. Simply click on the link to start using the examples. Notebooks can be run from [Jupyter Notebook](https://jupyter.readthedocs.io/en/latest/running.html).
 If you want, you can create your own `docker-compose` files using built in images from [docker-hub](https://hub.docker.com/u/openmined).
 
 And don't forget to star PyGrid on GitHub [https://github.com/OpenMined/PyGrid](https://github.com/OpenMined/PyGrid)!
