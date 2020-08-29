@@ -50,7 +50,7 @@ def test_notebooks_mnist_02():
 
 def test_notebooks_intro_00():
     notebook_intro_00 = data_centric_intro_path.joinpath(
-        "01-introduction-to- pygrid.ipynb"
+        "01-introduction-to-pygrid.ipynb"
     )
 
     res = pm.execute_notebook(
