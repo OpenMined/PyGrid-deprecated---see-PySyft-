@@ -204,6 +204,17 @@ dotenv = ["python-dotenv"]
 
 [[package]]
 category = "main"
+description = "Python3.6+ module to make Flask compatible with AWS Lambda"
+name = "flask-lambda-python36"
+optional = false
+python-versions = "*"
+version = "0.1.0"
+
+[package.dependencies]
+Flask = ">=0.10"
+
+[[package]]
+category = "main"
 description = "SQLAlchemy database migrations for Flask applications using Alembic"
 name = "flask-migrate"
 optional = false
@@ -770,7 +781,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "a7387320c794d15ae2465dd8e15cf0ce784d21cd86c3556d1dce898b30d159ec"
+content-hash = "b9c62402f723c05ec37775e375b0ee004f307cae19ab1c74872472357c1329fa"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -900,6 +911,9 @@ flake8-comprehensions = [
 flask = [
     {file = "Flask-1.1.2-py2.py3-none-any.whl", hash = "sha256:8a4fdd8936eba2512e9c85df320a37e694c93945b33ef33c89946a340a238557"},
     {file = "Flask-1.1.2.tar.gz", hash = "sha256:4efa1ae2d7c9865af48986de8aeb8504bf32c7f3d6fdc9353d34b21f4b127060"},
+]
+flask-lambda-python36 = [
+    {file = "flask_lambda_python36-0.1.0-py36-none-any.whl", hash = "sha256:d7a7ccef0ea6a2bc68d3a589bd7e8a58cff7dccfc8818cf06f40b4dedfb20552"},
 ]
 flask-migrate = [
     {file = "Flask-Migrate-2.5.3.tar.gz", hash = "sha256:a69d508c2e09d289f6e55a417b3b8c7bfe70e640f53d2d9deb0d056a384f37ee"},
@@ -1043,6 +1057,7 @@ more-itertools = [
 ]
 nodeenv = [
     {file = "nodeenv-1.4.0-py2.py3-none-any.whl", hash = "sha256:4b0b77afa3ba9b54f4b6396e60b0c83f59eaeb2d63dc3cc7a70f7f4af96c82bc"},
+    {file = "nodeenv-1.4.0.tar.gz", hash = "sha256:26941644654d8dd5378720e38f62a3bac5f9240811fb3b8913d2663a17baa91c"},
 ]
 packaging = [
     {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
