@@ -1,8 +1,10 @@
 """This package set up the app and server."""
 
+import json
 import os
 
-from flask import Blueprint, Flask
+from flask import Blueprint, Flask, Response
+from flask_lambda import FlaskLambda
 from flask_migrate import Migrate
 from flask_sockets import Sockets
 from flask_sqlalchemy import SQLAlchemy
@@ -13,8 +15,16 @@ from sqlalchemy_utils.functions import database_exists
 # Set routes/events
 ws = Blueprint(r"ws", __name__)
 http = Blueprint(r"http", __name__)
+
+cluster_arn = os.environ.get("DB_CLUSTER_ARN", "")
+secret_arn = os.environ.get("DB_SECRET_ARN", "")
+
 # Set db client instance
-db = SQLAlchemy()
+db = SQLAlchemy(
+    engine_options={
+        "connect_args": dict(aurora_cluster_arn=cluster_arn, secret_arn=secret_arn)
+    }
+)
 
 from . import utils  # isort:skip
 from . import routes, events  # isort:skip
@@ -140,3 +150,45 @@ def raise_grid(host: str, port: int, **kwargs):
     server = pywsgi.WSGIServer((host, port), app, handler_class=WebSocketHandler)
     server.serve_forever()
     return app, server
+
+
+def create_lambda_app() -> FlaskLambda:
+    """Create Flask Lambda app for deploying on AWS.
+
+    Returns:
+        app (Flask): flask application
+    """
+    app = FlaskLambda(__name__)
+    app.debug = False
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
+
+    # Add a test route
+    @http.route("/test-deployment/")
+    def test():
+        return Response(
+            json.dumps({"message": "Serverless deployment successful."}),
+            status=200,
+            mimetype="application/json",
+        )
+
+    app.register_blueprint(http, url_prefix=r"/")
+
+    # Set SQLAlchemy configs
+    global db
+    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+auroradataapi://:@/mydb"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    db.init_app(app)
+
+    s = app.app_context().push()
+    conn = db.engine.connect()
+
+    # Create all tables
+    try:
+        db.Model.metadata.create_all(db.engine, checkfirst=False)
+        seed_db()
+    except:
+        pass
+
+    db.session.commit()
+
+    return app
