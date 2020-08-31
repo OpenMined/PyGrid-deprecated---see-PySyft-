@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="OpenMined CLI",
+    name="OpenMined PyGrid CLI",
     version="0.0.1",
     packages=["apps.cli",],
     install_requires=["click",],

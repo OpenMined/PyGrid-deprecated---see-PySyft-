@@ -2,6 +2,9 @@ import json
 
 import click
 
+from .providers.aws import get_aws_config
+from .providers.azure import get_azure_config
+from .providers.gcp import get_gcp_config
 from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -34,7 +37,7 @@ def cli(config, output_file):
 @pass_config
 def deploy(config, provider):
     click.echo(f"Starting the deployment on {colored(provider)}...")
-    config.provider = provider
+    config.provider = provider.lower()
 
     # Deployment Keys
     config.id_key = click.prompt(
@@ -50,7 +53,7 @@ def deploy(config, provider):
 
     ## Websockets
     if click.confirm(f"Will you need to support Websockets?"):
-        if config.provider.lower() != "aws":
+        if config.provider != "aws":
             config.deployment_type = "serverfull"
         elif click.confirm(f"Do you want to deploy serverless?"):
             config.deployment_type = "serverless"
@@ -60,11 +63,23 @@ def deploy(config, provider):
         config.deployment_type = "serverless"
 
 
+def get_provider_config(config):
+    if config.provider == "aws":
+        config.aws = get_aws_config()
+    elif config.provider == "gcp":
+        config.gcp = get_gcp_config()
+    elif config.provider == "azure":
+        config.azure = get_azure_config()
+
+
 @deploy.command()
 @pass_config
 def node(config):
     click.echo(f"Node Deployment")
     config.app = "Node"
+
+    # Prompting user to provide configuration for the selected cloud
+    get_provider_config(config)
 
 
 @deploy.command()
@@ -73,12 +88,15 @@ def network(config):
     click.echo(f"Network Deployment")
     config.app = "Network"
 
+    # Prompting user to provide configuration for the selected cloud
+    get_provider_config(config)
+
 
 @cli.resultcallback()
 @pass_config
 def logging(config, results, **kwargs):
     click.echo(f"Writing configs to {config.output_file}")
-    config.id_key = "X" * len(config.id_key)
-    config.secret_key = "X" * len(config.secret_key)
+    del config.id_key
+    del config.secret_key
     with open(config.output_file, "w", encoding="utf-8") as f:
-        json.dump(vars(config), f)
+        json.dump(vars(config), f, default=lambda o: o.__dict__)
