@@ -18,9 +18,9 @@ def cli(config, output_file):
 
     Example:
 
-    >>> pygrid deploy node --provider aws
+    >>> pygrid deploy --provider aws node
 
-    >>> pygrid deploy network --provider azure
+    >>> pygrid deploy --provider azure network
     """
     click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
     config.output_file = output_file
