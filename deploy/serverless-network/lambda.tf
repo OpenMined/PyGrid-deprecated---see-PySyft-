@@ -14,6 +14,9 @@ module "lambda" {
   source_path = local.function_path
   handler     = local.function_handler
 
+  create_role = false
+  lambda_role = aws_iam_role.pygrid-network-lambda-role.arn
+
   layers = [
     module.lambda_layer_pygrid_network_dependencies.this_lambda_layer_arn,
   ]
