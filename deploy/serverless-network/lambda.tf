@@ -21,6 +21,12 @@ module "lambda" {
     module.lambda_layer_pygrid_network_dependencies.this_lambda_layer_arn,
   ]
 
+  environment_variables = {
+    DB_CLUSTER_ARN = module.aurora.this_rds_cluster_arn
+    DB_SECRET_ARN  = aws_secretsmanager_secret.database-secret.arn
+    SECRET_KEY = "Do-we-need-this-in-deployed-version"  # TODO: Clarify this
+  }
+
   #   tags = {
   #     Name = ""
   #   }
