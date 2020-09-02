@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "database-secret" {
-  name                    = "pygrid-network-rds-admin"
+  name                    = "pygrid-network-rds-admin-${random_pet.random.id}"
   description             = "PyGrid network database credentials"
 }
 

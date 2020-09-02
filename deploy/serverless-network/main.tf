@@ -19,3 +19,7 @@ module "api_gateway" {
     }
   }
 }
+
+resource "random_pet" "random" {
+  length = 2
+}

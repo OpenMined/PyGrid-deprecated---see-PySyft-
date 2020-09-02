@@ -1,4 +1,5 @@
 locals {
+  # TODO: Avoid __pycache__ folders to be zipped
   function_path    = "../../apps/network/src/"
   function_handler = "deploy.app"
 }

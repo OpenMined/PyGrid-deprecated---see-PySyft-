@@ -19,7 +19,7 @@ resource "aws_iam_role" "pygrid-network-lambda-role" {
 
 resource "aws_iam_role_policy" "AmazonRDSDataFullAcess" {
   name = "amazon-rds-data-full-acess"
-  role = aws_iam_role.blog-aurora-serverless-role.id
+  role = aws_iam_role.pygrid-network-lambda-role.id
   policy = <<-EOF
   {
     "Version": "2012-10-17",
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "AmazonRDSDataFullAcess" {
 
 resource "aws_iam_role_policy" "CloudWatchLogsFullAccess" {
   name = "cloud-watch-logs-full-access"
-  role = aws_iam_role.blog-aurora-serverless-role.id
+  role = aws_iam_role.pygrid-network-lambda-role.id
   policy = <<-EOF
   {
     "Version": "2012-10-17",
@@ -89,7 +89,7 @@ resource "aws_iam_role_policy" "CloudWatchLogsFullAccess" {
 
 resource "aws_iam_role_policy" "SecretManagerReadWrite" {
   name = "secret-manager-read-write-access"
-  role = aws_iam_role.blog-aurora-serverless-role.id
+  role = aws_iam_role.pygrid-network-lambda-role.id
   policy = <<-EOF
   {
     "Version": "2012-10-17",

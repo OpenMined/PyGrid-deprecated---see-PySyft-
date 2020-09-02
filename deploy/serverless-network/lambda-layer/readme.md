@@ -15,7 +15,6 @@ pip install -r requirements.txt -t python
 zip -r all-dep.zip python
 ```
 Remove the temporary files and folders.
-
-```
+```shell script
 rm -rf python requirements.txt
 ```

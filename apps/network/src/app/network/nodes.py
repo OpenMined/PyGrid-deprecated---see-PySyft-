@@ -9,9 +9,9 @@ class GridNodes(db.Model):
         address: Address of grid node.
     """
 
-    __tablename__ = "__gridnode__"
+    __tablename__ = "gridnode"
 
-    id = db.Column(db.String(), primary_key=True)
+    id = db.Column(db.String(64), primary_key=True)
     address = db.Column(db.String())
 
     def __str__(self):
