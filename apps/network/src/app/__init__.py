@@ -16,8 +16,9 @@ from sqlalchemy_utils.functions import database_exists
 ws = Blueprint(r"ws", __name__)
 http = Blueprint(r"http", __name__)
 
-cluster_arn = os.environ.get("DB_CLUSTER_ARN", "")
-secret_arn = os.environ.get("DB_SECRET_ARN", "")
+database_name = os.environ.get("DB_NAME")
+cluster_arn = os.environ.get("DB_CLUSTER_ARN")
+secret_arn = os.environ.get("DB_SECRET_ARN")
 
 # Set db client instance	# Set db client instance
 db = SQLAlchemy(
@@ -175,7 +176,7 @@ def create_lambda_app() -> FlaskLambda:
 
     # Set SQLAlchemy configs
     global db
-    app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+auroradataapi://:@/mydb"
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+auroradataapi://:@/{database_name}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
 

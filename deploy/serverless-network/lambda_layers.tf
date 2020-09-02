@@ -1,7 +1,3 @@
-###############################
-#   Layer with all dependencies
-###############################
-
 module "lambda_layer_pygrid_network_dependencies" {
   source = "terraform-aws-modules/lambda/aws"
 

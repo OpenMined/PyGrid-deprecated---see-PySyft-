@@ -27,10 +27,9 @@ module "aurora" {
   skip_final_snapshot             = true
   storage_encrypted               = true
 
-  #Todo: make them secret tf variables
   database_name = var.database_name
-  username      = var.rds_credentials.username
-  password      = var.rds_credentials.password
+  username      = var.database_username
+  password      = var.database_password
 
   db_parameter_group_name         = aws_db_parameter_group.aurora_db_56_parameter_group.id
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora_cluster_56_parameter_group.id

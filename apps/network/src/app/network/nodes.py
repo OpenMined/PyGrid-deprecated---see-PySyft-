@@ -12,7 +12,7 @@ class GridNodes(db.Model):
     __tablename__ = "gridnode"
 
     id = db.Column(db.String(64), primary_key=True)
-    address = db.Column(db.String())
+    address = db.Column(db.String(64))
 
     def __str__(self):
         return f"< Grid Node {self.id} : {self.address}>"
