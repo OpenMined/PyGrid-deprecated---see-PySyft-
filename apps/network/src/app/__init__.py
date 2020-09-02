@@ -156,6 +156,7 @@ def raise_grid(host: str, port: int, **kwargs):
 
 def create_lambda_app() -> FlaskLambda:
     """Create Flask Lambda app for deploying on AWS.
+
     Returns:
         app (Flask): flask application
     """
