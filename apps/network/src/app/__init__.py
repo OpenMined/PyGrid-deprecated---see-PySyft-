@@ -16,17 +16,7 @@ from sqlalchemy_utils.functions import database_exists
 ws = Blueprint(r"ws", __name__)
 http = Blueprint(r"http", __name__)
 
-database_name = os.environ.get("DB_NAME")
-cluster_arn = os.environ.get("DB_CLUSTER_ARN")
-secret_arn = os.environ.get("DB_SECRET_ARN")
-
-# Set db client instance	# Set db client instance
-db = SQLAlchemy(
-    engine_options={
-        "connect_args": dict(aurora_cluster_arn=cluster_arn, secret_arn=secret_arn)
-    }
-)
-
+db = SQLAlchemy()
 
 from . import utils  # isort:skip
 from . import routes, events  # isort:skip
@@ -154,43 +144,60 @@ def raise_grid(host: str, port: int, **kwargs):
     return app, server
 
 
+def seed_deployed_db():
+    """Creates database tables and adds data to tables.
+    """
+    global db
+    try:
+        db.Model.metadata.create_all(db.engine, checkfirst=False)
+        seed_db()
+    except Exception as e:
+        print("Error", e)
+
+    db.session.commit()
+
+
 def create_lambda_app() -> FlaskLambda:
     """Create Flask Lambda app for deploying on AWS.
 
     Returns:
         app (Flask): flask application
     """
+
+    database_name = os.environ.get("DB_NAME")
+    cluster_arn = os.environ.get("DB_CLUSTER_ARN")
+    secret_arn = os.environ.get("DB_SECRET_ARN")
+    secret_key = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
+
     app = FlaskLambda(__name__)
-    app.debug = False
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
+    app.config.from_mapping(
+        DEBUG=False,
+        SECRET_KEY=secret_key,
+        SQLALCHEMY_DATABASE_URI=f"mysql+auroradataapi://:@/{database_name}",
+        SQLALCHEMY_ENGINE_OPTIONS={
+            "connect_args": dict(aurora_cluster_arn=cluster_arn, secret_arn=secret_arn)
+        },
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
 
     # Add a test route
     @http.route("/test-deployment/")
     def test():
         return Response(
-            json.dumps({"message": "Serverless deployment successful."}),
+            json.dumps({"message": "Serverless deployment successful"}),
             status=200,
             mimetype="application/json",
         )
 
     app.register_blueprint(http, url_prefix=r"/")
 
-    # Set SQLAlchemy configs
+    # Setup database
     global db
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+auroradataapi://:@/{database_name}"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
 
     s = app.app_context().push()
     conn = db.engine.connect()
 
-    # Create all tables
-    try:
-        db.Model.metadata.create_all(db.engine, checkfirst=False)
-        seed_db()
-    except Exception as e:
-        print(e)
-
-    db.session.commit()
+    seed_deployed_db()  # Seed database
 
     return app
