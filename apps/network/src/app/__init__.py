@@ -144,19 +144,6 @@ def raise_grid(host: str, port: int, **kwargs):
     return app, server
 
 
-def seed_deployed_db():
-    """Creates database tables and adds data to tables.
-    """
-    global db
-    try:
-        db.Model.metadata.create_all(db.engine, checkfirst=False)
-        seed_db()
-    except Exception as e:
-        print("Error", e)
-
-    db.session.commit()
-
-
 def create_lambda_app() -> FlaskLambda:
     """Create Flask Lambda app for deploying on AWS.
 
@@ -195,9 +182,16 @@ def create_lambda_app() -> FlaskLambda:
     global db
     db.init_app(app)
 
-    s = app.app_context().push()
-    conn = db.engine.connect()
+    s = app.app_context().push()  # Push the app into context
 
-    seed_deployed_db()  # Seed database
+    try:
+        db.Model.metadata.create_all(
+            db.engine, checkfirst=False
+        )  # Create database tables
+        seed_db()  # Seed the database
+    except Exception as e:
+        print("Error", e)
+
+    db.session.commit()
 
     return app
