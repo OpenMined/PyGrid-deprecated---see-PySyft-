@@ -1,4 +1,1 @@
-from .role import Role
-from .group import Group
-from .user import User
-from .usergroup import UserGroup
+from .database import Role, Group, User, UserGroup

@@ -68,7 +68,7 @@ def test_post_usr_bad_data_with_key(client, database, cleanup):
     assert result.get_json()["error"] == JSON_DECODE_ERR_MSG
 
 
-def test_post_first_usr(client, database, cleanup):
+def test_post_first_usr_success(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -339,7 +339,7 @@ def test_login_usr_valid_credentials(client, database, cleanup):
         headers=headers,
         content_type="application/json",
     )
-
+   
     assert result.status_code == 200
     assert result.get_json()["success"] == True
 
@@ -533,7 +533,7 @@ def test_login_usr_invalid_password(client, database, cleanup):
 # GET ALL USERS
 
 
-def test_get_users_valid(client, database, cleanup):
+def test_get_users_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -835,11 +835,9 @@ def test_get_users_invalid_token(client, database, cleanup):
     assert result.status_code == 403
     assert result.get_json()["error"] == "Invalid credentials!"
 
-
 # GET SPECIFIC USER
 
-
-def test_get_one_user_valid(client, database, cleanup):
+def test_get_one_user_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -1195,7 +1193,7 @@ def test_get_one_missing_user(client, database, cleanup):
 # PUT USER EMAIL
 
 
-def test_put_other_user_email_valid(client, database, cleanup):
+def test_put_other_user_email_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -1544,7 +1542,7 @@ def test_put_other_user_email_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_put_own_user_email_valid(client, database, cleanup):
+def test_put_own_user_email_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -1702,11 +1700,9 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
     assert result.status_code == 404
     assert result.get_json()["error"] == "User ID not found!"
 
-
 # PUT USER ROLE
 
-
-def test_put_other_user_role_valid(client, database, cleanup):
+def test_put_other_user_role_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -2047,7 +2043,7 @@ def test_put_other_user_role_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_put_own_user_role_valid(client, database, cleanup):
+def test_put_own_user_role_sucess(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -2276,7 +2272,7 @@ def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_put_other_user_role_owner_valid(client, database, cleanup):
+def test_put_other_user_role_owner_success(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -2450,11 +2446,9 @@ def test_put_other_user_role_missing_user(client, database, cleanup):
     assert result.status_code == 404
     assert result.get_json()["error"] == "User ID not found!"
 
-
 # PUT USER PASSWORD
 
-
-def test_put_other_user_password_valid(client, database, cleanup):
+def test_put_other_user_password_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -2807,7 +2801,7 @@ def test_put_other_user_password_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_put_own_user_password_valid(client, database, cleanup):
+def test_put_own_user_password_success(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -2943,11 +2937,9 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
     assert result.status_code == 404
     assert result.get_json()["error"] == "User ID not found!"
 
-
 # PUT USER GROUPS
 
-
-def test_put_other_user_groups_valid(client, database, cleanup):
+def test_put_other_user_groups_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -3347,7 +3339,7 @@ def test_put_other_user_groups_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_put_own_user_groups_valid(client, database, cleanup):
+def test_put_own_user_groups_success(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -3588,11 +3580,9 @@ def test_put_user_groups_missing_group(client, database, cleanup):
     assert result.status_code == 404
     assert result.get_json()["error"] == "Group ID not found!"
 
-
 # DELETE USER
 
-
-def test_delete_other_user_valid(client, database, cleanup):
+def test_delete_other_user_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,
@@ -3895,7 +3885,7 @@ def test_delete_other_user_unauthorized(client, database, cleanup):
     assert result.get_json()["error"] == "User is not authorized for this operation!"
 
 
-def test_delete_own_user_valid(client, database, cleanup):
+def test_delete_own_user_success(client, database, cleanup):
     new_role = Role(
         name="Owner",
         can_triage_jobs=True,
@@ -4010,11 +4000,9 @@ def test_delete_other_user_missing_user(client, database, cleanup):
     assert result.status_code == 404
     assert result.get_json()["error"] == "User ID not found!"
 
-
 # SEARCH USERS
 
-
-def test_search_users_valid(client, database, cleanup):
+def test_search_users_success(client, database, cleanup):
     new_role = Role(
         name="Administrator",
         can_triage_jobs=True,

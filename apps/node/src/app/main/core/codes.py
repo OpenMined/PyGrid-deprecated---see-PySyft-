@@ -32,6 +32,8 @@ class MODEL_CENTRIC_FL_EVENTS(object):
     AUTHENTICATE = "model-centric/authenticate"
     CYCLE_REQUEST = "model-centric/cycle-request"
 
+class USER_EVENTS(object):
+    GET_ALL_USERS = "list-users"
 
 class CYCLE(object):
     STATUS = "status"
