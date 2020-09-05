@@ -1,7 +1,8 @@
 import boto3
 import click
+from PyInquirer import prompt
 
-from ..utils import Config
+from ..utils import Config, styles
 
 ## MARK: regions and instances takes some time to be loaded (5-7 sec)
 EC2 = boto3.client("ec2")
@@ -11,28 +12,67 @@ INSTANCES = [
     for instance in EC2.describe_instance_types()["InstanceTypes"]
 ]
 
+
 def get_aws_config():
     """Getting the configration required for deployment on AWs.
 
     Returns:
         Config: Simple Config with the user inputs
     """
-    region = click.prompt(
-        f"Please provide your desired AWS region", default="us-east-1", type=str,
-    )
-    instance_type = click.prompt(
-        f"Please provide your desired AWS instance type", default="t2.micro", type=str,
-    )
+
+    region = prompt(
+        [
+            {
+                "type": "list",
+                "name": "region",
+                "message": "Please select your desired AWS region",
+                "default": "us-east-1",
+                "choices": REGIONS,
+            },
+        ],
+        style=styles.second,
+    )["region"]
+
+    instance_type = prompt(
+        [
+            {
+                "type": "list",
+                "name": "instance",
+                "message": "Please select your desired AWS instance type",
+                "default": "t2.micro",
+                "choices": INSTANCES,
+            },
+        ],
+        style=styles.second,
+    )["instance"]
 
     ## VPC
-    vpc_cidr_block = click.prompt(
-        f"Please provide VPC cidr block", default="10.0.0.0/16", type=str,
-    )
+    vpc_cidr_block = prompt(
+        [
+            {
+                "type": "input",
+                "name": "vpc_cidr_block",
+                "message": "Please provide VPC cidr block",
+                "default": "10.0.0.0/16",
+                # TODO: 'validate': make sure it's a correct ip format
+            },
+        ],
+        style=styles.second,
+    )["vpc_cidr_block"]
 
     ## subnets
-    subnet_cidr_block = click.prompt(
-        f"Please provide Subnet cidr block", default="10.0.0.0/16", type=str,
-    )
+    subnet_cidr_block = prompt(
+        [
+            {
+                "type": "input",
+                "name": "subnet_cidr_block",
+                "message": "Please provide Subnet cidr block",
+                "default": "10.0.0.0/24",
+                # TODO: 'validate': make sure it's a correct ip format
+            },
+        ],
+        style=styles.second,
+    )["subnet_cidr_block"]
 
     return Config(
         region=region,
