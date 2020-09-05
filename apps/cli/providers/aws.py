@@ -1,7 +1,15 @@
+import boto3
 import click
 
 from ..utils import Config
 
+## MARK: regions and instances takes some time to be loaded (5-7 sec)
+EC2 = boto3.client("ec2")
+REGIONS = [region["RegionName"] for region in EC2.describe_regions()["Regions"]]
+INSTANCES = [
+    instance["InstanceType"]
+    for instance in EC2.describe_instance_types()["InstanceTypes"]
+]
 
 def get_aws_config():
     """Getting the configration required for deployment on AWs.
