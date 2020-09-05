@@ -80,6 +80,10 @@ def node(config):
 
     # Prompting user to provide configuration for the selected cloud
     get_provider_config(config)
+    if click.confirm(
+        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
+    ):
+        click.echo("Deploying...")
 
 
 @deploy.command()
@@ -90,6 +94,10 @@ def network(config):
 
     # Prompting user to provide configuration for the selected cloud
     get_provider_config(config)
+    if click.confirm(
+        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
+    ):
+        click.echo("Deploying...")
 
 
 @cli.resultcallback()
