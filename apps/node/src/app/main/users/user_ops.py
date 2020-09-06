@@ -25,34 +25,6 @@ from .. import main_routes
 from ..users import Role, User, UserGroup, Group
 
 
-def model_to_json(model):
-    """Returns a JSON representation of an SQLAlchemy-backed object."""
-    json = {}
-    for col in model.__mapper__.attrs.keys():
-        if col != "hashed_password" and col != "salt":
-            json[col] = getattr(model, col)
-
-    return json
-
-
-def expand_user_object(user):
-    def get_group(usr_group):
-        query = db.session().query
-        group = usr_group.group
-        group = query(Group).get(group)
-        group = model_to_json(group)
-        return group
-
-    query = db.session().query
-    user = model_to_json(user)
-    user["role"] = query(Role).get(user["role"])
-    user["role"] = model_to_json(user["role"])
-    user["groups"] = query(UserGroup).filter_by(user=user["id"]).all()
-    user["groups"] = [get_group(usr_group) for usr_group in user["groups"]]
-
-    return user
-
-
 def salt_and_hash_password(password, rounds):
     password = password.encode("UTF-8")
     salt = gensalt(rounds=rounds)
@@ -135,9 +107,8 @@ def signup_user(private_key, email, password, role):
     return new_user
 
 
-def login_user(email, password):
+def login_user(private_key, email, password):
     password = password.encode("UTF-8")
-    private_key = request.headers.get("private-key")
 
     usr = User.query.filter_by(email=email, private_key=private_key).first()
     if usr is None:
@@ -304,4 +275,3 @@ def search_users(current_user, private_key, filters, group):
     users = query.all()
 
     return users
-
