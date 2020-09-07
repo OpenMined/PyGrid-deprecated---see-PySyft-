@@ -186,13 +186,13 @@ pip install -e .
 #### Deploy a Node to AWS
 
 ```shell
-pygrid deploy --provider aws node
+pygrid deploy --provider aws --app node
 ```
 
 #### Deploy a Network to AWS
 
 ```shell
-pygrid deploy --provider azure network
+pygrid deploy --provider azure --app network
 ```
 
 ## Contributing
