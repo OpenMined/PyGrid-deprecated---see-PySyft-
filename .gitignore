@@ -79,3 +79,4 @@ terraform.rc
 
 # Ignore zipped packages
 /deploy/*/*/*.zip
+/.vscode/

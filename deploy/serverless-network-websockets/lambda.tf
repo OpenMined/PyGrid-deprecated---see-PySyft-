@@ -19,6 +19,11 @@ module "lambda" {
   create_role = false
   lambda_role = aws_iam_role.pygrid-network-websocket-role.arn
 
+  environment_variables = {
+    DYNAMODB_TABLE_NAME = module.dynamodb_table.this_dynamodb_table_id
+    WEBSOCKET_INVOKE_URL = aws_apigatewayv2_stage.Test.invoke_url
+  }
+
   allowed_triggers = {
     AllowExecutionFromAPIGateway_onConnect = {
       service    = "apigateway"
