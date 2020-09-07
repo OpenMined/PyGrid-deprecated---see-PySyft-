@@ -1,3 +1,4 @@
+import os
 import json
 
 import click
@@ -26,7 +27,7 @@ def cli(config, output_file):
     config.output_file = output_file
 
 
-@cli.group()
+@cli.command()
 @click.option(
     "--provider",
     prompt="Cloud Provider: ",
@@ -34,12 +35,23 @@ def cli(config, output_file):
     type=click.Choice(["AWS", "GCP", "AZURE"], case_sensitive=False),
     help="The Cloud Provider for the deployment",
 )
+@click.option(
+    "--app",
+    prompt="PyGrid App: ",
+    default="Node",
+    type=click.Choice(["Node", "Network", "Worker"], case_sensitive=False),
+    help="The PyGrid App to be deployed",
+)
 @pass_config
-def deploy(config, provider):
+def deploy(config, provider, app):
     click.echo(f"Starting the deployment on {colored(provider)}...")
     config.provider = provider.lower()
 
-    # Deployment Keys
+    ## Get app config and arguments
+    config.app = Config(name=app.lower())
+    get_app_arguments(config)
+
+    ## Deployment Keys
     config.id_key = click.prompt(
         f"Please enter a your cloud deployment {colored('id')} key",
         type=str,
@@ -62,6 +74,13 @@ def deploy(config, provider):
         click.echo("we are going to serverless deployment!")
         config.deployment_type = "serverless"
 
+    ## Prompting user to provide configuration for the selected cloud
+    get_provider_config(config)
+    if click.confirm(
+        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
+    ):
+        click.echo("Deploying...")
+
 
 def get_provider_config(config):
     if config.provider == "aws":
@@ -72,32 +91,55 @@ def get_provider_config(config):
         config.azure = get_azure_config()
 
 
-@deploy.command()
-@pass_config
-def node(config):
-    click.echo(f"Node Deployment")
-    config.app = "Node"
-
-    # Prompting user to provide configuration for the selected cloud
-    get_provider_config(config)
-    if click.confirm(
-        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
-    ):
-        click.echo("Deploying...")
-
-
-@deploy.command()
-@pass_config
-def network(config):
-    click.echo(f"Network Deployment")
-    config.app = "Network"
-
-    # Prompting user to provide configuration for the selected cloud
-    get_provider_config(config)
-    if click.confirm(
-        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
-    ):
-        click.echo("Deploying...")
+def get_app_arguments(config):
+    if config.app.name == "node":
+        config.app.id = click.prompt(
+            f"PyGrid Node ID", type=str, default=os.environ.get("NODE_ID", None),
+        )
+        config.app.port = click.prompt(
+            f"Port number of the socket.io server",
+            type=str,
+            default=os.environ.get("GRID_NODE_PORT", 5000),
+        )
+        config.app.host = click.prompt(
+            f"Grid node host",
+            type=str,
+            default=os.environ.get("GRID_NODE_HOST", "0.0.0.0"),
+        )
+        config.app.network = click.prompt(
+            f"Grid Network address (e.g. --network=0.0.0.0:7000)",
+            type=str,
+            default=os.environ.get("NETWORK", None),
+        )
+        config.app.num_replicas = click.prompt(
+            f"Number of replicas to provide fault tolerance to model hosting",
+            type=int,
+            default=os.environ.get("NUM_REPLICAS", None),
+        )
+        config.app.start_local_db = click.prompt(
+            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
+            type=bool,
+            default=False,
+        )
+    elif config.app.name == "network":
+        config.app.port = click.prompt(
+            f"Port number of the socket.io server",
+            type=str,
+            default=os.environ.get("GRID_NETWORK_PORT", "7000"),
+        )
+        config.app.host = click.prompt(
+            f"GridNerwork host",
+            type=str,
+            default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
+        )
+        config.app.start_local_db = click.prompt(
+            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
+            type=bool,
+            default=False,
+        )
+    else:
+        # TODO: Workers arguments
+        pass
 
 
 @cli.resultcallback()
