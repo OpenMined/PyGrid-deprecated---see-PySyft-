@@ -1,4 +1,3 @@
-import logging
 from secrets import token_hex
 from json import dumps, loads
 from json.decoder import JSONDecodeError
@@ -23,6 +22,7 @@ from ..core.exceptions import (
 from ... import db
 from .. import main_routes
 from ..users import Role, User, UserGroup, Group
+from ..users.database.utils import *
 from ..users.user_ops import (
     signup_user,
     login_user,
@@ -35,44 +35,29 @@ from ..users.user_ops import (
     delete_user,
     search_users,
 )
-from .auth import token_required
+from ..auth import token_required_factory, error_handler
 
 
-def model_to_json(model):
-    """Returns a JSON representation of an SQLAlchemy-backed object."""
-    json = {}
-    for col in model.__mapper__.attrs.keys():
-        if col != "hashed_password" and col != "salt":
-            json[col] = getattr(model, col)
+def get_token(*args, **kwargs):
+    token = request.headers.get("token")
+    if token is None:
+        raise MissingRequestKeyError
 
-    return json
+    return token
 
 
-def expand_user_object(user):
-    def get_group(usr_group):
-        query = db.session().query
-        group = usr_group.group
-        group = query(Group).get(group)
-        group = model_to_json(group)
-        return group
+def format_result(response_body, status_code, mimetype):
+    return Response(dumps(response_body), status=status_code,
+                    mimetype=mimetype)
 
-    query = db.session().query
-    user = model_to_json(user)
-    user["role"] = query(Role).get(user["role"])
-    user["role"] = model_to_json(user["role"])
-    user["groups"] = query(UserGroup).filter_by(user=user["id"]).all()
-    user["groups"] = [get_group(usr_group) for usr_group in user["groups"]]
 
-    return user
+token_required = token_required_factory(get_token, format_result)
 
 
 @main_routes.route("/users", methods=["POST"])
 def signup_user_route():
-    status_code = 200  # Success
-    response_body = {}
-    private_key = usr = usr_role = None
-
-    try:
+    def route_logic():
+        private_key = usr = usr_role = None
         private_key = request.headers.get("private-key")
         data = loads(request.data)
         password = data.get("password")
@@ -85,21 +70,9 @@ def signup_user_route():
         user = signup_user(private_key, email, password, role)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except RoleNotFoundError as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in post-role", exc_info=e)
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -108,10 +81,7 @@ def signup_user_route():
 
 @main_routes.route("/users/login", methods=["POST"])
 def login_user_route():
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic():
         data = loads(request.data)
         email = data.get("email")
         password = data.get("password")
@@ -122,21 +92,9 @@ def login_user_route():
 
         token = login_user(private_key, email, password)
         response_body = {RESPONSE_MSG.SUCCESS: True, "token": token}
+        return response_body
 
-    except InvalidCredentialsError as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in post-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -146,35 +104,20 @@ def login_user_route():
 @main_routes.route("/users", methods=["GET"])
 @token_required
 def get_all_users_route(current_user):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user):
         private_key = request.headers.get("private-key")
         if private_key is None:
             raise MissingRequestKeyError
-
+    
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
-
+    
         users = get_all_users(current_user, private_key)
         users = [expand_user_object(user) for user in users]
         response_body = {RESPONSE_MSG.SUCCESS: True, "users": users}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in get-roles", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -184,10 +127,7 @@ def get_all_users_route(current_user):
 @main_routes.route("/users/<user_id>", methods=["GET"])
 @token_required
 def get_specific_user_route(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         private_key = request.headers.get("private-key")
         if private_key is None:
@@ -199,22 +139,10 @@ def get_specific_user_route(current_user, user_id):
         user = get_specific_user(current_user, private_key, user_id)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in get-roles", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -224,10 +152,7 @@ def get_specific_user_route(current_user, user_id):
 @main_routes.route("/users/<user_id>/email", methods=["PUT"])
 @token_required
 def put_email_route(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         data = loads(request.data)
         email = data.get("email")
@@ -241,21 +166,10 @@ def put_email_route(current_user, user_id):
         user = put_email(current_user, private_key, email, user_id)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -265,10 +179,7 @@ def put_email_route(current_user, user_id):
 @main_routes.route("/users/<user_id>/role", methods=["PUT"])
 @token_required
 def put_role_route(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         data = loads(request.data)
         role = data.get("role")
@@ -282,21 +193,10 @@ def put_role_route(current_user, user_id):
         edited_user = put_role(current_user, private_key, role, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -306,10 +206,7 @@ def put_role_route(current_user, user_id):
 @main_routes.route("/users/<user_id>/password", methods=["PUT"])
 @token_required
 def put_password_role(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         data = loads(request.data)
         password = data.get("password")
@@ -324,21 +221,10 @@ def put_password_role(current_user, user_id):
         edited_user = expand_user_object(edited_user)
 
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -348,10 +234,7 @@ def put_password_role(current_user, user_id):
 @main_routes.route("/users/<user_id>/groups", methods=["PUT"])
 @token_required
 def put_groups_route(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         data = loads(request.data)
         groups = data.get("groups")
@@ -365,21 +248,10 @@ def put_groups_route(current_user, user_id):
         edited_user = put_groups(current_user, private_key, groups, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -389,10 +261,7 @@ def put_groups_route(current_user, user_id):
 @main_routes.route("/users/<user_id>", methods=["DELETE"])
 @token_required
 def delete_user_role(current_user, user_id):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user, user_id):
         user_id = int(user_id)
         private_key = request.headers.get("private-key")
 
@@ -404,21 +273,10 @@ def delete_user_role(current_user, user_id):
         edited_user = delete_user(current_user, private_key, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user,
+                                               user_id)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
@@ -428,10 +286,7 @@ def delete_user_role(current_user, user_id):
 @main_routes.route("/users/search", methods=["POST"])
 @token_required
 def search_users_route(current_user):
-    status_code = 200  # Success
-    response_body = {}
-
-    try:
+    def route_logic(current_user):
         filters = loads(request.data)
         email = filters.get("email")
         role = filters.get("role")
@@ -449,22 +304,11 @@ def search_users_route(current_user):
         users = search_users(current_user, private_key, filters, group)
         users = [expand_user_object(user) for user in users]
         response_body = {RESPONSE_MSG.SUCCESS: True, "users": users}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        status_code = 403  # Unathorized
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        status_code = 404  # Resource not found
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        status_code = 400  # Bad Request
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        status_code = 500  # Internal Server Error
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user)
 
     return Response(
         dumps(response_body), status=status_code, mimetype="application/json"
     )
+

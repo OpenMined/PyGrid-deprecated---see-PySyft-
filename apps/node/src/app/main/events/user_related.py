@@ -34,42 +34,28 @@ from ..users.user_ops import (
     delete_user,
     search_users,
 )
-from .auth import body_token_required
+from ..auth import token_required_factory, error_handler
+from ..users.database.utils import *
+
+def get_token(*args, **kwargs):
+    message = args[0]
+    token = message.get("token")
+    if token is None:
+        raise MissingRequestKeyError
+
+    return token
 
 
-def model_to_json(model):
-    """Returns a JSON representation of an SQLAlchemy-backed object."""
-    json = {}
-    for col in model.__mapper__.attrs.keys():
-        if col != "hashed_password" and col != "salt":
-            json[col] = getattr(model, col)
-
-    return json
+def format_result(response_body, status_code, mimetype):
+   return dumps(response_body)
 
 
-def expand_user_object(user):
-    def get_group(usr_group):
-        query = db.session().query
-        group = usr_group.group
-        group = query(Group).get(group)
-        group = model_to_json(group)
-        return group
-
-    query = db.session().query
-    user = model_to_json(user)
-    user["role"] = query(Role).get(user["role"])
-    user["role"] = model_to_json(user["role"])
-    user["groups"] = query(UserGroup).filter_by(user=user["id"]).all()
-    user["groups"] = [get_group(usr_group) for usr_group in user["groups"]]
-
-    return user
+token_required = token_required_factory(get_token, format_result)
 
 
 def signup_user_socket(message: dict) -> str:
-    response_body = {}
-    private_key = usr = usr_role = None
-
-    try:
+    def route_logic(message: dict) -> dict:
+        private_key = usr = usr_role = None
         private_key = message.get("private-key")
         password = message.get("password")
         email = message.get("email")
@@ -82,25 +68,15 @@ def signup_user_socket(message: dict) -> str:
         user = expand_user_object(user)
 
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except RoleNotFoundError as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in post-role", exc_info=e)
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, message)
 
     return dumps(response_body)
 
 
 def login_user_socket(message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(message: dict) -> dict:
 
         email = message.get("email")
         password = message.get("password")
@@ -111,26 +87,16 @@ def login_user_socket(message: dict) -> str:
 
         token = login_user(private_key, email, password)
         response_body = {RESPONSE_MSG.SUCCESS: True, "token": token}
+        return response_body
 
-    except InvalidCredentialsError as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in post-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def get_all_users_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         private_key = message.get("private-key")
         if private_key is None:
             raise MissingRequestKeyError
@@ -141,26 +107,16 @@ def get_all_users_socket(current_user: User, message: dict) -> str:
         users = get_all_users(current_user, private_key)
         users = [expand_user_object(user) for user in users]
         response_body = {RESPONSE_MSG.SUCCESS: True, "users": users}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in get-roles", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def get_specific_user_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         private_key = message.get("private-key")
         if private_key is None:
@@ -172,27 +128,16 @@ def get_specific_user_socket(current_user: User, message: dict) -> str:
         user = get_specific_user(current_user, private_key, user_id)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not found in get-roles", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User credentials are invalid", exc_info=e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def put_email_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         email = message.get("email")
         private_key = message.get("private-key")
@@ -205,26 +150,16 @@ def put_email_socket(current_user: User, message: dict) -> str:
         user = put_email(current_user, private_key, email, user_id)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def put_role_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         role = message.get("role")
         private_key = message.get("private-key")
@@ -237,26 +172,16 @@ def put_role_socket(current_user: User, message: dict) -> str:
         edited_user = put_role(current_user, private_key, role, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def put_password_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         password = message.get("password")
         private_key = message.get("private-key")
@@ -270,26 +195,16 @@ def put_password_socket(current_user: User, message: dict) -> str:
         edited_user = expand_user_object(edited_user)
 
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def put_groups_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         groups = message.get("groups")
         private_key = message.get("private-key")
@@ -302,26 +217,16 @@ def put_groups_socket(current_user: User, message: dict) -> str:
         edited_user = put_groups(current_user, private_key, groups, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def delete_user_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
+    def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         private_key = message.get("private-key")
 
@@ -333,25 +238,16 @@ def delete_user_socket(current_user: User, message: dict) -> str:
         edited_user = delete_user(current_user, private_key, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
 
 
-@body_token_required
+@token_required
 def search_users_socket(current_user: User, message: dict) -> str:
-    response_body = {}
-
-    try:
-
+    def route_logic(current_user: User, message: dict) -> dict:
         filters = message.copy()
         filters.pop("private-key", None)
         filters.pop("token", None)
@@ -372,16 +268,8 @@ def search_users_socket(current_user: User, message: dict) -> str:
         users = search_users(current_user, private_key, filters, group)
         users = [expand_user_object(user) for user in users]
         response_body = {RESPONSE_MSG.SUCCESS: True, "users": users}
+        return response_body
 
-    except (InvalidCredentialsError, AuthorizationError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User not authorized to post-role", exc_info=e)
-    except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-        logging.warning("User/Role not found in put-role", exc_info=e)
-    except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
-    except Exception as e:
-        response_body[RESPONSE_MSG.ERROR] = str(e)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
     return dumps(response_body)
