@@ -7,10 +7,42 @@ import jwt
 
 from src.app.main.core.exceptions import PyGridError
 from src.app.main.routes.user import model_to_json
-from src.app.main.users import Role, User, Group, UserGroup
+from src.app.main.users import Role, User, Group, UserGroup, create_role, create_user
 
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"
+)
+owner_role = ("Owner", True, True, True, True, True, True)
+user_role = ("User", False, False, False, False, False, False)
+admin_role = ("Administrator", True, True, True, True, False, False)
+
+user1 = (
+    "tech@gibberish.com",
+    "BDEB6E8EE39B6C70835993486C9E65DC",
+    "]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
+    "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
+    1,
+)
+user2 = (
+    "anemail@anemail.com",
+    "2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
+    "$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
+    "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
+    2,
+)
+user3 = (
+    "anemail@anemail.com",
+    "2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
+    "$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
+    "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
+    3,
+)
+user4 = (
+    "tech@gibberish.com",
+    "2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
+    "$2b$12$tufn64/0gSIAdprqBrRzC.",
+    "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
+    2,
 )
 
 
@@ -37,23 +69,8 @@ def test_post_role_usr_data_no_key(client):
 
 
 def test_post_usr_bad_data_with_key(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
-
+    new_role = create_role(*owner_role)
+    new_user = create_user(*user1)
     database.session.add(new_role)
     database.session.add(new_user)
     database.session.commit()
@@ -69,35 +86,11 @@ def test_post_usr_bad_data_with_key(client, database, cleanup):
 
 
 def test_post_first_usr_success(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -114,24 +107,9 @@ def test_post_first_usr_success(client, database, cleanup):
 
 
 def test_post_first_usr_missing_role(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -144,33 +122,11 @@ def test_post_first_usr_missing_role(client, database, cleanup):
 
 
 def test_post_usr_with_role(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -198,33 +154,11 @@ def test_post_usr_with_role(client, database, cleanup):
 
 
 def test_post_usr_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -248,33 +182,11 @@ def test_post_usr_invalid_key(client, database, cleanup):
 
 
 def test_post_usr_with_missing_role(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="BDEB6E8EE39B6C70835993486C9E65DC",
-        salt="]GBF[R>GX[9Cmk@DthFT!mhloUc%[f",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -298,25 +210,9 @@ def test_post_usr_with_missing_role(client, database, cleanup):
 
 
 def test_login_usr_valid_credentials(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="tech@gibberish.com",
@@ -349,33 +245,11 @@ def test_login_usr_valid_credentials(client, database, cleanup):
 
 
 def test_login_usr_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -396,33 +270,11 @@ def test_login_usr_invalid_key(client, database, cleanup):
 
 
 def test_login_usr_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -437,33 +289,11 @@ def test_login_usr_missing_key(client, database, cleanup):
 
 
 def test_login_usr_invalid_email(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -484,25 +314,9 @@ def test_login_usr_invalid_email(client, database, cleanup):
 
 
 def test_login_usr_invalid_password(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="tech@gibberish.com",
@@ -534,41 +348,13 @@ def test_login_usr_invalid_password(client, database, cleanup):
 
 
 def test_get_users_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -587,41 +373,13 @@ def test_get_users_success(client, database, cleanup):
 
 
 def test_get_users_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -638,41 +396,13 @@ def test_get_users_unauthorized(client, database, cleanup):
 
 
 def test_get_users_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -686,41 +416,13 @@ def test_get_users_missing_key(client, database, cleanup):
 
 
 def test_get_users_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -735,41 +437,13 @@ def test_get_users_missing_token(client, database, cleanup):
 
 
 def test_get_users_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -786,41 +460,13 @@ def test_get_users_invalid_key(client, database, cleanup):
 
 
 def test_get_users_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -840,41 +486,13 @@ def test_get_users_invalid_token(client, database, cleanup):
 
 
 def test_get_one_user_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -892,41 +510,13 @@ def test_get_one_user_success(client, database, cleanup):
 
 
 def test_get_one_user_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -940,41 +530,13 @@ def test_get_one_user_missing_key(client, database, cleanup):
 
 
 def test_get_one_user_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -989,41 +551,13 @@ def test_get_one_user_missing_token(client, database, cleanup):
 
 
 def test_get_one_user_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1040,41 +574,13 @@ def test_get_one_user_invalid_key(client, database, cleanup):
 
 
 def test_get_one_user_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1091,41 +597,13 @@ def test_get_one_user_invalid_token(client, database, cleanup):
 
 
 def test_get_one_user_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1142,41 +620,13 @@ def test_get_one_user_unauthorized(client, database, cleanup):
 
 
 def test_get_one_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1196,41 +646,13 @@ def test_get_one_missing_user(client, database, cleanup):
 
 
 def test_put_other_user_email_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1257,41 +679,13 @@ def test_put_other_user_email_success(client, database, cleanup):
 
 
 def test_put_other_user_email_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1313,41 +707,13 @@ def test_put_other_user_email_missing_key(client, database, cleanup):
 
 
 def test_put_other_user_email_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1370,41 +736,13 @@ def test_put_other_user_email_missing_token(client, database, cleanup):
 
 
 def test_put_user_email_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1429,41 +767,13 @@ def test_put_user_email_invalid_key(client, database, cleanup):
 
 
 def test_put_user_email_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1488,41 +798,13 @@ def test_put_user_email_invalid_token(client, database, cleanup):
 
 
 def test_put_other_user_email_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1545,41 +827,13 @@ def test_put_other_user_email_unauthorized(client, database, cleanup):
 
 
 def test_put_own_user_email_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1606,31 +860,11 @@ def test_put_own_user_email_success(client, database, cleanup):
 
 
 def test_put_user_email_missing_role(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1655,33 +889,11 @@ def test_put_user_email_missing_role(client, database, cleanup):
 
 
 def test_put_other_user_email_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1707,41 +919,13 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
 
 
 def test_put_other_user_role_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1768,41 +952,13 @@ def test_put_other_user_role_success(client, database, cleanup):
 
 
 def test_put_other_user_role_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1822,41 +978,13 @@ def test_put_other_user_role_missing_key(client, database, cleanup):
 
 
 def test_put_other_user_role_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1877,41 +1005,13 @@ def test_put_other_user_role_missing_token(client, database, cleanup):
 
 
 def test_put_user_role_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1934,41 +1034,13 @@ def test_put_user_role_invalid_key(client, database, cleanup):
 
 
 def test_put_user_role_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -1991,41 +1063,13 @@ def test_put_user_role_invalid_token(client, database, cleanup):
 
 
 def test_put_other_user_role_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2048,35 +1092,11 @@ def test_put_other_user_role_unauthorized(client, database, cleanup):
 
 
 def test_put_own_user_role_sucess(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -2086,21 +1106,9 @@ def test_put_own_user_role_sucess(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
+    new_user = create_user(*user3)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2127,35 +1135,11 @@ def test_put_own_user_role_sucess(client, database, cleanup):
 
 
 def test_put_first_user_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -2165,21 +1149,9 @@ def test_put_first_user_unauthorized(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
+    new_user = create_user(*user3)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2202,35 +1174,11 @@ def test_put_first_user_unauthorized(client, database, cleanup):
 
 
 def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -2240,21 +1188,9 @@ def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
+    new_user = create_user(*user3)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2277,35 +1213,11 @@ def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
 
 
 def test_put_other_user_role_owner_success(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -2315,21 +1227,9 @@ def test_put_other_user_role_owner_success(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
+    new_user = create_user(*user3)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2356,31 +1256,11 @@ def test_put_other_user_role_owner_success(client, database, cleanup):
 
 
 def test_put_user_role_missing_role(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2403,33 +1283,11 @@ def test_put_user_role_missing_role(client, database, cleanup):
 
 
 def test_put_other_user_role_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2455,33 +1313,11 @@ def test_put_other_user_role_missing_user(client, database, cleanup):
 
 
 def test_put_other_user_password_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -2523,41 +1359,13 @@ def test_put_other_user_password_success(client, database, cleanup):
 
 
 def test_put_user_password_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2578,41 +1386,13 @@ def test_put_user_password_missing_key(client, database, cleanup):
 
 
 def test_put_user_password_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2634,41 +1414,13 @@ def test_put_user_password_missing_token(client, database, cleanup):
 
 
 def test_put_user_password_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2692,41 +1444,13 @@ def test_put_user_password_invalid_key(client, database, cleanup):
 
 
 def test_put_user_password_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2750,41 +1474,13 @@ def test_put_user_password_invalid_token(client, database, cleanup):
 
 
 def test_put_other_user_password_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2808,35 +1504,11 @@ def test_put_other_user_password_unauthorized(client, database, cleanup):
 
 
 def test_put_own_user_password_success(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -2846,13 +1518,7 @@ def test_put_own_user_password_success(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -2894,33 +1560,11 @@ def test_put_own_user_password_success(client, database, cleanup):
 
 
 def test_put_other_user_email_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
 
     database.session.commit()
@@ -2948,33 +1592,11 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
 
 
 def test_put_other_user_groups_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -3026,41 +1648,13 @@ def test_put_other_user_groups_success(client, database, cleanup):
 
 
 def test_put_user_groups_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
@@ -3090,41 +1684,13 @@ def test_put_user_groups_missing_key(client, database, cleanup):
 
 
 def test_put_user_groups_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
     database.session.add(new_group)
@@ -3153,41 +1719,13 @@ def test_put_user_groups_missing_token(client, database, cleanup):
 
 
 def test_put_user_groups_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
     database.session.add(new_group)
@@ -3218,41 +1756,13 @@ def test_put_user_groups_invalid_key(client, database, cleanup):
 
 
 def test_put_user_groups_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
     database.session.add(new_group)
@@ -3283,41 +1793,13 @@ def test_put_user_groups_invalid_token(client, database, cleanup):
 
 
 def test_put_other_user_groups_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
     database.session.add(new_group)
@@ -3348,35 +1830,11 @@ def test_put_other_user_groups_unauthorized(client, database, cleanup):
 
 
 def test_put_own_user_groups_success(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -3386,13 +1844,7 @@ def test_put_own_user_groups_success(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -3444,33 +1896,11 @@ def test_put_own_user_groups_success(client, database, cleanup):
 
 
 def test_put_other_user_groups_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
     new_group = Group(name="Hospital_X")
     database.session.add(new_group)
@@ -3504,35 +1934,11 @@ def test_put_other_user_groups_missing_user(client, database, cleanup):
 
 
 def test_put_user_groups_missing_group(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -3542,13 +1948,7 @@ def test_put_user_groups_missing_group(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -3593,33 +1993,11 @@ def test_put_user_groups_missing_group(client, database, cleanup):
 
 
 def test_delete_other_user_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -3646,41 +2024,13 @@ def test_delete_other_user_success(client, database, cleanup):
 
 
 def test_delete_user_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -3694,41 +2044,13 @@ def test_delete_user_missing_key(client, database, cleanup):
 
 
 def test_delete_user_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -3743,41 +2065,13 @@ def test_delete_user_missing_token(client, database, cleanup):
 
 
 def test_delete_user_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -3794,41 +2088,13 @@ def test_delete_user_invalid_key(client, database, cleanup):
 
 
 def test_delete_user_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -3845,41 +2111,13 @@ def test_delete_user_invalid_token(client, database, cleanup):
 
 
 def test_delete_other_user_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -3896,35 +2134,11 @@ def test_delete_other_user_unauthorized(client, database, cleanup):
 
 
 def test_delete_own_user_success(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -3934,13 +2148,7 @@ def test_delete_own_user_success(client, database, cleanup):
         role=1,
     )
     database.session.add(new_user)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=2,
-    )
+    new_user = create_user(*user4)
     database.session.add(new_user)
     new_user = User(
         email="anemail@anemail.com",
@@ -3968,25 +2176,9 @@ def test_delete_own_user_success(client, database, cleanup):
 
 
 def test_delete_other_user_missing_user(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="tech@gibberish.com",
@@ -4015,25 +2207,9 @@ def test_delete_other_user_missing_user(client, database, cleanup):
 
 
 def test_search_users_success(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="tech@gibberish.com",
@@ -4074,35 +2250,11 @@ def test_search_users_success(client, database, cleanup):
 
 
 def test_search_users_nomatch(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="owner@owner.com",
@@ -4163,35 +2315,11 @@ def test_search_users_nomatch(client, database, cleanup):
 
 
 def test_search_users_onematch(client, database, cleanup):
-    new_role = Role(
-        name="Owner",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=True,
-        can_manage_infrastructure=True,
-    )
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
     new_user = User(
         email="tech@gibberish.com",
@@ -4253,41 +2381,13 @@ def test_search_users_onematch(client, database, cleanup):
 
 
 def test_search_users_missing_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -4307,41 +2407,13 @@ def test_search_users_missing_key(client, database, cleanup):
 
 
 def test_search_users_missing_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -4362,41 +2434,13 @@ def test_search_users_missing_token(client, database, cleanup):
 
 
 def test_search_users_invalid_key(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -4419,41 +2463,13 @@ def test_search_users_invalid_key(client, database, cleanup):
 
 
 def test_search_users_invalid_token(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
@@ -4476,41 +2492,13 @@ def test_search_users_invalid_token(client, database, cleanup):
 
 
 def test_search_users_unauthorized(client, database, cleanup):
-    new_role = Role(
-        name="Administrator",
-        can_triage_jobs=True,
-        can_edit_settings=True,
-        can_create_users=True,
-        can_create_groups=True,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*admin_role)
     database.session.add(new_role)
-    new_role = Role(
-        name="User",
-        can_triage_jobs=False,
-        can_edit_settings=False,
-        can_create_users=False,
-        can_create_groups=False,
-        can_edit_roles=False,
-        can_manage_infrastructure=False,
-    )
+    new_role = create_role(*user_role)
     database.session.add(new_role)
-    new_user = User(
-        email="tech@gibberish.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
-        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        role=1,
-    )
+    new_user = create_user(*user1)
     database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
+    new_user = create_user(*user2)
     database.session.add(new_user)
 
     database.session.commit()
