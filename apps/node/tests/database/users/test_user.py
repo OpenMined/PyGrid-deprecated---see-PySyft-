@@ -1,5 +1,5 @@
 import pytest
-from src.app.main.users import User
+from src.app.main.database import User
 
 from .presets.user import user_metrics
 

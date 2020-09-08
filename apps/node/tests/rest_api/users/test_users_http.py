@@ -5,9 +5,7 @@ from bcrypt import checkpw
 import pytest
 import jwt
 
-from src.app.main.core.exceptions import PyGridError
-from src.app.main.routes.user import model_to_json
-from src.app.main.users import Role, User, Group, UserGroup, create_role, create_user
+from src.app.main.database import *
 
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"

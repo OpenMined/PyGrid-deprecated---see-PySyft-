@@ -1,5 +1,5 @@
 import pytest
-from src.app.main.users import UserGroup
+from src.app.main.database import UserGroup
 
 from .presets.usergroup import usergroup_metrics
 

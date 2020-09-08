@@ -15,7 +15,7 @@ from .core.exceptions import (
     MissingRequestKeyError,
     InvalidCredentialsError,
 )
-from .users import User
+from .database import User
 from .. import db
 
 
@@ -24,7 +24,7 @@ def token_required_factory(get_token, format_result):
         @wraps(f)
         def wrapper(*args, **kwargs):
             status_code = 200
-            mimetype="application/json"
+            mimetype = "application/json"
             response_body = {}
             try:
                 token = get_token(*args, **kwargs)
@@ -34,7 +34,7 @@ def token_required_factory(get_token, format_result):
                 status_code = 400  # Bad Request
                 response_body[RESPONSE_MSG.ERROR] = str(e)
                 return format_result(response_body, status_code, mimetype)
-    
+
             try:
                 data = jwt.decode(token, app.config["SECRET_KEY"], algorithms="HS256")
                 current_user = User.query.get(data["id"])
@@ -42,10 +42,11 @@ def token_required_factory(get_token, format_result):
                 status_code = 403  # Unauthorized
                 response_body[RESPONSE_MSG.ERROR] = str(InvalidCredentialsError())
                 return format_result(response_body, status_code, mimetype)
-    
+
             return f(current_user, *args, **kwargs)
-    
+
         return wrapper
+
     return decorator
 
 
@@ -54,7 +55,7 @@ def error_handler(f, *args, **kwargs):
     response_body = {}
 
     try:
-      response_body = f(*args, **kwargs)
+        response_body = f(*args, **kwargs)
 
     except (InvalidCredentialsError, AuthorizationError) as e:
         status_code = 403  # Unathorized

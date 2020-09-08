@@ -6,9 +6,8 @@ import pytest
 import jwt
 
 from src.app.main.core.exceptions import PyGridError
-from src.app.main.routes.user import model_to_json
-from src.app.main.users import Role, User, Group, UserGroup, create_role, create_user
 from src.app.main.events.user_related import *
+from src.app.main.database import *
 
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"
@@ -608,7 +607,7 @@ def test_put_other_user_email_success(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 2
@@ -636,7 +635,7 @@ def test_put_other_user_email_missing_key(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -660,7 +659,7 @@ def test_put_other_user_email_missing_token(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
     }
     payload = {"user-id": 2, "email": "brandnew@brandnewemail.com"}
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -687,7 +686,7 @@ def test_put_user_email_invalid_key(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -714,7 +713,7 @@ def test_put_user_email_invalid_token(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -739,7 +738,7 @@ def test_put_other_user_email_unauthorized(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -766,7 +765,7 @@ def test_put_own_user_email_success(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 2
@@ -793,7 +792,7 @@ def test_put_user_email_missing_role(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Role ID not found!"
@@ -816,7 +815,7 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
-    result = put_email_socket(payload)
+    result = change_usr_email_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User ID not found!"
@@ -846,7 +845,7 @@ def test_put_other_user_role_success(client, database, cleanup):
         "role": 1,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 2
@@ -868,7 +867,7 @@ def test_put_other_user_role_missing_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     payload = {"token": token.decode("UTF-8"), "role": 1, "user-id": 2}
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -890,7 +889,7 @@ def test_put_other_user_role_missing_token(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
     }
     payload = {"role": 1, "user-id": 2}
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -915,7 +914,7 @@ def test_put_user_role_invalid_key(client, database, cleanup):
         "role": 1,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -940,7 +939,7 @@ def test_put_user_role_invalid_token(client, database, cleanup):
         "role": 1,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -965,7 +964,7 @@ def test_put_other_user_role_unauthorized(client, database, cleanup):
         "role": 2,
         "user-id": 1,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -1002,7 +1001,7 @@ def test_put_own_user_role_sucess(client, database, cleanup):
         "role": 3,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 2
@@ -1039,7 +1038,7 @@ def test_put_first_user_unauthorized(client, database, cleanup):
         "role": 3,
         "user-id": 1,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -1074,7 +1073,7 @@ def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
         "role": 1,
         "user-id": 3,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -1111,7 +1110,7 @@ def test_put_other_user_role_owner_success(client, database, cleanup):
         "role": 1,
         "user-id": 3,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 3
@@ -1136,7 +1135,7 @@ def test_put_user_role_missing_role(client, database, cleanup):
         "role": 2,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Role ID not found!"
@@ -1159,7 +1158,7 @@ def test_put_other_user_role_missing_user(client, database, cleanup):
         "role": 2,
         "user-id": 2,
     }
-    result = put_role_socket(payload)
+    result = change_usr_role_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User ID not found!"
@@ -1201,7 +1200,7 @@ def test_put_other_user_password_success(client, database, cleanup):
         "user-id": 2,
     }
 
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 2
@@ -1227,7 +1226,7 @@ def test_put_user_password_missing_key(client, database, cleanup):
     new_password = "BrandNewPassword123"
     payload = {"token": token.decode("UTF-8"), "user-id": 2, "password": new_password}
 
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -1251,7 +1250,7 @@ def test_put_user_password_missing_token(client, database, cleanup):
         "user-id": 2,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -1277,7 +1276,7 @@ def test_put_user_password_invalid_key(client, database, cleanup):
         "user-id": 2,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -1303,7 +1302,7 @@ def test_put_user_password_invalid_token(client, database, cleanup):
         "user-id": 2,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -1329,7 +1328,7 @@ def test_put_other_user_password_unauthorized(client, database, cleanup):
         "user-id": 1,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -1371,7 +1370,7 @@ def test_put_own_user_password_success(client, database, cleanup):
         "user-id": 3,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["user"]["id"] == 3
@@ -1399,7 +1398,7 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
         "user-id": 2,
         "password": new_password,
     }
-    result = put_password_socket(payload)
+    result = change_usr_password_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User ID not found!"
@@ -1445,7 +1444,7 @@ def test_put_other_user_groups_success(client, database, cleanup):
         "user-id": 2,
         "groups": [2, 3],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
     usr_groups = database.session.query(UserGroup).filter_by(user=2).all()
 
@@ -1482,7 +1481,7 @@ def test_put_user_groups_missing_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     payload = {"token": token.decode("UTF-8"), "user-id": 2, "groups": [2, 3]}
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
     usr_groups = database.session.query(UserGroup).filter_by(user=2).all()
 
@@ -1514,7 +1513,7 @@ def test_put_user_groups_missing_token(client, database, cleanup):
         "groups": [2, 3],
         "user-id": 2,
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Missing request key!"
@@ -1547,7 +1546,7 @@ def test_put_user_groups_invalid_key(client, database, cleanup):
         "user-id": 2,
         "groups": [2, 3],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -1580,7 +1579,7 @@ def test_put_user_groups_invalid_token(client, database, cleanup):
         "user-id": 2,
         "groups": [2, 3],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
@@ -1613,7 +1612,7 @@ def test_put_other_user_groups_unauthorized(client, database, cleanup):
         "user-id": 1,
         "groups": [2, 3],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User is not authorized for this operation!"
@@ -1662,7 +1661,7 @@ def test_put_own_user_groups_success(client, database, cleanup):
         "user-id": 3,
         "groups": [1],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
     usr_groups = database.session.query(UserGroup).filter_by(user=3).all()
 
@@ -1701,7 +1700,7 @@ def test_put_other_user_groups_missing_user(client, database, cleanup):
         "user-id": 2,
         "groups": [1],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
 
     assert result["error"] == "User ID not found!"
@@ -1746,7 +1745,7 @@ def test_put_user_groups_missing_group(client, database, cleanup):
         "user-id": 3,
         "groups": [5],
     }
-    result = put_groups_socket(payload)
+    result = change_usr_groups_socket(payload)
     result = loads(result)
     usr_groups = database.session.query(UserGroup).filter_by(user=3).all()
 

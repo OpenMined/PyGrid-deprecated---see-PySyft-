@@ -1,5 +1,5 @@
 import pytest
-from src.app.main.users import Role
+from src.app.main.database import Role
 
 from .presets.role import role_metrics
 

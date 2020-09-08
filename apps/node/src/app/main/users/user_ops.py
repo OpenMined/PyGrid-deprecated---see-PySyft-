@@ -22,7 +22,7 @@ from ..core.exceptions import (
 )
 from ... import db
 from .. import main_routes
-from ..users import Role, User, UserGroup, Group
+from ..database import Role, User, UserGroup, Group
 
 
 def salt_and_hash_password(password, rounds):
@@ -152,7 +152,7 @@ def get_specific_user(current_user, private_key, user_id):
     return user
 
 
-def put_email(current_user, private_key, email, user_id):
+def change_usr_email(current_user, private_key, email, user_id):
     usr_role = db.session.query(Role).get(current_user.role)
     edited_user = db.session.query(User).get(user_id)
 
@@ -169,7 +169,7 @@ def put_email(current_user, private_key, email, user_id):
     return edited_user
 
 
-def put_role(current_user, private_key, role, user_id):
+def change_usr_role(current_user, private_key, role, user_id):
     if user_id == 1:  # can't change Owner
         raise AuthorizationError
 
@@ -193,7 +193,7 @@ def put_role(current_user, private_key, role, user_id):
     return edited_user
 
 
-def put_password(current_user, private_key, password, user_id):
+def change_usr_password(current_user, private_key, password, user_id):
     usr_role = db.session.query(Role).get(current_user.role)
     edited_user = db.session.query(User).get(user_id)
 
@@ -212,7 +212,7 @@ def put_password(current_user, private_key, password, user_id):
     return edited_user
 
 
-def put_groups(current_user, private_key, groups, user_id):
+def change_usr_groups(current_user, private_key, groups, user_id):
     usr_role = db.session.query(Role).get(current_user.role)
     edited_user = db.session.query(User).get(user_id)
 

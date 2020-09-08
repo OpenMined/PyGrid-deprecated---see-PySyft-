@@ -30,4 +30,3 @@ def expand_user_object(user):
     user["groups"] = [get_group(usr_group) for usr_group in user["groups"]]
 
     return user
-

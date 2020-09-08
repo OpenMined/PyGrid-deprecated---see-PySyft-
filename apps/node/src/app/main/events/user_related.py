@@ -21,21 +21,22 @@ from ..core.exceptions import (
 )
 from ... import db
 from .. import main_routes
-from ..users import Role, User, UserGroup, Group
+from ..database import Role, User, UserGroup, Group
+from ..database.utils import *
 from ..users.user_ops import (
     signup_user,
     login_user,
     get_all_users,
     get_specific_user,
-    put_email,
-    put_role,
-    put_password,
-    put_groups,
+    change_usr_email,
+    change_usr_role,
+    change_usr_password,
+    change_usr_groups,
     delete_user,
     search_users,
 )
 from ..auth import token_required_factory, error_handler
-from ..users.database.utils import *
+
 
 def get_token(*args, **kwargs):
     message = args[0]
@@ -47,7 +48,7 @@ def get_token(*args, **kwargs):
 
 
 def format_result(response_body, status_code, mimetype):
-   return dumps(response_body)
+    return dumps(response_body)
 
 
 token_required = token_required_factory(get_token, format_result)
@@ -136,7 +137,7 @@ def get_specific_user_socket(current_user: User, message: dict) -> str:
 
 
 @token_required
-def put_email_socket(current_user: User, message: dict) -> str:
+def change_usr_email_socket(current_user: User, message: dict) -> str:
     def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         email = message.get("email")
@@ -147,7 +148,7 @@ def put_email_socket(current_user: User, message: dict) -> str:
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
-        user = put_email(current_user, private_key, email, user_id)
+        user = change_usr_email(current_user, private_key, email, user_id)
         user = expand_user_object(user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": user}
         return response_body
@@ -158,7 +159,7 @@ def put_email_socket(current_user: User, message: dict) -> str:
 
 
 @token_required
-def put_role_socket(current_user: User, message: dict) -> str:
+def change_usr_role_socket(current_user: User, message: dict) -> str:
     def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         role = message.get("role")
@@ -169,7 +170,7 @@ def put_role_socket(current_user: User, message: dict) -> str:
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
-        edited_user = put_role(current_user, private_key, role, user_id)
+        edited_user = change_usr_role(current_user, private_key, role, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
         return response_body
@@ -180,7 +181,7 @@ def put_role_socket(current_user: User, message: dict) -> str:
 
 
 @token_required
-def put_password_socket(current_user: User, message: dict) -> str:
+def change_usr_password_socket(current_user: User, message: dict) -> str:
     def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         password = message.get("password")
@@ -191,7 +192,7 @@ def put_password_socket(current_user: User, message: dict) -> str:
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
-        edited_user = put_password(current_user, private_key, password, user_id)
+        edited_user = change_usr_password(current_user, private_key, password, user_id)
         edited_user = expand_user_object(edited_user)
 
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
@@ -203,7 +204,7 @@ def put_password_socket(current_user: User, message: dict) -> str:
 
 
 @token_required
-def put_groups_socket(current_user: User, message: dict) -> str:
+def change_usr_groups_socket(current_user: User, message: dict) -> str:
     def route_logic(current_user: User, message: dict) -> dict:
         user_id = message.get("user-id")
         groups = message.get("groups")
@@ -214,7 +215,7 @@ def put_groups_socket(current_user: User, message: dict) -> str:
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
-        edited_user = put_groups(current_user, private_key, groups, user_id)
+        edited_user = change_usr_groups(current_user, private_key, groups, user_id)
         edited_user = expand_user_object(edited_user)
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": edited_user}
         return response_body
