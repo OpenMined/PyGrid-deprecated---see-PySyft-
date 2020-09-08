@@ -1,9 +1,6 @@
-import sys
-from random import randint
-
 import pytest
 
-from src.users.role import Role
+from src.app.users.role import Role
 from .presets.role import role_metrics
 
 

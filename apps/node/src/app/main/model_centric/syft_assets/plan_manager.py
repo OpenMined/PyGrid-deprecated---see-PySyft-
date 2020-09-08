@@ -10,7 +10,7 @@ from syft_proto.execution.v1.plan_pb2 import Plan as PlanPB
 from ...core.exceptions import PlanInvalidError, PlanNotFoundError, PlanTranslationError
 
 # PyGrid imports
-from ...storage.warehouse import Warehouse
+from ...core.warehouse import Warehouse
 from .plan import Plan
 
 # Make fake local worker for serialization

@@ -1,19 +1,16 @@
 import json
 import os
-import sys
 import time
 from multiprocessing import Process
 
 import pytest
-import requests
 import syft
 import torch
 from gevent import pywsgi
 from geventwebsocket.handler import WebSocketHandler
 from syft.grid.clients.data_centric_fl_client import DataCentricFLClient
-from syft.grid.public_grid import PublicGridNetwork
 
-from . import NETWORK_PORT, NETWORK_URL, IDS, PORTS
+from . import GRID_NETWORK_PORT, IDS, PORTS
 
 
 @pytest.fixture()
@@ -53,14 +50,57 @@ def setUpPyGrid(port, node_id):
     server.serve_forever()
 
 
+def setup_network(port: int) -> None:
+    """Setup gridnetwork.
+
+    Args:
+        port (int): port number
+
+    Returns:
+        None
+
+    """
+
+    from apps.network.src.app import create_app
+
+    db_path = "sqlite:///:memory:"
+    db_config = {"SQLALCHEMY_DATABASE_URI": db_path}
+
+    app = create_app(debug=False, db_config=db_config)
+    server = pywsgi.WSGIServer(("", port), app, handler_class=WebSocketHandler)
+    server.serve_forever()
+
+
 @pytest.fixture(scope="session", autouse=True)
-def init_pygrid_instances(node_infos):
+def init_network_instance():
+
+    p = Process(target=setup_network, args=(int(GRID_NETWORK_PORT),))
+    p.start()
+    time.sleep(2)
+
+    yield
+
+    p.terminate()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def init_node_instances(node_infos):
     jobs = []
 
     # Init Grid Nodes
     for (node_id, port) in node_infos:
         p = Process(target=setUpPyGrid, args=(port, node_id))
         p.start()
+
+        import requests
+
+        requests.post(
+            os.path.join("http://localhost:" + GRID_NETWORK_PORT, "join"),
+            data=json.dumps(
+                {"node-id": node_id, "node-address": "http://localhost:" + port}
+            ),
+        )
+
         time.sleep(2)
         jobs.append(p)
 
