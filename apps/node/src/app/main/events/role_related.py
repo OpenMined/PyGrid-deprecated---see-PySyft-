@@ -1,4 +1,4 @@
-from json import dumps, loads
+from json import dumps
 from json.decoder import JSONDecodeError
 import logging
 
@@ -32,7 +32,8 @@ expected_fields = (
 
 
 def get_token(*args, **kwargs):
-    token = request.headers.get("token")
+    message = args[0]
+    token = message.get("token")
     if token is None:
         raise MissingRequestKeyError
 
@@ -40,48 +41,45 @@ def get_token(*args, **kwargs):
 
 
 def format_result(response_body, status_code, mimetype):
-    return Response(dumps(response_body), status=status_code, mimetype=mimetype)
+    return dumps(response_body)
 
 
 token_required = token_required_factory(get_token, format_result)
 
 
-@main_routes.route("/roles", methods=["POST"])
 @token_required
-def create_role_route(current_user):
-    def route_logic(current_user):
-        private_key = request.headers.get("private-key")
-        data = loads(request.data)
+def create_role_socket(current_user, message: dict) -> str:
+    def route_logic(current_user, message: dict) -> dict:
+        private_key = message.get("private-key")
+        role = message.get("role")
 
-        if private_key is None:
+        if private_key is None or role is None:
             raise MissingRequestKeyError
 
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
         for field in expected_fields:
-            if data.get(field) is None:
+            if role.get(field) is None:
                 raise MissingRequestKeyError
 
-        new_role = create_role(current_user, private_key, data)
+        new_role = create_role(current_user, private_key, role)
         new_role = model_to_json(new_role)
         response_body = {RESPONSE_MSG.SUCCESS: True, "role": new_role}
         return response_body
 
-    status_code, response_body = error_handler(route_logic, current_user)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
-    return Response(
-        dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return dumps(response_body)
 
 
-@main_routes.route("/roles/<role_id>", methods=["GET"])
 @token_required
-def get_role_route(current_user, role_id):
-    def route_logic(current_user, role_id):
-        private_key = request.headers.get("private-key")
+def get_role_socket(current_user, message: dict) -> str:
+    def route_logic(current_user, message: dict) -> dict:
+        private_key = message.get("private-key")
+        role_id = message.get("id")
 
-        if private_key is None:
+        if private_key is None or role_id is None:
             raise MissingRequestKeyError
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
@@ -91,19 +89,15 @@ def get_role_route(current_user, role_id):
         response_body = {RESPONSE_MSG.SUCCESS: True, "role": role}
         return response_body
 
-    role_id = int(role_id)
-    status_code, response_body = error_handler(route_logic, current_user, role_id)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
-    return Response(
-        dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return dumps(response_body)
 
 
-@main_routes.route("/roles", methods=["GET"])
 @token_required
-def get_all_roles_route(current_user):
-    def route_logic(current_user):
-        private_key = request.headers.get("private-key")
+def get_all_roles_socket(current_user, message: dict) -> str:
+    def route_logic(current_user, message: dict) -> dict:
+        private_key = message.get("private-key")
 
         if private_key is None:
             raise MissingRequestKeyError
@@ -115,44 +109,40 @@ def get_all_roles_route(current_user):
         response_body = {RESPONSE_MSG.SUCCESS: True, "roles": roles}
         return response_body
 
-    status_code, response_body = error_handler(route_logic, current_user)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
-    return Response(
-        dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return dumps(response_body)
 
 
-@main_routes.route("/roles/<role_id>", methods=["PUT"])
 @token_required
-def put_role_route(current_user, role_id):
-    def route_logic(current_user, role_id):
-        private_key = request.headers.get("private-key")
-        new_fields = loads(request.data)
+def put_role_socket(current_user, message: dict) -> str:
+    def route_logic(current_user, message: dict) -> dict:
+        private_key = message.get("private-key")
+        role_id = message.get("id")
+        role = message.get("role")
 
-        if private_key is None:
+        if private_key is None or role_id is None or role is None:
             raise MissingRequestKeyError
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
 
-        role = put_role(current_user, role_id, new_fields)
+        role = put_role(current_user, role_id, role)
         role = model_to_json(role)
         response_body = {RESPONSE_MSG.SUCCESS: True, "role": role}
         return response_body
 
-    status_code, response_body = error_handler(route_logic, current_user, role_id)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
-    return Response(
-        dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return dumps(response_body)
 
 
-@main_routes.route("/roles/<role_id>", methods=["DELETE"])
 @token_required
-def delete_role_route(current_user, role_id):
-    def route_logic(current_user, role_id):
-        private_key = request.headers.get("private-key")
+def delete_role_socket(current_user, message: dict) -> str:
+    def route_logic(current_user, message: dict) -> dict:
+        private_key = message.get("private-key")
+        role_id = message.get("id")
 
-        if private_key is None:
+        if private_key is None or role_id is None:
             raise MissingRequestKeyError
         if private_key != current_user.private_key:
             raise InvalidCredentialsError
@@ -162,8 +152,6 @@ def delete_role_route(current_user, role_id):
         response_body = {RESPONSE_MSG.SUCCESS: True, "user": deleted_user}
         return response_body
 
-    status_code, response_body = error_handler(route_logic, current_user, role_id)
+    status_code, response_body = error_handler(route_logic, current_user, message)
 
-    return Response(
-        dumps(response_body), status=status_code, mimetype="application/json"
-    )
+    return dumps(response_body)
