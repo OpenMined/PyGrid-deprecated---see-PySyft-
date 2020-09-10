@@ -29,6 +29,7 @@ sqlalchemy_utils = "^0.36.8"
 numpy = "^1.18.5"
 wsaccel = "^0.6.2"
 papermill = "~=2.0.0"
+bcrypt = "^3.2.0"
 
 [tool.poetry.dev-dependencies]
 aiounittest = "^1.4.0"
@@ -42,6 +43,7 @@ flake8 = "^3.8.3"
 flake8-comprehensions = "^3.2.3"
 papermill = "~=2.0.0"
 jupyter = "~=1.0.0"
+flask-lambda-python36 = "~=0.1.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
