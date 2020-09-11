@@ -161,7 +161,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         """ 2 - Authentication Request """
 
         # "model-centric/authenticate" request body
-        request_id = uuid4()
+        request_id = str(uuid4())
         auth_msg = {
             "request_id": request_id,
             "type": "model-centric/authenticate",
@@ -219,7 +219,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
             "upload": 23.7,
         }
 
-        request_id = uuid4()
+        request_id = str(uuid4())
         message = {
             "type": "model-centric/cycle-request",
             "request_id": request_id,
@@ -281,7 +281,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
 
         # Send host_training message
         await send_ws_message(host_training_message)
-        request_id = uuid4()
+        request_id = str(uuid4())
         auth_msg = {
             "type": "model-centric/authenticate",
             "request_id": request_id,
@@ -298,7 +298,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         self.assertTrue(requires_speed_test)
 
         # Speed must be required in cycle-request
-        request_id = uuid4()
+        request_id = str(uuid4())
         cycle_req = {
             "type": "model-centric/cycle-request",
             "request_id": request_id,
@@ -314,7 +314,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         self.assertEqual(response["data"].get("status"), "rejected")
 
         # Should accept into cycle if all speed fields are sent
-        request_id = uuid4()
+        request_id = str(uuid4())
         cycle_req = {
             "type": "model-centric/cycle-request",
             "request_id": request_id,
@@ -367,7 +367,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
 
         # Send host_training message
         await send_ws_message(host_training_message)
-        request_id = uuid4()
+        request_id = str(uuid4())
         auth_msg = {
             "type": "model-c|entric/authenticate",
             "request_id": request_id,
@@ -384,7 +384,7 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         self.assertEqual(response["request_id"], request_id)
 
         # Speed is not required in cycle-request
-        request_id = uuid4()
+        request_id = str(uuid4())
         cycle_req = {
             "type": "model-centric/cycle-request",
             "request_id": request_id,
