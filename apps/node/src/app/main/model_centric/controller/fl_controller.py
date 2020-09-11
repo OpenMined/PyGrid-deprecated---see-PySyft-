@@ -162,9 +162,7 @@ class FLController:
 
             _max_cycles = server_config["num_cycles"]
 
-            response = {
-                CYCLE.STATUS: "rejected"
-            }
+            response = {CYCLE.STATUS: "rejected"}
 
             # If it's not the last cycle, add the remaining time to the next cycle.
             if n_completed_cycles < _max_cycles:

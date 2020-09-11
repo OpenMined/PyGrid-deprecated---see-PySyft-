@@ -162,7 +162,7 @@ def authenticate(message: dict, socket=None) -> str:
 
     response = {
         MSG_FIELD.TYPE: MODEL_CENTRIC_FL_EVENTS.AUTHENTICATE,
-        MSG_FIELD.REQUEST_ID: request_id, 
+        MSG_FIELD.REQUEST_ID: request_id,
         MSG_FIELD.DATA: response,
     }
     return json.dumps(response)
