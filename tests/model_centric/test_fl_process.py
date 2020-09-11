@@ -369,13 +369,12 @@ riWYMKALI61uc+NH0jr+B5/XTV/KlNqmbuEWfZdgRcXodNmIXt+LGHOQ1C+X+7OY
         await send_ws_message(host_training_message)
         request_id = str(uuid4())
         auth_msg = {
-            "type": "model-c|entric/authenticate",
+            "type": "model-centric/authenticate",
             "request_id": request_id,
             "data": {"model_name": "my-federated-model-3", "model_version": "0.1.0"},
         }
 
         response = await send_ws_message(auth_msg)
-
         worker_id = response["data"].get("worker_id", None)
         requires_speed_test = response["data"].get("requires_speed_test")
 
