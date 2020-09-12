@@ -433,7 +433,7 @@ def test_get_one_user_success(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
     }
@@ -457,7 +457,7 @@ def test_get_one_user_missing_key(client, database, cleanup):
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {"user-id": 1, "token": token.decode("UTF-8")}
+    message = {"id": 1, "token": token.decode("UTF-8")}
     result = get_specific_user_socket(message)
     result = loads(result)
 
@@ -477,7 +477,7 @@ def test_get_one_user_missing_token(client, database, cleanup):
     database.session.commit()
 
     message = {
-        "user-id": 1,
+        "id": 1,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
     }
     result = get_specific_user_socket(message)
@@ -500,7 +500,7 @@ def test_get_one_user_invalid_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 1,
+        "id": 1,
         "private-key": "invalid312987as12they0come",
         "token": token.decode("UTF-8"),
     }
@@ -524,7 +524,7 @@ def test_get_one_user_invalid_token(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, "peppperplsiwouldhavesome")
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
     }
@@ -548,7 +548,7 @@ def test_get_one_user_unauthorized(client, database, cleanup):
 
     token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 1,
+        "id": 1,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
     }
@@ -572,7 +572,7 @@ def test_get_one_missing_user(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 3,
+        "id": 3,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
     }
@@ -601,7 +601,7 @@ def test_put_other_user_email_success(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -630,7 +630,7 @@ def test_put_other_user_email_missing_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
     }
@@ -657,7 +657,7 @@ def test_put_other_user_email_missing_token(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced"
     }
-    message = {"user-id": 2, "email": "brandnew@brandnewemail.com"}
+    message = {"id": 2, "email": "brandnew@brandnewemail.com"}
     result = change_user_email_socket(message)
     result = loads(result)
 
@@ -680,7 +680,7 @@ def test_put_user_email_invalid_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -707,7 +707,7 @@ def test_put_user_email_invalid_token(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, "secretitis")
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -732,7 +732,7 @@ def test_put_other_user_email_unauthorized(client, database, cleanup):
 
     token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 1,
+        "id": 1,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -759,7 +759,7 @@ def test_put_own_user_email_success(client, database, cleanup):
 
     token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -786,7 +786,7 @@ def test_put_user_email_missing_role(client, database, cleanup):
 
     token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -809,7 +809,7 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "email": "brandnew@brandnewemail.com",
@@ -842,7 +842,7 @@ def test_put_other_user_role_success(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 1,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -865,7 +865,7 @@ def test_put_other_user_role_missing_key(client, database, cleanup):
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {"token": token.decode("UTF-8"), "role": 1, "user-id": 2}
+    message = {"token": token.decode("UTF-8"), "role": 1, "id": 2}
     result = change_user_role_socket(message)
     result = loads(result)
 
@@ -887,7 +887,7 @@ def test_put_other_user_role_missing_token(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced"
     }
-    message = {"role": 1, "user-id": 2}
+    message = {"role": 1, "id": 2}
     result = change_user_role_socket(message)
     result = loads(result)
 
@@ -911,7 +911,7 @@ def test_put_user_role_invalid_key(client, database, cleanup):
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "role": 1,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -936,7 +936,7 @@ def test_put_user_role_invalid_token(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 1,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -961,7 +961,7 @@ def test_put_other_user_role_unauthorized(client, database, cleanup):
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "role": 2,
-        "user-id": 1,
+        "id": 1,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -998,7 +998,7 @@ def test_put_own_user_role_sucess(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 3,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1035,7 +1035,7 @@ def test_put_first_user_unauthorized(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 3,
-        "user-id": 1,
+        "id": 1,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1070,7 +1070,7 @@ def test_put_other_user_role_owner_unauthorized(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 1,
-        "user-id": 3,
+        "id": 3,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1107,7 +1107,7 @@ def test_put_other_user_role_owner_success(client, database, cleanup):
         "private-key": "4de2d41486ceaffdf0c1778e50cea00000d6549ffe808fa860ecd4e91d9ee1b1",
         "token": token.decode("UTF-8"),
         "role": 1,
-        "user-id": 3,
+        "id": 3,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1132,7 +1132,7 @@ def test_put_user_role_missing_role(client, database, cleanup):
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
         "role": 2,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1155,7 +1155,7 @@ def test_put_other_user_role_missing_user(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "role": 2,
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_role_socket(message)
     result = loads(result)
@@ -1196,7 +1196,7 @@ def test_put_other_user_password_success(client, database, cleanup):
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
         "password": new_password,
-        "user-id": 2,
+        "id": 2,
     }
 
     result = change_user_password_socket(message)
@@ -1223,7 +1223,7 @@ def test_put_user_password_missing_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     new_password = "BrandNewPassword123"
-    message = {"token": token.decode("UTF-8"), "user-id": 2, "password": new_password}
+    message = {"token": token.decode("UTF-8"), "id": 2, "password": new_password}
 
     result = change_user_password_socket(message)
     result = loads(result)
@@ -1246,7 +1246,7 @@ def test_put_user_password_missing_token(client, database, cleanup):
     new_password = "BrandNewPassword123"
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "user-id": 2,
+        "id": 2,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1272,7 +1272,7 @@ def test_put_user_password_invalid_key(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1298,7 +1298,7 @@ def test_put_user_password_invalid_token(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1324,7 +1324,7 @@ def test_put_other_user_password_unauthorized(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 1,
+        "id": 1,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1366,7 +1366,7 @@ def test_put_own_user_password_success(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 3,
+        "id": 3,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1394,7 +1394,7 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "password": new_password,
     }
     result = change_user_password_socket(message)
@@ -1440,7 +1440,7 @@ def test_put_other_user_groups_success(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "groups": [2, 3],
     }
     result = change_user_groups_socket(message)
@@ -1479,7 +1479,7 @@ def test_put_user_groups_missing_key(client, database, cleanup):
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {"token": token.decode("UTF-8"), "user-id": 2, "groups": [2, 3]}
+    message = {"token": token.decode("UTF-8"), "id": 2, "groups": [2, 3]}
     result = change_user_groups_socket(message)
     result = loads(result)
     user_groups = database.session.query(UserGroup).filter_by(user=2).all()
@@ -1510,7 +1510,7 @@ def test_put_user_groups_missing_token(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "groups": [2, 3],
-        "user-id": 2,
+        "id": 2,
     }
     result = change_user_groups_socket(message)
     result = loads(result)
@@ -1542,7 +1542,7 @@ def test_put_user_groups_invalid_key(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "groups": [2, 3],
     }
     result = change_user_groups_socket(message)
@@ -1575,7 +1575,7 @@ def test_put_user_groups_invalid_token(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "groups": [2, 3],
     }
     result = change_user_groups_socket(message)
@@ -1608,7 +1608,7 @@ def test_put_other_user_groups_unauthorized(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 1,
+        "id": 1,
         "groups": [2, 3],
     }
     result = change_user_groups_socket(message)
@@ -1657,7 +1657,7 @@ def test_put_own_user_groups_success(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 3,
+        "id": 3,
         "groups": [1],
     }
     result = change_user_groups_socket(message)
@@ -1696,7 +1696,7 @@ def test_put_other_user_groups_missing_user(client, database, cleanup):
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
-        "user-id": 2,
+        "id": 2,
         "groups": [1],
     }
     result = change_user_groups_socket(message)
@@ -1741,7 +1741,7 @@ def test_put_user_groups_missing_group(client, database, cleanup):
     message = {
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
-        "user-id": 3,
+        "id": 3,
         "groups": [5],
     }
     result = change_user_groups_socket(message)
@@ -1777,7 +1777,7 @@ def test_delete_other_user_success(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "user-id": 2,
+        "id": 2,
         "token": token.decode("UTF-8"),
     }
     result = delete_user_socket(message)
@@ -1799,7 +1799,7 @@ def test_delete_user_missing_key(client, database, cleanup):
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {"user-id": 1, "token": token.decode("UTF-8")}
+    message = {"id": 1, "token": token.decode("UTF-8")}
     result = delete_user_socket(message)
     result = loads(result)
 
@@ -1819,7 +1819,7 @@ def test_delete_user_missing_token(client, database, cleanup):
     database.session.commit()
 
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
     }
     result = delete_user_socket(message)
@@ -1842,7 +1842,7 @@ def test_delete_user_invalid_key(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
     }
@@ -1866,7 +1866,7 @@ def test_delete_user_invalid_token(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, "secretitis")
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
     }
@@ -1890,7 +1890,7 @@ def test_delete_other_user_unauthorized(client, database, cleanup):
 
     token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 1,
+        "id": 1,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
     }
@@ -1926,7 +1926,7 @@ def test_delete_own_user_success(client, database, cleanup):
 
     token = jwt.encode({"id": 3}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 3,
+        "id": 3,
         "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
         "token": token.decode("UTF-8"),
     }
@@ -1949,7 +1949,7 @@ def test_delete_other_user_missing_user(client, database, cleanup):
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
-        "user-id": 2,
+        "id": 2,
         "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
         "token": token.decode("UTF-8"),
     }
