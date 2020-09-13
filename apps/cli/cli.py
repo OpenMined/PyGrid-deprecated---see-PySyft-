@@ -1,11 +1,12 @@
-import os
 import json
+import os
+from pprint import pformat
 
 import click
 
-from .providers.aws import get_aws_config
-from .providers.azure import get_azure_config
-from .providers.gcp import get_gcp_config
+from .providers.aws import AWS
+from .providers.azure import AZURE
+from .providers.gcp import GCP
 from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -19,9 +20,9 @@ def cli(config, output_file):
 
     Example:
 
-    >>> pygrid deploy --provider aws node
+    >>> pygrid deploy --provider aws --app node
 
-    >>> pygrid deploy --provider azure network
+    >>> pygrid deploy --provider azure --app network
     """
     click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
     config.output_file = output_file
@@ -75,20 +76,21 @@ def deploy(config, provider, app):
         config.deployment_type = "serverless"
 
     ## Prompting user to provide configuration for the selected cloud
-    get_provider_config(config)
-    if click.confirm(
-        f"Your current configration are => {colored(config.provider.upper())}: {(vars(config)[config.provider])} \n Continue?"
-    ):
-        click.echo("Deploying...")
-
-
-def get_provider_config(config):
     if config.provider == "aws":
-        config.aws = get_aws_config()
+        provider = AWS(config)
     elif config.provider == "gcp":
-        config.gcp = get_gcp_config()
+        provider = GCP(config)
     elif config.provider == "azure":
-        config.azure = get_azure_config()
+        provider = AZURE(config)
+
+    if click.confirm(
+        f"""
+        Your current configration are: \n
+        {colored((json.dumps(vars(config), indent=4, default=lambda o: o.__dict__)))} \n
+        Continue?
+        """
+    ):
+        provider.deploy()
 
 
 def get_app_arguments(config):
@@ -149,4 +151,4 @@ def logging(config, results, **kwargs):
     del config.id_key
     del config.secret_key
     with open(config.output_file, "w", encoding="utf-8") as f:
-        json.dump(vars(config), f, default=lambda o: o.__dict__)
+        json.dump(vars(config), f, indent=4, default=lambda o: o.__dict__)
