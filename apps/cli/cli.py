@@ -84,11 +84,7 @@ def deploy(config, provider, app):
         provider = AZURE(config)
 
     if click.confirm(
-        f"""
-        Your current configration are: \n
-        {colored((json.dumps(vars(config), indent=4, default=lambda o: o.__dict__)))} \n
-        Continue?
-        """
+        f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
     ):
         provider.deploy()
 
@@ -151,4 +147,4 @@ def logging(config, results, **kwargs):
     del config.id_key
     del config.secret_key
     with open(config.output_file, "w", encoding="utf-8") as f:
-        json.dump(vars(config), f, indent=4, default=lambda o: o.__dict__)
+        json.dump(vars(config), f, indent=2, default=lambda o: o.__dict__)

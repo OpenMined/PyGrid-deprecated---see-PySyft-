@@ -18,9 +18,9 @@ class Provider:
             )
 
     def deploy(self):
-        if config.app.name == "node":
+        if self.config.app.name == "node":
             self.deploy_node()
-        elif config.app.name == "network":
+        elif self.config.app.name == "network":
             self.deploy_network()
 
     @property

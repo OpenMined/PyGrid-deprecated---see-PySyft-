@@ -39,7 +39,7 @@ class AWS(Provider):
         build = self.build()
 
         if build == 0:
-            click.echo("Main Infrastructure has built Successfully!")
+            click.echo("Main Infrastructure has built Successfully!\n\n")
 
     def build(self) -> bool:
         # Create Virtual Private Cloud (VPC)
