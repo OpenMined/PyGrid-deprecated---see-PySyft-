@@ -78,7 +78,7 @@ def seed_db():
 
     new_role = Role(
         name="User",
-        can_triage_jobs=False,
+        can_triage_requests=False,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
@@ -90,7 +90,7 @@ def seed_db():
 
     new_role = Role(
         name="Compliance Officer",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
@@ -102,7 +102,7 @@ def seed_db():
 
     new_role = Role(
         name="Administrator",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,
@@ -114,7 +114,7 @@ def seed_db():
 
     new_role = Role(
         name="Owner",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,

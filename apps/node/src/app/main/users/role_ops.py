@@ -37,7 +37,7 @@ def get_role(current_user, private_key, role_id):
 
     if user_role is None:
         raise RoleNotFoundError
-    if not user_role.can_triage_jobs:
+    if not user_role.can_triage_requests:
         raise AuthorizationError
 
     role = db.session.query(Role).get(role_id)
@@ -52,7 +52,7 @@ def get_all_roles(current_user, private_key):
 
     if user_role is None:
         raise RoleNotFoundError
-    if not user_role.can_triage_jobs:
+    if not user_role.can_triage_requests:
         raise AuthorizationError
 
     roles = db.session.query(Role).all()
