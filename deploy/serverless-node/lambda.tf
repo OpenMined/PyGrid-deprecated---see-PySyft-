@@ -10,17 +10,13 @@ module "lambda" {
   description   = "Node hosted by UCSF"
   publish       = true    # To automate increasing versions
 
-  runtime     = "python3.6"
+  runtime     = "python3.8"
   source_path = local.function_path
   handler     = local.function_handler
 
   layers = [
-    module.lambda_layer_all_dependencies.this_lambda_layer_arn,
+    module.lambda_layer.this_lambda_layer_arn,
   ]
-
-  #   tags = {
-  #     Name = ""
-  #   }
 
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {

@@ -9,7 +9,6 @@ Flask-SQLAlchemy==2.4.4
 gevent==20.6.2
 gevent-websocket==0.10.1
 gunicorn==20.0.4
-numpy==1.18.5
 papermill==2.0.0
 psycopg2-binary==2.8.5
 pyjwt==1.7.1

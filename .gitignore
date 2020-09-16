@@ -67,3 +67,6 @@ override.tf.json
 terraform.rc
 /deploy/serverless-node/lambda-layers/all-dep/python/
 /deploy/serverless-node/lambda-layers/all-dep/all-dep.zip
+/deploy/serverless-node/lambda-layer/commands.md
+/deploy/serverless-node/lambda-layer/python/
+/deploy/serverless-node/lambda-layer/pygrid-node-dependencies.zip
