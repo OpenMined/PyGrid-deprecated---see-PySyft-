@@ -1,5 +1,5 @@
 locals {
-  dependencies_zip_path    = "lambda-layer/pygrid-node-dependencies.zip"
+  dependencies_zip_path    = "lambda-layer/pygrid-node-dep.zip"
 }
 
 resource "aws_s3_bucket" "node-lambda-layer-bucket" {
