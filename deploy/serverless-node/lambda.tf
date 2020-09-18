@@ -18,15 +18,20 @@ module "lambda" {
   memory_size = 1000   # 1000 MB
 
   create_role = false
-  lambda_role = aws_iam_role.pygrid-network-lambda-role.arn
+  lambda_role = aws_iam_role.pygrid-node-lambda-role.arn
 
   layers = [
     module.lambda_layer.this_lambda_layer_arn,
   ]
 
   environment_variables = {
-    MOUNT_PATH = "/mnt${aws_efs_access_point.node-access-points.root_directory[0].path}"
+    MOUNT_PATH     = "/mnt${aws_efs_access_point.node-access-points.root_directory[0].path}"
+    DB_NAME        = var.database_name
+    DB_CLUSTER_ARN = module.aurora.this_rds_cluster_arn
+    DB_SECRET_ARN  = aws_secretsmanager_secret.database-secret.arn
+    SECRET_KEY     = "Do-we-need-this-in-deployed-version" # TODO: Clarify this
   }
+
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"

@@ -11,7 +11,7 @@ data "aws_subnet_ids" "all" {
 module "aurora" {
   source = "terraform-aws-modules/rds-aurora/aws"
 
-  name                  = "aurora-serverless-database"
+  name                  = "pygrid-network-database"
   engine                = "aurora"
   engine_mode           = "serverless"
   replica_scale_enabled = false
@@ -21,30 +21,29 @@ module "aurora" {
   vpc_id        = data.aws_vpc.default.id
   instance_type = "db.r4.large"
 
-  enable_http_endpoint = true   # Enable Data API
+  enable_http_endpoint = true # Enable Data API
 
-  apply_immediately               = true
-  skip_final_snapshot             = true
-  storage_encrypted               = true
+  apply_immediately   = true
+  skip_final_snapshot = true
+  storage_encrypted   = true
 
-  #Todo: make them secret tf variables
-  database_name = "mydb"
-  username      = "admin"
-  password      = "random-strings"
+  database_name = var.database_name
+  username      = var.database_username
+  password      = var.database_password
 
   db_parameter_group_name         = aws_db_parameter_group.aurora_db_56_parameter_group.id
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.aurora_cluster_56_parameter_group.id
 
   scaling_configuration = {
     auto_pause               = true
-    max_capacity             = 64  #ACU
-    min_capacity             = 2   #ACU
+    max_capacity             = 64 #ACU
+    min_capacity             = 2  #ACU
     seconds_until_auto_pause = 300
     timeout_action           = "ForceApplyCapacityChange"
   }
 }
 
-
+# Todo: Look into these.
 resource "aws_db_parameter_group" "aurora_db_56_parameter_group" {
   name        = "test-aurora-db-56-parameter-group"
   family      = "aurora5.6"
