@@ -68,3 +68,5 @@ terraform.rc
 /deploy/serverless-node/lambda-layer/commands.md
 /deploy/serverless-node/lambda-layer/python/
 /deploy/serverless-node/lambda-layer/*.zip
+/deploy/serverless-node/ec2_efs_key
+/deploy/serverless-node/ec2_efs_key.pub

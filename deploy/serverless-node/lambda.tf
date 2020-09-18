@@ -14,8 +14,8 @@ module "lambda" {
   source_path = local.function_path
   handler     = local.function_handler
 
-  timeout = 60*2  # 2 minutes
-  memory_size = 1000 # 1000 MB
+  timeout     = 60 * 2 # 2 minutes
+  memory_size = 1000   # 1000 MB
 
   create_role = false
   lambda_role = aws_iam_role.pygrid-network-lambda-role.arn
@@ -37,8 +37,7 @@ module "lambda" {
   vpc_subnet_ids         = data.aws_subnet_ids.all.ids
   vpc_security_group_ids = [aws_security_group.allow_efs.id]
 
-  //  Note: file_system_arn is arn of access point
-  file_system_arn = aws_efs_access_point.node-access-points.arn
+  file_system_arn              = aws_efs_access_point.node-access-points.arn
   file_system_local_mount_path = "/mnt${aws_efs_access_point.node-access-points.root_directory[0].path}"
 }
 

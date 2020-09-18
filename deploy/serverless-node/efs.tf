@@ -1,5 +1,5 @@
 resource "aws_efs_file_system" "pygrid-syft-dependenices" {
-  creation_token   = "pygrid-syft-dependencies"
+  creation_token = "pygrid-syft-dependencies"
 
   encrypted        = true
   performance_mode = "generalPurpose"
@@ -14,7 +14,20 @@ resource "aws_efs_file_system" "pygrid-syft-dependenices" {
   }
 }
 
+# Note: Creates mount target in each subnet in the region
+resource "aws_efs_mount_target" "node-efs-mount-targets" {
+  file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
+  for_each        = data.aws_subnet_ids.all.ids
+  subnet_id       = each.value
+  security_groups = [aws_security_group.allow_efs.id]
+}
+
+
 resource "aws_efs_access_point" "node-access-points" {
+  depends_on     = [
+    aws_efs_file_system.pygrid-syft-dependenices,
+    aws_efs_mount_target.node-efs-mount-targets
+  ]
   file_system_id = aws_efs_file_system.pygrid-syft-dependenices.id
 
   root_directory {
@@ -24,13 +37,6 @@ resource "aws_efs_access_point" "node-access-points" {
   tags = {
     Name = "node-efs-access-point"
   }
-}
-
-# Note: Creates mount target in each subnet in the region
-resource "aws_efs_mount_target" "node-efs-mount-targets" {
-  file_system_id = aws_efs_file_system.pygrid-syft-dependenices.id
-  for_each       = data.aws_subnet_ids.all.ids
-  subnet_id      = each.value
 }
 
 
