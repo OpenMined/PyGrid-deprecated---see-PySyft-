@@ -37,13 +37,9 @@ def authentication(message: dict) -> dict:
     # If it was authenticated
     if user:
         login_user(user)
-        return {
-            RESPONSE_MSG.SUCCESS: "True", RESPONSE_MSG.NODE_ID: user.worker.id
-        }
+        return {RESPONSE_MSG.SUCCESS: "True", RESPONSE_MSG.NODE_ID: user.worker.id}
     else:
-        return {
-            RESPONSE_MSG.ERROR: "Invalid username/password!"
-        }
+        return {RESPONSE_MSG.ERROR: "Invalid username/password!"}
 
 
 def connect_grid_nodes(message: dict) -> dict:

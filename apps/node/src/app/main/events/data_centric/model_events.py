@@ -124,9 +124,6 @@ def run_inference(message: dict) -> dict:
 
         # We can now remove data from the objects
         del data
-        return {
-            RESPONSE_MSG.SUCCESS: True,
-            RESPONSE_MSG.INFERENCE_RESULT: predictions
-        }
+        return {RESPONSE_MSG.SUCCESS: True, RESPONSE_MSG.INFERENCE_RESULT: predictions}
     else:
         return response
