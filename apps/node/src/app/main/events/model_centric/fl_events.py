@@ -138,7 +138,7 @@ def authenticate(message: dict, socket=None) -> str:
         response : String response to the client
     """
     data = message.get("data")
-    request_id = message.get("request_id")
+    request_id = message.get("request_id", None)
     response = {}
 
     try:
@@ -179,7 +179,7 @@ def cycle_request(message: dict, socket=None) -> str:
         response : String response to the client
     """
     data = message[MSG_FIELD.DATA]
-    request_id = message[MSG_FIELD.REQUEST_ID]
+    request_id = message.get(MSG_FIELD.REQUEST_ID, None)
     response = {}
 
     try:
@@ -250,7 +250,7 @@ def report(message: dict, socket=None) -> str:
         response : String response to the client
     """
     data = message[MSG_FIELD.DATA]
-    request_id = message[MSG_FIELD.REQUEST_ID]
+    request_id = message.get(MSG_FIELD.REQUEST_ID, None)
     response = {}
 
     try:
