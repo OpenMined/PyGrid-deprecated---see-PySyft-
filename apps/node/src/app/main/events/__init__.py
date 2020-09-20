@@ -71,12 +71,11 @@ def route_requests(message, socket):
         message = json.loads(message)
         request_id = message.get(MSG_FIELD.REQUEST_ID)
         response = routes[message[REQUEST_MSG.TYPE_FIELD]](message)
-        if request_id:
-            response[MSG_FIELD.REQUEST_ID] = request_id
     except Exception as e:
         response = {"error": str(e)}
-        if request_id:
-            response[MSG_FIELD.REQUEST_ID] = request_id
+
+    if request_id:
+        response[MSG_FIELD.REQUEST_ID] = request_id
 
     return json.dumps(response)
 
