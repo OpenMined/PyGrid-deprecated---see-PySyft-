@@ -14,6 +14,8 @@ data_centric_intro_path = examples_path.joinpath(
     "examples", "data-centric", "introduction"
 )
 
+model_centric_mnist_path = examples_path.joinpath("examples", "model-centric")
+
 
 def test_notebooks_mnist_01():
     """Test if notebook r"""
@@ -39,7 +41,7 @@ def test_notebooks_mnist_02():
 
     res = pm.execute_notebook(
         str(notebook_mnist_02),
-        os.devnull,
+        "kk.ipynb",
         dict(
             grid_address="http://localhost:" + GRID_NETWORK_PORT, N_EPOCHS=2, N_TEST=2
         ),
@@ -48,7 +50,7 @@ def test_notebooks_mnist_02():
     assert isinstance(res, nbformat.notebooknode.NotebookNode)
 
 
-def test_notebooks_intro_00():
+def test_notebooks_model_centric_mnist_01():
     notebook_intro_00 = data_centric_intro_path.joinpath(
         "01-introduction-to-pygrid.ipynb"
     )
@@ -60,6 +62,18 @@ def test_notebooks_intro_00():
             grid_address=("http://localhost:" + GRID_NETWORK_PORT),
             bob=("http://localhost:" + worker_ports["Bob"]),
         ),
+    )
+
+    assert isinstance(res, nbformat.notebooknode.NotebookNode)
+
+
+def test_notebooks_intro_00():
+    notebook_intro_00 = model_centric_mnist_path.joinpath("01-Create-plan.ipynb")
+
+    res = pm.execute_notebook(
+        str(notebook_intro_00),
+        str(model_centric_mnist_path.joinpath("01-Create-plan_kk.ipynb")),
+        dict(gridAddress=("ws://localhost:" + worker_ports["Alice"])),
     )
 
     assert isinstance(res, nbformat.notebooknode.NotebookNode)
