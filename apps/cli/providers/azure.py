@@ -29,8 +29,57 @@ class AZURE(Provider):
 
         self.config.azure = self.get_azure_config()
 
+        self.tfscript += terrascript.provider.azurerm()
+
+        self.update_script()
+
+        click.echo("Initializing Azure Provider")
+        TF.init()
+
+        build = self.build()
+
+        if build == 0:
+            click.echo("Main Infrastructure has built Successfully!\n\n")
+
     def build(self) -> bool:
-        pass
+        self.resource_group = terrascript.resource.azurerm_resource_group(
+            "resource_group", name="resource_group", location=self.azure.location,
+        )
+        self.tfscript += self.resource_group
+
+        self.virtual_network = terrascript.resource.azurerm_virtual_network(
+            "virtual_network",
+            name="virtual_network",
+            resource_group_name=self.resource_group.name,
+            location=self.resource_group.location,
+            address_space=[self.azure.address_space],
+        )
+        self.tfscript += self.virtual_network
+
+        self.internal_subnet = terrascript.resource.azurerm_subnet(
+            "internal_subnet",
+            name="internal_subnet",
+            resource_group_name=self.resource_group.name,
+            virtual_network_name=self.virtual_network.name,
+            address_prefix=self.azure.address_prefix,
+        )
+        self.tfscript += self.internal_subnet
+
+        self.network_interface = terrascript.resource.azurerm_network_interface(
+            "network_interface",
+            name="network_interface",
+            resource_group_name=self.resource_group.name,
+            location=self.resource_group.location,
+            ip_configuration={
+                "name": "ip_configuration",
+                "subnet_id": self.internal_subnet.id,
+                "private_ip_address_allocation": "Dynamic",
+            },
+        )
+        self.tfscript += self.network_interface
+
+        self.update_script()
+        return TF.validate()
 
     def deploy_network(
         self, apply: bool = True,
