@@ -1,7 +1,24 @@
-import click
+import subprocess
 
-from ..utils import Config
+import click
+from PyInquirer import prompt
+
+from ..deploy import base_setup
+from ..tf import *
+from ..utils import Config, styles
 from .provider import *
+
+
+class AZ:
+    def locations_list(self):
+        proc = subprocess.Popen(
+            "az account list-locations --query '[].{DisplayName:displayName}' --output table",
+            shell=True,
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        )
+        locations = proc.stdout.read()
+        return locations.split("\n")[2:]
 
 
 class AZURE(Provider):
