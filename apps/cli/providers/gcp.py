@@ -173,6 +173,75 @@ class GCP(Provider):
         Returns:
             Config: Simple Config with the user inputs
         """
-        ## TODO: promt user for configs
+        gcp = GCloud()
 
-        return Config(region="", credentials="", project_id="",)
+        project_id = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "project_id",
+                    "message": "Please select your project_id",
+                    "choices": gcp.projects_list(),
+                },
+            ],
+            style=styles.second,
+        )["project_id"]
+
+        region = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "region",
+                    "message": "Please select your desired GCP region",
+                    "default": "us-central1",
+                    "choices": gcp.regions_list(),
+                },
+            ],
+            style=styles.second,
+        )["region"]
+
+        zone = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "zone",
+                    "message": "Please select your desired GCP zone",
+                    "choices": gcp.zones_list(region),
+                },
+            ],
+            style=styles.second,
+        )["zone"]
+
+        machine_type = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "machine_type",
+                    "message": "Please select your desired Machine type",
+                    "choices": gcp.machines_type(zone),
+                },
+            ],
+            style=styles.second,
+        )["machine_type"]
+
+        images = gcp.images_type()
+        image_type = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "image_type",
+                    "message": "Please select your desired Machine type",
+                    "choices": images.keys(),
+                },
+            ],
+            style=styles.second,
+        )["image_type"]
+
+        return Config(
+            project_id=project_id,
+            region=region,
+            zone=zone,
+            machine_type=machine_type,
+            images=images,
+            image_type=image_type,
+        )
