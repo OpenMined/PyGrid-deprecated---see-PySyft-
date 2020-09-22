@@ -10,21 +10,22 @@ from src.app.main.database import Role, User, create_role, create_user, model_to
 
 role = {
     "name": "mario mario",
-    "can_triage_jobs": False,
+    "can_triage_requests": False,
     "can_edit_settings": False,
     "can_create_users": True,
     "can_create_groups": True,
     "can_edit_roles": False,
     "can_manage_infrastructure": False,
+    "can_upload_data": False,
 }
 
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"
 )
-owner_role = ("Owner", True, True, True, True, True, True)
-admin_role = ("Administrator", True, True, True, True, False, False)
-user_role = ("User", False, False, False, False, False, False)
-officer_role = ("Compliance Officer", True, False, False, False, False, False)
+owner_role = ("Owner", True, True, True, True, True, True, True)
+admin_role = ("Administrator", True, True, True, True, False, False, True)
+user_role = ("User", False, False, False, False, False, False, False)
+officer_role = ("Compliance Officer", True, False, False, False, False, False, False)
 user_1 = (
     "tech@gibberish.com",
     "BDEB6E8EE39B6C70835993486C9E65DC",

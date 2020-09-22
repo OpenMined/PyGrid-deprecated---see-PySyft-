@@ -78,45 +78,49 @@ def seed_db():
 
     new_role = Role(
         name="User",
-        can_triage_jobs=False,
+        can_triage_requests=False,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=False,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Compliance Officer",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=False,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Administrator",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=True,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Owner",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,
         can_edit_roles=True,
         can_manage_infrastructure=True,
+        can_upload_data=True,
     )
     db.session.add(new_role)
 

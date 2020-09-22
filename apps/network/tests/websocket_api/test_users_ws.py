@@ -4,16 +4,17 @@ import jwt
 import pytest
 from bcrypt import checkpw
 from flask import current_app as app
-from src.app.main.core.exceptions import PyGridError
-from src.app.main.database import *
-from src.app.main.events.user_related import *
+
+from src.app.database import *
+from src.app.events.user_related import *
 
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"
 )
-owner_role = ("Owner", True, True, True, True, True, True, True)
-user_role = ("User", False, False, False, False, False, False, False)
-admin_role = ("Administrator", True, True, True, True, False, False, True)
+owner_role = ("Owner", True, True, True, True)
+user_role = ("User", False, False, False, False)
+admin_role = ("Administrator", True, True, False, False)
+
 user1 = (
     "tech@gibberish.com",
     "BDEB6E8EE39B6C70835993486C9E65DC",
@@ -58,8 +59,6 @@ def cleanup(database):
     try:
         database.session.query(User).delete()
         database.session.query(Role).delete()
-        database.session.query(Group).delete()
-        database.session.query(UserGroup).delete()
         database.session.commit()
     except:
         database.session.rollback()
@@ -306,29 +305,6 @@ def test_get_users_success(client, database, cleanup):
     assert result["users"][1]["id"] == 2
 
 
-def test_get_users_unauthorized(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-    }
-    result = get_all_users_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "User is not authorized for this operation!"
-
-
 def test_get_users_missing_key(client, database, cleanup):
     new_role = create_role(*admin_role)
     database.session.add(new_role)
@@ -532,30 +508,6 @@ def test_get_one_user_invalid_token(client, database, cleanup):
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
-
-
-def test_get_one_user_unauthorized(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
-    message = {
-        "id": 1,
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-    }
-    result = get_specific_user_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "User is not authorized for this operation!"
 
 
 def test_get_one_missing_user(client, database, cleanup):
@@ -1403,354 +1355,6 @@ def test_put_other_user_email_missing_user(client, database, cleanup):
     assert result["error"] == "User ID not found!"
 
 
-# PUT USER GROUPS
-
-
-def test_put_other_user_groups_success(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="wi6hJCTz9QN1GcKc2ZJk7ReZ1LshNsu",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=2,
-    )
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    user_groups = database.session.query(UserGroup).filter_by(user=2).all()
-    assert len(user_groups) == 1
-    assert user_groups[0].group == 1
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "token": token.decode("UTF-8"),
-        "id": 2,
-        "groups": [2, 3],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-    user_groups = database.session.query(UserGroup).filter_by(user=2).all()
-
-    assert result["user"]["id"] == 2
-    assert len(result["user"]["groups"]) == 2
-    assert result["user"]["groups"][0]["id"] == 2
-    assert result["user"]["groups"][1]["id"] == 3
-
-    assert len(user_groups) == 2
-    assert user_groups[0].group == 2
-    assert user_groups[1].group == 3
-
-
-def test_put_user_groups_missing_key(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {"token": token.decode("UTF-8"), "id": 2, "groups": [2, 3]}
-    result = change_user_groups_socket(message)
-    result = loads(result)
-    user_groups = database.session.query(UserGroup).filter_by(user=2).all()
-
-    assert result["error"] == "Missing request key!"
-
-
-def test_put_user_groups_missing_token(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    message = {
-        "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "groups": [2, 3],
-        "id": 2,
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "Missing request key!"
-
-
-def test_put_user_groups_invalid_key(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-        "id": 2,
-        "groups": [2, 3],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "Invalid credentials!"
-
-
-def test_put_user_groups_invalid_token(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 1}, "secretitis")
-    message = {
-        "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "token": token.decode("UTF-8"),
-        "id": 2,
-        "groups": [2, 3],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "Invalid credentials!"
-
-
-def test_put_other_user_groups_unauthorized(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-        "id": 1,
-        "groups": [2, 3],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "User is not authorized for this operation!"
-
-
-def test_put_own_user_groups_success(client, database, cleanup):
-    new_role = new_role = create_role(*owner_role)
-    database.session.add(new_role)
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user5)
-    database.session.add(new_user)
-    new_user = create_user(*user4)
-    database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="wi6hJCTz9QN1GcKc2ZJk7ReZ1LshNsu",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=3, group=2)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    user_groups = database.session.query(UserGroup).filter_by(user=3).all()
-    assert len(user_groups) == 1
-    assert user_groups[0].group == 2
-
-    token = jwt.encode({"id": 3}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-        "id": 3,
-        "groups": [1],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-    user_groups = database.session.query(UserGroup).filter_by(user=3).all()
-
-    assert result["user"]["id"] == 3
-    assert len(result["user"]["groups"]) == 1
-    assert result["user"]["groups"][0]["id"] == 1
-
-    assert len(user_groups) == 1
-    assert user_groups[0].group == 1
-
-
-def test_put_other_user_groups_missing_user(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=3, group=2)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
-        "token": token.decode("UTF-8"),
-        "id": 2,
-        "groups": [1],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "User ID not found!"
-
-
-def test_put_user_groups_missing_group(client, database, cleanup):
-    new_role = new_role = create_role(*owner_role)
-    database.session.add(new_role)
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user5)
-    database.session.add(new_user)
-    new_user = create_user(*user4)
-    database.session.add(new_user)
-    new_user = User(
-        email="anemail@anemail.com",
-        hashed_password="wi6hJCTz9QN1GcKc2ZJk7ReZ1LshNsu",
-        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
-        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        role=3,
-    )
-    database.session.add(new_user)
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=3, group=2)
-    database.session.add(new_usergroup)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 3}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-        "id": 3,
-        "groups": [5],
-    }
-    result = change_user_groups_socket(message)
-    result = loads(result)
-    user_groups = database.session.query(UserGroup).filter_by(user=3).all()
-
-    assert result["error"] == "Group ID not found!"
-
-
 # DELETE USER
 
 
@@ -1932,7 +1536,6 @@ def test_delete_own_user_success(client, database, cleanup):
     }
     result = delete_user_socket(message)
     result = loads(result)
-    user_groups = database.session.query(UserGroup).filter_by(user=3).all()
 
     assert database.session.query(User).get(3) is None
 
@@ -1994,7 +1597,7 @@ def test_search_users_success(client, database, cleanup):
     assert result["users"][0]["id"] == 2
 
 
-def test_search_users_nomatch(client, database, cleanup):
+def test_search_users_two_matches(client, database, cleanup):
     new_role = new_role = create_role(*owner_role)
     database.session.add(new_role)
     new_role = create_role(*admin_role)
@@ -2020,19 +1623,6 @@ def test_search_users_nomatch(client, database, cleanup):
     )
     database.session.add(new_user)
 
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=1, group=3)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=3, group=1)
-    database.session.add(new_usergroup)
-
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
@@ -2040,16 +1630,16 @@ def test_search_users_nomatch(client, database, cleanup):
         "private-key": "4de2d41486ceaffdf0c1778e50cea00000d6549ffe808fa860ecd4e91d9ee1b1",
         "token": token.decode("UTF-8"),
         "role": 3,
-        "group": 3,
     }
     result = search_users_socket(message)
     result = loads(result)
 
     assert result["success"] == True
-    assert len(result["users"]) == 0
+    assert len(result["users"]) == 2
+    assert set([el["id"] for el in result["users"]]) == set([2, 3])
 
 
-def test_search_users_onematch(client, database, cleanup):
+def test_search_users_nomatch(client, database, cleanup):
     new_role = new_role = create_role(*owner_role)
     database.session.add(new_role)
     new_role = create_role(*admin_role)
@@ -2081,35 +1671,20 @@ def test_search_users_onematch(client, database, cleanup):
     )
     database.session.add(new_user)
 
-    new_group = Group(name="Hospital_X")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Y")
-    database.session.add(new_group)
-    new_group = Group(name="Hospital_Z")
-    database.session.add(new_group)
-    new_usergroup = UserGroup(user=1, group=3)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=2, group=1)
-    database.session.add(new_usergroup)
-    new_usergroup = UserGroup(user=3, group=1)
-    database.session.add(new_usergroup)
-
     database.session.commit()
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     message = {
         "private-key": "4de2d41486ceaffdf0c1778e50cea00000d6549ffe808fa860ecd4e91d9ee1b1",
         "token": token.decode("UTF-8"),
-        "role": 3,
-        "group": 1,
-        "email": "tech@gibberish.com",
+        "role": 1,
+        "email": "anemail@anemail.com",
     }
     result = search_users_socket(message)
     result = loads(result)
 
     assert result["success"] == True
-    assert len(result["users"]) == 1
-    assert result["users"][0]["id"] == 2
+    assert len(result["users"]) == 0
 
 
 def test_search_users_missing_key(client, database, cleanup):
@@ -2200,27 +1775,3 @@ def test_search_users_invalid_token(client, database, cleanup):
     result = loads(result)
 
     assert result["error"] == "Invalid credentials!"
-
-
-def test_search_users_unauthorized(client, database, cleanup):
-    new_role = create_role(*admin_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-    new_user = create_user(*user3)
-    database.session.add(new_user)
-
-    database.session.commit()
-
-    token = jwt.encode({"id": 2}, app.config["SECRET_KEY"])
-    message = {
-        "private-key": "acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
-        "token": token.decode("UTF-8"),
-        "email": "anemail@anemail.com",
-    }
-    result = search_users_socket(message)
-    result = loads(result)
-
-    assert result["error"] == "User is not authorized for this operation!"
