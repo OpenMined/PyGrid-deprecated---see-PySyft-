@@ -82,14 +82,86 @@ class AZURE(Provider):
         return TF.validate()
 
     def deploy_network(
-        self, apply: bool = True,
+        self, name: str = "pygridmetwork", apply: bool = True,
     ):
-        pass
+        virtual_machine = terrascript.resource.azurerm_virtual_machine(
+            name,
+            name=name,
+            resource_group_name=self.resource_group.name,
+            location=self.resource_group.location,
+            network_interface_ids=[self.network_interface.id],
+            vm_size="Standard_DS1_v2",  # TODO: get this config from user
+            # TODO: get config from user
+            storage_image_reference={
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest",
+            },
+            storage_os_disk={
+                "name": "myosdisk1",
+                "caching": "ReadWrite",
+                "create_option": "FromImage",
+                "managed_disk_type": "Standard_LRS",
+            },
+            os_profile={
+                "computer_name": "hostname",
+                "admin_username": "testadmin",
+                "admin_password": "Password1234!",
+            },
+            os_profile_linux_config={"disable_password_authentication": False,},
+            custom_data=f"""
+                {base_setup}
+                \ncd /PyGrid/apps/network
+                \npoetry install
+                \nnohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {'--start_local_db' if self.config.app.start_local_db else ''}
+            """,
+        )
+
+        self.tfscript += network
+
+        self.update_script()
 
     def deploy_node(
         self, apply: bool = True,
     ):
-        pass
+        virtual_machine = terrascript.resource.azurerm_virtual_machine(
+            name,
+            name=name,
+            resource_group_name=self.resource_group.name,
+            location=self.resource_group.location,
+            network_interface_ids=[self.network_interface.id],
+            vm_size="Standard_DS1_v2",  # TODO: get this config from user
+            # TODO: get config from user
+            storage_image_reference={
+                "publisher": "Canonical",
+                "offer": "UbuntuServer",
+                "sku": "16.04-LTS",
+                "version": "latest",
+            },
+            storage_os_disk={
+                "name": "myosdisk1",
+                "caching": "ReadWrite",
+                "create_option": "FromImage",
+                "managed_disk_type": "Standard_LRS",
+            },
+            os_profile={
+                "computer_name": "hostname",
+                "admin_username": "testadmin",
+                "admin_password": "Password1234!",
+            },
+            os_profile_linux_config={"disable_password_authentication": False,},
+            custom_data=f"""
+                {base_setup}
+                \ncd /PyGrid/apps/node
+                \npoetry install
+                \nnohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network} --num_replicas {self.config.app.num_replicas} {'--start_local_db' if self.config.app.start_local_db else ''}
+            """,
+        )
+
+        self.tfscript += network
+
+        self.update_script()
 
     def get_azure_config(self) -> Config:
         """Getting the configration required for deployment on AZURE.
