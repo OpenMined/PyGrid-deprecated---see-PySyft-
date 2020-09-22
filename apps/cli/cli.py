@@ -52,16 +52,11 @@ def deploy(config, provider, app):
     config.app = Config(name=app.lower())
     get_app_arguments(config)
 
-    ## Deployment Keys
-    config.id_key = click.prompt(
-        f"Please enter a your cloud deployment {colored('id')} key",
+    ## credentials file
+    config.credentials = click.prompt(
+        f"Please enter a your cloud deployment {colored('credentials')} file",
         type=str,
-        hide_input=True,
-    )
-    config.secret_key = click.prompt(
-        f"Please enter a your cloud deployment {colored('secret')} key",
-        type=str,
-        hide_input=True,
+        default=f"~/.{config.provider}/credentials.json",
     )
 
     ## Websockets
@@ -144,7 +139,5 @@ def get_app_arguments(config):
 @pass_config
 def logging(config, results, **kwargs):
     click.echo(f"Writing configs to {config.output_file}")
-    del config.id_key
-    del config.secret_key
     with open(config.output_file, "w", encoding="utf-8") as f:
         json.dump(vars(config), f, indent=2, default=lambda o: o.__dict__)
