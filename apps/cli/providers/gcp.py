@@ -73,9 +73,9 @@ class GCP(Provider):
         self.config.gcp = self.get_gcp_config()
 
         self.tfscript += terrascript.provider.google(
-            credentials=self.config.gcp.credentials,
             project=self.config.gcp.project_id,
             region=self.config.gcp.region,
+            zone=self.config.gcp.zone,
         )
 
         self.update_script()
@@ -89,9 +89,10 @@ class GCP(Provider):
             click.echo("Main Infrastructure has built Successfully!\n\n")
 
     def build(self) -> bool:
+        app = self.config.app.name
         self.firewall = terrascript.resource.google_compute_firewall(
-            "firewall",
-            name="firewall",
+            f"firewall-{app}",
+            name=f"firewall-{app}",
             network="default",
             allow={
                 "protocol": "tcp",
@@ -101,30 +102,34 @@ class GCP(Provider):
         self.tfscript += self.firewall
 
         self.pygrid_ip = terrascript.resource.google_compute_address(
-            "pygrid", name="pygrid",
+            f"pygrid-{app}", name=f"pygrid-{app}",
         )
         self.tfscript += self.pygrid_ip
 
         self.tfscript += terrascript.output(
-            "pygrid_ip", value="${" + self.pygrid_ip.address + "}",
+            f"pygrid-{app}_ip", value="${" + self.pygrid_ip.address + "}",
         )
 
         self.update_script()
         return TF.validate()
 
     def deploy_network(
-        self, name: str = "PyGridNetwork", apply: bool = True,
+        self, name: str = "pygridnetwork", apply: bool = True,
     ):
+        images = self.config.gcp.images
+        image_type = self.config.gcp.image_type
         image = terrascript.data.google_compute_image(
-            name + "container-optimized-os", family="cos-81-lts", project="cos-cloud",
+            name + image_type,
+            project=images[image_type][0],
+            family=images[image_type][1],
         )
         self.tfscript += image
 
         network = terrascript.resource.google_compute_instance(
             name,
             name=name,
-            machine_type="",  # TODO: machine_type,
-            zone="",  # TODO: zone,
+            machine_type=self.config.gcp.machine_type,
+            zone=self.config.gcp.zone,
             boot_disk={"initialize_params": {"image": "${" + image.self_link + "}"}},
             network_interface={
                 "network": "default",
@@ -132,40 +137,48 @@ class GCP(Provider):
             },
             metadata_startup_script=f"""
                 {base_setup}
-                cd /PyGrid/apps/network
-                poetry install
-                nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {'--start_local_db' if self.config.app.start_local_db else ''}
+                \ncd /PyGrid/apps/network
+                \npoetry install
+                \nnohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {'--start_local_db' if self.config.app.start_local_db else ''}
             """,
         )
         self.tfscript += network
 
         self.update_script()
 
+        return TF.apply()
+
     def deploy_node(
-        self, name: str = "PyGridNode", apply: bool = True,
+        self, name: str = "pygridnode", apply: bool = True,
     ):
+        images = self.config.gcp.images
+        image_type = self.config.gcp.image_type
         image = terrascript.data.google_compute_image(
-            name + "container-optimized-os", family="cos-81-lts", project="cos-cloud",
+            name + image_type,
+            project=images[image_type][0],
+            family=images[image_type][1],
         )
         self.tfscript += image
 
         network = terrascript.resource.google_compute_instance(
             name,
             name=name,
-            machine_type="",  # TODO:  machine_type,
-            zone="",  # TODO: zone,
+            machine_type=self.config.gcp.machine_type,
+            zone=self.config.gcp.zone,
             boot_disk={"initialize_params": {"image": "${" + image.self_link + "}"}},
             network_interface={"network": "default", "access_config": {},},
             metadata_startup_script=f"""
                 {base_setup}
-                cd /PyGrid/apps/node
-                poetry install
-                nohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network} --num_replicas {self.config.app.num_replicas} {'--start_local_db' if self.config.app.start_local_db else ''}
+                \ncd /PyGrid/apps/node
+                \npoetry install
+                \nnohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network} --num_replicas {self.config.app.num_replicas} {'--start_local_db' if self.config.app.start_local_db else ''}
             """,
         )
         self.tfscript += network
 
         self.update_script()
+
+        return TF.apply()
 
     def get_gcp_config(self) -> Config:
         """Getting the configration required for deployment on GCP.
