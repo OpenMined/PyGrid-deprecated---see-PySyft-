@@ -7,13 +7,20 @@ from ..tf import *
 from ..utils import Config, styles
 from .provider import *
 
+
 ## MARK: regions and instances takes some time to be loaded (5-7 sec)
-EC2 = boto3.client("ec2")
-REGIONS = [region["RegionName"] for region in EC2.describe_regions()["Regions"]]
-INSTANCES = [
-    instance["InstanceType"]
-    for instance in EC2.describe_instance_types()["InstanceTypes"]
-]
+class EC2:
+    def __init__(self) -> None:
+        self.client = boto3.client("ec2")
+
+    def regions_list(self):
+        return [region["RegionName"] for region in EC2.describe_regions()["Regions"]]
+
+    def instances_list(self):
+        return [
+            instance["InstanceType"]
+            for instance in EC2.describe_instance_types()["InstanceTypes"]
+        ]
 
 
 class AWS(Provider):
@@ -27,8 +34,7 @@ class AWS(Provider):
         # AWS provider
         self.tfscript += terrascript.provider.aws(
             region=self.config.aws.region,
-            access_key=self.config.id_key,
-            secret_key=self.config.secret_key,
+            shared_credentials_file=self.config.credentials,
         )
 
         self.update_script()
@@ -262,6 +268,7 @@ class AWS(Provider):
         Returns:
             Config: Simple Config with the user inputs
         """
+        ec2 = EC2()
 
         region = prompt(
             [
@@ -270,7 +277,7 @@ class AWS(Provider):
                     "name": "region",
                     "message": "Please select your desired AWS region",
                     "default": "us-east-1",
-                    "choices": REGIONS,
+                    "choices": ec2.regions_list(),
                 },
             ],
             style=styles.second,
@@ -283,7 +290,7 @@ class AWS(Provider):
                     "name": "instance",
                     "message": "Please select your desired AWS instance type",
                     "default": "t2.micro",
-                    "choices": INSTANCES,
+                    "choices": ec2.instances_list(),
                 },
             ],
             style=styles.second,
