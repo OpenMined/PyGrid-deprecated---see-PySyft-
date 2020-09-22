@@ -48,6 +48,47 @@ class AZURE(Provider):
         Returns:
             Config: Simple Config with the user inputs
         """
-        ## TODO:
 
-        return Config()
+        az = AZ()
+
+        location = prompt(
+            [
+                {
+                    "type": "list",
+                    "name": "location",
+                    "message": "Please select your desired location",
+                    "choices": az.locations_list(),
+                },
+            ],
+            style=styles.second,
+        )["location"]
+
+        address_space = prompt(
+            [
+                {
+                    "type": "input",
+                    "name": "address_space",
+                    "message": "Please provide your VPC address_space",
+                    "default": "10.0.0.0/16",
+                },
+            ],
+            style=styles.second,
+        )["address_space"]
+
+        address_prefix = prompt(
+            [
+                {
+                    "type": "input",
+                    "name": "address_prefix",
+                    "message": "Please provide subnet address_prefix",
+                    "default": "10.0.0.0/24",
+                },
+            ],
+            style=styles.second,
+        )["address_prefix"]
+
+        return Config(
+            location=location,
+            address_space=address_space,
+            address_prefix=address_prefix,
+        )
