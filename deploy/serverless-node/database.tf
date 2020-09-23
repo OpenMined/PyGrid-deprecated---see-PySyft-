@@ -11,7 +11,7 @@ data "aws_subnet_ids" "all" {
 module "aurora" {
   source = "terraform-aws-modules/rds-aurora/aws"
 
-  name                  = "pygrid-network-database"
+  name                  = "pygrid-node-database"
   engine                = "aurora"
   engine_mode           = "serverless"
   replica_scale_enabled = false
@@ -19,7 +19,7 @@ module "aurora" {
 
   subnets       = data.aws_subnet_ids.all.ids
   vpc_id        = data.aws_vpc.default.id
-  instance_type = "db.r4.large"
+  instance_type = "db.t2.micro"
 
   enable_http_endpoint = true # Enable Data API
 

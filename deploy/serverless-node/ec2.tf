@@ -67,7 +67,7 @@ resource "aws_instance" "ec2_mount_efs" {
   provisioner "remote-exec" {
     inline = [
       "echo \"export EFS_DNS=${aws_efs_file_system.pygrid-syft-dependenices.dns_name}\" >> ~/.bashrc",
-      file("deploy.sh")
+      # file("deploy.sh")
     ]
   }
 
