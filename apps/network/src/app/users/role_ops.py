@@ -1,7 +1,7 @@
 from json import dumps, loads
 import logging
 
-from ..core.exceptions import (
+from ..exceptions import (
     UserNotFoundError,
     RoleNotFoundError,
     AuthorizationError,
