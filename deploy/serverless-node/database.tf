@@ -1,13 +1,3 @@
-# Data sources to get VPC and subnets
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnet_ids" "all" {
-  vpc_id = data.aws_vpc.default.id
-}
-
-
 module "aurora" {
   source = "terraform-aws-modules/rds-aurora/aws"
 
@@ -17,8 +7,8 @@ module "aurora" {
   replica_scale_enabled = false
   replica_count         = 0
 
-  subnets       = data.aws_subnet_ids.all.ids
-  vpc_id        = data.aws_vpc.default.id
+  vpc_id        = aws_vpc.pygrid_node.id
+  subnets       = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
   instance_type = "db.t2.micro"
 
   enable_http_endpoint = true # Enable Data API
@@ -38,20 +28,20 @@ module "aurora" {
     auto_pause               = true
     max_capacity             = 64 #ACU
     min_capacity             = 2  #ACU
-    seconds_until_auto_pause = 300
+    seconds_until_auto_pause = 300  # 5 minutes
     timeout_action           = "ForceApplyCapacityChange"
   }
 }
 
 # Todo: Look into these.
 resource "aws_db_parameter_group" "aurora_db_56_parameter_group" {
-  name        = "test-aurora-db-56-parameter-group"
+  name        = "pygrid-node-aurora-db-56-parameter-group"
   family      = "aurora5.6"
-  description = "test-aurora-db-56-parameter-group"
+  description = "pygrid-node-db-56-parameter-group"
 }
 
 resource "aws_rds_cluster_parameter_group" "aurora_cluster_56_parameter_group" {
-  name        = "test-aurora-56-cluster-parameter-group"
+  name        = "pygrid-node-aurora-56-cluster-parameter-group"
   family      = "aurora5.6"
-  description = "test-aurora-56-cluster-parameter-group"
+  description = "pygrid-node-56-cluster-parameter-group"
 }

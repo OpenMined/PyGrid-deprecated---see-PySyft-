@@ -3,6 +3,29 @@ locals {
   function_handler = "deploy.app"
 }
 
+resource "aws_security_group" "lambda_sg" {
+  vpc_id = aws_vpc.pygrid_node.id
+
+  ingress {
+    description = "Allow EFS"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "lambda-sg"
+  }
+}
+
 module "lambda" {
   source = "terraform-aws-modules/lambda/aws"
 
@@ -24,13 +47,12 @@ module "lambda" {
     module.lambda_layer.this_lambda_layer_arn,
   ]
 
-  environment_variables = {
-    MOUNT_PATH     = "/mnt${aws_efs_access_point.node-access-points.root_directory[0].path}"
-    DB_NAME        = var.database_name
-    DB_CLUSTER_ARN = module.aurora.this_rds_cluster_arn
-    DB_SECRET_ARN  = aws_secretsmanager_secret.database-secret.arn
-    SECRET_KEY     = "Do-we-need-this-in-deployed-version" # TODO: Clarify this
-  }
+  vpc_subnet_ids         = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
+
+  file_system_arn              = aws_efs_access_point.node-access-points.arn
+  file_system_local_mount_path = "/mnt${var.mount_path}"
+
 
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
@@ -39,12 +61,13 @@ module "lambda" {
     }
   }
 
-  vpc_subnet_ids         = data.aws_subnet_ids.all.ids
-  vpc_security_group_ids = [aws_security_group.allow_efs.id]
+  environment_variables = {
+    MOUNT_PATH     = "/mnt${var.mount_path}"
+    DB_NAME        = var.database_name
+    DB_CLUSTER_ARN = module.aurora.this_rds_cluster_arn
+    DB_SECRET_ARN  = aws_secretsmanager_secret.database-secret.arn
+  }
 
-  # Add File System
-  file_system_arn              = aws_efs_access_point.node-access-points.arn
-  file_system_local_mount_path = "/mnt${aws_efs_access_point.node-access-points.root_directory[0].path}"
 }
 
 module "lambda_alias" {

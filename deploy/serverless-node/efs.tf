@@ -14,53 +14,35 @@ resource "aws_efs_file_system" "pygrid-syft-dependenices" {
   }
 }
 
-# Note: Creates mount target in each subnet in the region
-resource "aws_efs_mount_target" "node-efs-mount-targets" {
+# Mount target connects the file system to the subnet
+resource "aws_efs_mount_target" "efs-mt-1" {
   file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
-  for_each        = data.aws_subnet_ids.all.ids
-  subnet_id       = each.value
-  security_groups = [aws_security_group.allow_efs.id]
+  security_groups = [aws_security_group.lambda_sg.id]
+  subnet_id = aws_subnet.private_subnet_1.id
 }
 
+resource "aws_efs_mount_target" "efs-mt-2" {
+  file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
+  security_groups = [aws_security_group.lambda_sg.id]
+  subnet_id = aws_subnet.private_subnet_2.id
+}
 
 resource "aws_efs_access_point" "node-access-points" {
-  depends_on     = [
-    aws_efs_file_system.pygrid-syft-dependenices,
-    aws_efs_mount_target.node-efs-mount-targets
-  ]
   file_system_id = aws_efs_file_system.pygrid-syft-dependenices.id
 
   root_directory {
-    path = "/dep"
+    path = var.mount_path
   }
 
   tags = {
-    Name = "node-efs-access-point"
+    Name = "access_point_for_lambda"
   }
+
+  depends_on     = [
+    aws_efs_file_system.pygrid-syft-dependenices,
+    aws_efs_mount_target.efs-mt-1,
+    aws_efs_mount_target.efs-mt-2
+  ]
 }
 
 
-resource "aws_security_group" "allow_efs" {
-  name        = "node_efs_allow_lambda"
-  description = "Allow inbound traffic"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    description = "NFS from VPC"
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "node_efs_allow_lambda"
-  }
-}

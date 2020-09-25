@@ -11,3 +11,7 @@ variable "database_name" {
   type    = string
   default = "mydb"
 }
+
+variable "mount_path" {
+  default = "/dep"
+}

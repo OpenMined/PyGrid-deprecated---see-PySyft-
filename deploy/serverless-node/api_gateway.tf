@@ -1,9 +1,3 @@
-provider "aws" {
-  region                  = "us-east-1"
-  shared_credentials_file = "$HOME/.aws/credentials"
-}
-
-
 module "api_gateway" {
   source = "terraform-aws-modules/apigateway-v2/aws"
 

@@ -16,8 +16,6 @@ resource "aws_iam_role" "pygrid-node-lambda-role" {
   }
   EOF
 }
-# TODO: Remove all unncesssary actions from all policies
-
 
 resource "aws_iam_role_policy" "AmazonElasticFileSystemClientFullAccess" {
   role   = aws_iam_role.pygrid-node-lambda-role.id
@@ -74,19 +72,6 @@ resource "aws_iam_role_policy" "AmazonRDSDataFullAcess" {
     "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "SecretsManagerDbCredentialsAccess",
-            "Effect": "Allow",
-            "Action": [
-                "secretsmanager:GetSecretValue",
-                "secretsmanager:PutResourcePolicy",
-                "secretsmanager:PutSecretValue",
-                "secretsmanager:DeleteSecret",
-                "secretsmanager:DescribeSecret",
-                "secretsmanager:TagResource"
-            ],
-            "Resource": "arn:aws:secretsmanager:*:*:secret:rds-db-credentials/*"
-        },
-        {
             "Sid": "RDSDataServiceAccess",
             "Effect": "Allow",
             "Action": [
@@ -105,9 +90,6 @@ resource "aws_iam_role_policy" "AmazonRDSDataFullAcess" {
                 "rds-data:BeginTransaction",
                 "rds-data:CommitTransaction",
                 "rds-data:RollbackTransaction",
-                "secretsmanager:CreateSecret",
-                "secretsmanager:ListSecrets",
-                "secretsmanager:GetRandomPassword",
                 "tag:GetResources"
             ],
             "Resource": "*"

@@ -2,6 +2,15 @@ variable "key_name" {
   default = "ec2_efs_key"
 }
 
+# Data sources to get VPC and subnets
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnet_ids" "all" {
+  vpc_id = data.aws_vpc.default.id
+}
+
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2_efs_sg"
   vpc_id      = data.aws_vpc.default.id
