@@ -65,8 +65,11 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
-/deploy/serverless-node/lambda-layer/commands.md
-/deploy/serverless-node/lambda-layer/python/
-/deploy/serverless-node/lambda-layer/*.zip
-/deploy/serverless-node/ec2_efs_key
-/deploy/serverless-node/ec2_efs_key.pub
+
+# Ignore zip files inside lambda layers
+/deploy/*/lambda-layer/*.zip
+/deploy/*/lambda-layer/*.txt
+
+# Ignore keys
+/deploy/Syft-Public-EFS/ec2_efs_key*
+
