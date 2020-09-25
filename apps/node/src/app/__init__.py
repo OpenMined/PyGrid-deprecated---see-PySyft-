@@ -199,6 +199,11 @@ def create_lambda_app(node_id: str) -> FlaskLambda:
         app : FlaskLambda App instance.
     """
 
+    # Register dialects to talk to AWS RDS via Data API
+    import sqlalchemy_aurora_data_api
+
+    sqlalchemy_aurora_data_api.register_dialects()
+
     database_name = os.environ.get("DB_NAME")
     cluster_arn = os.environ.get("DB_CLUSTER_ARN")
     secret_arn = os.environ.get("DB_SECRET_ARN")
