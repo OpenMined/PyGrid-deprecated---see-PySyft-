@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 
 from flask import Flask, Response
 from flask_cors import CORS
@@ -198,8 +198,20 @@ def create_lambda_app(node_id: str) -> FlaskLambda:
     Returns:
         app : FlaskLambda App instance.
     """
+
+    database_name = os.environ.get("DB_NAME")
+    cluster_arn = os.environ.get("DB_CLUSTER_ARN")
+    secret_arn = os.environ.get("DB_SECRET_ARN")
+
     app = FlaskLambda(__name__)
-    sockets = Sockets(app)
+    app.config.from_mapping(
+        DEBUG=False,
+        SQLALCHEMY_DATABASE_URI=f"mysql+auroradataapi://:@/{database_name}",
+        SQLALCHEMY_ENGINE_OPTIONS={
+            "connect_args": dict(aurora_cluster_arn=cluster_arn, secret_arn=secret_arn)
+        },
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    )
 
     # Register app blueprints
     from .main import (auth, data_centric_routes, hook, local_worker,
@@ -224,16 +236,30 @@ def create_lambda_app(node_id: str) -> FlaskLambda:
     app.register_blueprint(model_centric_routes, url_prefix=r"/model-centric")
     app.register_blueprint(data_centric_routes, url_prefix=r"/data-centric")
 
-    sockets.register_blueprint(ws, url_prefix=r"/")
+    # Setup database
+    global db
+    db.init_app(app)
+
+    s = app.app_context().push()  # Push the app into context
+
+    try:
+        db.Model.metadata.create_all(
+            db.engine, checkfirst=False
+        )  # Create database tables
+        seed_db()  # Seed the database
+    except Exception as e:
+        print("Error", e)
+
+    db.session.commit()
 
     # Set Authentication configs
     app = auth.set_auth_configs(app)
 
     CORS(app)
 
-    # # Threads
-    # executor.init_app(app)
-    # app.config["EXECUTOR_PROPAGATE_EXCEPTIONS"] = True
-    # app.config["EXECUTOR_TYPE"] = "thread"
+    # Threads
+    executor.init_app(app)
+    app.config["EXECUTOR_PROPAGATE_EXCEPTIONS"] = True
+    app.config["EXECUTOR_TYPE"] = "thread"
 
     return app
