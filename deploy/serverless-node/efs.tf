@@ -32,6 +32,16 @@ resource "aws_efs_access_point" "node-access-points" {
 
   root_directory {
     path = var.mount_path
+     creation_info {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "777"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
   }
 
   tags = {
