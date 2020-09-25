@@ -1,3 +1,8 @@
+provider "aws" {
+  region                  = "us-east-1"
+  shared_credentials_file = "$HOME/.aws/credentials"
+}
+
 variable "key_name" {
   default = "ec2_efs_key"
 }
@@ -75,8 +80,8 @@ resource "aws_instance" "ec2_mount_efs" {
   # Executes only once, when the server is provisioned
   provisioner "remote-exec" {
     inline = [
-      "echo \"export EFS_DNS=${aws_efs_file_system.pygrid-syft-dependenices.dns_name}\" >> ~/.bashrc",
-      # file("deploy.sh")
+      "echo \"export EFS_DNS=fs-536613d1.efs.us-east-1.amazonaws.com\" >> ~/.bashrc",
+      file("deploy.sh")
     ]
   }
 
