@@ -18,13 +18,19 @@ resource "aws_efs_file_system" "pygrid-syft-dependenices" {
 resource "aws_efs_mount_target" "efs-mt-1" {
   file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
   security_groups = [aws_security_group.lambda_sg.id]
-  subnet_id = aws_subnet.private_subnet_1.id
+  subnet_id       = aws_subnet.private_subnet_1.id
 }
 
 resource "aws_efs_mount_target" "efs-mt-2" {
   file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
   security_groups = [aws_security_group.lambda_sg.id]
-  subnet_id = aws_subnet.private_subnet_2.id
+  subnet_id       = aws_subnet.private_subnet_2.id
+}
+
+resource "aws_efs_mount_target" "efs-mt-3" {
+  file_system_id  = aws_efs_file_system.pygrid-syft-dependenices.id
+  security_groups = [aws_security_group.lambda_sg.id]
+  subnet_id       = aws_subnet.public_subnet.id
 }
 
 resource "aws_efs_access_point" "node-access-points" {
@@ -32,7 +38,7 @@ resource "aws_efs_access_point" "node-access-points" {
 
   root_directory {
     path = var.mount_path
-     creation_info {
+    creation_info {
       owner_gid   = 1000
       owner_uid   = 1000
       permissions = "777"
@@ -48,7 +54,7 @@ resource "aws_efs_access_point" "node-access-points" {
     Name = "access_point_for_lambda"
   }
 
-  depends_on     = [
+  depends_on = [
     aws_efs_file_system.pygrid-syft-dependenices,
     aws_efs_mount_target.efs-mt-1,
     aws_efs_mount_target.efs-mt-2

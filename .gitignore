@@ -71,5 +71,5 @@ terraform.rc
 /deploy/*/lambda-layer/*.txt
 
 # Ignore keys
-/deploy/Syft-Public-EFS/ec2_efs_key*
+/deploy/*/*key*
 

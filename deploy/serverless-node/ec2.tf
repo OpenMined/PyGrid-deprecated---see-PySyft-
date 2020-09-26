@@ -1,24 +1,10 @@
-provider "aws" {
-  region                  = "us-east-1"
-  shared_credentials_file = "$HOME/.aws/credentials"
-}
-
 variable "key_name" {
   default = "ec2_efs_key"
 }
 
-# Data sources to get VPC and subnets
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnet_ids" "all" {
-  vpc_id = data.aws_vpc.default.id
-}
-
 resource "aws_security_group" "ec2_sg" {
-  name        = "ec2_efs_sg"
-  vpc_id      = data.aws_vpc.default.id
+  name   = "ec2_efs_sg"
+  vpc_id = aws_vpc.pygrid_node.id
 
   ingress {
     description = "SSH"
@@ -57,11 +43,12 @@ resource "aws_instance" "ec2_mount_efs" {
 
   # TODO: future proof ami attribute
   # AWS can change ami names, so we need to make our ami attribute dynamic
-  ami           = "ami-0dba2cb6798deb6d8" # us-east-1  # ubuntu
+  ami           = "ami-0817d428a6fb68645" # us-east-1  # ubuntu18.04
   instance_type = "t2.large"
   key_name      = aws_key_pair.default.key_name
 
   associate_public_ip_address = true
+  subnet_id                   = aws_subnet.public_subnet.id
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
 
   tags = {
@@ -80,7 +67,7 @@ resource "aws_instance" "ec2_mount_efs" {
   # Executes only once, when the server is provisioned
   provisioner "remote-exec" {
     inline = [
-      "echo \"export EFS_DNS=fs-536613d1.efs.us-east-1.amazonaws.com\" >> ~/.bashrc",
+      "echo \"export EFS_DNS=${aws_efs_file_system.pygrid-syft-dependenices.dns_name}\" >> ~/.bashrc",
       file("deploy.sh")
     ]
   }

@@ -36,9 +36,9 @@ resource "aws_subnet" "private_subnet_2" {
 
 # Create public subnet
 resource "aws_subnet" "public_subnet" {
-  vpc_id     = aws_vpc.pygrid_node.id
-  cidr_block = "10.0.0.32/28"
-
+  vpc_id            = aws_vpc.pygrid_node.id
+  cidr_block        = "10.0.0.32/28"
+  availability_zone = "us-east-1c"
   tags = {
     Name = "GridNode-Public"
   }
