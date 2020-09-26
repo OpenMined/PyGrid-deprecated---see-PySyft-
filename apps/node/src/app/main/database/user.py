@@ -5,9 +5,9 @@ class User(BaseModel):
     __tablename__ = "user"
 
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    email = db.Column(db.String(1024))
-    hashed_password = db.Column(db.String(1024))
-    salt = db.Column(db.String(1024))
+    email = db.Column(db.String(255))
+    hashed_password = db.Column(db.String(512))
+    salt = db.Column(db.String(255))
     private_key = db.Column(db.Text())
     role = db.Column(db.Integer, db.ForeignKey("role.id"))
 
