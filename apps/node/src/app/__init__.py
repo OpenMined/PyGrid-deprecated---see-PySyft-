@@ -36,7 +36,7 @@ class BaseModel(db.Model, AllFeaturesMixin):
 
 
 # Tables must be created after db has been created
-from .main.users import Role
+from .main.database import Role
 
 
 def set_database_config(app, test_config=None, verbose=False):
@@ -81,45 +81,49 @@ def seed_db():
 
     new_role = Role(
         name="User",
-        can_triage_jobs=False,
+        can_triage_requests=False,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=False,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Compliance Officer",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=False,
         can_create_users=False,
         can_create_groups=False,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=False,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Administrator",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,
         can_edit_roles=False,
         can_manage_infrastructure=False,
+        can_upload_data=True,
     )
     db.session.add(new_role)
 
     new_role = Role(
         name="Owner",
-        can_triage_jobs=True,
+        can_triage_requests=True,
         can_edit_settings=True,
         can_create_users=True,
         can_create_groups=True,
         can_edit_roles=True,
         can_manage_infrastructure=True,
+        can_upload_data=True,
     )
     db.session.add(new_role)
 
@@ -150,8 +154,15 @@ def create_app(node_id: str, debug=False, n_replica=None, test_config=None) -> F
     sockets = Sockets(app)
 
     # Register app blueprints
-    from .main import (auth, data_centric_routes, hook, local_worker,
-                       main_routes, model_centric_routes, ws)
+    from .main import (
+        auth,
+        data_centric_routes,
+        hook,
+        local_worker,
+        main_routes,
+        model_centric_routes,
+        ws,
+    )
 
     # set_node_id(id)
     local_worker.id = node_id
@@ -219,8 +230,15 @@ def create_lambda_app(node_id: str) -> FlaskLambda:
     )
 
     # Register app blueprints
-    from .main import (auth, data_centric_routes, hook, local_worker,
-                       main_routes, model_centric_routes, ws)
+    from .main import (
+        auth,
+        data_centric_routes,
+        hook,
+        local_worker,
+        main_routes,
+        model_centric_routes,
+        ws,
+    )
 
     # Add a test route
     @main_routes.route("/test-deployment/")

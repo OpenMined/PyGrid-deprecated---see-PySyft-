@@ -73,3 +73,12 @@ terraform.rc
 # Ignore keys
 /deploy/*/*key*
 
+#Ignore terraform build files
+/deploy/*/builds/
+
+# Ignore temporary installed dependencies
+/deploy/*/*/python
+
+# Ignore zipped packages
+/deploy/*/*/*.zip
+
