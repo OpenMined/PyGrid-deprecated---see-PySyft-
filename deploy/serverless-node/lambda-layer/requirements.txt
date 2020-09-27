@@ -1,4 +1,4 @@
-Flask==1.1.2
+bcrypt==3.2.0Flask==1.1.2
 Flask-Cors==3.0.7
 Flask-Executor==0.9.3
 flask-lambda-python36==0.1.0
