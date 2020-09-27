@@ -84,7 +84,7 @@ resource "aws_iam_role_policy" "AmazonRDSDataFullAcess" {
                 "secretsmanager:DescribeSecret",
                 "secretsmanager:TagResource"
             ],
-            "Resource": "arn:aws:secretsmanager:*:*:secret:rds-db-credentials/*"
+            "Resource": "*"
         },
         {
             "Sid": "RDSDataServiceAccess",

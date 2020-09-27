@@ -34,3 +34,6 @@ sudo chmod go+rw ~/efs
 echo 'Installing syft in ~/efs/dep'
 mkdir -p ~/efs/dep
 python3 -m pip install syft==0.2.9 --target ~/efs/dep
+
+echo 'Replacing torch-gpu with torch-cpu'
+python3 -m pip install torch==1.4.0+cpu torchvision==0.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --target efs/dep --upgrade
