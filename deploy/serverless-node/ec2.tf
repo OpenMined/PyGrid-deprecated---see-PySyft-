@@ -34,6 +34,20 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+    name = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+  }
+
+  filter {
+    name = "virtualization-type"
+    values = ["hvm"]
+  }
+  owners = ["099720109477"] # Canonical
+}
+
 resource "aws_key_pair" "default" {
   key_name   = var.key_name
   public_key = file("${var.key_name}.pub")
@@ -41,9 +55,7 @@ resource "aws_key_pair" "default" {
 
 resource "aws_instance" "ec2_mount_efs" {
 
-  # TODO: future proof ami attribute
-  # AWS can change ami names, so we need to make our ami attribute dynamic
-  ami           = "ami-0817d428a6fb68645" # us-east-1  # ubuntu18.04
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.large"
   key_name      = aws_key_pair.default.key_name
 
@@ -75,7 +87,7 @@ resource "aws_instance" "ec2_mount_efs" {
   user_data = <<-EOF
               #!/bin/bash
               echo 'Mount EFS to ~/efs'
-              mkdir -p ~/efs
-              sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport $EFS_DNS:/ ~/efs
+              mkdir -p /efs
+              sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport $EFS_DNS:/ /efs
               EOF
 }
