@@ -1,25 +1,25 @@
-from json import loads
+from json import dumps, loads
 
 import jwt
 import pytest
 from flask import current_app as app
 
-from src.app.main.core.exceptions import PyGridError
-from src.app.main.database import Role, User, create_role, create_user, model_to_json
+from src.app.database import Role, User, create_role, create_user, model_to_json
 
-payload = (
-    '{"name": "mario mario", "can_triage_requests": false,'
-    '"can_edit_settings": false, "can_create_users": true,'
-    '"can_create_groups": true, "can_edit_roles": false,'
-    '"can_manage_infrastructure": false, "can_upload_data": false}'
-)
+payload = {
+    "name": "mario mario",
+    "can_edit_settings": False,
+    "can_create_users": True,
+    "can_edit_roles": False,
+    "can_manage_nodes": False,
+}
 JSON_DECODE_ERR_MSG = (
     "Expecting property name enclosed in " "double quotes: line 1 column 2 (char 1)"
 )
-owner_role = ("Owner", True, True, True, True, True, True, True)
-admin_role = ("Administrator", True, True, True, True, False, False, True)
-user_role = ("User", False, False, False, False, False, False, False)
-officer_role = ("Compliance Officer", True, False, False, False, False, False, False)
+owner_role = ("Owner", True, True, True, True)
+user_role = ("User", False, False, False, False)
+admin_role = ("Administrator", True, True, False, False)
+officer_role = ("Compliance Officer", True, False, False, False)
 user_1 = (
     "tech@gibberish.com",
     "BDEB6E8EE39B6C70835993486C9E65DC",
@@ -65,7 +65,7 @@ def test_post_role_missing_token(client, database, cleanup):
         "private_key": "3c777d6e1cece1e78aa9c26ae7fa2ecf33a6d3fb1db7c1313e7b79ef3ee884eb",
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 400
@@ -86,7 +86,7 @@ def test_post_role_missing_key(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {"token": token.decode("UTF-8")}
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 400
@@ -121,7 +121,7 @@ def test_post_role_invalid_key(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {"private-key": "IdoNotExist", "token": token.decode("UTF-8")}
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 403
@@ -140,7 +140,7 @@ def test_post_role_invalid_token(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 403
@@ -160,7 +160,7 @@ def test_post_role_user_with_missing_role(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 404
@@ -174,7 +174,7 @@ def test_post_role_missing_user(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 403
@@ -196,7 +196,7 @@ def test_post_role_unauthorized_user(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
     assert result.status_code == 403
@@ -220,10 +220,10 @@ def test_post_role_success(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.post(
-        "/roles", data=payload, content_type="application/json", headers=headers
+        "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
 
-    expected_role = loads(payload)
+    expected_role = payload.copy()
     expected_role["id"] = 3  # Two roles already inserted
 
     assert result.status_code == 200
@@ -248,7 +248,7 @@ def test_get_all_roles_missing_token(client, database, cleanup):
         "private_key": "3c777d6e1cece1e78aa9c26ae7fa2ecf33a6d3fb1db7c1313e7b79ef3ee884eb"
     }
     result = client.get(
-        "/roles", data=payload, headers=headers, content_type="application/json"
+        "/roles", data=dumps(payload), headers=headers, content_type="application/json"
     )
 
     assert result.status_code == 400
@@ -269,7 +269,7 @@ def test_get_all_roles_missing_key(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {"token": token.decode("UTF-8")}
     result = client.get(
-        "/roles", data=payload, headers=headers, content_type="application/json"
+        "/roles", data=dumps(payload), headers=headers, content_type="application/json"
     )
 
     assert result.status_code == 400
@@ -293,7 +293,7 @@ def test_get_all_roles_invalid_key(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/roles", data=payload, headers=headers, content_type="application/json"
+        "/roles", data=dumps(payload), headers=headers, content_type="application/json"
     )
 
     assert result.status_code == 403
@@ -317,7 +317,7 @@ def test_get_all_roles_invalid_token(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/roles", data=payload, headers=headers, content_type="application/json"
+        "/roles", data=dumps(payload), headers=headers, content_type="application/json"
     )
 
     assert result.status_code == 403
@@ -405,7 +405,10 @@ def test_get_role_missing_key(client, database, cleanup):
     headers = {"token": token.decode("UTF-8")}
 
     result = client.get(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
     assert result.status_code == 400
     assert result.get_json()["error"] == "Missing request key!"
@@ -426,7 +429,10 @@ def test_get_role_missing_token(client, database, cleanup):
         "private_key": "3c777d6e1cece1e78aa9c26ae7fa2ecf33a6d3fb1db7c1313e7b79ef3ee884eb",
     }
     result = client.get(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
 
     assert result.status_code == 400
@@ -442,7 +448,10 @@ def test_get_role_invalid_key(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {"private_key": "IdoNotExist", "token": token.decode("UTF-8")}
     result = client.get(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
 
     assert result.status_code == 403
@@ -461,7 +470,10 @@ def test_get_role_invalid_token(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
 
     assert result.status_code == 403
@@ -553,7 +565,10 @@ def test_put_role_missing_key(client, database, cleanup):
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {"token": token.decode("UTF-8")}
     result = client.put(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
     assert result.status_code == 400
     assert result.get_json()["error"] == "Missing request key!"
@@ -569,7 +584,10 @@ def test_put_role_missing_token(client, database, cleanup):
         "private_key": "3c777d6e1cece1e78aa9c26ae7fa2ecf33a6d3fb1db7c1313e7b79ef3ee884eb"
     }
     result = client.put(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
     assert result.status_code == 400
     assert result.get_json()["error"] == "Missing request key!"
@@ -590,7 +608,10 @@ def test_put_role_invalid_key(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
     assert result.status_code == 403
     assert result.get_json()["error"] == "Invalid credentials!"
@@ -611,7 +632,10 @@ def test_put_role_invalid_token(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/1", data=payload, headers=headers, content_type="application/json"
+        "/roles/1",
+        data=dumps(payload),
+        headers=headers,
+        content_type="application/json",
     )
     assert result.status_code == 403
     assert result.get_json()["error"] == "Invalid credentials!"
@@ -651,7 +675,10 @@ def test_put_role_user_with_missing_role(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/1", data=payload, content_type="application/json", headers=headers
+        "/roles/1",
+        data=dumps(payload),
+        content_type="application/json",
+        headers=headers,
     )
 
     assert result.status_code == 404
@@ -673,7 +700,10 @@ def test_put_role_unauthorized_user(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/1", data=payload, content_type="application/json", headers=headers
+        "/roles/1",
+        data=dumps(payload),
+        content_type="application/json",
+        headers=headers,
     )
 
     assert result.status_code == 403
@@ -698,7 +728,10 @@ def test_put_over_missing_role(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/3", data=payload, content_type="application/json", headers=headers
+        "/roles/3",
+        data=dumps(payload),
+        content_type="application/json",
+        headers=headers,
     )
 
     assert result.status_code == 404
@@ -723,10 +756,13 @@ def test_put_role_success(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.put(
-        "/roles/1", data=payload, content_type="application/json", headers=headers
+        "/roles/1",
+        data=dumps(payload),
+        content_type="application/json",
+        headers=headers,
     )
 
-    expected_role = loads(payload)
+    expected_role = payload.copy()
     expected_role["id"] = 1
 
     assert result.status_code == 200

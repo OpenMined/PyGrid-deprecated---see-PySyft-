@@ -1,20 +1,15 @@
 from json import dumps, loads
-from json.decoder import JSONDecodeError
 import logging
 
-from flask import Response, request
-from syft.codes import RESPONSE_MSG
-
-from ..core.exceptions import (
+from ..exceptions import (
     UserNotFoundError,
     RoleNotFoundError,
     AuthorizationError,
     PyGridError,
     MissingRequestKeyError,
 )
-from .. import main_routes
 from ..database import Role, User
-from ... import BaseModel, db
+from .. import db
 
 
 def create_role(current_user, private_key, role_fields):
@@ -37,7 +32,7 @@ def get_role(current_user, private_key, role_id):
 
     if user_role is None:
         raise RoleNotFoundError
-    if not user_role.can_triage_requests:
+    if not user_role.can_edit_settings:
         raise AuthorizationError
 
     role = db.session.query(Role).get(role_id)
@@ -52,7 +47,7 @@ def get_all_roles(current_user, private_key):
 
     if user_role is None:
         raise RoleNotFoundError
-    if not user_role.can_triage_requests:
+    if not user_role.can_edit_settings:
         raise AuthorizationError
 
     roles = db.session.query(Role).all()

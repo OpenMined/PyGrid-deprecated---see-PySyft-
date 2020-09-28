@@ -1,29 +1,21 @@
 import logging
-from datetime import datetime, timedelta
 from json import dumps, loads
-from json.decoder import JSONDecodeError
 from secrets import token_hex
 
 import jwt
-from bcrypt import checkpw, gensalt, hashpw
-from flask import Response
 from flask import current_app as app
-from flask import request
-from syft.codes import RESPONSE_MSG
-from werkzeug.security import check_password_hash, generate_password_hash
+from bcrypt import checkpw, gensalt, hashpw
 
-from ... import db
-from .. import main_routes
-from ..core.exceptions import (
+from .. import db
+from ..exceptions import (
     AuthorizationError,
-    GroupNotFoundError,
     InvalidCredentialsError,
     MissingRequestKeyError,
     PyGridError,
     RoleNotFoundError,
     UserNotFoundError,
 )
-from ..database import Group, Role, User, UserGroup
+from ..database import Role, User
 
 
 def salt_and_hash_password(password, rounds):
@@ -131,9 +123,6 @@ def get_all_users(current_user, private_key):
     if user_role is None:
         raise RoleNotFoundError
 
-    if not user_role.can_triage_requests:
-        raise AuthorizationError
-
     users = User.query.all()
     return users
 
@@ -142,9 +131,6 @@ def get_specific_user(current_user, private_key, user_id):
     user_role = Role.query.get(current_user.role)
     if user_role is None:
         raise RoleNotFoundError
-
-    if not user_role.can_triage_requests:
-        raise AuthorizationError
 
     user = User.query.get(user_id)
     if user is None:
@@ -213,34 +199,6 @@ def change_user_password(current_user, private_key, password, user_id):
     return edited_user
 
 
-def change_user_groups(current_user, private_key, groups, user_id):
-    user_role = db.session.query(Role).get(current_user.role)
-    edited_user = db.session.query(User).get(user_id)
-
-    if user_role is None:
-        raise RoleNotFoundError
-    if user_id != current_user.id and not user_role.can_create_users:
-        raise AuthorizationError
-    if edited_user is None:
-        raise UserNotFoundError
-
-    query = db.session().query
-    user_groups = query(UserGroup).filter_by(user=user_id).all()
-
-    for group in user_groups:
-        db.session.delete(group)
-
-    for new_group in groups:
-        if query(Group.id).filter_by(id=new_group).scalar() is None:
-            raise GroupNotFoundError
-        new_usergroup = UserGroup(user=user_id, group=new_group)
-        db.session.add(new_usergroup)
-
-    db.session.commit()
-
-    return edited_user
-
-
 def delete_user(current_user, private_key, user_id):
     user_role = db.session.query(Role).get(current_user.role)
     edited_user = db.session.query(User).get(user_id)
@@ -258,20 +216,15 @@ def delete_user(current_user, private_key, user_id):
     return edited_user
 
 
-def search_users(current_user, private_key, filters, group):
+def search_users(current_user, private_key, filters):
     user_role = db.session.query(Role).get(current_user.role)
 
     if user_role is None:
         raise RoleNotFoundError
-    if not user_role.can_triage_requests:
-        raise AuthorizationError
 
     query = db.session().query(User)
     for attr, value in filters.items():
-        if attr != "group":
-            query = query.filter(getattr(User, attr).like("%%%s%%" % value))
-        else:
-            query = query.join(UserGroup).filter(UserGroup.group.in_([group]))
+        query = query.filter(getattr(User, attr).like("%%%s%%" % value))
 
     users = query.all()
 
