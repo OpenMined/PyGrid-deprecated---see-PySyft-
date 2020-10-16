@@ -186,10 +186,7 @@ pip install -e .
 #### Install Terraform
 Check Instructions here: https://learn.hashicorp.com/tutorials/terraform/install-cli
 
-
 #### Deploy a Node to AWS
-
-#### Run Terraform init : terraform init
 
 ```shell
 pygrid deploy --provider aws --app node
