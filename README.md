@@ -184,7 +184,7 @@ pip install -e .
 ### Running CLI
 
 #### Install Terraform
-Check Instructions here : https://learn.hashicorp.com/tutorials/terraform/install-cli#:~:text=If%20you%20get%20an%20error,directory%20where%20Terraform%20was%20installed.
+Check Instructions here: https://learn.hashicorp.com/tutorials/terraform/install-cli
 
 
 #### Deploy a Node to AWS
