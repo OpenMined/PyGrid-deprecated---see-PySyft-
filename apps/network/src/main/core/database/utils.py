@@ -1,6 +1,6 @@
-from .. import db
-from .user import User
-from .role import Role
+from . import db
+from .users.user import User
+from .roles.roles import Role
 
 
 def model_to_json(model):

@@ -13,12 +13,13 @@ from ...exceptions import (
     PyGridError,
     MissingRequestKeyError,
 )
-from app import db
+from ...core.database import db
 from .blueprint import roles_blueprint as roles_route
 from ..auth import error_handler, token_required_factory
 from .role_ops import create_role, get_role, get_all_roles, put_role, delete_role
-from ...database import Role, User
-from ...database.utils import model_to_json
+from ...core.database.roles.roles import Role
+from ...core.database.users.user import User
+from ...core.database.utils import model_to_json
 
 
 expected_fields = (

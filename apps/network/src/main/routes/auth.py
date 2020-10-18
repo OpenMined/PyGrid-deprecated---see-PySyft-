@@ -15,8 +15,8 @@ from ..exceptions import (
     InvalidCredentialsError,
 )
 from ..codes import MSG_FIELD
-from ..database import User
-from .. import db
+from ..core.database.users.user import User
+from ..core.database import db
 
 
 def token_required_factory(get_token, format_result):

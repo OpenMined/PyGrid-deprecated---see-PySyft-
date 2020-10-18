@@ -8,8 +8,9 @@ from ...exceptions import (
     PyGridError,
     MissingRequestKeyError,
 )
-from ...database import Role, User
-from ... import db
+from ...core.database.roles.roles import Role
+from ...core.database.users.user import User
+from ...core.database import db
 
 
 def create_role(current_user, private_key, role_fields):
