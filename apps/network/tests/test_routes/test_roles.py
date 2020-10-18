@@ -67,7 +67,7 @@ def test_post_role_missing_token(client, database, cleanup):
     result = client.post(
         "/roles", data=dumps(payload), content_type="application/json", headers=headers
     )
-    
+
     assert result.status_code == 400
     assert result.get_json()["error"] == "Missing request key!"
 
