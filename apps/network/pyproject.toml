@@ -17,7 +17,7 @@ syft = { git = "https://github.com/OpenMined/PySyft.git", branch = "syft_0.3.0"}
 flask-lambda = "^0.0.4"
 Flask-Migrate = "^2.5.3"
 SQLAlchemy-Utils = "^0.36.8"
-jwt = "^1.0.0"
+PyJWT = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

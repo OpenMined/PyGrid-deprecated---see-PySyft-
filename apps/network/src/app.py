@@ -28,7 +28,7 @@ from main.routes import (
     association_requests_blueprint,
     infrastructure_blueprint,
 )
-
+from main.routes.roles.routes import *
 import config
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
@@ -54,7 +54,7 @@ logger = logging.getLogger()
 
 
 
-def create_app(test_config = None, debug=False, secret_key=DEFAULT_SECRET_KEY) -> Flask:
+def create_app(test_config = None, debug=False, secret_key=DEFAULT_SECRET_KEY, db_config=None) -> Flask:
     """This method creates a new Flask App instance and attach it with some
     HTTP/Websocket bluetprints.
 
@@ -74,13 +74,14 @@ def create_app(test_config = None, debug=False, secret_key=DEFAULT_SECRET_KEY) -
 
     # Register HTTP blueprints
     # Here you should add all the blueprints related to HTTP routes.
-    app.register_blueprint(roles_blueprint, url_prefix=r"/roles/")
+    app.register_blueprint(roles_blueprint, url_prefix=r"/roles")
     app.register_blueprint(users_blueprint, url_prefix=r"/users/")
     app.register_blueprint(setup_blueprint, url_prefix=r"/setup/")
     app.register_blueprint(infrastructure_blueprint, url_prefix=r"/networks/")
     app.register_blueprint(
         association_requests_blueprint, url_prefix=r"/association-requests/"
     )
+    
 
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
