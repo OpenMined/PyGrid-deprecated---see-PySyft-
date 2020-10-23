@@ -1,4 +1,5 @@
 from terrascript import Module
+from terrascript import Output
 import terrascript.provider as provider
 import terrascript.resource as resource
 import terrascript.data as data
@@ -7,60 +8,61 @@ import terrascript.data as data
 # THIS HANDLES THE DEPLOYMENT OF THE INFRASTRUCTURE
 # CURRENTLY, IT IS HERE FOR DEVELOPMENT PURPOSE ONLY.
 
+var = lambda x: "${" + x + "}"
 
-def serverless_deployment(tfscript, app):
-    """
-    app (str) : Either Node or Network
-    """
 
-    db_username = "admin"
-    db_password = "toughPasswordHere"
+def serverless_deployment(tfscript, app, db_username, db_password):
+    """
+    app (str) : The app("node"/"network") which is to be deployed.
+    db_username (str): Deployed database username
+    db_password (str): Deployed database password
+    """
 
     # TODO: THINK OF BETTER AND SHORTER NAMES.
     # TODO: ADD TAGS TO EVERY RESOURCE.
 
     # ----- VPC ----#
 
-    # vpc = data.aws_vpc("default", default=True)
-    # tfscript += vpc
-    #
-    # aws_subnet_ids = data.aws_subnet_ids("all", vpc_id=vpc.id)
-    # tfscript += aws_subnet_ids
+    vpc = data.aws_vpc("default", default=True)
+    tfscript += vpc
+
+    aws_subnet_ids = data.aws_subnet_ids("all", vpc_id="${" + vpc.id + "}")
+    tfscript += aws_subnet_ids
 
     # ----- Lambda Layer -----#
 
-    s3_bucket = resource.aws_s3_bucket(
-        f"{app}-lambda-layer-bucket",
-        bucket=f"pygrid-{app}-lambda-layer-bucket",
-        acl="private",
-        versioning={"enabled": True},
-    )
-    tfscript += s3_bucket
-
-    dependencies_zip_path = "deploy/serverless-network/lambda-layer/check.zip"
-
-    s3_bucket_object = resource.aws_s3_bucket_object(
-        f"pygrid-{app}-lambda-layer",
-        bucket=s3_bucket.bucket,
-        key='${filemd5("' + dependencies_zip_path + '")}.zip',
-        source=dependencies_zip_path,
-    )
-    tfscript += s3_bucket_object
-
-    lambda_layer = Module(
-        "pygrid-lambda-layer",
-        source="terraform-aws-modules/lambda/aws",
-        create_layer=True,
-        layer_name=f"pygrid-{app}-dependencies",
-        description=f"Lambda layer with all dependencies of PyGrid {app}",
-        compatible_runtimes=["python3.6"],
-        create_package=False,
-        s3_existing_package={
-            "bucket": s3_bucket_object.bucket,
-            "key": s3_bucket_object.id,
-        },
-    )
-    tfscript += lambda_layer
+    # s3_bucket = resource.aws_s3_bucket(
+    #     f"{app}-lambda-layer-bucket",
+    #     bucket=f"pygrid-{app}-lambda-layer-bucket",
+    #     acl="private",
+    #     versioning={"enabled": True},
+    # )
+    # tfscript += s3_bucket
+    #
+    # # dependencies_zip_path =
+    #
+    # s3_bucket_object = resource.aws_s3_bucket_object(
+    #     f"pygrid-{app}-lambda-layer",
+    #     bucket=s3_bucket.bucket,
+    #     key='${filemd5("deploy/serverless-network/lambda-layer/check.zip")}.zip',
+    #     source="deploy/serverless-network/lambda-layer/check.zip",
+    # )
+    # tfscript += s3_bucket_object
+    #
+    # lambda_layer = Module(
+    #     "pygrid-lambda-layer",
+    #     source="terraform-aws-modules/lambda/aws",
+    #     create_layer=True,
+    #     layer_name=f"pygrid-{app}-dependencies",
+    #     description=f"Lambda layer with all dependencies of PyGrid {app}",
+    #     compatible_runtimes=["python3.6"],
+    #     create_package=False,
+    #     s3_existing_package={
+    #         "bucket": s3_bucket_object.bucket,
+    #         "key": s3_bucket_object.key,
+    #     },
+    # )
+    # tfscript += lambda_layer
 
     # ----- API GateWay -----#
 
@@ -100,7 +102,7 @@ def serverless_deployment(tfscript, app):
     policy1 = resource.aws_iam_role_policy(
         "AWSLambdaVPCAccessExecutionRole",
         name="AWSLambdaVPCAccessExecutionRole",
-        role=lambda_iam_role.name,
+        role="${" + lambda_iam_role.id + "}",
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -125,7 +127,7 @@ def serverless_deployment(tfscript, app):
     policy2 = resource.aws_iam_role_policy(
         "CloudWatchLogsFullAccess",
         name="CloudWatchLogsFullAccess",
-        role=lambda_iam_role.name,
+        role="${" + lambda_iam_role.id + "}",
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -145,7 +147,7 @@ def serverless_deployment(tfscript, app):
     policy3 = resource.aws_iam_role_policy(
         "AmazonRDSDataFullAcess",
         name="AmazonRDSDataFullAcess",
-        role=lambda_iam_role.name,
+        role="${" + lambda_iam_role.id + "}",
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -275,9 +277,9 @@ def serverless_deployment(tfscript, app):
         runtime="python3.6",
         source_path=f"./apps/{app}/src",
         handler="deploy.app",
-        create_role=False,
-        lambda_role=lambda_iam_role.arn,
-        # layers=[lambda_layer.this_lambda_layer_arn],
+        create_role=True,
+        # lambda_role=lambda_iam_role.arn,
+        # layers=["${module." + lambda_layer._name + ".this_lambda_layer_arn}"],
         # environment_variables={
         #     "DB_NAME": database.name,
         #     "DB_CLUSTER_ARN": "${module." + database._name + ".this_rds_cluster_arn}",
@@ -300,8 +302,6 @@ def serverless_deployment(tfscript, app):
         source="terraform-aws-modules/lambda/aws//modules/alias",
         name="prod",
         function_name="${module." + lambda_func._name + ".this_lambda_function_name}",
-        # Set function_version when creating alias to be able to deploy using it,
-        # because AWS CodeDeploy doesn't understand $LATEST as CurrentVersion.
         function_version="${module."
         + lambda_func._name
         + ".this_lambda_function_version}",

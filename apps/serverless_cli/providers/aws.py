@@ -92,6 +92,9 @@ def get_db_config() -> Config:
                 "type": "input",
                 "name": "username",
                 "message": "Please set a username for your Database",
+                "validate": lambda x: True
+                if len(x) > 4
+                else "Username length should be atleast 4 characters",
             }
         ],
         style=styles.second,
@@ -114,7 +117,7 @@ def get_db_config() -> Config:
         msg="Enter a password for your Database (length > 8)",
         validate=lambda x: True
         if len(x) > 8
-        else "Password length should be greater than 8.",
+        else "Password length should be greater than 8 characters",
     )
     re_password = get_password(
         msg="Enter the password again",
