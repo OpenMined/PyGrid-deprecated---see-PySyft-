@@ -4,6 +4,8 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 import terrascript.data as data
 
+from .aws_role_policies import *
+
 # TODO: THIS FUNCTION WOULD BE MOVED TO API SIDE.
 # THIS HANDLES THE DEPLOYMENT OF THE INFRASTRUCTURE
 # CURRENTLY, IT IS HERE FOR DEVELOPMENT PURPOSE ONLY.
@@ -102,24 +104,7 @@ def serverless_deployment(
         "AWSLambdaVPCAccessExecutionRole",
         name="AWSLambdaVPCAccessExecutionRole",
         role=var(lambda_iam_role.id),
-        policy="""{
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "logs:CreateLogGroup",
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents",
-                        "ec2:CreateNetworkInterface",
-                        "ec2:DescribeNetworkInterfaces",
-                        "ec2:DeleteNetworkInterface"
-                    ],
-                    "Resource": "*"
-                }
-            ]
-        }
-    """,
+        policy=aws_lambda_vpc_execution_role_policy,
     )
     tfscript += policy1
 
@@ -127,19 +112,7 @@ def serverless_deployment(
         "CloudWatchLogsFullAccess",
         name="CloudWatchLogsFullAccess",
         role=var(lambda_iam_role.id),
-        policy="""{
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Action": [
-                        "logs:*"
-                    ],
-                    "Effect": "Allow",
-                    "Resource": "*"
-                }
-            ]
-        }
-        """,
+        policy=cloud_watch_logs_full_access_policy,
     )
     tfscript += policy2
 
@@ -147,50 +120,7 @@ def serverless_deployment(
         "AmazonRDSDataFullAcess",
         name="AmazonRDSDataFullAcess",
         role=var(lambda_iam_role.id),
-        policy="""{
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "SecretsManagerDbCredentialsAccess",
-                    "Effect": "Allow",
-                    "Action": [
-                        "secretsmanager:GetSecretValue",
-                        "secretsmanager:PutResourcePolicy",
-                        "secretsmanager:PutSecretValue",
-                        "secretsmanager:DeleteSecret",
-                        "secretsmanager:DescribeSecret",
-                        "secretsmanager:TagResource"
-                    ],
-                    "Resource": "*"
-                },
-                {
-                    "Sid": "RDSDataServiceAccess",
-                    "Effect": "Allow",
-                    "Action": [
-                        "dbqms:CreateFavoriteQuery",
-                        "dbqms:DescribeFavoriteQueries",
-                        "dbqms:UpdateFavoriteQuery",
-                        "dbqms:DeleteFavoriteQueries",
-                        "dbqms:GetQueryString",
-                        "dbqms:CreateQueryHistory",
-                        "dbqms:DescribeQueryHistory",
-                        "dbqms:UpdateQueryHistory",
-                        "dbqms:DeleteQueryHistory",
-                        "rds-data:ExecuteSql",
-                        "rds-data:ExecuteStatement",
-                        "rds-data:BatchExecuteStatement",
-                        "rds-data:BeginTransaction",
-                        "rds-data:CommitTransaction",
-                        "rds-data:RollbackTransaction",
-                        "secretsmanager:CreateSecret",
-                        "secretsmanager:ListSecrets",
-                        "secretsmanager:GetRandomPassword",
-                        "tag:GetResources"
-                    ],
-                    "Resource": "*"
-                }
-            ]
-        }""",
+        policy=amazon_rds_data_full_access_policy,
     )
     tfscript += policy3
 
