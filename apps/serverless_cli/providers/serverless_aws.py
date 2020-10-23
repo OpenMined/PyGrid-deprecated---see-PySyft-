@@ -198,59 +198,51 @@ def serverless_deployment(tfscript, app, db_username, db_password):
 
     # ----- Database -----#
 
-    # db_parameter_group = resource.aws_db_parameter_group(
-    #     "aurora_db_parameter_group",
-    #     name=f"pygrid-{app}aurora-db-parameter-group",
-    #     family="aurora5.6",
-    #     description=f"pygrid-{app}-aurora-db-parameter-group",
-    # )
-    # tfscript += db_parameter_group
-    #
-    # rds_cluster_parameter_group = resource.aws_rds_cluster_parameter_group(
-    #     "aurora_cluster_56_parameter_group",
-    #     name=f"pygrid-{app}-aurora-cluster-parameter-group",
-    #     family="aurora5.6",
-    #     description=f"pygrid-{app}-aurora-cluster-parameter-group",
-    # )
-    # tfscript += db_parameter_group
+    db_parameter_group = resource.aws_db_parameter_group(
+        "aurora_db_parameter_group",
+        name=f"pygrid-{app}-aurora-db-parameter-group",
+        family="aurora5.6",
+        description=f"pygrid-{app}-aurora-db-parameter-group",
+    )
+    tfscript += db_parameter_group
 
-    # database = Module(
-    #     "aurora",
-    #
-    #     source="terraform-aws-modules/rds-aurora/aws",
-    #
-    #     name="pygrid-network-database",
-    #     engine="aurora",
-    #     engine_mode="serverless",
-    #     replica_scale_enabled=False,
-    #     replica_count=0,
-    #
-    #     subnets=[aws_subnet_ids.ids],
-    #     vpc_id=vpc.id,
-    #     instance_type="db.t2.micro",
-    #
-    #     enable_http_endpoint=True,  # Enable Data API,
-    #
-    #     apply_immediately=True,
-    #     skip_final_snapshot=True,
-    #     storage_encrypted=True,
-    #
-    #     database_name=f"pygrid-{app}-db",
-    #     username=db_username,
-    #     password=db_password,
-    #
-    #     db_parameter_group_name=db_parameter_group.id,
-    #     db_cluster_parameter_group_name=rds_cluster_parameter_group.id,
-    #
-    #     scaling_configuration={
-    #         "auto_pause": True,
-    #         "max_capacity": 64,  # ACU
-    #         "min_capacity": 2,  # ACU
-    #         "seconds_until_auto_pause": 300,
-    #         "timeout_action": "ForceApplyCapacityChange",
-    #     }
-    # )
-    # tfscript += database
+    rds_cluster_parameter_group = resource.aws_rds_cluster_parameter_group(
+        "aurora_cluster_56_parameter_group",
+        name=f"pygrid-{app}-aurora-cluster-parameter-group",
+        family="aurora5.6",
+        description=f"pygrid-{app}-aurora-cluster-parameter-group",
+    )
+    tfscript += rds_cluster_parameter_group
+
+    database = Module(
+        "aurora",
+        source="terraform-aws-modules/rds-aurora/aws",
+        name=f"pygrid-{app}-database",
+        engine="aurora",
+        engine_mode="serverless",
+        replica_scale_enabled=False,
+        replica_count=0,
+        subnets=var(aws_subnet_ids.ids),
+        vpc_id=var(vpc.id),
+        instance_type="db.t2.micro",
+        enable_http_endpoint=True,  # Enable Data API,
+        apply_immediately=True,
+        skip_final_snapshot=True,
+        storage_encrypted=True,
+        database_name="pygridDB",
+        username=db_username,
+        password=db_password,
+        db_parameter_group_name=var(db_parameter_group.id),
+        db_cluster_parameter_group_name=var(rds_cluster_parameter_group.id),
+        scaling_configuration={
+            "auto_pause": True,
+            "max_capacity": 64,  # ACU
+            "min_capacity": 2,  # ACU
+            "seconds_until_auto_pause": 300,
+            "timeout_action": "ForceApplyCapacityChange",
+        },
+    )
+    tfscript += database
 
     # ----- Secret Manager ----#
 
@@ -278,22 +270,21 @@ def serverless_deployment(tfscript, app, db_username, db_password):
         runtime="python3.6",
         source_path=f"./apps/{app}/src",
         handler="deploy.app",
-        create_role=True,
-        # lambda_role=lambda_iam_role.arn,
+        create_role=False,
+        lambda_role=var(lambda_iam_role.arn),
         # layers=["${module." + lambda_layer._name + ".this_lambda_layer_arn}"],
-        # environment_variables={
-        #     "DB_NAME": database.name,
-        #     "DB_CLUSTER_ARN": "${module." + database._name + ".this_rds_cluster_arn}",
-        #     "DB_SECRET_ARN": db_secret_manager.arn,
-        #     # "SECRET_KEY"     : "Do-we-need-this-in-deployed-version"  # TODO: Clarify this
-        # },
+        environment_variables={
+            "DB_NAME": database.database_name,
+            "DB_CLUSTER_ARN": var_module(database, "this_rds_cluster_arn"),
+            # "DB_SECRET_ARN": db_secret_manager.arn,
+            # "SECRET_KEY"     : "Do-we-need-this-in-deployed-version"  # TODO: Clarify this
+        },
         allowed_triggers={
             "AllowExecutionFromAPIGateway": {
                 "service": "apigateway",
-                "source_arn": var_module(
-                    api_gateway, "this_apigatewayv2_api_execution_arn"
-                )
-                + "/*/*",
+                "source_arn": "{}/*/*".format(
+                    var_module(api_gateway, "this_apigatewayv2_api_execution_arn")
+                ),
             }
         },
     )
