@@ -12,7 +12,9 @@ var = lambda x: "${" + x + "}"
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
 
 
-def serverless_deployment(tfscript, app, db_username, db_password):
+def serverless_deployment(
+    tfscript, app, db_username, db_password, python_runtime="python3.6"
+):
     """
     app (str) : The app("node"/"network") which is to be deployed.
     db_username (str): Deployed database username
@@ -51,20 +53,15 @@ def serverless_deployment(tfscript, app, db_username, db_password):
     )
     tfscript += s3_bucket_object
 
-    # lambda_layer = Module(
-    #     "pygrid-lambda-layer",
-    #     source="terraform-aws-modules/lambda/aws",
-    #     create_layer=True,
-    #     layer_name=f"pygrid-{app}-dependencies",
-    #     description=f"Lambda layer with all dependencies of PyGrid {app}",
-    #     compatible_runtimes=["python3.6"],
-    #     create_package=False,
-    #     s3_existing_package={
-    #         "bucket": s3_bucket_object.bucket,
-    #         "key": s3_bucket_object.key,
-    #     },
-    # )
-    # tfscript += lambda_layer
+    lambda_layer = resource.aws_lambda_layer_version(
+        f"pygrid-{app}-lambda-layer",
+        layer_name=f"pygrid-{app}-dependencies",
+        compatible_runtimes=[python_runtime],
+        s3_bucket=s3_bucket_object.bucket,
+        s3_key=s3_bucket_object.key,
+        depends_on=[f"aws_s3_bucket_object.{s3_bucket_object._name}"],
+    )
+    tfscript += lambda_layer
 
     # ----- API GateWay -----#
 
@@ -268,12 +265,12 @@ def serverless_deployment(tfscript, app, db_username, db_password):
         source="terraform-aws-modules/lambda/aws",
         function_name=f"pygrid-{app}",
         publish=True,  # To automate increasing versions
-        runtime="python3.6",
+        runtime=python_runtime,
         source_path=f"./apps/{app}/src",
         handler="deploy.app",
         create_role=False,
         lambda_role=var(lambda_iam_role.arn),
-        # layers=["${module." + lambda_layer._name + ".this_lambda_layer_arn}"],
+        layers=[var(lambda_layer.arn)],
         environment_variables={
             "DB_NAME": database.database_name,
             "DB_CLUSTER_ARN": var_module(database, "this_rds_cluster_arn"),
