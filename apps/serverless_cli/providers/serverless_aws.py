@@ -32,24 +32,25 @@ def serverless_deployment(tfscript, app, db_username, db_password):
 
     # ----- Lambda Layer -----#
 
-    # s3_bucket = resource.aws_s3_bucket(
-    #     f"{app}-lambda-layer-bucket",
-    #     bucket=f"pygrid-{app}-lambda-layer-bucket",
-    #     acl="private",
-    #     versioning={"enabled": True},
-    # )
-    # tfscript += s3_bucket
-    #
-    # # dependencies_zip_path =
-    #
-    # s3_bucket_object = resource.aws_s3_bucket_object(
-    #     f"pygrid-{app}-lambda-layer",
-    #     bucket=s3_bucket.bucket,
-    #     key='${filemd5("deploy/serverless-network/lambda-layer/check.zip")}.zip',
-    #     source="deploy/serverless-network/lambda-layer/check.zip",
-    # )
-    # tfscript += s3_bucket_object
-    #
+    s3_bucket = resource.aws_s3_bucket(
+        f"{app}-lambda-layer-bucket",
+        bucket=f"pygrid-{app}-lambda-layer-bucket",
+        acl="private",
+        versioning={"enabled": True},
+    )
+    tfscript += s3_bucket
+
+    dependencies_zip_path = "deploy/serverless-network/lambda-layer/check.zip"
+
+    s3_bucket_object = resource.aws_s3_bucket_object(
+        f"pygrid-{app}-lambda-layer",
+        bucket=s3_bucket.bucket,
+        key=var('filemd5("{}")'.format(dependencies_zip_path)) + ".zip",
+        source=dependencies_zip_path,
+        depends_on=[f"aws_s3_bucket.{s3_bucket._name}"],
+    )
+    tfscript += s3_bucket_object
+
     # lambda_layer = Module(
     #     "pygrid-lambda-layer",
     #     source="terraform-aws-modules/lambda/aws",
