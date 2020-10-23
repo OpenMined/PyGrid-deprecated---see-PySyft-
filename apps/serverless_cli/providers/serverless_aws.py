@@ -9,6 +9,7 @@ import terrascript.data as data
 # CURRENTLY, IT IS HERE FOR DEVELOPMENT PURPOSE ONLY.
 
 var = lambda x: "${" + x + "}"
+var_module = lambda x, y: var(f"module.{x._name}.{y}")
 
 
 def serverless_deployment(tfscript, app, db_username, db_password):
@@ -26,7 +27,7 @@ def serverless_deployment(tfscript, app, db_username, db_password):
     vpc = data.aws_vpc("default", default=True)
     tfscript += vpc
 
-    aws_subnet_ids = data.aws_subnet_ids("all", vpc_id="${" + vpc.id + "}")
+    aws_subnet_ids = data.aws_subnet_ids("all", vpc_id=var(vpc.id))
     tfscript += aws_subnet_ids
 
     # ----- Lambda Layer -----#
@@ -102,7 +103,7 @@ def serverless_deployment(tfscript, app, db_username, db_password):
     policy1 = resource.aws_iam_role_policy(
         "AWSLambdaVPCAccessExecutionRole",
         name="AWSLambdaVPCAccessExecutionRole",
-        role="${" + lambda_iam_role.id + "}",
+        role=var(lambda_iam_role.id),
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -127,7 +128,7 @@ def serverless_deployment(tfscript, app, db_username, db_password):
     policy2 = resource.aws_iam_role_policy(
         "CloudWatchLogsFullAccess",
         name="CloudWatchLogsFullAccess",
-        role="${" + lambda_iam_role.id + "}",
+        role=var(lambda_iam_role.id),
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -147,7 +148,7 @@ def serverless_deployment(tfscript, app, db_username, db_password):
     policy3 = resource.aws_iam_role_policy(
         "AmazonRDSDataFullAcess",
         name="AmazonRDSDataFullAcess",
-        role="${" + lambda_iam_role.id + "}",
+        role=var(lambda_iam_role.id),
         policy="""{
             "Version": "2012-10-17",
             "Statement": [
@@ -289,9 +290,10 @@ def serverless_deployment(tfscript, app, db_username, db_password):
         allowed_triggers={
             "AllowExecutionFromAPIGateway": {
                 "service": "apigateway",
-                "source_arn": "${module."
-                + api_gateway._name
-                + ".this_apigatewayv2_api_execution_arn}/*/*",
+                "source_arn": var_module(
+                    api_gateway, "this_apigatewayv2_api_execution_arn"
+                )
+                + "/*/*",
             }
         },
     )
@@ -301,10 +303,8 @@ def serverless_deployment(tfscript, app, db_username, db_password):
         "lambda_alias",
         source="terraform-aws-modules/lambda/aws//modules/alias",
         name="prod",
-        function_name="${module." + lambda_func._name + ".this_lambda_function_name}",
-        function_version="${module."
-        + lambda_func._name
-        + ".this_lambda_function_version}",
+        function_name=var_module(lambda_func, "this_lambda_function_name"),
+        function_version=var_module(lambda_func, "this_lambda_function_version"),
     )
     tfscript += lambda_alias
 
