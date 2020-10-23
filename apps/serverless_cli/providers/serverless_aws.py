@@ -244,19 +244,24 @@ def serverless_deployment(
 
     # ----- Secret Manager ----#
 
-    # db_secret_manager = resource.aws_secretsmanager_secret(
-    #     "db-secret",
-    #     name=f"pygrid-{app}-rds-admin",
-    #     description=f"PyGrid {app} database credentials"
-    # )
-    # tfscript += db_secret_manager
-    #
-    # db_secret_version = resource.aws_secretsmanager_secret_version(
-    #     "db-secret-version",
-    #     secret_id=db_secret_manager.id,
-    #     secret_string="jsonencode({\"username\" = " + db_username + ", \"password\" = " + db_password + "})"
-    # )
-    # tfscript += db_secret_version
+    db_secret_manager = resource.aws_secretsmanager_secret(
+        "db-secret",
+        name=f"pygrid-{app}-rds",
+        description=f"PyGrid {app} database credentials",
+    )
+    tfscript += db_secret_manager
+
+    # TODO: THE PASSWORDS ARE WRITTEN TO STATE FILES
+    # wHICH SHOUOLD NOT BE THE CASE
+
+    db_secret_version = resource.aws_secretsmanager_secret_version(
+        "db-secret-version",
+        secret_id=var(db_secret_manager.id),
+        secret_string="jsonencode({})".format(
+            {"username": db_username, "password": db_password}
+        ),
+    )
+    tfscript += db_secret_version
 
     # ----- Lambda Function -----#
 
@@ -274,7 +279,7 @@ def serverless_deployment(
         environment_variables={
             "DB_NAME": database.database_name,
             "DB_CLUSTER_ARN": var_module(database, "this_rds_cluster_arn"),
-            # "DB_SECRET_ARN": db_secret_manager.arn,
+            "DB_SECRET_ARN": var(db_secret_manager.arn),
             # "SECRET_KEY"     : "Do-we-need-this-in-deployed-version"  # TODO: Clarify this
         },
         allowed_triggers={
