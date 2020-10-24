@@ -3,6 +3,15 @@ import os
 from pprint import pformat
 
 import click
+import terrascript
+import subprocess
+
+from .provider_utils import aws
+from .provider_utils import azure
+from .provider_utils import gcp
+
+# For dev only
+from ..api.providers.aws import serverless_deployment, deploy_vpc
 
 from .providers.aws import AWS
 from .providers.azure import AZURE
@@ -45,7 +54,6 @@ def cli(config, output_file):
 )
 @pass_config
 def deploy(config, provider, app):
-    click.echo(f"Starting the deployment on {colored(provider)}...")
     config.provider = provider.lower()
 
     ## Get app config and arguments
@@ -61,33 +69,66 @@ def deploy(config, provider, app):
 
     ## Websockets
     if click.confirm(f"Will you need to support Websockets?"):
-        if config.provider != "aws":
-            config.deployment_type = "serverfull"
-        elif click.confirm(f"Do you want to deploy serverless?"):
-            config.deployment_type = "serverless"
+        pass
+    else:
+        pass
 
-    elif click.confirm(f"Do you want to deploy serverless?"):
-        click.echo("we are going to serverless deployment!")
+    # Deployment type
+    if click.confirm(f"Do you want to deploy serverless?"):
         config.deployment_type = "serverless"
+    else:
+        config.deployment_type = "serverfull"
 
     ## Prompting user to provide configuration for the selected cloud
     if config.provider == "aws":
-        provider = AWS(config)
+        config.aws = aws.get_vpc_config()
+        config.db = aws.get_db_config()
     elif config.provider == "gcp":
-        provider = GCP(config)
+        pass
     elif config.provider == "azure":
-        provider = AZURE(config)
+        pass
 
     if click.confirm(
         f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
     ):
-        provider.deploy()
+
+        # TODO: CALL THE API HERE TO DEPLOY THE INFRASTRUCTURE
+
+        ### For dev purpose
+        tfscript = terrascript.Terrascript()
+
+        tfscript += terrascript.provider.aws(
+            region=config.aws.region, shared_credentials_file=config.credentials
+        )
+        tfscript, vpc, subnets = deploy_vpc(
+            tfscript, app=config.app.name, av_zones=config.aws.av_zones
+        )
+
+        if config.deployment_type == "serverless":
+            tfscript = serverless_deployment(
+                tfscript,
+                app=config.app.name,
+                vpc=vpc,
+                subnets=subnets,
+                db_username=config.db.username,
+                db_password=config.db.password,
+            )
+        elif config.deployment_type == "serverfull":
+            pass
+
+        # write config to file
+        with open("main.tf.json", "w") as tfjson:
+            json.dump(tfscript, tfjson, indent=2, sort_keys=False)
+
+        # subprocess.call("terraform init", shell=True)
+        subprocess.call("terraform validate", shell=True)
+        subprocess.call("terraform apply", shell=True)
 
 
 def get_app_arguments(config):
     if config.app.name == "node":
         config.app.id = click.prompt(
-            f"PyGrid Node ID", type=str, default=os.environ.get("NODE_ID", None),
+            f"PyGrid Node ID", type=str, default=os.environ.get("NODE_ID", None)
         )
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
@@ -104,16 +145,12 @@ def get_app_arguments(config):
             type=str,
             default=os.environ.get("NETWORK", None),
         )
-        config.app.num_replicas = click.prompt(
-            f"Number of replicas to provide fault tolerance to model hosting",
-            type=int,
-            default=os.environ.get("NUM_REPLICAS", None),
-        )
-        config.app.start_local_db = click.prompt(
-            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
-            type=bool,
-            default=False,
-        )
+        # TODO: Validate if this is related to data-centric or model-centric
+        # config.app.num_replicas = click.prompt(
+        #     f"Number of replicas to provide fault tolerance to model hosting",
+        #     type=int,
+        #     default=os.environ.get("NUM_REPLICAS", None),
+        # )
     elif config.app.name == "network":
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
@@ -121,14 +158,9 @@ def get_app_arguments(config):
             default=os.environ.get("GRID_NETWORK_PORT", "7000"),
         )
         config.app.host = click.prompt(
-            f"GridNerwork host",
+            f"Grid Network host",
             type=str,
             default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
-        )
-        config.app.start_local_db = click.prompt(
-            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
-            type=bool,
-            default=False,
         )
     else:
         # TODO: Workers arguments

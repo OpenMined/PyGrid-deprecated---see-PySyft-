@@ -1,9 +1,4 @@
-__all__ = [
-    "aws",
-    "azure",
-    "gcp",
-    "provider",
-]
+__all__ = ["aws", "azure", "gcp", "provider"]
 
 from .aws import *
 from .azure import *

@@ -127,11 +127,3 @@ def get_db_config() -> Config:
     )
 
     return Config(username=username, password=password)
-
-
-def get_serverless_config() -> Config:
-    """Assists the user in entering configuration related to the resources in serverless deployment.
-
-    :return:
-    """
-    pass

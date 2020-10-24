@@ -14,7 +14,9 @@ class EC2:
         self.client = boto3.client("ec2")
 
     def regions_list(self):
-        return [region["RegionName"] for region in self.client.describe_regions()["Regions"]]
+        return [
+            region["RegionName"] for region in self.client.describe_regions()["Regions"]
+        ]
 
     def instances_list(self):
         return [
@@ -60,7 +62,7 @@ class AWS(Provider):
 
         # Create Internet Gateway
         self.gw = terrascript.resource.aws_internet_gateway(
-            "gw", vpc_id=self.main_vpc.id, tags={"Name": "main-gw"},
+            "gw", vpc_id=self.main_vpc.id, tags={"Name": "main-gw"}
         )
         self.tfscript += self.gw
 
@@ -97,7 +99,7 @@ class AWS(Provider):
 
         # Associate subnet with the route table
         self.rta = terrascript.resource.aws_route_table_association(
-            "rta", subnet_id=self.main_subnet.id, route_table_id=self.route_table.id,
+            "rta", subnet_id=self.main_subnet.id, route_table_id=self.route_table.id
         )
         self.tfscript += self.rta
 
@@ -184,9 +186,7 @@ class AWS(Provider):
         self.update_script()
         return TF.validate()
 
-    def deploy_network(
-        self, apply: bool = True,
-    ):
+    def deploy_network(self, apply: bool = True):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -197,7 +197,7 @@ class AWS(Provider):
                         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
                     ],
                 },
-                {"name": "virtualization-type", "values": ["hvm"],},
+                {"name": "virtualization-type", "values": ["hvm"]},
             ],
             owners=["099720109477"],
         )
@@ -223,9 +223,7 @@ class AWS(Provider):
 
         return TF.apply()
 
-    def deploy_node(
-        self, apply: bool = True,
-    ):
+    def deploy_node(self, apply: bool = True):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -236,7 +234,7 @@ class AWS(Provider):
                         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
                     ],
                 },
-                {"name": "virtualization-type", "values": ["hvm"],},
+                {"name": "virtualization-type", "values": ["hvm"]},
             ],
             owners=["099720109477"],
         )
@@ -278,7 +276,7 @@ class AWS(Provider):
                     "message": "Please select your desired AWS region",
                     "default": "us-east-1",
                     "choices": ec2.regions_list(),
-                },
+                }
             ],
             style=styles.second,
         )["region"]
@@ -291,7 +289,7 @@ class AWS(Provider):
                     "message": "Please select your desired AWS instance type",
                     "default": "t2.micro",
                     "choices": ec2.instances_list(),
-                },
+                }
             ],
             style=styles.second,
         )["instance"]
@@ -305,7 +303,7 @@ class AWS(Provider):
                     "message": "Please provide VPC cidr block",
                     "default": "10.0.0.0/16",
                     # TODO: 'validate': make sure it's a correct ip format
-                },
+                }
             ],
             style=styles.second,
         )["vpc_cidr_block"]
@@ -319,7 +317,7 @@ class AWS(Provider):
                     "message": "Please provide Subnet cidr block",
                     "default": "10.0.0.0/24",
                     # TODO: 'validate': make sure it's a correct ip format
-                },
+                }
             ],
             style=styles.second,
         )["subnet_cidr_block"]

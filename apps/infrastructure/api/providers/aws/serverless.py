@@ -2,7 +2,7 @@ from terrascript import Module
 import terrascript.provider as provider
 import terrascript.resource as resource
 
-from .aws_role_policies import *
+from .lambda_role_policies import *
 
 # TODO: THIS FUNCTION WOULD BE MOVED TO API SIDE.
 # THIS HANDLES THE DEPLOYMENT OF THE INFRASTRUCTURE
@@ -21,9 +21,6 @@ def serverless_deployment(
     db_password (str): Username of the database about to be deployed
     """
 
-    # TODO: THINK OF BETTER AND SHORTER NAMES.
-    # TODO: ADD TAGS TO EVERY RESOURCE.
-
     # ----- Lambda Layer -----#
 
     s3_bucket = resource.aws_s3_bucket(
@@ -35,7 +32,8 @@ def serverless_deployment(
     )
     tfscript += s3_bucket
 
-    dependencies_zip_path = "deploy/serverless-network/lambda-layer/check.zip"
+    # TODO: Make this zip file on the fly
+    dependencies_zip_path = "deploy/serverless-network/lambda-layer/dependencies.zip"
 
     s3_bucket_object = resource.aws_s3_bucket_object(
         f"pygrid-{app}-lambda-layer",
@@ -54,7 +52,6 @@ def serverless_deployment(
         s3_bucket=s3_bucket_object.bucket,
         s3_key=s3_bucket_object.key,
         depends_on=[f"aws_s3_bucket_object.{s3_bucket_object._name}"],
-        tags={"Name": f"pygrid-{app}-lambda-layer"},
     )
     tfscript += lambda_layer
 
@@ -190,7 +187,6 @@ def serverless_deployment(
         secret_string="jsonencode({})".format(
             {"username": db_username, "password": db_password}
         ),
-        tags={"Name": f"pygrid-{app}-secret-manager-version"},
     )
     tfscript += db_secret_version
 
