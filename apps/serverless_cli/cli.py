@@ -1,13 +1,13 @@
 import json
 import os
-from pprint import pformat
 
 import terrascript
 import subprocess
 import click
 import requests
 
-from .providers import get_aws_config, serverless_deployment
+from .providers import aws, gcp, azure
+from .providers import serverless_deployment, deploy_vpc
 from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -46,7 +46,6 @@ def cli(config, output_file):
 )
 @pass_config
 def deploy(config, provider, app):
-    click.echo(f"Starting the deployment on {colored(provider)}...")
     config.provider = provider.lower()
 
     ## Get app config and arguments
@@ -62,7 +61,14 @@ def deploy(config, provider, app):
 
     ## Prompting user to provide configuration for the selected cloud
     if config.provider == "aws":
-        config.aws = get_aws_config()
+        config.aws = aws.get_vpc_config()
+        config.db = aws.get_db_config()
+    elif config.provider == "gcp":
+        pass
+    elif config.provider == "azure":
+        pass
+
+    config.aws = Config(region="us-east-1", av_zones=["us-east-1a", "us-east-1b"])
 
     if click.confirm(
         f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
@@ -76,13 +82,23 @@ def deploy(config, provider, app):
         tfscript += terrascript.provider.aws(
             region=config.aws.region, shared_credentials_file=config.credentials
         )
-        tfscript = serverless_deployment(tfscript, config.app.name)
+        tfscript, vpc, subnets = deploy_vpc(
+            tfscript, app=config.app.name, av_zones=config.aws.av_zones
+        )
+        tfscript = serverless_deployment(
+            tfscript,
+            app=config.app.name,
+            vpc=vpc,
+            subnets=subnets,
+            db_username=config.db.username,
+            db_password=config.db.password,
+        )
 
         # write config to file
         with open("main.tf.json", "w") as tfjson:
             json.dump(tfscript, tfjson, indent=2, sort_keys=False)
 
-        subprocess.call("terraform init", shell=True)
+        # subprocess.call("terraform init", shell=True)
         subprocess.call("terraform validate", shell=True)
         subprocess.call("terraform apply", shell=True)
 
@@ -107,16 +123,12 @@ def get_app_arguments(config):
             type=str,
             default=os.environ.get("NETWORK", None),
         )
-        config.app.num_replicas = click.prompt(
-            f"Number of replicas to provide fault tolerance to model hosting",
-            type=int,
-            default=os.environ.get("NUM_REPLICAS", None),
-        )
-        config.app.start_local_db = click.prompt(
-            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
-            type=bool,
-            default=False,
-        )
+        # TODO: Validate if this is related to data-centric or model-centric
+        # config.app.num_replicas = click.prompt(
+        #     f"Number of replicas to provide fault tolerance to model hosting",
+        #     type=int,
+        #     default=os.environ.get("NUM_REPLICAS", None),
+        # )
     elif config.app.name == "network":
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
@@ -124,14 +136,9 @@ def get_app_arguments(config):
             default=os.environ.get("GRID_NETWORK_PORT", "7000"),
         )
         config.app.host = click.prompt(
-            f"GridNerwork host",
+            f"Grid Network host",
             type=str,
             default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
-        )
-        config.app.start_local_db = click.prompt(
-            f"Start local db (If this flag is used a SQLAlchemy DB URI is generated to use a local db)",
-            type=bool,
-            default=False,
         )
     else:
         # TODO: Workers arguments

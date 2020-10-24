@@ -1,8 +1,6 @@
 from terrascript import Module
-from terrascript import Output
 import terrascript.provider as provider
 import terrascript.resource as resource
-import terrascript.data as data
 
 from .aws_role_policies import *
 
@@ -15,24 +13,16 @@ var_module = lambda x, y: var(f"module.{x._name}.{y}")
 
 
 def serverless_deployment(
-    tfscript, app, db_username, db_password, python_runtime="python3.6"
+    tfscript, app, vpc, subnets, db_username, db_password, python_runtime="python3.6"
 ):
     """
-    app (str) : The app("node"/"network") which is to be deployed.
-    db_username (str): Deployed database username
-    db_password (str): Deployed database password
+    app (str) : The app("node"/"network") which is to be deployed
+    db_username (str): Username of the database about to be deployed
+    db_password (str): Username of the database about to be deployed
     """
 
     # TODO: THINK OF BETTER AND SHORTER NAMES.
     # TODO: ADD TAGS TO EVERY RESOURCE.
-
-    # ----- VPC ----#
-
-    vpc = data.aws_vpc("default", default=True)
-    tfscript += vpc
-
-    aws_subnet_ids = data.aws_subnet_ids("all", vpc_id=var(vpc.id))
-    tfscript += aws_subnet_ids
 
     # ----- Lambda Layer -----#
 
@@ -150,7 +140,7 @@ def serverless_deployment(
         engine_mode="serverless",
         replica_scale_enabled=False,
         replica_count=0,
-        subnets=var(aws_subnet_ids.ids),
+        subnets=[var(private_subnet.id) for private_subnet, _ in subnets],
         vpc_id=var(vpc.id),
         instance_type="db.t2.micro",
         enable_http_endpoint=True,  # Enable Data API,
@@ -174,9 +164,12 @@ def serverless_deployment(
 
     # ----- Secret Manager ----#
 
+    random_pet = resource.random_pet("random", length=2)
+    tfscript += random_pet
+
     db_secret_manager = resource.aws_secretsmanager_secret(
         "db-secret",
-        name=f"pygrid-{app}-rds",
+        name=f"pygrid-{app}-rds-{var(random_pet.id)}",
         description=f"PyGrid {app} database credentials",
     )
     tfscript += db_secret_manager
@@ -203,6 +196,7 @@ def serverless_deployment(
         runtime=python_runtime,
         source_path=f"./apps/{app}/src",
         handler="deploy.app",
+        vpc_subnet_ids=[var(private_subnet.id) for private_subnet, _ in subnets],
         create_role=False,
         lambda_role=var(lambda_iam_role.arn),
         layers=[var(lambda_layer.arn)],
