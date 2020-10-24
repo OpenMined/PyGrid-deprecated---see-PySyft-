@@ -31,6 +31,7 @@ def serverless_deployment(
         bucket=f"pygrid-{app}-lambda-layer-bucket",
         acl="private",
         versioning={"enabled": True},
+        tags={"Name": f"pygrid-{app}-s3-bucket"},
     )
     tfscript += s3_bucket
 
@@ -42,6 +43,7 @@ def serverless_deployment(
         key=var('filemd5("{}")'.format(dependencies_zip_path)) + ".zip",
         source=dependencies_zip_path,
         depends_on=[f"aws_s3_bucket.{s3_bucket._name}"],
+        tags={"Name": f"pygrid-{app}-s3-bucket-object"},
     )
     tfscript += s3_bucket_object
 
@@ -52,6 +54,7 @@ def serverless_deployment(
         s3_bucket=s3_bucket_object.bucket,
         s3_key=s3_bucket_object.key,
         depends_on=[f"aws_s3_bucket_object.{s3_bucket_object._name}"],
+        tags={"Name": f"pygrid-{app}-lambda-layer"},
     )
     tfscript += lambda_layer
 
@@ -66,6 +69,7 @@ def serverless_deployment(
         integrations={
             "$default": {"lambda_arn": "${module.lambda.this_lambda_function_arn}"}
         },
+        tags={"Name": f"pygrid-{app}-api-gateway-http"},
     )
     tfscript += api_gateway
 
@@ -87,6 +91,7 @@ def serverless_deployment(
                 }
             ]
         }""",
+        tags={"Name": f"pygrid-{app}-lambda-iam-role"},
     )
     tfscript += lambda_iam_role
 
@@ -159,6 +164,7 @@ def serverless_deployment(
             "seconds_until_auto_pause": 300,
             "timeout_action": "ForceApplyCapacityChange",
         },
+        tags={"Name": f"pygrid-{app}-aurora-database"},
     )
     tfscript += database
 
@@ -171,6 +177,7 @@ def serverless_deployment(
         "db-secret",
         name=f"pygrid-{app}-rds-{var(random_pet.id)}",
         description=f"PyGrid {app} database credentials",
+        tags={"Name": f"pygrid-{app}-rds-secret-manager"},
     )
     tfscript += db_secret_manager
 
@@ -183,6 +190,7 @@ def serverless_deployment(
         secret_string="jsonencode({})".format(
             {"username": db_username, "password": db_password}
         ),
+        tags={"Name": f"pygrid-{app}-secret-manager-version"},
     )
     tfscript += db_secret_version
 
@@ -214,6 +222,7 @@ def serverless_deployment(
                 ),
             }
         },
+        tags={"Name": f"pygrid-{app}-lambda-function"},
     )
     tfscript += lambda_func
 
