@@ -39,26 +39,26 @@ def deploy_vpc(tfscript, app, av_zones):
     # ----- Route Tables -----#
 
     # One public route table for all public subnets across different availability zones
-    # public_rt = resource.aws_route_table(
-    #     "public-RT",
-    #     vpc_id=var(vpc.id),
-    #     route=[
-    #         {
-    #             "cidr_block": "0.0.0.0/0",
-    #             "ipv6_cidr_block": "::/0",
-    #             "gateway_id": var(internet_gateway.id),
-    #             "egress_only_gateway_id": "",
-    #             "instance_id": "",
-    #             "local_gateway_id": "",
-    #             "nat_gateway_id": "",
-    #             "network_interface_id": "",
-    #             "transit_gateway_id": "",
-    #             "vpc_peering_connection_id": "",
-    #         }
-    #     ],
-    #     tags={"Name": f"pygrid-{app}-public-RT"},
-    # )
-    # tfscript += public_rt
+    public_rt = resource.aws_route_table(
+        "public-RT",
+        vpc_id=var(vpc.id),
+        route=[
+            {
+                "cidr_block": "0.0.0.0/0",
+                "gateway_id": var(internet_gateway.id),
+                "egress_only_gateway_id": "",
+                "ipv6_cidr_block": "",
+                "instance_id": "",
+                "local_gateway_id": "",
+                "nat_gateway_id": "",
+                "network_interface_id": "",
+                "transit_gateway_id": "",
+                "vpc_peering_connection_id": "",
+            }
+        ],
+        tags={"Name": f"pygrid-{app}-public-RT"},
+    )
+    tfscript += public_rt
 
     # ----- Subnets ----- #
 
@@ -117,39 +117,39 @@ def deploy_vpc(tfscript, app, av_zones):
         tfscript += nat_gateway
 
         # Route table for private subnet
-        # private_rt = resource.aws_route_table(
-        #     f"private-RT-{i}",
-        #     vpc_id=var(vpc.id),
-        #     route=[
-        #         {
-        #             "cidr_block": "0.0.0.0/0",
-        #             "ipv6_cidr_block": "::/0",
-        #             "gateway_id": "",
-        #             "egress_only_gateway_id": "",
-        #             "instance_id": "",
-        #             "local_gateway_id": "",
-        #             "nat_gateway_id": var(nat_gateway.id),
-        #             "network_interface_id": "",
-        #             "transit_gateway_id": "",
-        #             "vpc_peering_connection_id": "",
-        #         }
-        #     ],
-        #     tags={"Name": f"pygrid-{app}-private-RT-{i}"},
-        # )
-        # tfscript += private_rt
+        private_rt = resource.aws_route_table(
+            f"private-RT-{i}",
+            vpc_id=var(vpc.id),
+            route=[
+                {
+                    "cidr_block": "0.0.0.0/0",
+                    "nat_gateway_id": var(nat_gateway.id),
+                    "ipv6_cidr_block": "",
+                    "gateway_id": "",
+                    "egress_only_gateway_id": "",
+                    "instance_id": "",
+                    "local_gateway_id": "",
+                    "network_interface_id": "",
+                    "transit_gateway_id": "",
+                    "vpc_peering_connection_id": "",
+                }
+            ],
+            tags={"Name": f"pygrid-{app}-private-RT-{i}"},
+        )
+        tfscript += private_rt
 
         # Associate public subnet with public route table
-        # tfscript += resource.aws_route_table_association(
-        #     f"rta-public-subnet-{i}",
-        #     subnet_id=var(public_subnet.id),
-        #     route_table_id=var(public_rt.id),
-        # )
-        #
-        # # Associate private subnet with private route table
-        # tfscript += resource.aws_route_table_association(
-        #     f"rta-private-subnet-{i}",
-        #     subnet_id=var(private_subnet.id),
-        #     route_table_id=var(private_rt.id),
-        # )
+        tfscript += resource.aws_route_table_association(
+            f"rta-public-subnet-{i}",
+            subnet_id=var(public_subnet.id),
+            route_table_id=var(public_rt.id),
+        )
+
+        # Associate private subnet with private route table
+        tfscript += resource.aws_route_table_association(
+            f"rta-private-subnet-{i}",
+            subnet_id=var(private_subnet.id),
+            route_table_id=var(private_rt.id),
+        )
 
     return tfscript, vpc, subnets
