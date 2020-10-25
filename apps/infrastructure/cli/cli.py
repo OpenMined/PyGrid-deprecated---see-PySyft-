@@ -1,5 +1,7 @@
 import json
 import os
+import time
+from pathlib import Path
 from pprint import pformat
 
 import click
@@ -20,7 +22,9 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
-@click.option("--output-file", default="config.json")
+@click.option(
+    "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
+)
 @pass_config
 def cli(config, output_file):
     """OpenMined CLI for Infrastructure Management.
@@ -32,7 +36,11 @@ def cli(config, output_file):
     >>> pygrid deploy --provider azure --app network
     """
     click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
-    config.output_file = output_file
+
+    ## ROOT Directory
+    config.pygrid_root_path = str(Path.home() / ".pygrid/")
+    os.makedirs(config.pygrid_root_path, exist_ok=True)
+    config.output_file = f"{config.pygrid_root_path}/{output_file}"
 
 
 @cli.command()
