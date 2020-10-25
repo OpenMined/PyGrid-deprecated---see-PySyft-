@@ -1,27 +1,25 @@
 from ..utils import generate_cidr_block
 from ..provider import *
-from ...tf import TF, var, var_module
+from ...tf import var, var_module
 
 
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, region, av_zones, credentials, db_username, db_password) -> None:
+    def __init__(self, credentials, vpc_config, db_config) -> None:
         """
         db_username (str): Username of the database about to be deployed
         db_password (str): Username of the database about to be deployed
         """
         super().__init__()
 
-        self.region = region
-        self.av_zones = av_zones
+        self.region = vpc_config["region"]
+        self.av_zones = vpc_config["av_zones"]
         self.credentials = credentials
 
         self.tfscript += terrascript.provider.aws(
             region=self.region, shared_credentials_file=self.credentials
         )
-
-        self.update_script()
 
         # Build the VPC
         self.vpc = None
@@ -29,12 +27,9 @@ class AWS(Provider):
         self.build_vpc()
 
         # Build the database
-        self.db_username = db_username
-        self.db_password = db_password
+        self.db_username = db_config["username"]
+        self.db_password = db_config["password"]
         self.build_database()
-
-        # Initialize terraform
-        TF.init()
 
     # TODO: ask amr if this vpc works for serverfull as well
     # if it does, then we can keep it here

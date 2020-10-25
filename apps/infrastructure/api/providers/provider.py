@@ -6,11 +6,17 @@ import terrascript.provider as provider  # aws, google, ...
 import terrascript.resource as resource  # aws_instance, google_compute_instance, ...
 from terrascript import Module
 
+from ..tf import TF
+
 
 class Provider:
     def __init__(self):
         self.tfscript = terrascript.Terrascript()
 
-    def update_script(self):
+    def deploy(self):
+        # write file
         with open("main.tf.json", "w") as tfjson:
             json.dump(self.tfscript, tfjson, indent=2, sort_keys=False)
+
+        TF.init()
+        TF.apply()

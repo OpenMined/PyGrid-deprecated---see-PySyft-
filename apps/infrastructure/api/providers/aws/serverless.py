@@ -3,21 +3,19 @@ from .utils import *
 
 
 class AWS_Serverless(AWS):
-    def __init__(
-        self, region, av_zones, credentials, app, python_runtime="python3.6"
-    ) -> None:
+    def __init__(self, credentials, vpc_config, db_config, app_config) -> None:
         """
         app (str) : The app("node"/"network") which is to be deployed
         """
 
-        super().__init__(region, av_zones, credentials)
+        super().__init__(credentials, vpc_config, db_config)
 
-        self.app = app
-        self.python_runtime = python_runtime
+        self.app = app_config["name"]
+        self.python_runtime = app_config.get("python_runtime", "python3.6")
 
-        self.deploy()
+        self.build()
 
-    def deploy(self):
+    def build(self):
 
         # ----- Lambda Layer -----#
 
@@ -32,7 +30,7 @@ class AWS_Serverless(AWS):
 
         # TODO: Make this zip file on the fly
         dependencies_zip_path = (
-            "deploy/serverless-network/lambda-layer/dependencies.zip"
+            "../../deploy/serverless-network/lambda-layer/dependencies.zip"
         )
 
         s3_bucket_object = resource.aws_s3_bucket_object(
@@ -143,7 +141,7 @@ class AWS_Serverless(AWS):
             replica_scale_enabled=False,
             replica_count=0,
             subnets=[var(private_subnet.id) for private_subnet, _ in self.subnets],
-            vpc_id=var(vpc.id),
+            vpc_id=var(self.vpc.id),
             instance_type="db.t2.micro",
             enable_http_endpoint=True,  # Enable Data API,
             apply_immediately=True,
@@ -195,7 +193,7 @@ class AWS_Serverless(AWS):
             function_name=f"pygrid-{self.app}",
             publish=True,  # To automate increasing versions
             runtime=self.python_runtime,
-            source_path=f"./apps/{self.app}/src",
+            source_path=f"../../apps/{self.app}/src",
             handler="deploy.app",
             vpc_subnet_ids=[
                 var(private_subnet.id) for private_subnet, _ in self.subnets
