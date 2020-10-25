@@ -13,9 +13,9 @@ from .provider_utils import gcp
 # For dev only
 from ..api.providers.aws import serverless_deployment, deploy_vpc
 
-from .providers.aws import AWS
-from .providers.azure import AZURE
-from .providers.gcp import GCP
+# from .providers.aws import AWS
+# from .providers.azure import AZURE
+# from .providers.gcp import GCP
 from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)

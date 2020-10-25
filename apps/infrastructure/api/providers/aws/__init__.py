@@ -1,2 +1,2 @@
-from .serverless import serverless_deployment
-from .vpc import deploy_vpc
+from .serverless import AWS_Serverless
+from .serverfull import AWS_Serverfull
