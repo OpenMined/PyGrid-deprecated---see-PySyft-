@@ -1,6 +1,6 @@
-from ..utils import generate_cidr_block
-from ..provider import *
 from ...tf import var, var_module
+from ..provider import *
+from ..utils import generate_cidr_block
 
 
 class AWS(Provider):

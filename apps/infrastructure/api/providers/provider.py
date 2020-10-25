@@ -1,4 +1,6 @@
 import json
+import time
+from pathlib import Path
 
 import terrascript
 import terrascript.data as data  # aws_ami, google_compute_image, ...
@@ -15,7 +17,10 @@ class Provider:
 
     def deploy(self):
         # write file
-        with open("main.tf.json", "w") as tfjson:
+        with open(
+            f"{str(Path.home() / '.pygrid/')}/main_{time.strftime('%Y-%m-%d_%H%M%S')}.tf.json",
+            "w",
+        ) as tfjson:
             json.dump(self.tfscript, tfjson, indent=2, sort_keys=False)
 
         TF.init()

@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 from pprint import pformat
@@ -7,12 +8,8 @@ from pprint import pformat
 import click
 import requests
 import terrascript
-import subprocess
 
-from .provider_utils import aws
-from .provider_utils import azure
-from .provider_utils import gcp
-
+from .provider_utils import aws, azure, gcp
 # from .providers.aws import AWS
 # from .providers.azure import AZURE
 # from .providers.gcp import GCP

@@ -1,6 +1,5 @@
 import subprocess
 
-
 var = lambda x: "${" + x + "}"
 
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
