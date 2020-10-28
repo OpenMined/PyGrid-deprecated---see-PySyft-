@@ -15,7 +15,7 @@ class AWS_Serverless(AWS):
         super().__init__(credentials, vpc_config)
 
         self.app = app_config["name"]
-        self.python_runtime = app_config.get("python_runtime", "python3.6")
+        self.python_runtime = app_config.get("python_runtime", "python3.8")
 
         self.db_username = db_config["username"]
         self.db_password = db_config["password"]
@@ -192,6 +192,86 @@ class AWS_Serverless(AWS):
         )
         self.tfscript += db_secret_version
 
+        # ----- Security Group ------#
+
+        security_group = resource.aws_security_group(
+            "security_group",
+            name="lambda-sg",
+            vpc_id=var(self.vpc.id),
+            ingress=[
+                {
+                    "description": "HTTPS",
+                    "from_port": 443,
+                    "to_port": 443,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "HTTP",
+                    "from_port": 80,
+                    "to_port": 80,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Nodes",
+                    "from_port": 5000,
+                    "to_port": 5999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Workers",
+                    "from_port": 6000,
+                    "to_port": 6999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Networks",
+                    "from_port": 7000,
+                    "to_port": 7999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+            ],
+            egress=[
+                {
+                    "description": "Egress Connection",
+                    "from_port": 0,
+                    "to_port": 0,
+                    "protocol": "-1",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                }
+            ],
+            tags={"Name": "lambda-security-group"},
+        )
+        self.tfscript += security_group
+
         # ----- Lambda Function -----#
         lambda_func = Module(
             "lambda",
@@ -204,6 +284,7 @@ class AWS_Serverless(AWS):
             vpc_subnet_ids=[
                 var(private_subnet.id) for private_subnet, _ in self.subnets
             ],
+            vpc_security_group_ids=[var(security_group.id)],
             create_role=False,
             lambda_role=var(lambda_iam_role.arn),
             layers=[var(lambda_layer.arn)],
@@ -258,7 +339,7 @@ class AWS_Serverless(AWS):
             # Build a zip file containing all dependencies of PyGrid Network, to deploy to an AWS Lambda Layer.
             # The root file should be called `Python`, and contains all the dependencies.
             mkdir python
-            pip install -r {pygrid_dir}/{self.app}_requirements.txt -t python
+            {self.python_runtime} -m pip install -r {pygrid_dir}/{self.app}_requirements.txt -t python
             zip -r {self.app}.zip python
 
             # Remove the temporary files and folders.
