@@ -1,12 +1,7 @@
 import json
-
-import terrascript
 from flask import Flask, Response, jsonify, request
 
 from .providers.aws import AWS_Serverfull, AWS_Serverless
-
-# from .providers import gcp
-# from .providers import azure
 
 app = Flask(__name__)
 
@@ -14,7 +9,7 @@ app = Flask(__name__)
 @app.route("/", methods=["POST"])
 def index():
     """
-
+    Deploys the resources.
     """
 
     data = json.loads(request.json)

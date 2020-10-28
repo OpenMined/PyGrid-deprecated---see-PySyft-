@@ -6,16 +6,16 @@ from ..utils import generate_cidr_block
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, credentials, vpc_config, db_config) -> None:
+    def __init__(self, credentials, vpc_config) -> None:
         """
-        db_username (str): Username of the database about to be deployed
-        db_password (str): Username of the database about to be deployed
+        credentials (dict) : Contains AWS credentials (required for deployment)
+        vpc_config (dict) : Contains arguments required to deploy the VPC
         """
         super().__init__()
 
+        self.credentials = credentials
         self.region = vpc_config["region"]
         self.av_zones = vpc_config["av_zones"]
-        self.credentials = credentials
 
         self.tfscript += terrascript.provider.aws(
             region=self.region, shared_credentials_file=self.credentials
@@ -26,19 +26,11 @@ class AWS(Provider):
         self.subnets = []
         self.build_vpc()
 
-        # Build the database
-        self.db_username = db_config["username"]
-        self.db_password = db_config["password"]
-        self.build_database()
+    # TODO: Make sure this works for serverfull as well.
 
-    # TODO: ask amr if this vpc works for serverfull as well
-    # if it does, then we can keep it here
-    # Otherwise, we can make it an abstract method
-    # and allow the child classes to implement it.
-
-    def build_vpc(self) -> bool:
+    def build_vpc(self):
         """
-        av_zones (list) : List of availability zones in the region in which VPC subnets should be created.
+        Appends resources which form the VPC, to the `self.tfscript` configuration object.
         """
 
         # ----- Virtual Private Cloud (VPC) ------#
@@ -172,12 +164,3 @@ class AWS(Provider):
                 subnet_id=var(private_subnet.id),
                 route_table_id=var(private_rt.id),
             )
-
-        return True
-
-    def build_database(self):
-        """
-        This class needs to be implemented in the child classes.
-        :return:
-        """
-        pass

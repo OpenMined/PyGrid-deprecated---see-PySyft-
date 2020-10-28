@@ -1,18 +1,12 @@
 import json
 import os
-import subprocess
 import time
 from pathlib import Path
-from pprint import pformat
 
 import click
 import requests
-import terrascript
 
 from .provider_utils import aws, azure, gcp
-# from .providers.aws import AWS
-# from .providers.azure import AZURE
-# from .providers.gcp import GCP
 from .utils import COLORS, Config, colored
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -84,13 +78,14 @@ def deploy(config, provider, app):
 
     ## Prompting user to provide configuration for the selected cloud
     if config.provider == "aws":
-        # config.vpc = aws.get_vpc_config()
-        config.vpc = Config(region="us-east-1", av_zones=["us-east-1a", "us-east-1b"])
-        config.db = aws.get_db_config()
+        config.vpc = aws.get_vpc_config()
     elif config.provider == "gcp":
         pass
     elif config.provider == "azure":
         pass
+
+    ## Database
+    config.db = aws.get_db_config()
 
     if click.confirm(
         f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
@@ -107,36 +102,6 @@ def deploy(config, provider, app):
             print(
                 f"There was an issue with deploying your Pygrid {config.app.name}. Please try again."
             )
-
-        ### For dev purpose
-        # tfscript = terrascript.Terrascript()
-        #
-        # tfscript += terrascript.provider.aws(
-        #     region=config.aws.region, shared_credentials_file=config.credentials
-        # )
-        # tfscript, vpc, subnets = deploy_vpc(
-        #     tfscript, app=config.app.name, av_zones=config.aws.av_zones
-        # )
-        #
-        # if config.deployment_type == "serverless":
-        #     tfscript = serverless_deployment(
-        #         tfscript,
-        #         app=config.app.name,
-        #         vpc=vpc,
-        #         subnets=subnets,
-        #         db_username=config.db.username,
-        #         db_password=config.db.password,
-        #     )
-        # elif config.deployment_type == "serverfull":
-        #     pass
-        #
-        # # write config to file
-        # with open("main.tf.json", "w") as tfjson:
-        #     json.dump(tfscript, tfjson, indent=2, sort_keys=False)
-        #
-        # # subprocess.call("terraform init", shell=True)
-        # subprocess.call("terraform validate", shell=True)
-        # subprocess.call("terraform apply", shell=True)
 
 
 def get_app_arguments(config):

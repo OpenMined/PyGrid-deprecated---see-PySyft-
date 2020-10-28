@@ -3,9 +3,9 @@ import time
 from pathlib import Path
 
 import terrascript
-import terrascript.data as data  # aws_ami, google_compute_image, ...
-import terrascript.provider as provider  # aws, google, ...
-import terrascript.resource as resource  # aws_instance, google_compute_instance, ...
+import terrascript.data as data
+import terrascript.provider as provider
+import terrascript.resource as resource
 from terrascript import Module
 
 from ..tf import TF
@@ -16,7 +16,7 @@ class Provider:
         self.tfscript = terrascript.Terrascript()
 
     def deploy(self):
-        # write file
+        # save the terraform configuration as a file
         with open(
             f"{str(Path.home() / '.pygrid/')}/main_{time.strftime('%Y-%m-%d_%H%M%S')}.tf.json",
             "w",
