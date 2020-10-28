@@ -68,12 +68,6 @@ def deploy(config, provider, app):
 
     ## Get app config and arguments
     config.app = Config(name=app.lower())
-    get_app_arguments(config)
-
-    ## Websockets
-    config.websockets = (
-        True if click.confirm(f"Will you need to support Websockets?") else False
-    )
 
     ## Deployment type
     config.deployment_type = (
@@ -81,6 +75,13 @@ def deploy(config, provider, app):
         if click.confirm(f"Do you want to deploy serverless?")
         else "serverfull"
     )
+
+    ## Websockets
+    config.websockets = (
+        True if click.confirm(f"Will you need to support Websockets?") else False
+    )
+
+    get_app_arguments(config)
 
     ## Prompting user to provide configuration for the selected cloud
     if config.provider == "aws":
@@ -131,13 +132,13 @@ def get_app_arguments(config):
             type=str,
             default=os.environ.get("NETWORK", None),
         )
-        # TODO: Validate if this is related to data-centric or model-centric
+        # TODO: Validate if this is related to data-centric or model-centric and is it requried?
         # config.app.num_replicas = click.prompt(
         #     f"Number of replicas to provide fault tolerance to model hosting",
         #     type=int,
         #     default=os.environ.get("NUM_REPLICAS", None),
         # )
-    elif config.app.name == "network":
+    elif config.app.name == "network" and config.deployment_type == "serverfull":
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
             type=str,
