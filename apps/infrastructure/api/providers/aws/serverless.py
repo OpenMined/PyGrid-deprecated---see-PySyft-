@@ -39,10 +39,7 @@ class AWS_Serverless(AWS):
         )
         self.tfscript += s3_bucket
 
-        # TODO: Make this zip file on the fly
-        dependencies_zip_path = (
-            "../../deploy/serverless-network/lambda-layer/dependencies.zip"
-        )
+        dependencies_zip_path = self.zip_dependencies()
 
         s3_bucket_object = resource.aws_s3_bucket_object(
             f"pygrid-{self.app}-lambda-layer",
@@ -203,7 +200,7 @@ class AWS_Serverless(AWS):
             function_name=f"pygrid-{self.app}",
             publish=True,  # To automate increasing versions
             runtime=self.python_runtime,
-            source_path=f"../../apps/{self.app}/src",
+            source_path=f"{self.root_dir}/PyGrid/apps/{self.app}/src",
             handler="deploy.app",
             vpc_subnet_ids=[
                 var(private_subnet.id) for private_subnet, _ in self.subnets
@@ -237,3 +234,38 @@ class AWS_Serverless(AWS):
             function_version=var_module(lambda_func, "this_lambda_function_version"),
         )
         self.tfscript += lambda_alias
+
+    def zip_dependencies(self):
+        """
+        Clones the PyGrid repo and creates a zip file with the required dependencies.
+        """
+        pygrid_dir = os.path.join(self.root_dir, "PyGrid")
+
+        bash_script = f"""
+        if [ ! -d "{pygrid_dir}" ]
+        then
+            # Clone the required pygrid version
+            mkdir {pygrid_dir}
+            git clone https://github.com/OpenMined/PyGrid/ {pygrid_dir}
+        fi
+
+        if [ ! -d "{pygrid_dir}/{self.app}.zip" ]
+        then
+            # Let us first go to `apps/network` and export the poetry lock file to a requirements file.
+            cd {pygrid_dir}/apps/{self.app}
+            poetry export --format requirements.txt -o {pygrid_dir}/{self.app}_requirements.txt --without-hashes
+            cd {pygrid_dir}
+
+            # Build a zip file containing all dependencies of PyGrid Network, to deploy to an AWS Lambda Layer.
+            # The root file should be called `Python`, and contains all the dependencies.
+            mkdir python
+            pip install -r {pygrid_dir}/{self.app}_requirements.txt -t python
+            zip -r {self.app}.zip python
+
+            # Remove the temporary files and folders.
+            rm -rf python {self.app}_requirements.txt
+        fi
+        """
+
+        subprocess.call(bash_script, shell=True)
+        return os.path.join(pygrid_dir, f"{self.app}.zip")
