@@ -1,19 +1,24 @@
 from ...tf import var, var_module
 from ..provider import *
-from ..utils import generate_cidr_block
 
 
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, credentials, vpc_config) -> None:
+    def __init__(self, root_dir, credentials, vpc_config) -> None:
         """
         credentials (dict) : Contains AWS credentials (required for deployment)
         vpc_config (dict) : Contains arguments required to deploy the VPC
         """
-        super().__init__()
+        super().__init__(root_dir)
 
-        self.credentials = credentials
+        credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
+        os.makedirs(credentials_dir, exist_ok=True)
+        self.credentials = os.path.join(credentials_dir, "credentials.json")
+
+        with open(self.credentials, "w") as cred:
+            json.dump(credentials, cred, indent=2, sort_keys=False)
+
         self.region = vpc_config["region"]
         self.av_zones = vpc_config["av_zones"]
 

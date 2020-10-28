@@ -3,7 +3,9 @@ from .utils import *
 
 
 class AWS_Serverless(AWS):
-    def __init__(self, credentials, vpc_config, db_config, app_config) -> None:
+    def __init__(
+        self, root_dir, credentials, vpc_config, db_config, app_config
+    ) -> None:
         """
         credentials (dict) : Contains AWS credentials
         vpc_config (dict) : Contains arguments required to deploy the VPC
@@ -11,7 +13,7 @@ class AWS_Serverless(AWS):
         app_config (dict) : Contains arguments which are required to deploy the app.
         """
 
-        super().__init__(credentials, vpc_config)
+        super().__init__(root_dir, credentials, vpc_config)
 
         self.app = app_config["name"]
         self.python_runtime = app_config.get("python_runtime", "python3.6")
@@ -195,7 +197,6 @@ class AWS_Serverless(AWS):
         self.tfscript += db_secret_version
 
         # ----- Lambda Function -----#
-
         lambda_func = Module(
             "lambda",
             source="terraform-aws-modules/lambda/aws",

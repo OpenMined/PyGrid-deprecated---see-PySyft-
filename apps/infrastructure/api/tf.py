@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 
 var = lambda x: "${" + x + "}"
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
@@ -8,20 +9,20 @@ class Terraform:
     def __init__(self):
         super().__init__()
 
-    def init(self):
-        return subprocess.call("terraform init", shell=True)
+    def init(self, dir):
+        return subprocess.call("terraform init", shell=True, cwd=dir)
 
-    def validate(self):
-        return subprocess.call("terraform validate", shell=True)
+    def validate(self, dir):
+        return subprocess.call("terraform validate", shell=True, cwd=dir)
 
-    def plan(self):
-        return subprocess.call("terraform plan", shell=True)
+    def plan(self, dir):
+        return subprocess.call("terraform plan", shell=True, cwd=dir)
 
-    def apply(self):
-        return subprocess.call("terraform apply", shell=True)
+    def apply(self, dir):
+        return subprocess.call("terraform apply", shell=True, cwd=dir)
 
-    def destroy(self):
-        return subprocess.call("terraform destroy", shell=True)
+    def destroy(self, dir):
+        return subprocess.call("terraform destroy", shell=True, cwd=dir)
 
 
 TF = Terraform()

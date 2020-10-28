@@ -1,4 +1,6 @@
+import os
 import json
+from pathlib import Path
 from flask import Flask, Response, jsonify, request
 
 from .providers.aws import AWS_Serverfull, AWS_Serverless
@@ -20,6 +22,7 @@ def index():
     if provider == "aws":
         if deployment_type == "serverless":
             aws_deployment = AWS_Serverless(
+                root_dir=os.path.join(str(Path.home()), ".pygrid", "api"),
                 credentials=data["credentials"],
                 vpc_config=data["vpc"],
                 db_config=data["db"],

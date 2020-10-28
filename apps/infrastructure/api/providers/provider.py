@@ -1,3 +1,4 @@
+import os
 import json
 import time
 from pathlib import Path
@@ -8,20 +9,22 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from ..tf import TF
+from ..tf import Terraform
+from .utils import *
 
 
 class Provider:
-    def __init__(self):
+    def __init__(self, root_dir):
+        self.root_dir = root_dir
+        os.makedirs(self.root_dir, exist_ok=True)
+
+        self.TF = Terraform()
         self.tfscript = terrascript.Terrascript()
 
     def deploy(self):
-        # save the terraform configuration as a file
-        with open(
-            f"{str(Path.home() / '.pygrid/')}/main_{time.strftime('%Y-%m-%d_%H%M%S')}.tf.json",
-            "w",
-        ) as tfjson:
+        # save the terraform configuration files
+        with open(f"{self.root_dir}/main.tf.json", "w") as tfjson:
             json.dump(self.tfscript, tfjson, indent=2, sort_keys=False)
 
-        TF.init()
-        TF.apply()
+        self.TF.init(self.root_dir)
+        self.TF.apply(self.root_dir)
