@@ -5,12 +5,12 @@ from ..provider import *
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, root_dir, credentials, vpc_config) -> None:
+    def __init__(self, credentials, vpc_config) -> None:
         """
         credentials (dict) : Contains AWS credentials (required for deployment)
         vpc_config (dict) : Contains arguments required to deploy the VPC
         """
-        super().__init__(root_dir)
+        super().__init__()
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)

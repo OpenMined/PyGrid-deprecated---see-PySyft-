@@ -29,7 +29,7 @@ def cli(config, output_file):
     click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
 
     ## ROOT Directory
-    config.pygrid_root_path = str(Path.home() / ".pygrid/")
+    config.pygrid_root_path = str(Path.home() / ".pygrid/cli/")
     os.makedirs(config.pygrid_root_path, exist_ok=True)
     config.output_file = f"{config.pygrid_root_path}/{output_file}"
 
@@ -53,28 +53,34 @@ def cli(config, output_file):
 def deploy(config, provider, app):
     config.provider = provider.lower()
 
+    credentials = Config()
+
+    ## credentials file
+    with open(
+        click.prompt(
+            f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
+            type=str,
+            default=f"{Path.home()}/.{config.provider}/credentials.json",
+        ),
+        "r",
+    ) as f:
+        credentials.cloud = json.load(f)
+
     ## Get app config and arguments
     config.app = Config(name=app.lower())
     get_app_arguments(config)
 
-    ## credentials file
-    config.credentials = click.prompt(
-        f"Please enter a your cloud deployment {colored('credentials')} file",
-        type=str,
-        default=f"~/.{config.provider}/credentials.json",
+    ## Websockets
+    config.websockets = (
+        True if click.confirm(f"Will you need to support Websockets?") else False
     )
 
-    ## Websockets
-    if click.confirm(f"Will you need to support Websockets?"):
-        config.websockets = True
-    else:
-        config.websockets = False
-
     ## Deployment type
-    if click.confirm(f"Do you want to deploy serverless?"):
-        config.deployment_type = "serverless"
-    else:
-        config.deployment_type = "serverfull"
+    config.deployment_type = (
+        "serverless"
+        if click.confirm(f"Do you want to deploy serverless?")
+        else "serverfull"
+    )
 
     ## Prompting user to provide configuration for the selected cloud
     if config.provider == "aws":
@@ -85,15 +91,16 @@ def deploy(config, provider, app):
         pass
 
     ## Database
-    config.db = aws.get_db_config()
+    credentials.db = aws.get_db_config()
 
     if click.confirm(
         f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
     ):
 
-        data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
+        config.credentials = credentials
 
         url = "http://localhost:5000/"
+        data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
         r = requests.post(url, json=data)
 
         if r.status_code == 200:

@@ -1,5 +1,4 @@
 import subprocess
-from pathlib import Path
 
 var = lambda x: "${" + x + "}"
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
@@ -23,6 +22,3 @@ class Terraform:
 
     def destroy(self, dir):
         return subprocess.call("terraform destroy", shell=True, cwd=dir)
-
-
-TF = Terraform()

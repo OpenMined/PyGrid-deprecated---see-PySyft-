@@ -1,11 +1,10 @@
+import subprocess
 from .aws import *
 from .utils import *
 
 
 class AWS_Serverless(AWS):
-    def __init__(
-        self, root_dir, credentials, vpc_config, db_config, app_config
-    ) -> None:
+    def __init__(self, credentials, vpc_config, db_config, app_config) -> None:
         """
         credentials (dict) : Contains AWS credentials
         vpc_config (dict) : Contains arguments required to deploy the VPC
@@ -13,7 +12,7 @@ class AWS_Serverless(AWS):
         app_config (dict) : Contains arguments which are required to deploy the app.
         """
 
-        super().__init__(root_dir, credentials, vpc_config)
+        super().__init__(credentials, vpc_config)
 
         self.app = app_config["name"]
         self.python_runtime = app_config.get("python_runtime", "python3.6")
@@ -249,7 +248,7 @@ class AWS_Serverless(AWS):
             git clone https://github.com/OpenMined/PyGrid/ {pygrid_dir}
         fi
 
-        if [ ! -d "{pygrid_dir}/{self.app}.zip" ]
+        if [ ! -f "{pygrid_dir}/{self.app}.zip" ]
         then
             # Let us first go to `apps/network` and export the poetry lock file to a requirements file.
             cd {pygrid_dir}/apps/{self.app}

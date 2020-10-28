@@ -2,9 +2,7 @@ from .aws import *
 
 
 class AWS_Serverfull(AWS):
-    def __init__(
-        self, root_dir, credentials, vpc_config, db_config, app_config
-    ) -> None:
+    def __init__(self, credentials, vpc_config, db_config, app_config) -> None:
         """
         credentials (dict) : Contains AWS credentials
         vpc_config (dict) : Contains arguments required to deploy the VPC
@@ -12,7 +10,7 @@ class AWS_Serverfull(AWS):
         app_config (dict) : Contains arguments which are required to deploy the app.
         """
 
-        super().__init__(root_dir, credentials, vpc_config)
+        super().__init__(credentials, vpc_config)
 
         self.app = app_config["name"]
 

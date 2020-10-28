@@ -22,10 +22,9 @@ def index():
     if provider == "aws":
         if deployment_type == "serverless":
             aws_deployment = AWS_Serverless(
-                root_dir=os.path.join(str(Path.home()), ".pygrid", "api"),
-                credentials=data["credentials"],
+                credentials=data["credentials"]["cloud"],
                 vpc_config=data["vpc"],
-                db_config=data["db"],
+                db_config=data["credentials"]["db"],
                 app_config=data["app"],
             )
             aws_deployment.deploy()
