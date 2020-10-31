@@ -2,6 +2,7 @@ import json
 import os
 import time
 from pathlib import Path
+from urllib.parse import urljoin
 
 import click
 import requests
@@ -13,20 +14,29 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
+@click.option("--api-url", required=True, type=str)
 @click.option(
     "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
 )
 @pass_config
-def cli(config, output_file):
+def cli(config, output_file, api_url):
     """OpenMined CLI for Infrastructure Management.
 
     Example:
 
-    >>> pygrid deploy --provider aws --app node
+    >>> pygrid --api <api-endpoint> deploy --provider aws --app node
 
-    >>> pygrid deploy --provider azure --app network
+    >>> pygrid --api <api-endpoint> deploy --provider azure --app network
     """
-    click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
+    try:
+        config.api_url = api_url
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            click.echo(colored(response.json()["message"]))
+            click.echo(colored("Welcome to OpenMined PyGrid CLI", color=COLORS.blue))
+    except:
+        click.echo(colored("Please enter a valid API URL", color=COLORS.red))
+        quit()
 
     ## ROOT Directory
     config.pygrid_root_path = str(Path.home() / ".pygrid/cli/")
@@ -99,16 +109,20 @@ def deploy(config, provider, app):
     ):
 
         config.credentials = credentials
-
-        url = "http://localhost:5000/"
+        url = urljoin(config.api_url, "/deploy")
         data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
         r = requests.post(url, json=data)
 
         if r.status_code == 200:
-            print(f"Your PyGrid {config.app.name} was deployed successfully")
+            click.echo(
+                colored(f"Your PyGrid {config.app.name} was deployed successfully")
+            )
         else:
-            print(
-                f"There was an issue with deploying your Pygrid {config.app.name}. Please try again."
+            click.echo(
+                colored(
+                    f"There was an issue with deploying your Pygrid {config.app.name}. Please try again."
+                ),
+                color=COLORS.red,
             )
 
 

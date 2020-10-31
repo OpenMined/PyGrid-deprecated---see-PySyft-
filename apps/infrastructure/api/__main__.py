@@ -8,8 +8,16 @@ from .providers.aws import AWS_Serverfull, AWS_Serverless
 app = Flask(__name__)
 
 
-@app.route("/", methods=["POST"])
+@app.route("/")
 def index():
+    response = {
+        "message": "Welcome to OpenMined PyGrid Infrastructure Deployment Suite"
+    }
+    return Response(json.dumps(response), status=200, mimetype="application/json")
+
+
+@app.route("/deploy", methods=["POST"])
+def deploy():
     """
     Deploys the resources.
     """
