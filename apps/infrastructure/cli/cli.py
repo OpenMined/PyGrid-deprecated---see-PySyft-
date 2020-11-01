@@ -80,16 +80,10 @@ def deploy(config, provider, app):
     config.app = Config(name=app.lower())
 
     ## Deployment type
-    config.deployment_type = (
-        "serverless"
-        if click.confirm(f"Do you want to deploy serverless?")
-        else "serverfull"
-    )
+    config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
     ## Websockets
-    config.websockets = (
-        True if click.confirm(f"Will you need to support Websockets?") else False
-    )
+    config.websockets = click.confirm(f"Will you need to support Websockets?")
 
     get_app_arguments(config)
 
@@ -114,15 +108,10 @@ def deploy(config, provider, app):
         r = requests.post(url, json=data)
 
         if r.status_code == 200:
-            click.echo(
-                colored(f"Your PyGrid {config.app.name} was deployed successfully")
-            )
+            click.echo(colored(json.dumps(json.loads(r.text), indent=2)))
         else:
             click.echo(
-                colored(
-                    f"There was an issue with deploying your Pygrid {config.app.name}. Please try again."
-                ),
-                color=COLORS.red,
+                colored(json.dumps(json.loads(r.text), indent=2)), color=COLORS.red
             )
 
 
@@ -152,7 +141,7 @@ def get_app_arguments(config):
         #     type=int,
         #     default=os.environ.get("NUM_REPLICAS", None),
         # )
-    elif config.app.name == "network" and config.deployment_type == "serverfull":
+    elif config.app.name == "network" and not config.serverless:
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
             type=str,

@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import subprocess
 from pathlib import Path
 
 import terrascript
@@ -26,5 +27,12 @@ class Provider:
         with open(f"{self.root_dir}/main.tf.json", "w") as tfjson:
             json.dump(self.tfscript, tfjson, indent=2, sort_keys=False)
 
-        self.TF.init(self.root_dir)
-        self.TF.apply(self.root_dir)
+        try:
+            self.TF.init(self.root_dir)
+            self.TF.validate(self.root_dir)
+            self.TF.apply(self.root_dir)
+            output = self.TF.output(self.root_dir)
+            return True, output
+        except subprocess.CalledProcessError as err:
+            output = {"ERROR": err}
+            return False, output
