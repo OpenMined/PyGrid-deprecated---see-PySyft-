@@ -106,6 +106,7 @@ def app_to_dict(app):
     return {
         "id": app.id,
         "provider": app.provider,
+        "deployed_at": app.deployed_at,
         "serverless": app.serverless,
         "websockets": app.websockets,
         "db_username": app.db_username,

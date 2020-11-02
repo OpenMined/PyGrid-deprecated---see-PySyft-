@@ -14,7 +14,7 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
-@click.option("--api-url", required=True, type=str)
+@click.option("--api-url", required=True, type=str, prompt="API URL")
 @click.option(
     "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
 )
@@ -155,6 +155,36 @@ def get_app_arguments(config):
     else:
         # TODO: Workers arguments
         pass
+
+
+@cli.command()
+@click.option(
+    "--app",
+    prompt="PyGrid App: ",
+    type=click.Choice(["Node", "Network"], case_sensitive=False),
+    required=True,
+    help="Get info about deployed instances",
+)
+@click.option(
+    "--id",
+    type=int,
+    help="The Id of the instance about which more info is to be fetched.",
+)
+@pass_config
+def status(config, app, id):
+    app = app.lower()
+    url = (
+        urljoin(config.api_url, f"/deployed/{app}s")
+        if id is None
+        else urljoin(config.api_url, f"/deployed/{app}/{id}")
+    )
+
+    r = requests.get(url)
+
+    if r.status_code == 200:
+        click.echo(colored(json.dumps(json.loads(r.text), indent=2)))
+    else:
+        click.echo(colored("There was an error in reaching the API"), color=COLORS.red)
 
 
 @cli.resultcallback()
