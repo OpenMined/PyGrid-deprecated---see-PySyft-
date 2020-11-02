@@ -4,8 +4,8 @@ from datetime import datetime
 db = SQLAlchemy()
 
 
-class Domain(db.Model):
-    __tablename__ = "domains"
+class Node(db.Model):
+    __tablename__ = "nodes"
     id = db.Column(db.Integer, primary_key=True)
 
     provider = db.Column(db.String(32), nullable=False)

@@ -70,7 +70,7 @@ def deploy():
         }
         if app_config["name"] == "node":
             db.session.add(
-                Domain(
+                Node(
                     node_id=app_config["id"],
                     network=app_config["network"],
                     port=app_config.get("port"),
@@ -99,4 +99,89 @@ def deploy():
 
     return Response(
         json.dumps(response), status=status_code, mimetype="application/json"
+    )
+
+
+def app_to_dict(app):
+    return {
+        "id": app.id,
+        "provider": app.provider,
+        "serverless": app.serverless,
+        "websockets": app.websockets,
+        "db_username": app.db_username,
+        "db_password": app.db_password,
+        "region": app.region,
+        "av_zones": list(app.av_zones.split(",")),
+    }
+
+
+def node_to_dict(node):
+    app = app_to_dict(node)
+    app["node_id"] = node.node_id
+    app["network"] = node.network
+    app["port"] = node.port
+    app["host"] = node.host
+    return app
+
+
+def network_to_dict(network):
+    app = app_to_dict(network)
+    app["port"] = network.port
+    app["host"] = network.host
+    return app
+
+
+@app.route("/deployed/nodes")
+def get_deployed_nodes():
+    """
+    Returns info about all the deployed nodes.
+    """
+
+    return Response(
+        json.dumps(
+            [node_to_dict(node) for node in Node.query.order_by("deployed_at").all()]
+        ),
+        status=200,
+        mimetype="application/json",
+    )
+
+
+@app.route("/deployed/node/<id>")
+def get_deployed_node(id):
+    """
+    Returns info about a given deployed node.
+    """
+    return Response(
+        json.dumps(node_to_dict(Node.query.get(id))),
+        status=200,
+        mimetype="application/json",
+    )
+
+
+@app.route("/deployed/networks")
+def get_deployed_networks():
+    """
+    Returns info about all the deployed networks.
+    """
+    return Response(
+        json.dumps(
+            [
+                network_to_dict(network)
+                for network in Network.query.order_by("deployed_at").all()
+            ]
+        ),
+        status=200,
+        mimetype="application/json",
+    )
+
+
+@app.route("/deployed/network/<id>")
+def get_deployed_network(id):
+    """
+    Returns info about a given deployed network.
+    """
+    return Response(
+        json.dumps(network_to_dict(Network.query.get(id))),
+        status=200,
+        mimetype="application/json",
     )
