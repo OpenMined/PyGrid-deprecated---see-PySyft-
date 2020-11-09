@@ -47,7 +47,25 @@ def get_vpc_config() -> Config:
         style=styles.second,
     )["av_zones"]
 
-    return Config(region=region, av_zones=av_zones)
+    instance_type = prompt(
+        [
+            {
+                "type": "list",
+                "name": "instance",
+                "message": "Please select your desired AWS instance type",
+                "default": "t2.micro",
+                "choices": [
+                    instance["InstanceType"]
+                    for instance in boto3.client("ec2").describe_instance_types()[
+                        "InstanceTypes"
+                    ]
+                ],
+            },
+        ],
+        style=styles.second,
+    )["instance"]
+
+    return Config(region=region, av_zones=av_zones, instance_type=instance_type)
 
 
 def get_vpc_ip_config() -> Config:
