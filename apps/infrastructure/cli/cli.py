@@ -1,3 +1,4 @@
+import glob
 import json
 import os
 import time
@@ -9,6 +10,10 @@ import requests
 from .provider_utils import aws, azure, gcp
 from .utils import COLORS, Config, colored
 
+config_exist = glob.glob(str(Path.home() / ".pygrid/cli/*.json")) or None
+prev_config = (
+    max(config_exist, key=os.path.getmtime) if config_exist is not None else None
+)
 pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
@@ -34,7 +39,14 @@ def cli(config, output_file):
     config.output_file = f"{config.pygrid_root_path}/{output_file}"
 
 
+## TODO: Load prev config
 @cli.command()
+@click.option(
+    "--prev-config",
+    prompt="Load prev Config?",
+    default=prev_config,
+    help="If there is a previous configuration file",
+)
 @click.option(
     "--provider",
     prompt="Cloud Provider: ",
@@ -50,56 +62,63 @@ def cli(config, output_file):
     help="The PyGrid App to be deployed",
 )
 @pass_config
-def deploy(config, provider, app):
-    config.provider = provider.lower()
+def deploy(config, prev_config, provider, app):
 
-    credentials = Config()
+    # prev_config = None
+    if prev_config is not None:
+        with open(prev_config, "r") as f:
+            click.echo("loading previous configurations...")
+            config.update(**json.load(f))
+    else:
+        config.provider = provider.lower()
 
-    ## credentials file
-    with open(
-        click.prompt(
-            f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
-            type=str,
-            default=f"{Path.home()}/.{config.provider}/credentials.json",
-        ),
-        "r",
-    ) as f:
-        credentials.cloud = json.load(f)
+        config.credentials = Config()
 
-    ## Get app config and arguments
-    config.app = Config(name=app.lower())
+        ## credentials file
+        with open(
+            click.prompt(
+                f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
+                type=str,
+                default=f"{Path.home()}/.{config.provider}/credentials.json",
+            ),
+            "r",
+        ) as f:
+            config.credentials.cloud = json.load(f)
 
-    ## Deployment type
-    config.deployment_type = (
-        "serverless"
-        if click.confirm(f"Do you want to deploy serverless?")
-        else "serverfull"
-    )
+        ## Get app config and arguments
+        config.app = Config(name=app.lower())
 
-    ## Websockets
-    config.websockets = (
-        True if click.confirm(f"Will you need to support Websockets?") else False
-    )
+        ## Deployment type
+        config.deployment_type = (
+            "serverless"
+            if click.confirm(f"Do you want to deploy serverless?")
+            else "serverfull"
+        )
 
-    get_app_arguments(config)
+        ## Websockets
+        config.websockets = (
+            True if click.confirm(f"Will you need to support Websockets?") else False
+        )
 
-    ## Prompting user to provide configuration for the selected cloud
-    if config.provider == "aws":
-        config.vpc = aws.get_vpc_config()
-    elif config.provider == "gcp":
-        pass
-    elif config.provider == "azure":
-        pass
+        get_app_arguments(config)
 
-    ## Database
-    credentials.db = aws.get_db_config()
+        ## Prompting user to provide configuration for the selected cloud
+        if config.provider == "aws":
+            config.vpc = aws.get_vpc_config()
+        elif config.provider == "gcp":
+            pass
+        elif config.provider == "azure":
+            pass
+
+        ## Database
+        config.credentials.db = aws.get_db_config()
 
     if click.confirm(
-        f"""Your current configration are: \n\n{colored((json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)))} \n\nContinue?"""
+        f"""Your current configration are:
+        \n\n{colored((json.dumps(vars(config),
+                        indent=2, default=lambda o: o.__dict__)))}
+        \n\nContinue?"""
     ):
-
-        config.credentials = credentials
-
         url = "http://localhost:5000/"
         data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
         r = requests.post(url, json=data)
