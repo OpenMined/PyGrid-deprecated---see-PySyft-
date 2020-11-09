@@ -1,3 +1,5 @@
+from apps.infrastructure.cli.utils import Config
+
 from ...tf import var, var_module
 from ..provider import *
 
@@ -5,12 +7,12 @@ from ..provider import *
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, credentials, vpc_config) -> None:
+    def __init__(self, config: Config, credentials: dict, vpc_config: dict) -> None:
         """
         credentials (dict) : Contains AWS credentials (required for deployment)
         vpc_config (dict) : Contains arguments required to deploy the VPC
         """
-        super().__init__()
+        super().__init__(config=config)
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
@@ -51,10 +53,10 @@ class AWS(Provider):
 
         # ----- Internet Gateway -----#
 
-        internet_gateway = resource.aws_internet_gateway(
+        self.internet_gateway = resource.aws_internet_gateway(
             "igw", vpc_id=var(self.vpc.id), tags={"Name": f"pygrid-igw"}
         )
-        self.tfscript += internet_gateway
+        self.tfscript += self.internet_gateway
 
         # ----- Route Tables -----#
 
@@ -65,7 +67,7 @@ class AWS(Provider):
             route=[
                 {
                     "cidr_block": "0.0.0.0/0",
-                    "gateway_id": var(internet_gateway.id),
+                    "gateway_id": var(self.internet_gateway.id),
                     "egress_only_gateway_id": "",
                     "ipv6_cidr_block": "",
                     "instance_id": "",
