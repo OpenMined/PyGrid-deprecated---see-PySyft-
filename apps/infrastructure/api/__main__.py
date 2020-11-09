@@ -1,7 +1,10 @@
-import os
 import json
+import os
 from pathlib import Path
+
+from apps.infrastructure.cli.utils import Config
 from flask import Flask, Response, jsonify, request
+from loguru import logger
 
 from .providers.aws import AWS_Serverfull, AWS_Serverless
 
@@ -15,6 +18,8 @@ def index():
     """
 
     data = json.loads(request.json)
+    config_data = Config(**data)
+    logger.debug(config_data)
 
     provider = data.get("provider").lower()
     deployment_type = data.get("deployment_type").lower()
@@ -29,7 +34,12 @@ def index():
             )
             aws_deployment.deploy()
         elif deployment_type == "serverfull":
-            pass
+            aws_deployment = AWS_Serverfull(
+                config=config_data,
+                credentials=data["credentials"]["cloud"],
+                vpc_config=data["vpc"],
+            )
+            aws_deployment.deploy()
     elif provider == "azure":
         pass
     elif provider == "gcp":
