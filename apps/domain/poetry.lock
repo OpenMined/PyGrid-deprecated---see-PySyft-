@@ -872,7 +872,7 @@ python-versions = "*"
 
 [[package]]
 name = "syft"
-version = "0.2.6.post0.dev488+g726d4b35"
+version = "0.3.0"
 description = "Add a short description here!"
 category = "main"
 optional = false
@@ -899,13 +899,7 @@ typing-extensions = "*"
 websockets = "*"
 
 [package.extras]
-testing = ["pytest", "pytest-cov", "protobuf", "sqlitedict", "typing-extensions", "dataclasses", "pynacl", "flask", "pandas", "websockets"]
-
-[package.source]
-type = "git"
-url = "https://github.com/OpenMined/PySyft"
-reference = "syft_0.3.0"
-resolved_reference = "726d4b350386610dcc6a38d9f1b6219931498cc5"
+testing = ["dataclasses", "flask", "pandas", "protobuf", "pynacl", "pytest", "pytest-cov", "sqlitedict", "typing-extensions", "websockets"]
 
 [[package]]
 name = "toml"
@@ -1079,7 +1073,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "ea926231558a8d94cf9f1f6c46d6016be90e630e6c07e2806a8e2e9b02488003"
+content-hash = "c0f93385ea2ba9f4ff0d87791ffcfb3b2bbc7610ca2e86768fd71ece6123ceac"
 
 [metadata.files]
 aioice = [
