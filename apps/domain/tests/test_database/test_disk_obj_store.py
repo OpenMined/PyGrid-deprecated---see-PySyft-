@@ -6,7 +6,7 @@ from flask import current_app as app
 from syft.core.common import UID
 from syft.core.store.storeable_object import StorableObject
 
-from src.main.core.database.disk_obj_store import DiskObjectStore, create_storable
+from src.main.core.database.store_disk import DiskObjectStore, create_storable
 from src.main.core.database.bin_storage.metadata import StorageMetadata, get_metadata
 from src.main.core.database.bin_storage.bin_obj import BinaryObject
 
@@ -165,37 +165,119 @@ def test_clear(client, database, cleanup):
     assert database.session.query(StorageMetadata).all() == []
 
 
-# def test_get_values(client, database, cleanup):
-#
-#    storage = DiskObjectStore(database)
-#    uid1 = UID()
-#    uid2 = UID()
-#
-#    storable1 = create_storable(
-#        _id=uid1,
-#        data=th.Tensor([10, 20, 30, 40]),
-#        description="Dummy tensor 1",
-#        tags=["dummy1", "tensor"],
-#    )
-#    storable2 = create_storable(
-#        _id=uid2,
-#        data=th.Tensor([15, 25, 35, 45]),
-#        description="Dummy tensor 2",
-#        tags=["dummy2", "tensor"],
-#    )
-#
-#    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
-#    metadata = get_metadata(database)
-#    metadata.length += 1
-#    database.session.add(bin_obj)
-#    database.session.commit()
-#
-#    bin_obj = BinaryObject(id=uid2.value.hex, binary=storable2.to_bytes())
-#    metadata = get_metadata(database)
-#    metadata.length += 1
-#    database.session.add(bin_obj)
-#    database.session.commit()
-#
-#    binaries = storage.values()
-#
-#    assert binaries == set([storable1, storable2])
+def test_get_values(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    storable2 = th.tensor([15.0, 25.0, 35.0, 45.0], requires_grad=True)
+    storable2.describe("Dummy tensor 2")
+    storable2.tags = ["dummy2", "tensor"]
+    storable2.id = uid2
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    bin_obj = BinaryObject(id=uid2.value.hex, binary=storable2.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    binaries = storage.values()
+
+    assert th.eq(binaries[0], storable1).all()
+    assert th.eq(binaries[1], storable2).all()
+
+
+def test__getitem__(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    retrieved = storage.__getitem__(uid1)
+    assert th.eq(retrieved, storable1).all()
+
+
+def test__getitem__missing(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    with pytest.raises(AttributeError):
+        retrieved = storage.__getitem__(uid2)
+
+
+def test_get_object(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    retrieved = storage.get_object(uid1)
+    assert th.eq(retrieved, storable1).all()
+
+
+def test_get_object_missing(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    retrieved = storage.get_object(uid2)
+    assert retrieved is None

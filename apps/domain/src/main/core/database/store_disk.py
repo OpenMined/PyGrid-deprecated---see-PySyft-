@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 from torch import Tensor
+from loguru import logger
 from syft.core.store import ObjectStore
 from syft.core.common.uid import UID
 from syft.core.common.serde import _deserialize
@@ -44,13 +45,31 @@ class DiskObjectStore(ObjectStore):
         obj.binary = value.to_bytes()
         self.db.session.commit()
 
-    def __delitem__(self, key: UID) -> None:
+    def __getitem__(self, key: UID) -> StorableObject:
+        try:
+            obj = self.db.session.query(BinaryObject).get(key.value.hex)
+            obj = _deserialize(blob=obj.binary, from_bytes=True)
+            return obj
+        except Exception as e:
+            logger.trace(f"{type(self)} get item error {key} {e}")
+            raise e
+
+    def get_object(self, key: UID) -> Optional[StorableObject]:
+        obj = None
+        if self.db.session.query(BinaryObject).get(key.value.hex) is not None:
+            obj = self.__getitem__(key)
+        return obj
+
+    def delete(self, key: UID) -> None:
         obj = self.db.session.query(BinaryObject).get(key.value.hex)
         metadata = get_metadata(self.db)
         metadata.length -= 1
 
         self.db.session.delete(obj)
         self.db.session.commit()
+
+    def __delitem__(self, key: UID) -> None:
+        self.delete(key=key)
 
     def __len__(self) -> int:
         return get_metadata(self.db).length
@@ -65,7 +84,7 @@ class DiskObjectStore(ObjectStore):
         self.db.session.commit()
 
     def values(self) -> List[StorableObject]:
-        # TODO _deserialize creates storable with no data or tags
+        # TODO _deserialize creates storable with no data or tags for StorableObject
         binaries = self.db.session.query(BinaryObject.binary).all()
         binaries = [_deserialize(blob=b[0], from_bytes=True) for b in binaries]
         return binaries
