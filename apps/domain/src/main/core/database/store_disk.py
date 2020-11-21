@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Iterable
 
 from torch import Tensor
 from loguru import logger
@@ -16,7 +16,7 @@ ENCODING = "UTF-8"
 
 # from main.core.database.bin_storage.metadata import *
 def create_storable(
-    _id: UID, data: Tensor, description: str, tags: List[str]
+    _id: UID, data: Tensor, description: str, tags: Iterable[str]
 ) -> StorableObject:
     obj = StorableObject(id=_id, data=data, description=description, tags=tags)
 
@@ -74,7 +74,7 @@ class DiskObjectStore(ObjectStore):
     def __len__(self) -> int:
         return get_metadata(self.db).length
 
-    def keys(self) -> List[UID]:
+    def keys(self) -> Iterable[UID]:
         ids = self.db.session.query(BinaryObject.id).all()
         return [UID.from_string(value=_id[0]) for _id in ids]
 
@@ -83,11 +83,14 @@ class DiskObjectStore(ObjectStore):
         self.db.session.query(StorageMetadata).delete()
         self.db.session.commit()
 
-    def values(self) -> List[StorableObject]:
+    def values(self) -> Iterable[StorableObject]:
         # TODO _deserialize creates storable with no data or tags for StorableObject
         binaries = self.db.session.query(BinaryObject.binary).all()
         binaries = [_deserialize(blob=b[0], from_bytes=True) for b in binaries]
         return binaries
+
+    def get_objects_of_type(self, obj_type: type) -> Iterable[StorableObject]:
+        return [v for v in self.values() if isinstance(v, obj_type)]
 
     def __str__(self) -> str:
         objs = self.db.session.query(BinaryObject).all()

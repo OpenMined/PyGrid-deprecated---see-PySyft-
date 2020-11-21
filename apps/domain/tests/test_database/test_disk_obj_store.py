@@ -199,6 +199,53 @@ def test_get_values(client, database, cleanup):
     assert th.eq(binaries[1], storable2).all()
 
 
+def test_get_objects_of_type(client, database, cleanup):
+
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    storable1 = th.tensor([10.0, 20.0, 30.0, 40.0], requires_grad=True)
+    storable1.describe("Dummy tensor 1")
+    storable1.tags = ["dummy1", "tensor"]
+    storable1.id = uid1
+
+    storable2 = th.tensor([15.0, 25.0, 35.0, 45.0], requires_grad=True)
+    storable2.describe("Dummy tensor 2")
+    storable2.tags = ["dummy2", "tensor"]
+    storable2.id = uid2
+
+    new_storable = create_storable(
+        _id=storable.id,
+        data=th.Tensor([11, 22, 33, 44]),
+        description="NewDummy tensor",
+        tags=["new", "dummy", "tensor"],
+    )
+
+    bin_obj = BinaryObject(id=new_storable.id.value.hex, binary=new_storable.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable1.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    bin_obj = BinaryObject(id=uid2.value.hex, binary=storable2.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    binaries = storage.get_objects_of_type(th.Tensor)
+
+    assert th.eq(binaries[0], storable1).all()
+    assert th.eq(binaries[1], storable2).all()
+
+
 def test__getitem__(client, database, cleanup):
 
     storage = DiskObjectStore(database)
