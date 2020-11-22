@@ -54,6 +54,7 @@ def set_database_config(app, test_config=None, verbose=False):
             if test_config.get("SQLALCHEMY_TRACK_MODIFICATIONS")
             else False
         )
+    app.config["SQLALCHEMY_BINDS"] = {"bin_store": "sqlite:////tmp/binstore.db"}
     app.config["VERBOSE"] = verbose
     db.init_app(app)
 

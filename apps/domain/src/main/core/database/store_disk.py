@@ -1,9 +1,11 @@
 from typing import Optional, Iterable
+from os.path import getsize
 
 from torch import Tensor
 from loguru import logger
-from syft.core.store import ObjectStore
+from flask import current_app as app
 from syft.core.common.uid import UID
+from syft.core.store import ObjectStore
 from syft.core.common.serde import _deserialize
 from syft.core.store.storeable_object import StorableObject
 
@@ -26,6 +28,11 @@ def create_storable(
 class DiskObjectStore(ObjectStore):
     def __init__(self, db):
         self.db = db
+
+    def __sizeof__(self) -> int:
+        uri = app.config["SQLALCHEMY_BINDS"]["bin_store"]
+        db_path = uri[10:]
+        return getsize(db_path)
 
     def store(self, obj: StorableObject) -> None:
         bin_obj = BinaryObject(id=obj.id.value.hex, binary=obj.to_bytes())

@@ -165,6 +165,26 @@ def test_clear(client, database, cleanup):
     assert database.session.query(StorageMetadata).all() == []
 
 
+def test__sizeof__(client, database, cleanup):
+    storage = DiskObjectStore(database)
+    uid1 = UID()
+    uid2 = UID()
+
+    bin_obj = BinaryObject(id=uid1.value.hex, binary=storable.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    bin_obj = BinaryObject(id=uid2.value.hex, binary=storable.to_bytes())
+    metadata = get_metadata(database)
+    metadata.length += 1
+    database.session.add(bin_obj)
+    database.session.commit()
+
+    assert storage.__sizeof__() > 0
+
+
 def test_get_values(client, database, cleanup):
 
     storage = DiskObjectStore(database)
