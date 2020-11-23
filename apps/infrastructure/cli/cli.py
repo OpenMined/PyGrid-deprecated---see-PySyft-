@@ -3,12 +3,14 @@ import json
 import os
 import time
 from pathlib import Path
+from urllib.parse import urljoin
 
 import click
 import requests
 
 from .provider_utils import aws, azure, gcp
-from .utils import COLORS, Config, colored
+from ..utils import Config
+from .utils import COLORS, colored
 
 config_exist = glob.glob(str(Path.home() / ".pygrid/cli/*.json")) or None
 prev_config = (
@@ -18,20 +20,29 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
+@click.option("--api-url", required=True, type=str)
 @click.option(
     "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
 )
 @pass_config
-def cli(config, output_file):
+def cli(config, output_file, api_url):
     """OpenMined CLI for Infrastructure Management.
 
     Example:
 
-    >>> pygrid deploy --provider aws --app node
+    >>> pygrid --api <api-endpoint> deploy --provider aws --app node
 
-    >>> pygrid deploy --provider azure --app network
+    >>> pygrid --api <api-endpoint> deploy --provider azure --app network
     """
-    click.echo(colored("Welcome to OpenMined PyGrid CLI!"))
+    try:
+        config.api_url = api_url
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            click.echo(colored(response.json()["message"]))
+            click.echo(colored("Welcome to OpenMined PyGrid CLI", color=COLORS.blue))
+    except:
+        click.echo(colored("Please enter a valid API URL", color=COLORS.red))
+        quit()
 
     ## ROOT Directory
     config.pygrid_root_path = str(Path.home() / ".pygrid/cli/")
@@ -72,7 +83,9 @@ def deploy(config, prev_config, provider, app):
     else:
         config.provider = provider.lower()
 
-        config.credentials = Config()
+        # Store credentials in a separate object, thus not printing it to the output console
+        # when asking the user to confirm the current configuration
+        credentials = Config()
 
         ## credentials file
         with open(
@@ -83,22 +96,16 @@ def deploy(config, prev_config, provider, app):
             ),
             "r",
         ) as f:
-            config.credentials.cloud = json.load(f)
+            credentials.cloud = json.load(f)
 
         ## Get app config and arguments
         config.app = Config(name=app.lower())
 
         ## Deployment type
-        config.deployment_type = (
-            "serverless"
-            if click.confirm(f"Do you want to deploy serverless?")
-            else "serverfull"
-        )
+        config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
         ## Websockets
-        config.websockets = (
-            True if click.confirm(f"Will you need to support Websockets?") else False
-        )
+        config.websockets = click.confirm(f"Will you need to support Websockets?")
 
         get_app_arguments(config)
 
@@ -110,25 +117,30 @@ def deploy(config, prev_config, provider, app):
         elif config.provider == "azure":
             pass
 
+        get_app_arguments(config)
+
         ## Database
-        config.credentials.db = aws.get_db_config()
+        credentials.db = aws.get_db_config()
 
-    if click.confirm(
-        f"""Your current configration are:
-        \n\n{colored((json.dumps(vars(config),
-                        indent=2, default=lambda o: o.__dict__)))}
-        \n\nContinue?"""
-    ):
-        url = "http://localhost:5000/"
-        data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
-        r = requests.post(url, json=data)
+        if click.confirm(
+            f"""Your current configration are:
+            \n\n{colored((json.dumps(vars(config),
+                            indent=2, default=lambda o: o.__dict__)))}
+            \n\nContinue?"""
+        ):
 
-        if r.status_code == 200:
-            print(f"Your PyGrid {config.app.name} was deployed successfully")
-        else:
-            print(
-                f"There was an issue with deploying your Pygrid {config.app.name}. Please try again."
-            )
+            config.credentials = credentials
+            url = urljoin(config.api_url, "/deploy")
+
+            data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
+            r = requests.post(url, json=data)
+
+            if r.status_code == 200:
+                click.echo(colored(json.dumps(json.loads(r.text), indent=2)))
+            else:
+                click.echo(
+                    colored(json.dumps(json.loads(r.text), indent=2)), color=COLORS.red
+                )
 
 
 def get_app_arguments(config):
@@ -157,7 +169,7 @@ def get_app_arguments(config):
         #     type=int,
         #     default=os.environ.get("NUM_REPLICAS", None),
         # )
-    elif config.app.name == "network" and config.deployment_type == "serverfull":
+    elif config.app.name == "network" and not config.serverless:
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
             type=str,

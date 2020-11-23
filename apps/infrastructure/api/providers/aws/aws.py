@@ -1,18 +1,16 @@
-from apps.infrastructure.cli.utils import Config
-
-from ...tf import var, var_module
 from ..provider import *
+from ...tf import var, var_module
 
 
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, config: Config, credentials: dict, vpc_config: dict) -> None:
+    def __init__(self, credentials: dict, vpc_config: dict) -> None:
         """
         credentials (dict) : Contains AWS credentials (required for deployment)
         vpc_config (dict) : Contains arguments required to deploy the VPC
         """
-        super().__init__(config=config)
+        super().__init__()
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
