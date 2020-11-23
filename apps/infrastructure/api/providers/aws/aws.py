@@ -1,16 +1,15 @@
-from ...tf import generate_cidr_block, var, var_module
 from ..provider import *
+from ...tf import var, var_module
 
 
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, credentials: dict, vpc_config: dict) -> None:
         """
         config (Config) : Object storing the required configuration for deployment
         """
-        super().__init__(app=config.app.name)
-        self.config = config
+        super().__init__()
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)

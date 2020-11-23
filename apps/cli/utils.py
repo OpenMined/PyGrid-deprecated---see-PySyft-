@@ -4,11 +4,6 @@ import click
 from PyInquirer import Separator, Token, prompt, style_from_dict
 
 
-class Config(SimpleNamespace):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-
 COLORS = SimpleNamespace(
     **{
         "black": "black",
