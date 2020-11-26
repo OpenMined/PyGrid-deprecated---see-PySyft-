@@ -76,7 +76,8 @@ def cli(config, output_file, api):
 @pass_config
 def deploy(config, prev_config, provider, app):
 
-    prev_config = None
+    prev_config = None  # Comment this for dev
+
     if prev_config is not None:
         with open(prev_config, "r") as f:
             click.echo("loading previous configurations...")
@@ -103,10 +104,13 @@ def deploy(config, prev_config, provider, app):
         config.app = Config(name=app.lower())
 
         ## Deployment type
-        config.serverless = click.confirm(f"Do you want to deploy serverless?")
+        config.serverless = False
+        if not config.app.name in ["node", "worker"]:
+            config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
         ## Websockets
-        config.websockets = click.confirm(f"Will you need to support Websockets?")
+        if not config.serverless:
+            config.websockets = click.confirm(f"Will you need to support Websockets?")
 
         get_app_arguments(config)
 
@@ -120,30 +124,29 @@ def deploy(config, prev_config, provider, app):
         elif config.provider == "azure":
             pass
 
-        get_app_arguments(config)
-
         ## Database
         credentials.db = aws.get_db_config()
 
-        if click.confirm(
-            f"""Your current configration are:
-            \n\n{colored((json.dumps(vars(config),
-                            indent=2, default=lambda o: o.__dict__)))}
-            \n\nContinue?"""
-        ):
+    if click.confirm(
+        f"""Your current configration are:
+        \n\n{colored((json.dumps(vars(config),
+                        indent=2, default=lambda o: o.__dict__)))}
+        \n\nContinue?"""
+    ):
 
-            config.credentials = credentials
-            url = urljoin(config.api_url, "/deploy")
+        # credentials = config.credentials    # Uncomment this for dev
+        config.credentials = credentials
+        url = urljoin(config.api_url, "/deploy")
 
-            data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
-            r = requests.post(url, json=data)
+        data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
+        r = requests.post(url, json=data)
 
-            if r.status_code == 200:
-                click.echo(colored(json.dumps(json.loads(r.text), indent=2)))
-            else:
-                click.echo(
-                    colored(json.dumps(json.loads(r.text), indent=2)), color=COLORS.red
-                )
+        if r.status_code == 200:
+            click.echo(colored(json.dumps(json.loads(r.text), indent=2)))
+        else:
+            click.echo(
+                colored(json.dumps(json.loads(r.text), indent=2)), color=COLORS.red
+            )
 
 
 def get_app_arguments(config):
