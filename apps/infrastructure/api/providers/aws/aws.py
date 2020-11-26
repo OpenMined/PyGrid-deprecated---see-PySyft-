@@ -27,20 +27,18 @@ class AWS(Provider):
             region=self.region, shared_credentials_file=self.cred_file
         )
 
-        # Build the VPC
+        # Build the Infrastructure
         self.vpc = None
         self.subnets = []
         self.build_vpc()
-
-    # TODO: Make sure this works for serverfull as well.
+        self.build_igw()
+        self.build_public_rt()
+        self.build_subnets()
 
     def build_vpc(self):
         """
-        Appends resources which form the VPC, to the `self.tfscript` configuration object.
+        Adds a VPC.
         """
-
-        # ----- Virtual Private Cloud (VPC) ------#
-
         self.vpc = resource.aws_vpc(
             f"pygrid-vpc",
             cidr_block="10.0.0.0/26",  # 2**(32-26) = 64 IP Addresses
@@ -50,17 +48,21 @@ class AWS(Provider):
         )
         self.tfscript += self.vpc
 
-        # ----- Internet Gateway -----#
-
+    def build_igw(self):
+        """
+        Adds an Internet Gateway.
+        """
         self.internet_gateway = resource.aws_internet_gateway(
             "igw", vpc_id=var(self.vpc.id), tags={"Name": f"pygrid-igw"}
         )
         self.tfscript += self.internet_gateway
 
-        # ----- Route Tables -----#
-
-        # One public route table for all public subnets across different availability zones
-        public_rt = resource.aws_route_table(
+    def build_public_rt(self):
+        """
+        Adds a public Route table.
+        One public route table for all public subnets across different availability zones
+        """
+        self.public_rt = resource.aws_route_table(
             "public-RT",
             vpc_id=var(self.vpc.id),
             route=[
@@ -79,9 +81,18 @@ class AWS(Provider):
             ],
             tags={"Name": f"pygrid-public-RT"},
         )
-        self.tfscript += public_rt
+        self.tfscript += self.public_rt
 
-        # ----- Subnets ----- #
+    def build_subnets(self):
+        """
+        Adds subnets to the VPC.
+        Each availability zone contains
+             - one public subnet : Connects to the internet via public route table
+             - one private subnet : Hosts the deployed resources
+             - one NAT gateway (in the public subnet) : Allows traffic from the internet to the private subnet
+                via the public subnet
+             - one Route table : Routes the traffic from the NAT gateway to the private subnet
+        """
 
         num_ip_addresses = 2 ** (32 - 26)
         num_subnets = 2 * len(
@@ -91,14 +102,6 @@ class AWS(Provider):
         cidr_blocks = generate_cidr_block(num_ip_addresses, num_subnets)
 
         for i, av_zone in enumerate(self.av_zones):
-            """
-            Each availability zone contains
-             - one public subnet : Connects to the internet via public route table
-             - one private subnet : Hosts the deployed resources
-             - one NAT gateway (in the public subnet) : Allows traffic from the internet to the private subnet
-                via the public subnet
-             - one Route table : Routes the traffic from the NAT gateway to the private subnet
-            """
 
             private_subnet = resource.aws_subnet(
                 f"private-subnet-{i}",
@@ -161,7 +164,7 @@ class AWS(Provider):
             self.tfscript += resource.aws_route_table_association(
                 f"rta-public-subnet-{i}",
                 subnet_id=var(public_subnet.id),
-                route_table_id=var(public_rt.id),
+                route_table_id=var(self.public_rt.id),
             )
 
             # Associate private subnet with private route table

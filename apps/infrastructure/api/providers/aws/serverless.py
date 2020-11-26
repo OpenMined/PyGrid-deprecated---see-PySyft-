@@ -22,14 +22,27 @@ class AWS_Serverless(AWS):
         self.db_username = config.credentials.db.username
         self.db_password = config.credentials.db.password
 
-        self.build()
+        # Api gateway
+        self.build_api_gateway()
 
-    def build(self):
-        """
-        Appends resources to the `self.terrascript` configuration object.
-        """
+        # Database
+        self.build_database()
+        self.build_secret_manager()
 
-        # ----- Lambda Layer -----#
+        # Lambda function associates
+        self.build_lambda_role()
+        self.build_security_group()
+        self.build_lambda_layer()
+
+        # Main lambda function
+        self.build_lambda_function()
+
+    def build_lambda_layer(self):
+        """
+        Creates a AWS S3 bucket object and uploads zipped dependencies (of the app) to it.
+        Then creates a lambda layer, which points to that S3 bucket.
+        This lambda layer is later attached to the lambda function hosting the app.
+        """
 
         s3_bucket = resource.aws_s3_bucket(
             f"{self.app}-lambda-layer-bucket",
@@ -52,7 +65,7 @@ class AWS_Serverless(AWS):
         )
         self.tfscript += s3_bucket_object
 
-        lambda_layer = resource.aws_lambda_layer_version(
+        self.lambda_layer = resource.aws_lambda_layer_version(
             f"pygrid-{self.app}-lambda-layer",
             layer_name=f"pygrid-{self.app}-dependencies",
             compatible_runtimes=[self.python_runtime],
@@ -60,11 +73,13 @@ class AWS_Serverless(AWS):
             s3_key=s3_bucket_object.key,
             depends_on=[f"aws_s3_bucket_object.{s3_bucket_object._name}"],
         )
-        self.tfscript += lambda_layer
+        self.tfscript += self.lambda_layer
 
-        # ----- API GateWay -----#
-
-        api_gateway = Module(
+    def build_api_gateway(self):
+        """
+        Builds an API Gateway, which points to the main lambda function.
+        """
+        self.api_gateway = Module(
             "api_gateway",
             source="terraform-aws-modules/apigateway-v2/aws",
             name=f"pygrid-{self.app}-http",
@@ -75,11 +90,14 @@ class AWS_Serverless(AWS):
             },
             tags={"Name": f"pygrid-{self.app}-api-gateway-http"},
         )
-        self.tfscript += api_gateway
+        self.tfscript += self.api_gateway
 
-        # ------ IAM role ------#
+    def build_lambda_role(self):
+        """
+        Builds AWS IAM Role with associated policies for the main lambda function
+        """
 
-        lambda_iam_role = resource.aws_iam_role(
+        self.lambda_iam_role = resource.aws_iam_role(
             f"pygrid-{self.app}-lambda-role",
             name=f"pygrid-{self.app}-lambda-role",
             assume_role_policy="""{
@@ -97,12 +115,12 @@ class AWS_Serverless(AWS):
             }""",
             tags={"Name": f"pygrid-{self.app}-lambda-iam-role"},
         )
-        self.tfscript += lambda_iam_role
+        self.tfscript += self.lambda_iam_role
 
         policy1 = resource.aws_iam_role_policy(
             "AWSLambdaVPCAccessExecutionRole",
             name="AWSLambdaVPCAccessExecutionRole",
-            role=var(lambda_iam_role.id),
+            role=var(self.lambda_iam_role.id),
             policy=aws_lambda_vpc_execution_role_policy,
         )
         self.tfscript += policy1
@@ -110,7 +128,7 @@ class AWS_Serverless(AWS):
         policy2 = resource.aws_iam_role_policy(
             "CloudWatchLogsFullAccess",
             name="CloudWatchLogsFullAccess",
-            role=var(lambda_iam_role.id),
+            role=var(self.lambda_iam_role.id),
             policy=cloud_watch_logs_full_access_policy,
         )
         self.tfscript += policy2
@@ -118,12 +136,15 @@ class AWS_Serverless(AWS):
         policy3 = resource.aws_iam_role_policy(
             "AmazonRDSDataFullAcess",
             name="AmazonRDSDataFullAcess",
-            role=var(lambda_iam_role.id),
+            role=var(self.lambda_iam_role.id),
             policy=amazon_rds_data_full_access_policy,
         )
         self.tfscript += policy3
 
-        # ----- Database -----#
+    def build_database(self):
+        """
+        Builds an Aurora serverless database.
+        """
 
         db_parameter_group = resource.aws_db_parameter_group(
             "aurora_db_parameter_group",
@@ -141,7 +162,7 @@ class AWS_Serverless(AWS):
         )
         self.tfscript += rds_cluster_parameter_group
 
-        database = Module(
+        self.database = Module(
             "aurora",
             source="terraform-aws-modules/rds-aurora/aws",
             name=f"pygrid-{self.app}-database",
@@ -170,33 +191,39 @@ class AWS_Serverless(AWS):
             },
             tags={"Name": f"pygrid-{self.app}-aurora-database"},
         )
-        self.tfscript += database
+        self.tfscript += self.database
 
-        # ----- Secret Manager ----#
+    def build_secret_manager(self):
+        """
+        Builds a secret manager which holds the database credentials.
+        """
 
         random_pet = resource.random_pet("random", length=2)
         self.tfscript += random_pet
 
-        db_secret_manager = resource.aws_secretsmanager_secret(
+        self.db_secret_manager = resource.aws_secretsmanager_secret(
             "db-secret",
             name=f"pygrid-{self.app}-rds-{var(random_pet.id)}",
             description=f"PyGrid {self.app} database credentials",
             tags={"Name": f"pygrid-{self.app}-rds-secret-manager"},
         )
-        self.tfscript += db_secret_manager
+        self.tfscript += self.db_secret_manager
 
         db_secret_version = resource.aws_secretsmanager_secret_version(
             "db-secret-version",
-            secret_id=var(db_secret_manager.id),
+            secret_id=var(self.db_secret_manager.id),
             secret_string="jsonencode({})".format(
                 {"username": self.db_username, "password": self.db_password}
             ),
         )
         self.tfscript += db_secret_version
 
-        # ----- Security Group ------#
+    def build_security_group(self):
+        """
+        Builds a security group for the lambda function.
+        """
 
-        security_group = resource.aws_security_group(
+        self.security_group = resource.aws_security_group(
             "security_group",
             name="lambda-sg",
             vpc_id=var(self.vpc.id),
@@ -272,9 +299,13 @@ class AWS_Serverless(AWS):
             ],
             tags={"Name": "lambda-security-group"},
         )
-        self.tfscript += security_group
+        self.tfscript += self.security_group
 
-        # ----- Lambda Function -----#
+    def build_lambda_function(self):
+        """
+        Builds the main lambda function hosting the app, and associate the lambda
+        function with all the other deployed resources.
+        """
         lambda_func = Module(
             "lambda",
             source="terraform-aws-modules/lambda/aws",
@@ -286,21 +317,22 @@ class AWS_Serverless(AWS):
             vpc_subnet_ids=[
                 var(private_subnet.id) for private_subnet, _ in self.subnets
             ],
-            vpc_security_group_ids=[var(security_group.id)],
+            vpc_security_group_ids=[var(self.security_group.id)],
             create_role=False,
-            lambda_role=var(lambda_iam_role.arn),
-            layers=[var(lambda_layer.arn)],
+            lambda_role=var(self.lambda_iam_role.arn),
+            layers=[var(self.lambda_layer.arn)],
             environment_variables={
-                "DB_NAME": database.database_name,
-                "DB_CLUSTER_ARN": var_module(database, "this_rds_cluster_arn"),
-                "DB_SECRET_ARN": var(db_secret_manager.arn),
-                # "SECRET_KEY"     : "Do-we-need-this-in-deployed-version"  # TODO: Clarify this
+                "DB_NAME": self.database.database_name,
+                "DB_CLUSTER_ARN": var_module(self.database, "this_rds_cluster_arn"),
+                "DB_SECRET_ARN": var(self.db_secret_manager.arn),
             },
             allowed_triggers={
                 "AllowExecutionFromAPIGateway": {
                     "service": "apigateway",
                     "source_arn": "{}/*/*".format(
-                        var_module(api_gateway, "this_apigatewayv2_api_execution_arn")
+                        var_module(
+                            self.api_gateway, "this_apigatewayv2_api_execution_arn"
+                        )
                     ),
                 }
             },
