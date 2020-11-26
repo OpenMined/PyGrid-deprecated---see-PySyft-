@@ -11,7 +11,7 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from ...utils import Config
+from ..utils import Config
 from ..tf import Terraform
 from ..utils import Config
 
@@ -34,7 +34,7 @@ class Provider:
             self.TF.validate(self.root_dir)
             self.TF.apply(self.root_dir)
             output = self.TF.output(self.root_dir)
-            return True, output
+            return (True, output)
         except subprocess.CalledProcessError as err:
             output = {"ERROR": err}
-            return False, output
+            return (False, output)

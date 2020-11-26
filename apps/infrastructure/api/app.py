@@ -2,9 +2,9 @@ import os
 import json
 from pathlib import Path
 from flask import Flask, Response, jsonify, request
-from ..utils import Config
 from loguru import logger
 
+from .utils import Config
 from .providers.aws import AWS_Serverfull, AWS_Serverless
 
 app = Flask(__name__)
@@ -25,26 +25,21 @@ def deploy():
     """
 
     data = json.loads(request.json)
+    config = Config(**data)
+    logger.debug(config)
 
-    provider = data.get("provider").lower()
-    serverless = data.get("serverless")
-    websockets = data.get("websockets")
-
-    config_data = Config(**data)
-    logger.debug(config_data)
+    # provider = data.get("provider").lower()
+    # serverless = data.get("serverless")
+    # websockets = data.get("websockets")
 
     deployed = False
     output = None
+    print(config.provider)
 
-    if provider == "aws":
-        if serverless:
+    if config.provider == "aws":
+        if config.serverless:
             ## Todo: Make serverless class work with config object
-            aws_deployment = AWS_Serverless(
-                credentials=data["credentials"]["cloud"],
-                vpc_config=data["vpc"],
-                db_config=data["credentials"]["db"],
-                app_config=data["app"],
-            )
+            aws_deployment = AWS_Serverless(config)
             deployed, output = aws_deployment.deploy()
         else:
             pass
@@ -54,21 +49,21 @@ def deploy():
             #     vpc_config=data["vpc"],
             # )
             # aws_deployment.deploy()
-    elif provider == "azure":
+    elif config.provider == "azure":
         pass
-    elif provider == "gcp":
+    elif config.provider == "gcp":
         pass
 
     if deployed:
         status_code = 200
         response = {
-            "message": f"Your PyGrid {data['app']['name']} was deployed successfully",
+            "message": f"Your PyGrid {config.app.name} was deployed successfully",
             "output": output,
         }
     else:
         status_code = 400
         response = {
-            "message": f"Your attempt to deploy PyGrid {data['app']['name']} failed",
+            "message": f"Your attempt to deploy PyGrid {config.app.name} failed",
             "error": output,
         }
 

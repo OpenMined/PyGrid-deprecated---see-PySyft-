@@ -5,18 +5,20 @@ from ...tf import var, var_module
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, credentials: dict, vpc_config: dict) -> None:
+    def __init__(self, config: Config) -> None:
         """
         config (Config) : Object storing the required configuration for deployment
         """
         super().__init__()
+        self.config = config
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.cred_file = os.path.join(credentials_dir, "credentialss.json")
+        self.cred_file = os.path.join(credentials_dir, "credentials.json")
 
-        with open(self.cred_file, "w") as f:
-            json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
+        # # Todo: turn this to json
+        # with open(self.cred_file, "w") as cred:
+        #     json.dump(config.credentials, cred, indent=2, sort_keys=False)
 
         self.region = config.vpc.region
         self.av_zones = config.vpc.av_zones

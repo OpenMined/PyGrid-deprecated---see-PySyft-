@@ -12,14 +12,16 @@ class AWS_Serverless(AWS):
 
         super().__init__(config)
 
+        self.app = config.app.name
+
         # TODO: Make it beautiful
         try:
             self.python_runtime = config.app.python_runtime
         except AttributeError:
             self.python_runtime = "python3.8"
 
-        # Api gateway
-        self.build_api_gateway()
+        self.db_username = config.credentials.db.username
+        self.db_password = config.credentials.db.password
 
         # Database
         self.build_database()
