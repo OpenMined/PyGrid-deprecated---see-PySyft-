@@ -5,25 +5,26 @@ from ...tf import var, var_module
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, credentials: dict, vpc_config: dict) -> None:
+    def __init__(self, config: Config) -> None:
         """
-        credentials (dict) : Contains AWS credentials (required for deployment)
-        vpc_config (dict) : Contains arguments required to deploy the VPC
+        config (Config) : Object storing the required configuration for deployment
         """
         super().__init__()
+        self.config = config
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.credentials = os.path.join(credentials_dir, "credentials.json")
+        self.cred_file = os.path.join(credentials_dir, "credentials.json")
 
-        with open(self.credentials, "w") as cred:
-            json.dump(credentials, cred, indent=2, sort_keys=False)
+        # # Todo: turn this to json
+        # with open(self.cred_file, "w") as cred:
+        #     json.dump(config.credentials, cred, indent=2, sort_keys=False)
 
-        self.region = vpc_config["region"]
-        self.av_zones = vpc_config["av_zones"]
+        self.region = config.vpc.region
+        self.av_zones = config.vpc.av_zones
 
         self.tfscript += terrascript.provider.aws(
-            region=self.region, shared_credentials_file=self.credentials
+            region=self.region, shared_credentials_file=self.cred_file
         )
 
         # Build the VPC

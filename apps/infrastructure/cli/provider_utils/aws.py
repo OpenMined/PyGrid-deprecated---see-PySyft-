@@ -47,7 +47,12 @@ def get_vpc_config() -> Config:
         style=styles.second,
     )["av_zones"]
 
-    instance_type = prompt(
+    return Config(region=region, av_zones=av_zones)
+
+
+def get_instance_type():
+
+    return prompt(
         [
             {
                 "type": "list",
@@ -60,12 +65,10 @@ def get_vpc_config() -> Config:
                         "InstanceTypes"
                     ]
                 ],
-            },
+            }
         ],
         style=styles.second,
     )["instance"]
-
-    return Config(region=region, av_zones=av_zones, instance_type=instance_type)
 
 
 def get_vpc_ip_config() -> Config:

@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import time
+import requests
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -9,7 +10,7 @@ import click
 import requests
 
 from .provider_utils import aws, azure, gcp
-from ..utils import Config
+from .utils import Config
 from .utils import COLORS, colored
 
 config_exist = glob.glob(str(Path.home() / ".pygrid/cli/*.json")) or None
@@ -20,12 +21,12 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
 
 
 @click.group()
-@click.option("--api-url", required=True, type=str)
+@click.option("--api", required=True, type=str)
 @click.option(
     "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
 )
 @pass_config
-def cli(config, output_file, api_url):
+def cli(config, output_file, api):
     """OpenMined CLI for Infrastructure Management.
 
     Example:
@@ -35,8 +36,8 @@ def cli(config, output_file, api_url):
     >>> pygrid --api <api-endpoint> deploy --provider azure --app network
     """
     try:
-        config.api_url = api_url
-        response = requests.get(api_url)
+        config.api_url = api
+        response = requests.get(config.api_url)
         if response.status_code == 200:
             click.echo(colored(response.json()["message"]))
             click.echo(colored("Welcome to OpenMined PyGrid CLI", color=COLORS.blue))
@@ -75,7 +76,7 @@ def cli(config, output_file, api_url):
 @pass_config
 def deploy(config, prev_config, provider, app):
 
-    # prev_config = None
+    prev_config = None
     if prev_config is not None:
         with open(prev_config, "r") as f:
             click.echo("loading previous configurations...")
@@ -112,6 +113,8 @@ def deploy(config, prev_config, provider, app):
         ## Prompting user to provide configuration for the selected cloud
         if config.provider == "aws":
             config.vpc = aws.get_vpc_config()
+            if not config.serverless:
+                config.vpc.instance_type = aws.get_instance_type()
         elif config.provider == "gcp":
             pass
         elif config.provider == "azure":
@@ -163,12 +166,6 @@ def get_app_arguments(config):
             type=str,
             default=os.environ.get("NETWORK", None),
         )
-        # TODO: Validate if this is related to data-centric or model-centric and is it requried?
-        # config.app.num_replicas = click.prompt(
-        #     f"Number of replicas to provide fault tolerance to model hosting",
-        #     type=int,
-        #     default=os.environ.get("NUM_REPLICAS", None),
-        # )
     elif config.app.name == "network" and not config.serverless:
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
