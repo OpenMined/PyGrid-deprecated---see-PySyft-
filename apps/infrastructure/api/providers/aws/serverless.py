@@ -23,6 +23,9 @@ class AWS_Serverless(AWS):
         self.db_username = config.credentials.db.username
         self.db_password = config.credentials.db.password
 
+        self.db_username = config.credentials.db.username
+        self.db_password = config.credentials.db.password
+
         # Database
         self.build_database()
         self.build_secret_manager()
