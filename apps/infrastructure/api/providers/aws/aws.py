@@ -1,5 +1,5 @@
 from ..provider import *
-from ...tf import var, var_module
+from ...tf import var, var_module, generate_cidr_block
 
 
 class AWS(Provider):
@@ -14,11 +14,10 @@ class AWS(Provider):
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.cred_file = os.path.join(credentials_dir, "credentials.json")
+        self.cred_file = os.path.join(credentials_dir, "credentialss.json")
 
-        # # Todo: turn this to json
-        # with open(self.cred_file, "w") as cred:
-        #     json.dump(config.credentials, cred, indent=2, sort_keys=False)
+        with open(self.cred_file, "w") as f:
+            json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
 
         self.region = config.vpc.region
         self.av_zones = config.vpc.av_zones
@@ -93,16 +92,6 @@ class AWS(Provider):
              - one NAT gateway (in the public subnet) : Allows traffic from the internet to the private subnet
                 via the public subnet
              - one Route table : Routes the traffic from the NAT gateway to the private subnet
-        """
-
-    def build_subnets(self):
-        """Adds subnets to the VPC. Each availability zone contains.
-
-        - one public subnet : Connects to the internet via public route table
-        - one private subnet : Hosts the deployed resources
-        - one NAT gateway (in the public subnet) : Allows traffic from the internet to the private subnet
-           via the public subnet
-        - one Route table : Routes the traffic from the NAT gateway to the private subnet
         """
 
         for i, av_zone in enumerate(self.av_zones):

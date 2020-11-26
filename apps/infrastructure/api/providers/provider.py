@@ -13,7 +13,6 @@ from terrascript import Module
 
 from ..utils import Config
 from ..tf import Terraform
-from ..utils import Config
 
 
 class Provider:
