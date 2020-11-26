@@ -37,6 +37,19 @@ class AWS_Serverless(AWS):
         # Main lambda function
         self.build_lambda_function()
 
+        # Append outputs
+        self.outputs()
+
+    def outputs(self):
+        """
+        Add outputs to be returned as a response from the API.
+        """
+        self.tfscript += terrascript.Output(
+            "api_gateway_endpoint",
+            value=var_module(self.api_gateway, "this_apigatewayv2_api_api_endpoint"),
+            description=f"PyGrid {self.app} API endpoint",
+        )
+
     def build_lambda_layer(self):
         """
         Creates a AWS S3 bucket object and uploads zipped dependencies (of the app) to it.

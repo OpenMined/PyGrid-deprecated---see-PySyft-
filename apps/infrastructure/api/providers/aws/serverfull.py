@@ -15,6 +15,8 @@ class AWS_Serverfull(AWS):
 
         self.build()
 
+    # TODO: Amr add outputs function, which appends outputs to self.tfscript.
+    # the parent class handles returing the output as a response from the API.
     def build(self):
         # ----- Security Group ------#
 
@@ -107,7 +109,7 @@ class AWS_Serverfull(AWS):
                         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
                     ],
                 },
-                {"name": "virtualization-type", "values": ["hvm"],},
+                {"name": "virtualization-type", "values": ["hvm"]},
             ],
             owners=["099720109477"],
         )
@@ -140,7 +142,7 @@ class AWS_Serverfull(AWS):
                         "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
                     ],
                 },
-                {"name": "virtualization-type", "values": ["hvm"],},
+                {"name": "virtualization-type", "values": ["hvm"]},
             ],
             owners=["099720109477"],
         )
