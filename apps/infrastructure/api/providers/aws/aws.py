@@ -36,7 +36,9 @@ class AWS(Provider):
         self.build_subnets()
 
     def build_vpc(self):
-        """Adds a VPC."""
+        """
+        Adds a VPC.
+        """
         self.vpc = resource.aws_vpc(
             f"pygrid-vpc",
             cidr_block="10.0.0.0/16",
@@ -47,17 +49,18 @@ class AWS(Provider):
         self.tfscript += self.vpc
 
     def build_igw(self):
-        """Adds an Internet Gateway."""
+        """
+        Adds an Internet Gateway.
+        """
         self.internet_gateway = resource.aws_internet_gateway(
             "igw", vpc_id=var(self.vpc.id), tags={"Name": f"pygrid-igw"}
         )
         self.tfscript += self.internet_gateway
 
     def build_public_rt(self):
-        """Adds a public Route table.
-
-        One public route table for all public subnets across different
-        availability zones
+        """
+        Adds a public Route table.
+        One public route table for all public subnets across different availability zones
         """
         self.public_rt = resource.aws_route_table(
             "public-RT",
@@ -80,6 +83,17 @@ class AWS(Provider):
             tags={"Name": f"pygrid-public-RT"},
         )
         self.tfscript += self.public_rt
+
+    def build_subnets(self):
+        """
+        Adds subnets to the VPC.
+        Each availability zone contains
+             - one public subnet : Connects to the internet via public route table
+             - one private subnet : Hosts the deployed resources
+             - one NAT gateway (in the public subnet) : Allows traffic from the internet to the private subnet
+                via the public subnet
+             - one Route table : Routes the traffic from the NAT gateway to the private subnet
+        """
 
     def build_subnets(self):
         """Adds subnets to the VPC. Each availability zone contains.

@@ -23,8 +23,8 @@ class AWS_Serverless(AWS):
         self.db_username = config.credentials.db.username
         self.db_password = config.credentials.db.password
 
-        self.db_username = config.credentials.db.username
-        self.db_password = config.credentials.db.password
+        # Api gateway
+        self.build_api_gateway()
 
         # Database
         self.build_database()
@@ -38,24 +38,11 @@ class AWS_Serverless(AWS):
         # Main lambda function
         self.build_lambda_function()
 
-        # Append outputs
-        self.outputs()
-
-    def outputs(self):
-        """Add outputs to be returned as a response from the API."""
-        self.tfscript += terrascript.Output(
-            "api_gateway_endpoint",
-            value=var_module(self.api_gateway, "this_apigatewayv2_api_api_endpoint"),
-            description=f"PyGrid {self.config.app.name} API endpoint",
-        )
-
     def build_lambda_layer(self):
-        """Creates a AWS S3 bucket object and uploads zipped dependencies (of
-        the app) to it.
-
+        """
+        Creates a AWS S3 bucket object and uploads zipped dependencies (of the app) to it.
         Then creates a lambda layer, which points to that S3 bucket.
-        This lambda layer is later attached to the lambda function
-        hosting the app.
+        This lambda layer is later attached to the lambda function hosting the app.
         """
 
         s3_bucket = resource.aws_s3_bucket(
@@ -80,8 +67,8 @@ class AWS_Serverless(AWS):
         self.tfscript += s3_bucket_object
 
         self.lambda_layer = resource.aws_lambda_layer_version(
-            f"pygrid-{self.config.app.name}-lambda-layer",
-            layer_name=f"pygrid-{self.config.app.name}-dependencies",
+            f"pygrid-{self.app}-lambda-layer",
+            layer_name=f"pygrid-{self.app}-dependencies",
             compatible_runtimes=[self.python_runtime],
             s3_bucket=s3_bucket_object.bucket,
             s3_key=s3_bucket_object.key,
@@ -90,7 +77,9 @@ class AWS_Serverless(AWS):
         self.tfscript += self.lambda_layer
 
     def build_api_gateway(self):
-        """Builds an API Gateway, which points to the main lambda function."""
+        """
+        Builds an API Gateway, which points to the main lambda function.
+        """
         self.api_gateway = Module(
             "api_gateway",
             source="terraform-aws-modules/apigateway-v2/aws",
@@ -105,12 +94,13 @@ class AWS_Serverless(AWS):
         self.tfscript += self.api_gateway
 
     def build_lambda_role(self):
-        """Builds AWS IAM Role with associated policies for the main lambda
-        function."""
+        """
+        Builds AWS IAM Role with associated policies for the main lambda function
+        """
 
         self.lambda_iam_role = resource.aws_iam_role(
-            f"pygrid-{self.config.app.name}-lambda-role",
-            name=f"pygrid-{self.config.app.name}-lambda-role",
+            f"pygrid-{self.app}-lambda-role",
+            name=f"pygrid-{self.app}-lambda-role",
             assume_role_policy="""{
                 "Version": "2012-10-17",
                 "Statement": [
@@ -153,7 +143,9 @@ class AWS_Serverless(AWS):
         self.tfscript += policy3
 
     def build_database(self):
-        """Builds an Aurora serverless database."""
+        """
+        Builds an Aurora serverless database.
+        """
 
         db_parameter_group = resource.aws_db_parameter_group(
             "aurora_db_parameter_group",
@@ -203,7 +195,9 @@ class AWS_Serverless(AWS):
         self.tfscript += self.database
 
     def build_secret_manager(self):
-        """Builds a secret manager which holds the database credentials."""
+        """
+        Builds a secret manager which holds the database credentials.
+        """
 
         random_pet = resource.random_pet("random", length=2)
         self.tfscript += random_pet
@@ -219,18 +213,16 @@ class AWS_Serverless(AWS):
         db_secret_version = resource.aws_secretsmanager_secret_version(
             "db-secret-version",
             secret_id=var(self.db_secret_manager.id),
-            secret_string=var(
-                'jsonencode({"username" = "'
-                + self.config.credentials.db.username
-                + '", "password" = "'
-                + self.config.credentials.db.password
-                + '"})'
+            secret_string="jsonencode({})".format(
+                {"username": self.db_username, "password": self.db_password}
             ),
         )
         self.tfscript += db_secret_version
 
     def build_security_group(self):
-        """Builds a security group for the lambda function."""
+        """
+        Builds a security group for the lambda function.
+        """
 
         self.security_group = resource.aws_security_group(
             "security_group",
@@ -311,8 +303,10 @@ class AWS_Serverless(AWS):
         self.tfscript += self.security_group
 
     def build_lambda_function(self):
-        """Builds the main lambda function hosting the app, and associate the
-        lambda function with all the other deployed resources."""
+        """
+        Builds the main lambda function hosting the app, and associate the lambda
+        function with all the other deployed resources.
+        """
         lambda_func = Module(
             "lambda",
             source="terraform-aws-modules/lambda/aws",
