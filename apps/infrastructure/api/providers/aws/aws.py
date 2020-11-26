@@ -1,5 +1,5 @@
 from ..provider import *
-from ...tf import var, var_module
+from ...tf import var, var_module, generate_cidr_block
 
 
 class AWS(Provider):
@@ -14,11 +14,10 @@ class AWS(Provider):
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.cred_file = os.path.join(credentials_dir, "credentials.json")
+        self.cred_file = os.path.join(credentials_dir, "credentialss.json")
 
-        # # Todo: turn this to json
-        # with open(self.cred_file, "w") as cred:
-        #     json.dump(config.credentials, cred, indent=2, sort_keys=False)
+        with open(self.cred_file, "w") as f:
+            json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
 
         self.region = config.vpc.region
         self.av_zones = config.vpc.av_zones
@@ -41,7 +40,7 @@ class AWS(Provider):
         """
         self.vpc = resource.aws_vpc(
             f"pygrid-vpc",
-            cidr_block="10.0.0.0/26",  # 2**(32-26) = 64 IP Addresses
+            cidr_block="10.0.0.0/16",
             instance_tenancy="default",
             enable_dns_hostnames=True,
             tags={"Name": f"pygrid-vpc"},
@@ -94,19 +93,13 @@ class AWS(Provider):
              - one Route table : Routes the traffic from the NAT gateway to the private subnet
         """
 
-        num_ip_addresses = 2 ** (32 - 26)
-        num_subnets = 2 * len(
-            self.av_zones
-        )  # Each Availability zone contains one public and one private subnet
-
-        cidr_blocks = generate_cidr_block(num_ip_addresses, num_subnets)
-
         for i, av_zone in enumerate(self.av_zones):
-
             private_subnet = resource.aws_subnet(
                 f"private-subnet-{i}",
                 vpc_id=var(self.vpc.id),
-                cidr_block=next(cidr_blocks),
+                cidr_block=generate_cidr_block(
+                    base_cidr_block=self.vpc.cidr_block, netnum=(2 * i)
+                ),
                 availability_zone=av_zone,
                 tags={"Name": f"private-{i}"},
             )
@@ -115,7 +108,9 @@ class AWS(Provider):
             public_subnet = resource.aws_subnet(
                 f"public-subnet-{i}",
                 vpc_id=var(self.vpc.id),
-                cidr_block=next(cidr_blocks),
+                cidr_block=generate_cidr_block(
+                    base_cidr_block=self.vpc.cidr_block, netnum=(2 * i + 1)
+                ),
                 availability_zone=av_zone,
                 tags={"Name": f"public-{i}"},
             )

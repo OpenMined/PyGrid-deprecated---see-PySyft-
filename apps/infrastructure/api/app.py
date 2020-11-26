@@ -26,19 +26,13 @@ def deploy():
 
     data = json.loads(request.json)
     config = Config(**data)
-    logger.debug(config)
-
-    # provider = data.get("provider").lower()
-    # serverless = data.get("serverless")
-    # websockets = data.get("websockets")
+    # logger.debug(config)
 
     deployed = False
     output = None
-    print(config.provider)
 
     if config.provider == "aws":
         if config.serverless:
-            ## Todo: Make serverless class work with config object
             aws_deployment = AWS_Serverless(config)
             deployed, output = aws_deployment.deploy()
         else:
@@ -54,19 +48,10 @@ def deploy():
     elif config.provider == "gcp":
         pass
 
-    if deployed:
-        status_code = 200
-        response = {
-            "message": f"Your PyGrid {config.app.name} was deployed successfully",
-            "output": output,
-        }
-    else:
-        status_code = 400
-        response = {
-            "message": f"Your attempt to deploy PyGrid {config.app.name} failed",
-            "error": output,
-        }
-
-    return Response(
-        json.dumps(response), status=status_code, mimetype="application/json"
-    )
+    response = {
+        "message": f"Your PyGrid {config.app.name} was deployed successfully"
+        if deployed
+        else f"Your attempt to deploy PyGrid {config.app.name} failed",
+        "output": output,
+    }
+    return Response(json.dumps(response), status=200, mimetype="application/json")

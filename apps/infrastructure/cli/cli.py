@@ -76,7 +76,7 @@ def cli(config, output_file, api):
 @pass_config
 def deploy(config, prev_config, provider, app):
 
-    prev_config = None  # Comment this for dev
+    # prev_config = None  # Comment this for dev
 
     if prev_config is not None:
         with open(prev_config, "r") as f:
@@ -85,7 +85,7 @@ def deploy(config, prev_config, provider, app):
     else:
         config.provider = provider.lower()
 
-        # Store credentials in a separate object, thus not printing it to the output console
+        # Store credentials in a separate object, thus not logging it in output
         # when asking the user to confirm the current configuration
         credentials = Config()
 

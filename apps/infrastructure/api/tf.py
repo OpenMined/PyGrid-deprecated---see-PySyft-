@@ -3,6 +3,9 @@ import subprocess
 
 var = lambda x: "${" + x + "}"
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
+generate_cidr_block = lambda base_cidr_block, netnum: var(
+    f'cidrsubnet("{base_cidr_block}", 8, {netnum})'
+)
 
 
 class Terraform:
