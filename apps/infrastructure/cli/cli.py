@@ -2,16 +2,14 @@ import glob
 import json
 import os
 import time
-import requests
 from pathlib import Path
 from urllib.parse import urljoin
 
 import click
 import requests
 
-from .provider_utils import aws, azure, gcp
-from .utils import Config
-from .utils import COLORS, colored
+from .providers import aws, azure, gcp
+from .utils import COLORS, Config, colored
 
 config_exist = glob.glob(str(Path.home() / ".pygrid/cli/*.json")) or None
 prev_config = (
@@ -134,7 +132,7 @@ def deploy(config, prev_config, provider, app):
         \n\nContinue?"""
     ):
 
-        # credentials = config.credentials    # Uncomment this for dev
+        credentials = config.credentials  # Uncomment this for dev
         config.credentials = credentials
         url = urljoin(config.api_url, "/deploy")
 
