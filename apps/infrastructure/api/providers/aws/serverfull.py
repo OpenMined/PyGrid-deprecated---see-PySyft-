@@ -1,23 +1,29 @@
+from ...tf import var
 from .aws import *
-from .utils import base_setup
 
 
 class AWS_Serverfull(AWS):
-    def __init__(self, config, credentials, vpc_config) -> None:
+    def __init__(self, config) -> None:
         """
         credentials (dict) : Contains AWS credentials
-        vpc_config (dict) : Contains arguments required to deploy the VPC
-        db_config (dict) : Contains username and password of the deployed database
-        app_config (dict) : Contains arguments which are required to deploy the app.
         """
 
-        super().__init__(config, credentials, vpc_config)
+        super().__init__(config)
 
-        self.build()
+        self.build_security_group()
+        self.writing_exec_script()
+        self.build_instance()
 
-    # TODO: Amr add outputs function, which appends outputs to self.tfscript.
-    # the parent class handles returing the output as a response from the API.
-    def build(self):
+        self.output()
+
+    def output(self):
+        self.tfscript += terrascript.Output(
+            "instance_endpoint",
+            value=var(self.instance.public_ip),
+            description="The public IP address of the main server instance.",
+        )
+
+    def build_security_group(self):
         # ----- Security Group ------#
 
         self.security_group = resource.aws_security_group(
@@ -98,7 +104,7 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.security_group
 
-    def deploy_network(self):
+    def build_instance(self):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -116,51 +122,61 @@ class AWS_Serverfull(AWS):
         self.tfscript += self.ami
 
         self.instance = terrascript.resource.aws_instance(
-            f"PyGridNetworkInstance",
+            f"pygrid-{self.config.app.name}-instance",
             ami=var(self.ami.id),
             instance_type=self.config.vpc.instance_type,
             associate_public_ip_address=True,
             vpc_security_group_ids=[var(self.security_group.id)],
             subnet_id=var(self.subnets[0][1].id),
-            user_data=f"""
-                {base_setup}
-                cd /PyGrid/apps/network
-                poetry install
-                nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host}
-            """,
+            user_data=f"file('{self.root_dir}/deploy.sh')",
         )
         self.tfscript += self.instance
 
-    def deploy_node(self):
-        self.ami = terrascript.data.aws_ami(
-            "ubuntu",
-            most_recent=True,
-            filter=[
-                {
-                    "name": "name",
-                    "values": [
-                        "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-                    ],
-                },
-                {"name": "virtualization-type", "values": ["hvm"]},
-            ],
-            owners=["099720109477"],
-        )
-        self.tfscript += self.ami
+    def writing_exec_script(self):
+        exec_script = f'''
+        #!/bin/bash
 
-        self.instance = terrascript.resource.aws_instance(
-            f"PyGridNodeInstance",
-            ami=var(self.ami.id),
-            instance_type=self.config.vpc.instance_type,
-            associate_public_ip_address=True,
-            vpc_security_group_ids=[var(self.security_group.id)],
-            subnet_id=var(self.subnets[0][1].id),
-            key_name="openmined_pygrid",
-            user_data=f"""
-                {base_setup}
-                cd /PyGrid/apps/node
-                poetry install
-                nohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network}
-            """,
-        )
-        self.tfscript += self.instance
+        ## For debugging
+        # redirect stdout/stderr to a file
+        exec &> log.out
+
+
+        echo "Simple Web Server for testing the deployment"
+        sudo apt update -y
+        sudo apt install apache2 -y
+        sudo systemctl start apache2
+        echo """
+        <h1 style='color:#f09764; text-align:center'>
+            OpenMined First Server Deployed via Terraform
+        </h1>
+        """ | sudo tee /var/www/html/index.html
+
+        echo "Setup Miniconda environment"
+
+        sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        sudo bash miniconda.sh -b -p miniconda
+        sudo rm miniconda.sh
+        export PATH=/miniconda/bin:$PATH > ~/.bashrc
+        conda init bash
+        source ~/.bashrc
+        conda create -y -n pygrid python=3.7
+        conda activate pygrid
+
+        echo "Install poetry..."
+        pip install poetry
+
+        echo "Install GCC"
+        sudo apt-get install python3-dev -y
+        sudo apt-get install libevent-dev -y
+        sudo apt-get install gcc -y
+
+        echo "Cloning PyGrid"
+        git clone https://github.com/OpenMined/PyGrid
+
+        cd /PyGrid/apps/{self.config.app.name}
+        poetry install
+        nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {f"--id {self.config.app.id} --network {self.config.app.network}" if self.config.app.name == "node" else ""}
+        '''
+
+        with open(f"{self.root_dir}/deploy.sh", "w") as deploy_file:
+            deploy_file.write(exec_script)
