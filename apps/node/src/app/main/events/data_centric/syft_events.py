@@ -44,6 +44,35 @@ def forward_binary_message(message: bin) -> bin:
         decoded_response = sy.serde.serialize(e)
     return decoded_response
 
+@authenticated_only
+def forward_binary_message_arrow(message: bin) -> bin:
+    """Forward binary syft messages to user's workers.
+    Args:
+        message (bin) : PySyft binary message.
+    Returns:
+        response (bin) : PySyft binary response.
+    """
+    try:
+        ## If worker is empty, load previous database tensors.
+        if not current_user.worker._objects:
+            recover_objects(current_user.worker)
+
+        # Process message
+        decoded_response = current_user.worker._recv_msg_arrow(message)
+
+    except (
+        EmptyCryptoPrimitiveStoreError,
+        GetNotPermittedError,
+        ResponseSignatureError,
+    ) as e:
+        # Register this request into tensor owner account.
+        if hasattr(current_user, "save_tensor_request"):
+            message = sy.serde.deserialize(message, worker=current_user.worker)
+            current_user.save_request(message._contents)
+
+        decoded_response = sy.serde.serialize(e)
+    return decoded_response
+
 
 @authenticated_only
 def syft_command(message: dict) -> str:

@@ -106,3 +106,24 @@ def socket_api(socket):
                 socket.send(response)
 
     worker_id = handler.remove(socket)
+
+@ws.route("/arrow/")
+def socket_api_arrow(socket):
+    """Handle websocket connections and receive their messages.
+    Args:
+        socket : websocket instance.
+    """
+    print("Hello from the worker")
+    while not socket.closed:
+        message = socket.receive()
+        if not message:
+            continue
+        else:
+            # Process received message
+            response = forward_binary_message_arrow(message)
+            if isinstance(response, bytearray):
+                socket.send(response, binary=True)
+            else:
+                socket.send(response)
+
+    worker_id = handler.remove(socket)
