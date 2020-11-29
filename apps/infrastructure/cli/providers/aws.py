@@ -7,6 +7,7 @@ from ..utils import Config, styles
 
 def get_vpc_config() -> Config:
     """Assists the user in entering configuration related to VPC.
+
     :return:
     """
 
@@ -73,6 +74,7 @@ def get_instance_type():
 
 def get_vpc_ip_config() -> Config:
     """Assists the user in entering configuration related to IP address of VPC.
+
     :return:
     """
 
