@@ -1,4 +1,5 @@
 import subprocess
+
 from .aws import *
 from .utils import *
 
@@ -41,9 +42,7 @@ class AWS_Serverless(AWS):
         self.outputs()
 
     def outputs(self):
-        """
-        Add outputs to be returned as a response from the API.
-        """
+        """Add outputs to be returned as a response from the API."""
         self.tfscript += terrascript.Output(
             "api_gateway_endpoint",
             value=var_module(self.api_gateway, "this_apigatewayv2_api_api_endpoint"),
@@ -51,10 +50,12 @@ class AWS_Serverless(AWS):
         )
 
     def build_lambda_layer(self):
-        """
-        Creates a AWS S3 bucket object and uploads zipped dependencies (of the app) to it.
+        """Creates a AWS S3 bucket object and uploads zipped dependencies (of
+        the app) to it.
+
         Then creates a lambda layer, which points to that S3 bucket.
-        This lambda layer is later attached to the lambda function hosting the app.
+        This lambda layer is later attached to the lambda function
+        hosting the app.
         """
 
         s3_bucket = resource.aws_s3_bucket(
@@ -89,9 +90,7 @@ class AWS_Serverless(AWS):
         self.tfscript += self.lambda_layer
 
     def build_api_gateway(self):
-        """
-        Builds an API Gateway, which points to the main lambda function.
-        """
+        """Builds an API Gateway, which points to the main lambda function."""
         self.api_gateway = Module(
             "api_gateway",
             source="terraform-aws-modules/apigateway-v2/aws",
@@ -106,9 +105,8 @@ class AWS_Serverless(AWS):
         self.tfscript += self.api_gateway
 
     def build_lambda_role(self):
-        """
-        Builds AWS IAM Role with associated policies for the main lambda function
-        """
+        """Builds AWS IAM Role with associated policies for the main lambda
+        function."""
 
         self.lambda_iam_role = resource.aws_iam_role(
             f"pygrid-{self.app}-lambda-role",
@@ -155,9 +153,7 @@ class AWS_Serverless(AWS):
         self.tfscript += policy3
 
     def build_database(self):
-        """
-        Builds an Aurora serverless database.
-        """
+        """Builds an Aurora serverless database."""
 
         db_parameter_group = resource.aws_db_parameter_group(
             "aurora_db_parameter_group",
@@ -207,9 +203,7 @@ class AWS_Serverless(AWS):
         self.tfscript += self.database
 
     def build_secret_manager(self):
-        """
-        Builds a secret manager which holds the database credentials.
-        """
+        """Builds a secret manager which holds the database credentials."""
 
         random_pet = resource.random_pet("random", length=2)
         self.tfscript += random_pet
@@ -232,9 +226,7 @@ class AWS_Serverless(AWS):
         self.tfscript += db_secret_version
 
     def build_security_group(self):
-        """
-        Builds a security group for the lambda function.
-        """
+        """Builds a security group for the lambda function."""
 
         self.security_group = resource.aws_security_group(
             "security_group",
@@ -315,10 +307,8 @@ class AWS_Serverless(AWS):
         self.tfscript += self.security_group
 
     def build_lambda_function(self):
-        """
-        Builds the main lambda function hosting the app, and associate the lambda
-        function with all the other deployed resources.
-        """
+        """Builds the main lambda function hosting the app, and associate the
+        lambda function with all the other deployed resources."""
         lambda_func = Module(
             "lambda",
             source="terraform-aws-modules/lambda/aws",
@@ -363,9 +353,8 @@ class AWS_Serverless(AWS):
         self.tfscript += lambda_alias
 
     def zip_dependencies(self):
-        """
-        Clones the PyGrid repo and creates a zip file with the required dependencies.
-        """
+        """Clones the PyGrid repo and creates a zip file with the required
+        dependencies."""
         pygrid_dir = os.path.join(self.root_dir, "PyGrid")
 
         bash_script = f"""
