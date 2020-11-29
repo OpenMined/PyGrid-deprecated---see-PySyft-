@@ -2,7 +2,6 @@ import json
 import os
 import subprocess
 import time
-import subprocess
 from pathlib import Path
 
 import terrascript
@@ -11,8 +10,8 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from ..utils import Config
 from ..tf import Terraform
+from ..utils import Config
 
 
 class Provider:
