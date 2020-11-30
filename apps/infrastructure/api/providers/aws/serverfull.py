@@ -121,14 +121,23 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.ami
 
-        self.instance = terrascript.resource.aws_instance(
-            f"pygrid-{self.config.app.name}-instance",
+        self.instances = Module(
+            f"pygrid-cluster",
+            instance_count=2,  ## TODO: get config.count
+            source="terraform-aws-modules/ec2-instance/aws",
+            name=f"pygrid-{self.config.app.name}-instances",
             ami=var(self.ami.id),
             instance_type=self.config.vpc.instance_type,
             associate_public_ip_address=True,
+            monitoring=True,
             vpc_security_group_ids=[var(self.security_group.id)],
-            subnet_id=var(self.subnets[0][1].id),
+            subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
             user_data=f"file('{self.root_dir}/deploy.sh')",
+            tags={
+                "Name": f"pygrid-{self.config.app.name}-instances",
+            },
+        )
+        self.tfscript += self.instances
         )
         self.tfscript += self.instance
 
