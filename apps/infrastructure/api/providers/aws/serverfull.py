@@ -19,7 +19,7 @@ class AWS_Serverfull(AWS):
     def output(self):
         self.tfscript += terrascript.Output(
             "instance_endpoint",
-            value=var(self.instance.public_ip),
+            value=var_module(self.instances, "public_ip"),
             description="The public IP address of the main server instance.",
         )
 
