@@ -1,5 +1,6 @@
 from ...tf import var
 from .aws import *
+from terrascript import Module
 
 
 class AWS_Serverfull(AWS):
@@ -10,9 +11,11 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        self.build_security_group()
         self.writing_exec_script()
+
+        self.build_security_group()
         self.build_instance()
+        self.build_load_balancer()
 
         self.output()
 
@@ -138,8 +141,44 @@ class AWS_Serverfull(AWS):
             },
         )
         self.tfscript += self.instances
+
+    def build_load_balancer(self):
+        self.load_balancer = Module(
+            "pygrid_load_balancer",
+            source="terraform-aws-modules/elb/aws",
+            name=f"pygrid-{self.config.app.name}-load-balancer",
+            subnets=[var(private_subnet.id) for private_subnet, _ in self.subnets],
+            security_groups=[var(self.security_group.id)],
+            number_of_instances=2,  ## TODO: get config.count
+            instances=[
+                var_module(self.instances, f"id[{i}]") for i in range(2)
+            ],  ## TODO: get config.count
+            listener=[
+                {
+                    "instance_port": "80",
+                    "instance_protocol": "HTTP",
+                    "lb_port": "80",
+                    "lb_protocol": "HTTP",
+                },
+                {
+                    "instance_port": "8080",
+                    "instance_protocol": "http",
+                    "lb_port": "8080",
+                    "lb_protocol": "http",
+                },
+            ],
+            health_check={
+                "target": "HTTP:80/",
+                "interval": 30,
+                "healthy_threshold": 2,
+                "unhealthy_threshold": 2,
+                "timeout": 5,
+            },
+            tags={
+                "Name": f"pygrid-{self.config.app.name}-load-balancer",
+            },
         )
-        self.tfscript += self.instance
+        self.tfscript += self.load_balancer
 
     def writing_exec_script(self):
         exec_script = f'''
