@@ -1,6 +1,7 @@
 """This file exists to provide a route to websocket events."""
 # Standard Python imports
 import json
+import time
 
 # External imports
 from syft.codes import REQUEST_MSG
@@ -100,6 +101,7 @@ def socket_api(socket):
         else:
             # Process received message
             response = route_requests(message, socket)
+            time.sleep(0.070)
             if isinstance(response, bytearray):
                 socket.send(response, binary=True)
             else:
@@ -121,6 +123,7 @@ def socket_api_arrow(socket):
         else:
             # Process received message
             response = forward_binary_message_arrow(message)
+            time.sleep(0.070)
             if isinstance(response, bytearray):
                 socket.send(response, binary=True)
             else:
