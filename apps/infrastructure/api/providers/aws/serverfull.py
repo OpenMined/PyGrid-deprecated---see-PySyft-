@@ -1,6 +1,5 @@
 from ...tf import var
 from .aws import *
-from terrascript import Module
 
 
 class AWS_Serverfull(AWS):
@@ -136,9 +135,7 @@ class AWS_Serverfull(AWS):
             vpc_security_group_ids=[var(self.security_group.id)],
             subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
             user_data=f"file('{self.root_dir}/deploy.sh')",
-            tags={
-                "Name": f"pygrid-{self.config.app.name}-instances",
-            },
+            tags={"Name": f"pygrid-{self.config.app.name}-instances"},
         )
         self.tfscript += self.instances
 
@@ -174,9 +171,7 @@ class AWS_Serverfull(AWS):
                 "unhealthy_threshold": 2,
                 "timeout": 5,
             },
-            tags={
-                "Name": f"pygrid-{self.config.app.name}-load-balancer",
-            },
+            tags={"Name": f"pygrid-{self.config.app.name}-load-balancer"},
         )
         self.tfscript += self.load_balancer
 

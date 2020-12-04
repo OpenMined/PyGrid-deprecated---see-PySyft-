@@ -12,16 +12,11 @@ class AWS_Serverless(AWS):
 
         super().__init__(config)
 
-        self.app = config.app.name
-
         # TODO: Make it beautiful
         try:
             self.python_runtime = config.app.python_runtime
         except AttributeError:
             self.python_runtime = "python3.8"
-
-        self.db_username = config.credentials.db.username
-        self.db_password = config.credentials.db.password
 
         # Api gateway
         self.build_api_gateway()
@@ -46,7 +41,7 @@ class AWS_Serverless(AWS):
         self.tfscript += terrascript.Output(
             "api_gateway_endpoint",
             value=var_module(self.api_gateway, "this_apigatewayv2_api_api_endpoint"),
-            description=f"PyGrid {self.app} API endpoint",
+            description=f"PyGrid {self.config.app.name} API endpoint",
         )
 
     def build_lambda_layer(self):
@@ -59,29 +54,29 @@ class AWS_Serverless(AWS):
         """
 
         s3_bucket = resource.aws_s3_bucket(
-            f"{self.app}-lambda-layer-bucket",
-            bucket=f"pygrid-{self.app}-lambda-layer-bucket",
+            f"{self.config.app.name}-lambda-layer-bucket",
+            bucket=f"pygrid-{self.config.app.name}-lambda-layer-bucket",
             acl="private",
             versioning={"enabled": True},
-            tags={"Name": f"pygrid-{self.app}-s3-bucket"},
+            tags={"Name": f"pygrid-{self.config.app.name}-s3-bucket"},
         )
         self.tfscript += s3_bucket
 
         dependencies_zip_path = self.zip_dependencies()
 
         s3_bucket_object = resource.aws_s3_bucket_object(
-            f"pygrid-{self.app}-lambda-layer",
+            f"pygrid-{self.config.app.name}-lambda-layer",
             bucket=s3_bucket.bucket,
             key=var('filemd5("{}")'.format(dependencies_zip_path)) + ".zip",
             source=dependencies_zip_path,
             depends_on=[f"aws_s3_bucket.{s3_bucket._name}"],
-            tags={"Name": f"pygrid-{self.app}-s3-bucket-object"},
+            tags={"Name": f"pygrid-{self.config.app.name}-s3-bucket-object"},
         )
         self.tfscript += s3_bucket_object
 
         self.lambda_layer = resource.aws_lambda_layer_version(
-            f"pygrid-{self.app}-lambda-layer",
-            layer_name=f"pygrid-{self.app}-dependencies",
+            f"pygrid-{self.config.app.name}-lambda-layer",
+            layer_name=f"pygrid-{self.config.app.name}-dependencies",
             compatible_runtimes=[self.python_runtime],
             s3_bucket=s3_bucket_object.bucket,
             s3_key=s3_bucket_object.key,
@@ -94,13 +89,13 @@ class AWS_Serverless(AWS):
         self.api_gateway = Module(
             "api_gateway",
             source="terraform-aws-modules/apigateway-v2/aws",
-            name=f"pygrid-{self.app}-http",
+            name=f"pygrid-{self.config.app.name}-http",
             protocol_type="HTTP",
             create_api_domain_name=False,
             integrations={
                 "$default": {"lambda_arn": "${module.lambda.this_lambda_function_arn}"}
             },
-            tags={"Name": f"pygrid-{self.app}-api-gateway-http"},
+            tags={"Name": f"pygrid-{self.config.app.name}-api-gateway-http"},
         )
         self.tfscript += self.api_gateway
 
@@ -109,8 +104,8 @@ class AWS_Serverless(AWS):
         function."""
 
         self.lambda_iam_role = resource.aws_iam_role(
-            f"pygrid-{self.app}-lambda-role",
-            name=f"pygrid-{self.app}-lambda-role",
+            f"pygrid-{self.config.app.name}-lambda-role",
+            name=f"pygrid-{self.config.app.name}-lambda-role",
             assume_role_policy="""{
                 "Version": "2012-10-17",
                 "Statement": [
@@ -124,7 +119,7 @@ class AWS_Serverless(AWS):
                     }
                 ]
             }""",
-            tags={"Name": f"pygrid-{self.app}-lambda-iam-role"},
+            tags={"Name": f"pygrid-{self.config.app.name}-lambda-iam-role"},
         )
         self.tfscript += self.lambda_iam_role
 
@@ -157,24 +152,24 @@ class AWS_Serverless(AWS):
 
         db_parameter_group = resource.aws_db_parameter_group(
             "aurora_db_parameter_group",
-            name=f"pygrid-{self.app}-aurora-db-parameter-group",
+            name=f"pygrid-{self.config.app.name}-aurora-db-parameter-group",
             family="aurora5.6",
-            description=f"pygrid-{self.app}-aurora-db-parameter-group",
+            description=f"pygrid-{self.config.app.name}-aurora-db-parameter-group",
         )
         self.tfscript += db_parameter_group
 
         rds_cluster_parameter_group = resource.aws_rds_cluster_parameter_group(
             "aurora_cluster_56_parameter_group",
-            name=f"pygrid-{self.app}-aurora-cluster-parameter-group",
+            name=f"pygrid-{self.config.app.name}-aurora-cluster-parameter-group",
             family="aurora5.6",
-            description=f"pygrid-{self.app}-aurora-cluster-parameter-group",
+            description=f"pygrid-{self.config.app.name}-aurora-cluster-parameter-group",
         )
         self.tfscript += rds_cluster_parameter_group
 
         self.database = Module(
             "aurora",
             source="terraform-aws-modules/rds-aurora/aws",
-            name=f"pygrid-{self.app}-database",
+            name=f"pygrid-{self.config.app.name}-database",
             engine="aurora",
             engine_mode="serverless",
             replica_scale_enabled=False,
@@ -187,8 +182,8 @@ class AWS_Serverless(AWS):
             skip_final_snapshot=True,
             storage_encrypted=True,
             database_name="pygridDB",
-            username=self.db_username,
-            password=self.db_password,
+            username=self.config.credentials.db.username,
+            password=self.config.credentials.db.password,
             db_parameter_group_name=var(db_parameter_group.id),
             db_cluster_parameter_group_name=var(rds_cluster_parameter_group.id),
             scaling_configuration={
@@ -198,7 +193,7 @@ class AWS_Serverless(AWS):
                 "seconds_until_auto_pause": 300,
                 "timeout_action": "ForceApplyCapacityChange",
             },
-            tags={"Name": f"pygrid-{self.app}-aurora-database"},
+            tags={"Name": f"pygrid-{self.config.app.name}-aurora-database"},
         )
         self.tfscript += self.database
 
@@ -210,9 +205,9 @@ class AWS_Serverless(AWS):
 
         self.db_secret_manager = resource.aws_secretsmanager_secret(
             "db-secret",
-            name=f"pygrid-{self.app}-rds-{var(random_pet.id)}",
-            description=f"PyGrid {self.app} database credentials",
-            tags={"Name": f"pygrid-{self.app}-rds-secret-manager"},
+            name=f"pygrid-{self.config.app.name}-rds-{var(random_pet.id)}",
+            description=f"PyGrid {self.config.app.name} database credentials",
+            tags={"Name": f"pygrid-{self.config.app.name}-rds-secret-manager"},
         )
         self.tfscript += self.db_secret_manager
 
@@ -220,7 +215,10 @@ class AWS_Serverless(AWS):
             "db-secret-version",
             secret_id=var(self.db_secret_manager.id),
             secret_string="jsonencode({})".format(
-                {"username": self.db_username, "password": self.db_password}
+                {
+                    "username": self.config.credentials.db.username,
+                    "password": self.config.credentials.db.password,
+                }
             ),
         )
         self.tfscript += db_secret_version
@@ -312,10 +310,10 @@ class AWS_Serverless(AWS):
         lambda_func = Module(
             "lambda",
             source="terraform-aws-modules/lambda/aws",
-            function_name=f"pygrid-{self.app}",
+            function_name=f"pygrid-{self.config.app.name}",
             publish=True,  # To automate increasing versions
             runtime=self.python_runtime,
-            source_path=f"{self.root_dir}/PyGrid/apps/{self.app}/src",
+            source_path=f"{self.root_dir}/PyGrid/apps/{self.config.app.name}/src",
             handler="deploy.app",
             vpc_subnet_ids=[
                 var(private_subnet.id) for private_subnet, _ in self.subnets
@@ -339,7 +337,7 @@ class AWS_Serverless(AWS):
                     ),
                 }
             },
-            tags={"Name": f"pygrid-{self.app}-lambda-function"},
+            tags={"Name": f"pygrid-{self.config.app.name}-lambda-function"},
         )
         self.tfscript += lambda_func
 
@@ -365,23 +363,23 @@ class AWS_Serverless(AWS):
             git clone https://github.com/OpenMined/PyGrid/ {pygrid_dir}
         fi
 
-        if [ ! -f "{pygrid_dir}/{self.app}.zip" ]
+        if [ ! -f "{pygrid_dir}/{self.config.app.name}.zip" ]
         then
             # Let us first go to `apps/network` and export the poetry lock file to a requirements file.
-            cd {pygrid_dir}/apps/{self.app}
-            poetry export --format requirements.txt -o {pygrid_dir}/{self.app}_requirements.txt --without-hashes
+            cd {pygrid_dir}/apps/{self.config.app.name}
+            poetry export --format requirements.txt -o {pygrid_dir}/{self.config.app.name}_requirements.txt --without-hashes
             cd {pygrid_dir}
 
             # Build a zip file containing all dependencies of PyGrid Network, to deploy to an AWS Lambda Layer.
             # The root file should be called `Python`, and contains all the dependencies.
             mkdir python
-            {self.python_runtime} -m pip install -r {pygrid_dir}/{self.app}_requirements.txt -t python
-            zip -r {self.app}.zip python
+            {self.python_runtime} -m pip install -r {pygrid_dir}/{self.config.app.name}_requirements.txt -t python
+            zip -r {self.config.app.name}.zip python
 
             # Remove the temporary files and folders.
-            rm -rf python {self.app}_requirements.txt
+            rm -rf python {self.config.app.name}_requirements.txt
         fi
         """
 
         subprocess.call(bash_script, shell=True)
-        return os.path.join(pygrid_dir, f"{self.app}.zip")
+        return os.path.join(pygrid_dir, f"{self.config.app.name}.zip")
