@@ -12,16 +12,11 @@ class AWS_Serverless(AWS):
 
         super().__init__(config)
 
-        self.app = config.app.name
-
         # TODO: Make it beautiful
         try:
             self.python_runtime = config.app.python_runtime
         except AttributeError:
             self.python_runtime = "python3.8"
-
-        self.db_username = config.credentials.db.username
-        self.db_password = config.credentials.db.password
 
         # Api gateway
         self.build_api_gateway()
@@ -46,7 +41,7 @@ class AWS_Serverless(AWS):
         self.tfscript += terrascript.Output(
             "api_gateway_endpoint",
             value=var_module(self.api_gateway, "this_apigatewayv2_api_api_endpoint"),
-            description=f"PyGrid {self.app} API endpoint",
+            description=f"PyGrid {self.config.app.name} API endpoint",
         )
 
     def build_lambda_layer(self):
@@ -80,8 +75,8 @@ class AWS_Serverless(AWS):
         self.tfscript += s3_bucket_object
 
         self.lambda_layer = resource.aws_lambda_layer_version(
-            f"pygrid-{self.app}-lambda-layer",
-            layer_name=f"pygrid-{self.app}-dependencies",
+            f"pygrid-{self.config.app.name}-lambda-layer",
+            layer_name=f"pygrid-{self.config.app.name}-dependencies",
             compatible_runtimes=[self.python_runtime],
             s3_bucket=s3_bucket_object.bucket,
             s3_key=s3_bucket_object.key,
@@ -109,8 +104,8 @@ class AWS_Serverless(AWS):
         function."""
 
         self.lambda_iam_role = resource.aws_iam_role(
-            f"pygrid-{self.app}-lambda-role",
-            name=f"pygrid-{self.app}-lambda-role",
+            f"pygrid-{self.config.app.name}-lambda-role",
+            name=f"pygrid-{self.config.app.name}-lambda-role",
             assume_role_policy="""{
                 "Version": "2012-10-17",
                 "Statement": [
@@ -220,7 +215,10 @@ class AWS_Serverless(AWS):
             "db-secret-version",
             secret_id=var(self.db_secret_manager.id),
             secret_string="jsonencode({})".format(
-                {"username": self.db_username, "password": self.db_password}
+                {
+                    "username": self.config.credentials.db.username,
+                    "password": self.config.credentials.db.password,
+                }
             ),
         )
         self.tfscript += db_secret_version

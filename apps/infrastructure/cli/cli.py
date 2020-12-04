@@ -53,7 +53,7 @@ def cli(config, output_file, api):
 @cli.command()
 @click.option(
     "--prev-config",
-    prompt="Load prev Config?",
+    prompt="Load prev Config? (This feature is only for dev purpose, you can skip it by pressing Enter)",
     default=prev_config,
     help="If there is a previous configuration file",
 )
@@ -74,7 +74,7 @@ def cli(config, output_file, api):
 @pass_config
 def deploy(config, prev_config, provider, app):
 
-    # prev_config = None  # Comment this for dev
+    prev_config = None  # Comment this while developing
 
     if prev_config is not None:
         with open(prev_config, "r") as f:
@@ -132,7 +132,7 @@ def deploy(config, prev_config, provider, app):
         \n\nContinue?"""
     ):
 
-        credentials = config.credentials  # Uncomment this for dev
+        # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
         url = urljoin(config.api_url, "/deploy")
 
