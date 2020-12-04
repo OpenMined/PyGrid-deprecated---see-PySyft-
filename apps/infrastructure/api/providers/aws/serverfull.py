@@ -125,7 +125,7 @@ class AWS_Serverfull(AWS):
 
         self.instances = Module(
             f"pygrid-cluster",
-            instance_count=2,  ## TODO: get config.count
+            instance_count=self.config.app.count,
             source="terraform-aws-modules/ec2-instance/aws",
             name=f"pygrid-{self.config.app.name}-instances",
             ami=var(self.ami.id),
@@ -146,10 +146,11 @@ class AWS_Serverfull(AWS):
             name=f"pygrid-{self.config.app.name}-load-balancer",
             subnets=[var(private_subnet.id) for private_subnet, _ in self.subnets],
             security_groups=[var(self.security_group.id)],
-            number_of_instances=2,  ## TODO: get config.count
+            number_of_instances=self.config.app.count,
             instances=[
-                var_module(self.instances, f"id[{i}]") for i in range(2)
-            ],  ## TODO: get config.count
+                var_module(self.instances, f"id[{i}]")
+                for i in range(self.config.app.count)
+            ],
             listener=[
                 {
                     "instance_port": "80",

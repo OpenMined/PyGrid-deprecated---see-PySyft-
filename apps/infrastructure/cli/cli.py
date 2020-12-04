@@ -148,6 +148,11 @@ def deploy(config, prev_config, provider, app):
 
 
 def get_app_arguments(config):
+    config.app.count = click.prompt(
+        f"How many apps do you want to deploy",
+        type=int,
+        default=1,
+    )
     if config.app.name == "node":
         config.app.id = click.prompt(
             f"PyGrid Node ID", type=str, default=os.environ.get("NODE_ID", None)
