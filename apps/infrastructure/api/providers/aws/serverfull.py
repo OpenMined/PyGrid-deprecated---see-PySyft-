@@ -134,7 +134,7 @@ class AWS_Serverfull(AWS):
             monitoring=True,
             vpc_security_group_ids=[var(self.security_group.id)],
             subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-            user_data=f"file('{self.root_dir}/deploy.sh')",
+            user_data=var(f"file(\"{self.root_dir}/deploy.sh\")"),
             tags={"Name": f"pygrid-{self.config.app.name}-instances"},
         )
         self.tfscript += self.instances
@@ -144,7 +144,7 @@ class AWS_Serverfull(AWS):
             "pygrid_load_balancer",
             source="terraform-aws-modules/elb/aws",
             name=f"pygrid-{self.config.app.name}-load-balancer",
-            subnets=[var(private_subnet.id) for private_subnet, _ in self.subnets],
+            subnets=[var(public_subnet.id) for _, public_subnet in self.subnets],
             security_groups=[var(self.security_group.id)],
             number_of_instances=self.config.app.count,
             instances=[
@@ -178,6 +178,7 @@ class AWS_Serverfull(AWS):
 
     def writing_exec_script(self):
         exec_script = f'''
+        #cloud-boothook
         #!/bin/bash
 
         ## For debugging
