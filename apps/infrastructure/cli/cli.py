@@ -110,7 +110,8 @@ def deploy(config, prev_config, provider, app):
         if not config.serverless:
             config.websockets = click.confirm(f"Will you need to support Websockets?")
 
-        get_app_arguments(config)
+        if not config.serverless:
+            get_app_arguments(config)
 
         ## Prompting user to provide configuration for the selected cloud
         if config.provider == "aws":
@@ -149,9 +150,7 @@ def deploy(config, prev_config, provider, app):
 
 def get_app_arguments(config):
     config.app.count = click.prompt(
-        f"How many apps do you want to deploy",
-        type=int,
-        default=1,
+        f"How many apps do you want to deploy", type=int, default=1
     )
     if config.app.name == "node":
         config.app.id = click.prompt(
@@ -172,7 +171,7 @@ def get_app_arguments(config):
             type=str,
             default=os.environ.get("NETWORK", None),
         )
-    elif config.app.name == "network" and not config.serverless:
+    elif config.app.name == "network":
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
             type=str,

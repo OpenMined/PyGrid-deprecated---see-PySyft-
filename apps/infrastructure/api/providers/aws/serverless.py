@@ -214,11 +214,11 @@ class AWS_Serverless(AWS):
         db_secret_version = resource.aws_secretsmanager_secret_version(
             "db-secret-version",
             secret_id=var(self.db_secret_manager.id),
-            secret_string="jsonencode({})".format(
-                {
-                    "username": self.config.credentials.db.username,
-                    "password": self.config.credentials.db.password,
-                }
+            secret_string=var(
+                'jsonencode({"username" = "{}", "password" = "{}"})'.format(
+                    self.config.credentials.db.username,
+                    self.config.credentials.db.password,
+                )
             ),
         )
         self.tfscript += db_secret_version
