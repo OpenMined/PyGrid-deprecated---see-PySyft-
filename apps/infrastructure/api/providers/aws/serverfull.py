@@ -299,15 +299,14 @@ class AWS_Serverfull(AWS):
         echo "Cloning PyGrid"
         git clone https://github.com/OpenMined/PyGrid
 
-        echo "Setting Environment Varialbes"
-        export DB_ENGINE={self.database.engine}
-        export DB_USERNAME={self.database.username}
-        export DB_PASSWORD={self.database.password}
-        export DB_ENDPOINT={var(self.database.endpoint)}
-        export DB_NAME={self.database.name}
-
         cd /PyGrid/apps/{self.config.app.name}
+
+        echo "Installing {self.config.app.name} Dependencies"
         poetry install
+
+        echo "Setting Database URL"
+        export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+
         nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {f"--id {self.config.app.id} --network {self.config.app.network}" if self.config.app.name == "node" else ""}
         '''
 
