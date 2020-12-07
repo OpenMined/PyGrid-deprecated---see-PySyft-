@@ -179,6 +179,40 @@ class AWS_Serverfull(AWS):
     def build_database(self):
         """Builds a MySQL central database."""
 
+        db_security_group = resource.aws_security_group(
+            "default",
+            name=f"{self.config.app.name}-db-security-group",
+            vpc_id=var(self.vpc.id),
+            ingress=[
+                {
+                    "description": "EC2 connection to MySQL database",
+                    "from_port": 3306,
+                    "to_port": 3306,
+                    "protocol": "tcp",
+                    "cidr_blocks": [],
+                    "ipv6_cidr_blocks": [],
+                    "prefix_list_ids": [],
+                    "security_groups": [var(self.security_group.id)],
+                    "self": True,
+                }
+            ],
+            egress=[
+                {
+                    "description": "Egress Connection",
+                    "from_port": 0,
+                    "to_port": 0,
+                    "protocol": "-1",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                }
+            ],
+            tags={"Name": f"pygrid-{self.config.app.name}-db-security-group"},
+        )
+        self.tfscript += db_security_group
+
         db_subnet_group = resource.aws_db_subnet_group(
             "default",
             name=f"{self.config.app.name}-db-subnet-group",
@@ -198,12 +232,13 @@ class AWS_Serverfull(AWS):
             username=self.config.credentials.db.username,
             password=self.config.credentials.db.password,
             db_subnet_group_name=var(db_subnet_group.id),
+            vpc_security_group_ids=[var(db_security_group.id)],
             apply_immediately=True,
             skip_final_snapshot=True,
             # Storage Autoscaling
             allocated_storage=20,
             max_allocated_storage=100,
-            tags={"Name": f"pygrid-{self.config.app.name}-aurora-database"},
+            tags={"Name": f"pygrid-{self.config.app.name}-mysql-database"},
         )
         self.tfscript += self.database
 
