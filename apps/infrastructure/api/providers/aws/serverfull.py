@@ -42,7 +42,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "HTTP",
@@ -53,7 +53,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Nodes",
@@ -64,7 +64,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Workers",
@@ -75,7 +75,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Networks",
@@ -86,7 +86,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
             ],
             egress=[
@@ -99,7 +99,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 }
             ],
             tags={"Name": "pygrid-security-group"},
@@ -193,7 +193,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": [],
                     "prefix_list_ids": [],
                     "security_groups": [var(self.security_group.id)],
-                    "self": True,
+                    "self": False,
                 }
             ],
             egress=[
@@ -206,7 +206,7 @@ class AWS_Serverfull(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 }
             ],
             tags={"Name": f"pygrid-{self.config.app.name}-db-security-group"},

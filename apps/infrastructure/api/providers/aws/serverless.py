@@ -240,7 +240,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "HTTP",
@@ -251,7 +251,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Nodes",
@@ -262,7 +262,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Workers",
@@ -273,7 +273,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
                 {
                     "description": "PyGrid Networks",
@@ -284,7 +284,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 },
             ],
             egress=[
@@ -297,7 +297,7 @@ class AWS_Serverless(AWS):
                     "ipv6_cidr_blocks": ["::/0"],
                     "prefix_list_ids": [],
                     "security_groups": [],
-                    "self": True,
+                    "self": False,
                 }
             ],
             tags={"Name": "lambda-security-group"},
