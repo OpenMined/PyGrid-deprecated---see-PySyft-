@@ -16,17 +16,23 @@ class AWS_Serverfull(AWS):
         self.build_database()
 
         self.writing_exec_script()
-        # self.build_instance()
-        # self.build_load_balancer()
-        #
-        # self.output()
+        self.build_instance()
+        self.build_load_balancer()
 
-    # def output(self):
-    #     self.tfscript += terrascript.Output(
-    #         "instance_endpoint",
-    #         value=var_module(self.instances, "public_ip"),
-    #         description="The public IP address of the main server instance.",
-    #     )
+        self.output()
+
+    def output(self):
+        self.tfscript += terrascript.Output(
+            "instance_endpoint",
+            value=var_module(self.instances, "public_ip"),
+            description="The public IP address of the main server instance.",
+        )
+
+        self.tfscript += terrascript.Output(
+            "load_balancer_dns",
+            value=var_module(self.load_balancer, "this_elb_dns_name"),
+            description="The DNS name of the ELB.",
+        )
 
         self.tfscript += terrascript.Output(
             "load_balancer_dns",
