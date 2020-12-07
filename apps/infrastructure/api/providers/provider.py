@@ -15,8 +15,8 @@ from ..utils import Config
 
 
 class Provider:
-    def __init__(self):
-        self.root_dir = os.path.join(str(Path.home()), ".pygrid", "api")
+    def __init__(self, app):
+        self.root_dir = os.path.join(str(Path.home()), ".pygrid", "api", app)
         os.makedirs(self.root_dir, exist_ok=True)
 
         self.TF = Terraform()

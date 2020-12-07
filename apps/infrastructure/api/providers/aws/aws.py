@@ -9,7 +9,7 @@ class AWS(Provider):
         """
         config (Config) : Object storing the required configuration for deployment
         """
-        super().__init__()
+        super().__init__(app=config.app.name)
         self.config = config
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
@@ -73,6 +73,7 @@ class AWS(Provider):
                     "network_interface_id": "",
                     "transit_gateway_id": "",
                     "vpc_peering_connection_id": "",
+                    "vpc_endpoint_id": "",
                 }
             ],
             tags={"Name": f"pygrid-public-RT"},
@@ -145,6 +146,7 @@ class AWS(Provider):
                         "network_interface_id": "",
                         "transit_gateway_id": "",
                         "vpc_peering_connection_id": "",
+                        "vpc_endpoint_id": "",
                     }
                 ],
                 tags={"Name": f"pygrid-private-RT-{i}"},
