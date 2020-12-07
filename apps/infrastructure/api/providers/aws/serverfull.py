@@ -15,7 +15,7 @@ class AWS_Serverfull(AWS):
         self.build_security_group()
         self.build_instance()
         self.build_load_balancer()
-
+        self.build_database()
         self.output()
 
     def output(self):
@@ -30,7 +30,7 @@ class AWS_Serverfull(AWS):
 
         self.security_group = resource.aws_security_group(
             "security_group",
-            name="pygrid-security-group",
+            name=f"pygrid-{self.config.app.name}-security-group",
             vpc_id=var(self.vpc.id),
             ingress=[
                 {
@@ -134,7 +134,7 @@ class AWS_Serverfull(AWS):
             monitoring=True,
             vpc_security_group_ids=[var(self.security_group.id)],
             subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-            user_data=var(f"file(\"{self.root_dir}/deploy.sh\")"),
+            user_data=var(f'file("{self.root_dir}/deploy.sh")'),
             tags={"Name": f"pygrid-{self.config.app.name}-instances"},
         )
         self.tfscript += self.instances
@@ -175,6 +175,37 @@ class AWS_Serverfull(AWS):
             tags={"Name": f"pygrid-{self.config.app.name}-load-balancer"},
         )
         self.tfscript += self.load_balancer
+
+    def build_database(self):
+        """Builds a MySQL central database."""
+
+        db_subnet_group = resource.aws_db_subnet_group(
+            "default",
+            name=f"{self.config.app.name}-db-subnet-group",
+            subnet_ids=[var(private_subnet.id) for private_subnet, _ in self.subnets],
+            tags={"Name": f"pygrid-{self.config.app.name}-db-subnet-group"},
+        )
+        self.tfscript += db_subnet_group
+
+        self.database = resource.aws_db_instance(
+            f"pygrid-{self.config.app.name}-database",
+            engine="mysql",
+            port="3306",
+            name="pygridDB",
+            instance_class="db.t2.micro",
+            storage_type="gp2",  # general purpose SSD
+            identifier=f"pygrid-{self.config.app.name}-db",  # name
+            username=self.config.credentials.db.username,
+            password=self.config.credentials.db.password,
+            db_subnet_group_name=var(db_subnet_group.id),
+            apply_immediately=True,
+            skip_final_snapshot=True,
+            # Storage Autoscaling
+            allocated_storage=20,
+            max_allocated_storage=100,
+            tags={"Name": f"pygrid-{self.config.app.name}-aurora-database"},
+        )
+        self.tfscript += self.database
 
     def writing_exec_script(self):
         exec_script = f'''
