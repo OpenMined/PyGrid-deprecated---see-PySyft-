@@ -10,20 +10,23 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        self.writing_exec_script()
-
+        # Order matters
         self.build_security_group()
-        self.build_instance()
-        self.build_load_balancer()
-        self.build_database()
-        self.output()
 
-    def output(self):
-        self.tfscript += terrascript.Output(
-            "instance_endpoint",
-            value=var_module(self.instances, "public_ip"),
-            description="The public IP address of the main server instance.",
-        )
+        self.build_database()
+
+        self.writing_exec_script()
+        # self.build_instance()
+        # self.build_load_balancer()
+        #
+        # self.output()
+
+    # def output(self):
+    #     self.tfscript += terrascript.Output(
+    #         "instance_endpoint",
+    #         value=var_module(self.instances, "public_ip"),
+    #         description="The public IP address of the main server instance.",
+    #     )
 
     def build_security_group(self):
         # ----- Security Group ------#
@@ -180,7 +183,7 @@ class AWS_Serverfull(AWS):
         """Builds a MySQL central database."""
 
         db_security_group = resource.aws_security_group(
-            "default",
+            "db-security-group",
             name=f"{self.config.app.name}-db-security-group",
             vpc_id=var(self.vpc.id),
             ingress=[
@@ -283,6 +286,13 @@ class AWS_Serverfull(AWS):
 
         echo "Cloning PyGrid"
         git clone https://github.com/OpenMined/PyGrid
+
+        echo "Setting Environment Varialbes"
+        export DB_ENGINE={self.database.engine}
+        export DB_USERNAME={self.database.username}
+        export DB_PASSWORD={self.database.password}
+        export DB_ENDPOINT={var(self.database.endpoint)}
+        export DB_NAME={self.database.name}
 
         cd /PyGrid/apps/{self.config.app.name}
         poetry install
