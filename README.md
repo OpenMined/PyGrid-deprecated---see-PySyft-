@@ -4,15 +4,13 @@
 
 PyGrid is a peer-to-peer network of data owners and data scientists who can collectively train AI models using [PySyft](https://github.com/OpenMined/PySyft/). PyGrid is also the central server for conducting both model-centric and data-centric federated learning.
 
-_**A quick note about PySyft 0.3.x:** Currently, PyGrid is designed to work with the PySyft 0.2.x product line only. We are working on support for 0.3.x and hope to have this released by early 2021. Thanks for your patience!_
-
 ## Architecture
 
 PyGrid platform is composed by three different components.
 
 - **Network** - A Flask-based application used to manage, monitor, control, and route instructions to various PyGrid Nodes.
 - **Node** - A Flask-based application used to store private data and models for federated learning, as well as to issue instructions to various PyGrid Workers.
-- **Worker** - An ephemeral instance, managed by a PyGrid Node, that is used to compute data.
+- **Worker** - An emphemeral instance, managed by a PyGrid Node, that is used to compute data.
 
 ## Use Cases
 
@@ -173,30 +171,6 @@ You can pass the arguments or use environment variables to set the network confi
 - `GRID_NETWORK_HOST` - The Network host
 - `DATABASE_URL` - The Network database URL
 - `SECRET_KEY` - The secret key
-
-## PyGrid CLI
-
-OpenMined PyGrid CLI is used for Infrastructure Management to deploy various PyGrid components to various cloud providers ([AWS](https://aws.amazon.com/), [GCP](https://cloud.google.com/), [Azure](https://azure.microsoft.com/)).
-
-To get started, install the CLI first through this command:
-
-```shell
-pip install -e .
-```
-
-### Running CLI
-
-#### Deploy a Node to AWS
-
-```shell
-pygrid deploy --provider aws --app node
-```
-
-#### Deploy a Network to AWS
-
-```shell
-pygrid deploy --provider azure --app network
-```
 
 ## Contributing
 

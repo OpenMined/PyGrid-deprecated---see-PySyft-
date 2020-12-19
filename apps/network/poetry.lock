@@ -662,20 +662,33 @@ flake8 = ["flake8", "flake8-import-order", "pep8-naming"]
 test = ["pytest (>=4.0.1,<5.0.0)", "pytest-cov (>=2.6.0,<3.0.0)", "pytest-runner (>=4.2,<5.0.0)"]
 
 [[package]]
+name = "pylibsrtp"
+version = "0.6.6"
+description = "Python wrapper around the libsrtp library"
 category = "main"
-description = "Pure Python MySQL Driver"
-name = "pymysql"
 optional = false
 python-versions = "*"
-version = "0.10.1"
 
-[package.extras]
-ed25519 = ["PyNaCl (>=1.4.0)"]
-rsa = ["cryptography"]
+[package.dependencies]
+cffi = ">=1.0.0"
 
 [[package]]
-category = "dev"
-description = "Python parsing module"
+name = "pynacl"
+version = "1.4.0"
+description = "Python binding to the Networking and Cryptography (NaCl) library"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[package.dependencies]
+cffi = ">=1.4.1"
+six = "*"
+
+[package.extras]
+docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
+tests = ["pytest (>=3.2.1,<3.3.0 || >3.3.0)", "hypothesis (>=3.27.0)"]
+
+[[package]]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
@@ -1040,9 +1053,9 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "d94814e0fac4fc712eb9d92a09153f71347fb2a5eadf2c1afc9843f77b9e3f18"
-lock-version = "1.0"
-python-versions = "^3.7"
+lock-version = "1.1"
+python-versions = "^3.8"
+content-hash = "7517300e0f66514b035e27ee620f1b92bae319bb59b376ea05d32c277af57a2c"
 
 [metadata.files]
 aioice = [
@@ -1632,9 +1645,50 @@ pyjwt = [
     {file = "PyJWT-1.7.1-py2.py3-none-any.whl", hash = "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e"},
     {file = "PyJWT-1.7.1.tar.gz", hash = "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"},
 ]
-pymysql = [
-    {file = "PyMySQL-0.10.1-py2.py3-none-any.whl", hash = "sha256:44f47128dda8676e021c8d2dbb49a82be9e4ab158b9f03e897152a3a287c69ea"},
-    {file = "PyMySQL-0.10.1.tar.gz", hash = "sha256:263040d2779a3b84930f7ac9da5132be0fefcd6f453a885756656103f8ee1fdd"},
+pylibsrtp = [
+    {file = "pylibsrtp-0.6.6-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:f06b4fa7e6cedb1050ace08e3e5d378b32924e63c79b70877cafc42190facfcb"},
+    {file = "pylibsrtp-0.6.6-cp35-cp35m-manylinux2010_i686.whl", hash = "sha256:cf11c75dac9344c42937ba0cf89b613a0a2682abb4a02153378cf18cec5e03fd"},
+    {file = "pylibsrtp-0.6.6-cp35-cp35m-manylinux2010_x86_64.whl", hash = "sha256:5ef1e051bfd4b59d7495541bbec4d9d6cfd2b74d762943c63358c811892dbb8e"},
+    {file = "pylibsrtp-0.6.6-cp35-cp35m-win32.whl", hash = "sha256:a1ecf2f04bb5b25b67f5b41882dd999c9577842536878f41f980f5142646f698"},
+    {file = "pylibsrtp-0.6.6-cp35-cp35m-win_amd64.whl", hash = "sha256:706e3dd7637dda92880e35dd7c20d532a30a8ef18715e1339e72ed201573233e"},
+    {file = "pylibsrtp-0.6.6-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:d365d496ea986e1917ec51f0271d21d593c1cc2aca0fb0e5e048df8dcaa0c87b"},
+    {file = "pylibsrtp-0.6.6-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:aca96394af234eccc279ad020f0a021832873967b0cba31da2cdb7b95122439a"},
+    {file = "pylibsrtp-0.6.6-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:099250642c00c072f4895220042ad6e11b8932b20599ab7398e959035b93dec4"},
+    {file = "pylibsrtp-0.6.6-cp36-cp36m-win32.whl", hash = "sha256:bca9061bfe3f6c439d1380530e9174eca94ae3be11f162b4aca91737685712c0"},
+    {file = "pylibsrtp-0.6.6-cp36-cp36m-win_amd64.whl", hash = "sha256:2e5f17bd0c60a4ddae91ed2f6116a6e776b997c488eb1c4cd06091b33a5cbfc3"},
+    {file = "pylibsrtp-0.6.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:05db3efdfa4eee7d937de291438aa7582a35be11b15a8a5af523302518483d38"},
+    {file = "pylibsrtp-0.6.6-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:904f5b9eb8de4c85d5214742ad602bd42528d3dce2779168307b83609a65cc8c"},
+    {file = "pylibsrtp-0.6.6-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:133a0d88354c7779605f9386636ccff8d7d373f3e24183b72315d1c259810017"},
+    {file = "pylibsrtp-0.6.6-cp37-cp37m-win32.whl", hash = "sha256:9a68c3f63665dfca7aa024018f6c2836f048314f0e160ce583f8dec8e3e428ca"},
+    {file = "pylibsrtp-0.6.6-cp37-cp37m-win_amd64.whl", hash = "sha256:3c47d5ccc87d25bb9d9271533063cf9bf5056dc7e8a6d7c5eafcf04597806fe0"},
+    {file = "pylibsrtp-0.6.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:c9f4e7335fc28bea9f0212707a726e0a5437ebbd0484b16cad1510a26093496f"},
+    {file = "pylibsrtp-0.6.6-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:88d0599af067f1f031253cb858a4533c99d742e75df8993bfd4f7cddd47a2a15"},
+    {file = "pylibsrtp-0.6.6-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:b2f95c6153eb05da981267c3d7fdea793807960cb823d6a9d7e88dd42a484498"},
+    {file = "pylibsrtp-0.6.6-cp38-cp38-win32.whl", hash = "sha256:1f20773a4e15c805d66aae9129e1b74ff4fcf06ff07e868b1dc34bf068b97b52"},
+    {file = "pylibsrtp-0.6.6-cp38-cp38-win_amd64.whl", hash = "sha256:af28819aa9c3ddd6c85e1abe9abc739a5fb596cf2e932f50b17df02313f2b75b"},
+    {file = "pylibsrtp-0.6.6-pp36-pypy36_pp73-macosx_10_7_x86_64.whl", hash = "sha256:e128a6e0344a7ec1fbbbf54b2287ae3944bd98740e12c2db0fccebdaedf6d847"},
+    {file = "pylibsrtp-0.6.6-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:5d4d212d6c90bfc9976ffd74b66dee003273b6badb75a9f5cd502c23f9b58ee6"},
+    {file = "pylibsrtp-0.6.6.tar.gz", hash = "sha256:7c1a20b751a984a6dfdf2c9e9ce5b0be572bd058c357a820b35568a16499e019"},
+]
+pynacl = [
+    {file = "PyNaCl-1.4.0-cp27-cp27m-macosx_10_10_x86_64.whl", hash = "sha256:ea6841bc3a76fa4942ce00f3bda7d436fda21e2d91602b9e21b7ca9ecab8f3ff"},
+    {file = "PyNaCl-1.4.0-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:d452a6746f0a7e11121e64625109bc4468fc3100452817001dbe018bb8b08514"},
+    {file = "PyNaCl-1.4.0-cp27-cp27m-win32.whl", hash = "sha256:2fe0fc5a2480361dcaf4e6e7cea00e078fcda07ba45f811b167e3f99e8cff574"},
+    {file = "PyNaCl-1.4.0-cp27-cp27m-win_amd64.whl", hash = "sha256:f8851ab9041756003119368c1e6cd0b9c631f46d686b3904b18c0139f4419f80"},
+    {file = "PyNaCl-1.4.0-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:7757ae33dae81c300487591c68790dfb5145c7d03324000433d9a2c141f82af7"},
+    {file = "PyNaCl-1.4.0-cp35-abi3-macosx_10_10_x86_64.whl", hash = "sha256:757250ddb3bff1eecd7e41e65f7f833a8405fede0194319f87899690624f2122"},
+    {file = "PyNaCl-1.4.0-cp35-abi3-manylinux1_x86_64.whl", hash = "sha256:30f9b96db44e09b3304f9ea95079b1b7316b2b4f3744fe3aaecccd95d547063d"},
+    {file = "PyNaCl-1.4.0-cp35-abi3-win32.whl", hash = "sha256:4e10569f8cbed81cb7526ae137049759d2a8d57726d52c1a000a3ce366779634"},
+    {file = "PyNaCl-1.4.0-cp35-abi3-win_amd64.whl", hash = "sha256:c914f78da4953b33d4685e3cdc7ce63401247a21425c16a39760e282075ac4a6"},
+    {file = "PyNaCl-1.4.0-cp35-cp35m-win32.whl", hash = "sha256:06cbb4d9b2c4bd3c8dc0d267416aaed79906e7b33f114ddbf0911969794b1cc4"},
+    {file = "PyNaCl-1.4.0-cp35-cp35m-win_amd64.whl", hash = "sha256:511d269ee845037b95c9781aa702f90ccc36036f95d0f31373a6a79bd8242e25"},
+    {file = "PyNaCl-1.4.0-cp36-cp36m-win32.whl", hash = "sha256:11335f09060af52c97137d4ac54285bcb7df0cef29014a1a4efe64ac065434c4"},
+    {file = "PyNaCl-1.4.0-cp36-cp36m-win_amd64.whl", hash = "sha256:cd401ccbc2a249a47a3a1724c2918fcd04be1f7b54eb2a5a71ff915db0ac51c6"},
+    {file = "PyNaCl-1.4.0-cp37-cp37m-win32.whl", hash = "sha256:8122ba5f2a2169ca5da936b2e5a511740ffb73979381b4229d9188f6dcb22f1f"},
+    {file = "PyNaCl-1.4.0-cp37-cp37m-win_amd64.whl", hash = "sha256:537a7ccbea22905a0ab36ea58577b39d1fa9b1884869d173b5cf111f006f689f"},
+    {file = "PyNaCl-1.4.0-cp38-cp38-win32.whl", hash = "sha256:9c4a7ea4fb81536c1b1f5cc44d54a296f96ae78c1ebd2311bd0b60be45a48d96"},
+    {file = "PyNaCl-1.4.0-cp38-cp38-win_amd64.whl", hash = "sha256:7c6092102219f59ff29788860ccb021e80fffd953920c4a8653889c029b2d420"},
+    {file = "PyNaCl-1.4.0.tar.gz", hash = "sha256:54e9a2c849c742006516ad56a88f5c74bf2ce92c9f67435187c3c5953b346505"},
 ]
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
