@@ -120,7 +120,7 @@ class AZURE(Provider):
 
         self.update_script()
 
-    def deploy_node(self, apply: bool = True):
+    def deploy_domain(self, apply: bool = True):
         virtual_machine = terrascript.resource.azurerm_virtual_machine(
             name,
             name=name,
@@ -149,7 +149,7 @@ class AZURE(Provider):
             os_profile_linux_config={"disable_password_authentication": False},
             custom_data=f"""
                 {base_setup}
-                \ncd /PyGrid/apps/node
+                \ncd /PyGrid/apps/domain
                 \npoetry install
                 \nnohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network} --num_replicas {self.config.app.num_replicas} {'--start_local_db' if self.config.app.start_local_db else ''}
             """,

@@ -65,7 +65,7 @@ class AWS_Serverfull(AWS):
                     "self": False,
                 },
                 {
-                    "description": "PyGrid Nodes",
+                    "description": "PyGrid Domains",
                     "from_port": 5000,
                     "to_port": 5999,
                     "protocol": "tcp",
@@ -301,7 +301,7 @@ class AWS_Serverfull(AWS):
         echo "Setting Database URL"
         export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
 
-        nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {f"--id {self.config.app.id} --network {self.config.app.network}" if self.config.app.name == "node" else ""}
+        nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {f"--id {self.config.app.id} --network {self.config.app.network}" if self.config.app.name == "domain" else ""}
         '''
 
         with open(f"{self.root_dir}/deploy.sh", "w") as deploy_file:

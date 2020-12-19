@@ -146,7 +146,7 @@ class GCP(Provider):
 
         return TF.apply()
 
-    def deploy_node(self, name: str = "pygridnode", apply: bool = True):
+    def deploy_domain(self, name: str = "pygriddomain", apply: bool = True):
         images = self.config.gcp.images
         image_type = self.config.gcp.image_type
         image = terrascript.data.google_compute_image(
@@ -165,7 +165,7 @@ class GCP(Provider):
             network_interface={"network": "default", "access_config": {}},
             metadata_startup_script=f"""
                 {base_setup}
-                \ncd /PyGrid/apps/node
+                \ncd /PyGrid/apps/domain
                 \npoetry install
                 \nnohup ./run.sh --id {self.config.app.id} --port {self.config.app.port}  --host {self.config.app.host} --network {self.config.app.network} --num_replicas {self.config.app.num_replicas} {'--start_local_db' if self.config.app.start_local_db else ''}
             """,

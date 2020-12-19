@@ -29,7 +29,7 @@ def cli(config, output_file, api):
 
     Example:
 
-    >>> pygrid --api <api-endpoint> deploy --provider aws --app node
+    >>> pygrid --api <api-endpoint> deploy --provider aws --app domain
 
     >>> pygrid --api <api-endpoint> deploy --provider azure --app network
     """
@@ -67,8 +67,8 @@ def cli(config, output_file, api):
 @click.option(
     "--app",
     prompt="PyGrid App: ",
-    default="Node",
-    type=click.Choice(["Node", "Network", "Worker"], case_sensitive=False),
+    default="Domain",
+    type=click.Choice(["Domain", "Network", "Worker"], case_sensitive=False),
     help="The PyGrid App to be deployed",
 )
 @pass_config
@@ -103,7 +103,7 @@ def deploy(config, prev_config, provider, app):
 
         ## Deployment type
         config.serverless = False
-        if not config.app.name in ["node", "worker"]:
+        if not config.app.name in ["domain", "worker"]:
             config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
         ## Websockets
@@ -152,19 +152,19 @@ def get_app_arguments(config):
     config.app.count = click.prompt(
         f"How many apps do you want to deploy", type=int, default=1
     )
-    if config.app.name == "node":
+    if config.app.name == "domain":
         config.app.id = click.prompt(
-            f"PyGrid Node ID", type=str, default=os.environ.get("NODE_ID", None)
+            f"PyGrid Domain ID", type=str, default=os.environ.get("DOMAIN_ID", None)
         )
         config.app.port = click.prompt(
             f"Port number of the socket.io server",
             type=str,
-            default=os.environ.get("GRID_NODE_PORT", 5000),
+            default=os.environ.get("GRID_DOMAIN_PORT", 5000),
         )
         config.app.host = click.prompt(
-            f"Grid node host",
+            f"Grid DOMAIN host",
             type=str,
-            default=os.environ.get("GRID_NODE_HOST", "0.0.0.0"),
+            default=os.environ.get("GRID_DOMAIN_HOST", "0.0.0.0"),
         )
         config.app.network = click.prompt(
             f"Grid Network address (e.g. --network=0.0.0.0:7000)",
