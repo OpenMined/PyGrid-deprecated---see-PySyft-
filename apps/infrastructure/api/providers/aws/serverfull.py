@@ -34,12 +34,6 @@ class AWS_Serverfull(AWS):
             description="The DNS name of the ELB.",
         )
 
-        self.tfscript += terrascript.Output(
-            "load_balancer_dns",
-            value=var_module(self.load_balancer, "this_elb_dns_name"),
-            description="The DNS name of the ELB.",
-        )
-
     def build_security_group(self):
         # ----- Security Group ------#
 
