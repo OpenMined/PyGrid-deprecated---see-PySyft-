@@ -15,18 +15,19 @@ class AWS_Serverfull(AWS):
 
         self.build_database()
 
-        self.writing_exec_script()
+        # self.writing_exec_script()
         self.build_instance()
         self.build_load_balancer()
 
         self.output()
 
     def output(self):
-        self.tfscript += terrascript.Output(
-            "instance_endpoint",
-            value=var_module(self.instances, "public_ip"),
-            description="The public IP address of the main server instance.",
-        )
+        for count in range(self.config.app.count):
+            self.tfscript += terrascript.Output(
+                f"instance_{count}_endpoint",
+                value=var_module(self.instances[count], "public_ip"),
+                description=f"The public IP address of #{count} instance.",
+            )
 
         self.tfscript += terrascript.Output(
             "load_balancer_dns",
@@ -132,21 +133,26 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.ami
 
-        self.instances = Module(
-            f"pygrid-cluster",
-            instance_count=self.config.app.count,
-            source="terraform-aws-modules/ec2-instance/aws",
-            name=f"pygrid-{self.config.app.name}-instances",
-            ami=var(self.ami.id),
-            instance_type=self.config.vpc.instance_type,
-            associate_public_ip_address=True,
-            monitoring=True,
-            vpc_security_group_ids=[var(self.security_group.id)],
-            subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-            user_data=var(f'file("{self.root_dir}/deploy.sh")'),
-            tags={"Name": f"pygrid-{self.config.app.name}-instances"},
-        )
-        self.tfscript += self.instances
+        self.instances = []
+        for count in range(self.config.app.count):
+            app = self.config.apps[count]
+            instance = Module(
+                f"pygrid-instance-{count}",
+                instance_count=1,
+                source="terraform-aws-modules/ec2-instance/aws",
+                name=f"pygrid-{self.config.app.name}-instance-{count}",
+                ami=var(self.ami.id),
+                instance_type=self.config.vpc.instance_type.split(" ")[1],
+                associate_public_ip_address=True,
+                monitoring=True,
+                vpc_security_group_ids=[var(self.security_group.id)],
+                subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
+                # user_data=var(f'file("{self.root_dir}/deploy.sh")'),
+                user_data=self.exec_script(app),
+                tags={"Name": f"pygrid-{self.config.app.name}-instances-{count}"},
+            )
+            self.tfscript += instance
+            self.instances.append(instance)
 
     def build_load_balancer(self):
         self.load_balancer = Module(
@@ -157,7 +163,7 @@ class AWS_Serverfull(AWS):
             security_groups=[var(self.security_group.id)],
             number_of_instances=self.config.app.count,
             instances=[
-                var_module(self.instances, f"id[{i}]")
+                var_module(self.instances[i], f"id[{i}]")
                 for i in range(self.config.app.count)
             ],
             listener=[
@@ -251,7 +257,7 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.database
 
-    def writing_exec_script(self):
+    def exec_script(self, app):
         exec_script = f'''
         #cloud-boothook
         #!/bin/bash
@@ -301,8 +307,9 @@ class AWS_Serverfull(AWS):
         echo "Setting Database URL"
         export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
 
-        nohup ./run.sh --port {self.config.app.port}  --host {self.config.app.host} {f"--id {self.config.app.id} --network {self.config.app.network}" if self.config.app.name == "domain" else ""}
+        nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
         '''
 
-        with open(f"{self.root_dir}/deploy.sh", "w") as deploy_file:
-            deploy_file.write(exec_script)
+        # with open(f"{self.root_dir}/deploy.sh", "w") as deploy_file:
+        # deploy_file.write(exec_script)
+        return exec_script
