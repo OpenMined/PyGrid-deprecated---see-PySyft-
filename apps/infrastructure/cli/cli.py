@@ -152,39 +152,48 @@ def get_app_arguments(config):
     config.app.count = click.prompt(
         f"How many apps do you want to deploy", type=int, default=1
     )
-    if config.app.name == "domain":
-        config.app.id = click.prompt(
-            f"PyGrid Domain ID", type=str, default=os.environ.get("DOMAIN_ID", None)
-        )
-        config.app.port = click.prompt(
-            f"Port number of the socket.io server",
-            type=str,
-            default=os.environ.get("GRID_DOMAIN_PORT", 5000),
-        )
-        config.app.host = click.prompt(
-            f"Grid DOMAIN host",
-            type=str,
-            default=os.environ.get("GRID_DOMAIN_HOST", "0.0.0.0"),
-        )
-        config.app.network = click.prompt(
-            f"Grid Network address (e.g. --network=0.0.0.0:7000)",
-            type=str,
-            default=os.environ.get("NETWORK", None),
-        )
-    elif config.app.name == "network":
-        config.app.port = click.prompt(
-            f"Port number of the socket.io server",
-            type=str,
-            default=os.environ.get("GRID_NETWORK_PORT", "7000"),
-        )
-        config.app.host = click.prompt(
-            f"Grid Network host",
-            type=str,
-            default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
-        )
-    else:
-        # TODO: Workers arguments
-        pass
+    apps = []
+    for count in range(config.app.count):
+        if config.app.name == "domain":
+            id = click.prompt(
+                f"#{count}: PyGrid Domain ID",
+                type=str,
+                default=os.environ.get("DOMAIN_ID", None),
+            )
+            port = click.prompt(
+                f"#{count}: Port number of the socket.io server",
+                type=str,
+                default=os.environ.get("GRID_DOMAIN_PORT", 5000),
+            )
+            host = click.prompt(
+                f"#{count}: Grid DOMAIN host",
+                type=str,
+                default=os.environ.get("GRID_DOMAIN_HOST", "0.0.0.0"),
+            )
+            network = click.prompt(
+                f"#{count}: Grid Network address (e.g. --network=0.0.0.0:7000)",
+                type=str,
+                default=os.environ.get("NETWORK", None),
+            )
+            app = Config(id=id, port=port, host=host, network=network)
+        elif config.app.name == "network":
+            port = click.prompt(
+                f"#{count}: Port number of the socket.io server",
+                type=str,
+                default=os.environ.get("GRID_NETWORK_PORT", f"{7000 + count}"),
+            )
+            host = click.prompt(
+                f"#{count}: Grid Network host",
+                type=str,
+                default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
+            )
+            app = Config(port=port, host=host)
+        else:
+            # TODO: Workers arguments
+            pass
+
+        apps.append(app)
+    config.apps = apps
 
 
 @cli.resultcallback()
