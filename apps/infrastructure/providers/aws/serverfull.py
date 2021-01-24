@@ -1,4 +1,4 @@
-from ...tf import var
+from apps.infrastructure.tf import var
 from .aws import *
 
 
@@ -136,6 +136,7 @@ class AWS_Serverfull(AWS):
         self.instances = []
         for count in range(self.config.app.count):
             app = self.config.apps[count]
+            self.write_exec_script(app, index=count)
             instance = Module(
                 f"pygrid-instance-{count}",
                 instance_count=1,
@@ -147,9 +148,9 @@ class AWS_Serverfull(AWS):
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
                 subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-                # user_data=var(f'file("{self.root_dir}/deploy.sh")'),
-                user_data=self.exec_script(app),
-                tags={"Name": f"pygrid-{self.config.app.name}-instances-{count}"},
+                user_data=var(f'file("{self.root_dir}/deploy-instance-{count}.sh")'),
+                # user_data=self.exec_script(app),
+                tags={"Name": f"pygrid-{self.config.app.name}-instance-{count}"},
             )
             self.tfscript += instance
             self.instances.append(instance)
@@ -163,8 +164,8 @@ class AWS_Serverfull(AWS):
             security_groups=[var(self.security_group.id)],
             number_of_instances=self.config.app.count,
             instances=[
-                var_module(self.instances[i], f"id[{i}]")
-                for i in range(self.config.app.count)
+                var_module(instance, f"id[0]")
+                for instance in self.instances
             ],
             listener=[
                 {
@@ -257,7 +258,7 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.database
 
-    def exec_script(self, app):
+    def write_exec_script(self, app, index=0):
         exec_script = f'''
         #cloud-boothook
         #!/bin/bash
@@ -310,6 +311,6 @@ class AWS_Serverfull(AWS):
         nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
         '''
 
-        # with open(f"{self.root_dir}/deploy.sh", "w") as deploy_file:
-        # deploy_file.write(exec_script)
-        return exec_script
+        with open(f"{self.root_dir}/deploy-instance-{index}.sh", "w") as deploy_file:
+            deploy_file.write(exec_script)
+        # return exec_script

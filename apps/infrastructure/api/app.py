@@ -5,8 +5,8 @@ from pathlib import Path
 from flask import Flask, Response, jsonify, request
 from loguru import logger
 
-from .providers.aws import AWS_Serverfull, AWS_Serverless
-from .utils import Config
+from apps.infrastructure.providers import AWS_Serverfull, AWS_Serverless
+from apps.infrastructure.utils import Config
 
 app = Flask(__name__)
 

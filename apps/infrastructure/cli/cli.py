@@ -4,12 +4,13 @@ import os
 import time
 from pathlib import Path
 from urllib.parse import urljoin
+from types import SimpleNamespace
 
 import click
 import requests
 
-from .providers import aws, azure, gcp
-from .utils import COLORS, Config, colored
+from apps.infrastructure.cli.providers import aws, azure, gcp
+from apps.infrastructure.utils import COLORS, Config, colored
 
 config_exist = glob.glob(str(Path.home() / ".pygrid/cli/*.json")) or None
 prev_config = (
@@ -24,7 +25,7 @@ pass_config = click.make_pass_decorator(Config, ensure=True)
     "--output-file", default=f"config_{time.strftime('%Y-%m-%d_%H%M%S')}.json"
 )
 @pass_config
-def cli(config, output_file, api):
+def cli(config: SimpleNamespace, output_file: str, api: str):
     """OpenMined CLI for Infrastructure Management.
 
     Example:
@@ -72,9 +73,9 @@ def cli(config, output_file, api):
     help="The PyGrid App to be deployed",
 )
 @pass_config
-def deploy(config, prev_config, provider, app):
+def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
-    prev_config = None  # Comment this while developing
+    # prev_config = None  # Comment this while developing
 
     if prev_config is not None:
         with open(prev_config, "r") as f:
@@ -133,7 +134,7 @@ def deploy(config, prev_config, provider, app):
         \n\nContinue?"""
     ):
 
-        # credentials = config.credentials  # Uncomment this while developing
+        credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
         url = urljoin(config.api_url, "/deploy")
 
@@ -189,8 +190,17 @@ def get_app_arguments(config):
             )
             app = Config(port=port, host=host)
         else:
-            # TODO: Workers arguments
-            pass
+            port = click.prompt(
+                f"#{count}: Port number of the socket.io server",
+                type=str,
+                default=os.environ.get("GRID_WORKER_PORT", 5000),
+            )
+            host = click.prompt(
+                f"#{count}: Grid DOMAIN host",
+                type=str,
+                default=os.environ.get("GRID_WORKER_HOST", "0.0.0.0"),
+            )
+            app = Config(port=port, host=host, network=network)
 
         apps.append(app)
     config.apps = apps

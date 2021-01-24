@@ -10,8 +10,8 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from ..tf import Terraform
-from ..utils import Config
+from apps.infrastructure.tf import Terraform
+from apps.infrastructure.utils import Config
 
 
 class Provider:

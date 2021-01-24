@@ -1,4 +1,4 @@
-from ...tf import generate_cidr_block, var, var_module
+from apps.infrastructure.tf import generate_cidr_block, var, var_module
 from ..provider import *
 
 
