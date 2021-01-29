@@ -1,4 +1,7 @@
+import textwrap
+
 from apps.infrastructure.tf import var
+
 from .aws import *
 
 
@@ -163,10 +166,7 @@ class AWS_Serverfull(AWS):
             subnets=[var(public_subnet.id) for _, public_subnet in self.subnets],
             security_groups=[var(self.security_group.id)],
             number_of_instances=self.config.app.count,
-            instances=[
-                var_module(instance, f"id[0]")
-                for instance in self.instances
-            ],
+            instances=[var_module(instance, f"id[0]") for instance in self.instances],
             listener=[
                 {
                     "instance_port": "80",
@@ -259,10 +259,9 @@ class AWS_Serverfull(AWS):
         self.tfscript += self.database
 
     def write_exec_script(self, app, index=0):
-        exec_script = f'''
-        #cloud-boothook
-        #!/bin/bash
-
+        exec_script = "#cloud-boothook\n#!/bin/bash\n"
+        exec_script += textwrap.dedent(
+            f'''
         ## For debugging
         # redirect stdout/stderr to a file
         exec &> log.out
@@ -299,6 +298,7 @@ class AWS_Serverfull(AWS):
 
         echo "Cloning PyGrid"
         git clone https://github.com/OpenMined/PyGrid
+        git checkout pygrid_0.3.0
 
         cd /PyGrid/apps/{self.config.app.name}
 
@@ -310,6 +310,7 @@ class AWS_Serverfull(AWS):
 
         nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
         '''
+        )
 
         with open(f"{self.root_dir}/deploy-instance-{index}.sh", "w") as deploy_file:
             deploy_file.write(exec_script)
