@@ -9,6 +9,8 @@ from syft.core.io.location import Location
 from .services.association_request import AssociationRequestService
 from .services.infra_service import DomainInfrastructureService
 from .services.setup_service import SetUpService
+from .services.tensor_service import RegisterTensorService
+from .services.role_service import RoleManagerService
 
 from nacl.signing import SigningKey
 from nacl.signing import VerifyKey
@@ -42,7 +44,8 @@ class GridDomain(Domain):
         self.immediate_services_with_reply.append(AssociationRequestService)
         self.immediate_services_with_reply.append(DomainInfrastructureService)
         self.immediate_services_with_reply.append(SetUpService)
-
+        self.immediate_services_with_reply.append(RegisterTensorService)
+        self.immediate_services_with_reply.append(RoleManagerService)
         self._register_services()
 
 
