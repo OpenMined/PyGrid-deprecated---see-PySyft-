@@ -14,7 +14,8 @@ db.init_app(app)
 
 @app.route("/workers", methods=["POST"])
 def create():
-    """Deploys a worker."""
+    """Creates a worker.
+    This endpoint can be accessed by a user to create a new worker."""
 
     data = json.loads(request.json)
     config = Config(**data)
@@ -29,6 +30,13 @@ def create():
         pass
     elif config.provider == "gcp":
         pass
+
+    if deployed:
+        # TODO: Use app.instance_type to pull worker specific data from cloud providers
+        # and fill them below
+        worker = Worker(user_id="", vCPU="", RAM="", storage="", GPU="", GPU_memory="")
+        db.session.add(worker)
+        db.commit()
 
     response = {"deloyed": deployed, "output": output}
     return Response(json.dumps(response), status=200, mimetype="application/json")
