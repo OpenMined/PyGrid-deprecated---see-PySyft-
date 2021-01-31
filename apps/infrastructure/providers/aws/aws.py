@@ -1,4 +1,5 @@
 from apps.infrastructure.tf import generate_cidr_block, var, var_module
+
 from ..provider import *
 
 
@@ -9,7 +10,7 @@ class AWS(Provider):
         """
         config (Config) : Object storing the required configuration for deployment
         """
-        super().__init__(app=config.app.name)
+        super().__init__(config)
         self.config = config
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")

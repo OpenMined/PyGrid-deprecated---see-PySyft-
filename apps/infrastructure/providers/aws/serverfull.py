@@ -1,4 +1,5 @@
 from apps.infrastructure.tf import var
+
 from .aws import *
 
 
@@ -10,16 +11,20 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        # Order matters
-        self.build_security_group()
+        if not config.app.name == "worker":
+            # Order matters
+            self.build_security_group()
 
-        self.build_database()
+            self.build_database()
 
-        # self.writing_exec_script()
-        self.build_instance()
-        self.build_load_balancer()
+            # self.writing_exec_script()
+            self.build_instance()
+            self.build_load_balancer()
 
-        self.output()
+            self.output()
+        else:
+            self.build_security_group()
+            self.build_instance()
 
     def output(self):
         for count in range(self.config.app.count):
@@ -163,10 +168,7 @@ class AWS_Serverfull(AWS):
             subnets=[var(public_subnet.id) for _, public_subnet in self.subnets],
             security_groups=[var(self.security_group.id)],
             number_of_instances=self.config.app.count,
-            instances=[
-                var_module(instance, f"id[0]")
-                for instance in self.instances
-            ],
+            instances=[var_module(instance, f"id[0]") for instance in self.instances],
             listener=[
                 {
                     "instance_port": "80",
