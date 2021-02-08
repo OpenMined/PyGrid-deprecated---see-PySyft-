@@ -3,11 +3,12 @@ import json
 import os
 import time
 from pathlib import Path
-from urllib.parse import urljoin
 from types import SimpleNamespace
+from urllib.parse import urljoin
 
 import click
 import requests
+from PyInquirer import Separator, prompt
 
 from apps.infrastructure.cli.providers import aws, azure, gcp
 from apps.infrastructure.utils import COLORS, Config, colored
@@ -75,7 +76,7 @@ def cli(config: SimpleNamespace, output_file: str, api: str):
 @pass_config
 def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
-    # prev_config = None  # Comment this while developing
+    prev_config = None  # Comment this while developing
 
     if prev_config is not None:
         with open(prev_config, "r") as f:
@@ -118,7 +119,7 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
         if config.provider == "aws":
             config.vpc = aws.get_vpc_config()
             if not config.serverless:
-                config.vpc.instance_type = aws.get_instance_type()
+                config.vpc.instance_type = aws.get_instance_type(config.vpc.region)
         elif config.provider == "gcp":
             pass
         elif config.provider == "azure":
@@ -134,7 +135,7 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
         \n\nContinue?"""
     ):
 
-        credentials = config.credentials  # Uncomment this while developing
+        # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
         url = urljoin(config.api_url, "/deploy")
 
@@ -154,7 +155,7 @@ def get_app_arguments(config):
         f"How many apps do you want to deploy", type=int, default=1
     )
     apps = []
-    for count in range(config.app.count):
+    for count in range(1, config.app.count + 1):
         if config.app.name == "domain":
             id = click.prompt(
                 f"#{count}: PyGrid Domain ID",
@@ -200,7 +201,7 @@ def get_app_arguments(config):
                 type=str,
                 default=os.environ.get("GRID_WORKER_HOST", "0.0.0.0"),
             )
-            app = Config(port=port, host=host, network=network)
+            app = Config(port=port, host=host)
 
         apps.append(app)
     config.apps = apps
