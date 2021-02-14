@@ -54,10 +54,10 @@ def get_vpc_config() -> Config:
 def get_instance_type(region):
 
     instance_type_filters = {
-        "Compute Optimized Instances": [{"Name": "instance-type", "Values": ["c5*"]}],
-        "General Purpose Instances": [
-            # TODO: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/general-purpose-instances.html
+        "Accelerated Computing Instances(GPU)": [
+            {"Name": "instance-type", "Values": ["p*"]}
         ],
+        "Compute Optimized Instances": [{"Name": "instance-type", "Values": ["c5*"]}],
         "Free Tier Instances": [{"Name": "free-tier-eligible", "Values": ["true"]}],
     }
 
@@ -90,17 +90,34 @@ def get_instance_type(region):
         instances += response["InstanceTypes"]
 
     # Sort instances
-    sorted_instances = sorted(instances, key=lambda i: i["VCpuInfo"]["DefaultVCpus"])
+    sorted_instances = (
+        sorted(instances, key=lambda i: i["GpuInfo"]["TotalGpuMemoryInMiB"])
+        if instance_category is "Accelerated Computing Instances(GPU)"
+        else sorted(instances, key=lambda i: i["VCpuInfo"]["DefaultVCpus"])
+    )
+
+    to_GB = lambda x: f"{round(x / 1024, 3)} GB"
+    log = lambda name, value: f"{name}: {value}"
 
     def parse_instance(i):
-        s = [" " for i in range(150)]
-        s[:30] = f"Instance: {i['InstanceType']}"
-        s[30:60] = f"Memory: {round(i['MemoryInfo']['SizeInMiB'] / 1024, 3)} GB"
-        s[60:90] = f"CPUs: {i['VCpuInfo']['DefaultVCpus']}"
-        s[90:120] = (
-            f"GPU: {i['GpuInfo']['TotalGpuMemoryInMiB']}" if i.get("GpuInfo") else ""
-        )
-        return "".join(s)
+        s = [" " for i in range(500)]
+        s[:30] = log("Instance", i["InstanceType"])
+        s[30:60] = log("Memory", to_GB(i["MemoryInfo"]["SizeInMiB"]))
+        s[60:80] = log("CPUs", i["VCpuInfo"]["DefaultVCpus"])
+        gpu_info = i.get("GpuInfo", None)
+        if gpu_info:
+            for i, gpu in enumerate(gpu_info["Gpus"]):
+                offset = 80 + i * 60
+                s[offset : offset + 10] = "GPU :-"
+                s[offset + 10 : offset + 25] = gpu["Manufacturer"] + " " + gpu["Name"]
+                s[offset + 25 : offset + 45] = "| " + log(
+                    "Memory", to_GB(gpu["MemoryInfo"]["SizeInMiB"])
+                )
+                s[offset + 45 : offset + 60] = "| " + log("Count", gpu["Count"])
+            s[80 + (i + 1) * 60 : 80 + (i + 1) * 60 + 90] = log(
+                "Total GPU Memory", to_GB(gpu_info["TotalGpuMemoryInMiB"])
+            )
+        return "".join(s).rstrip()
 
     # dictionary of parsed instances
     parsed_instances = {parse_instance(i): i for i in sorted_instances}
