@@ -29,6 +29,8 @@ def deploy():
     deployed = False
     output = None
 
+    config.app.id = 0
+
     if config.provider == "aws":
         if config.serverless:
             aws_deployment = AWS_Serverless(config)
