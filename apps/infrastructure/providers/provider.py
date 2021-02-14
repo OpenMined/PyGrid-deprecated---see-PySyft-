@@ -16,24 +16,20 @@ from apps.infrastructure.utils import Config
 
 class Provider:
     def __init__(self, config):
-        self.app_dir = os.path.join(
-            str(Path.home()), ".pygrid", "api", config.app, config.id
-        )
-        os.makedirs(self.app_dir, exist_ok=True)
+        folder_name = f"{config.provider}-{config.app.name}-{config.app.id}"
+        dir = os.path.join(str(Path.home()), ".pygrid", "api", folder_name)
+        os.makedirs(dir, exist_ok=True)
 
-        self.TF = Terraform()
+        self.TF = Terraform(dir)
         self.tfscript = terrascript.Terrascript()
 
     def deploy(self):
-        # save the terraform configuration files
-        with open(f"{self.app_dir}/main.tf.json", "w") as tfjson:
-            json.dump(self.tfscript, tfjson, indent=2, sort_keys=False)
-
+        self.TF.write(self.tfscript)
         try:
-            self.TF.init(self.app_dir)
-            self.TF.validate(self.app_dir)
-            self.TF.apply(self.app_dir)
-            output = self.TF.output(self.app_dir)
+            self.TF.init()
+            self.TF.validate()
+            self.TF.apply()
+            output = self.TF.output()
             return (True, output)
         except subprocess.CalledProcessError as err:
             output = {"ERROR": err}
@@ -41,7 +37,7 @@ class Provider:
 
     def destroy(self):
         try:
-            self.TF.destroy(self.app_dir)
+            self.TF.destroy()
             return True
         except subprocess.CalledProcessError as err:
             return False

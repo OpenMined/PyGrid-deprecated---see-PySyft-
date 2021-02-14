@@ -9,32 +9,42 @@ generate_cidr_block = lambda base_cidr_block, netnum: var(
 
 
 class Terraform:
-    def __init__(self) -> None:
+    def __init__(self, dir) -> None:
         super().__init__()
+        self.dir = dir
 
-    def init(self, dir):
-        return subprocess.run("terraform init", shell=True, cwd=dir, check=True)
+    def write(self, tfscript):
+        # save the terraform configuration files
+        with open(f"{self.dir}/main.tf.json", "w") as tfjson:
+            json.dump(tfscript, tfjson, indent=2, sort_keys=False)
 
-    def validate(self, dir):
-        return subprocess.run("terraform validate", shell=True, cwd=dir, check=True)
+    def init(self):
+        return subprocess.run("terraform init", shell=True, cwd=self.dir, check=True)
 
-    def plan(self, dir):
-        return subprocess.run("terraform plan", shell=True, cwd=dir, check=True)
-
-    def apply(self, dir):
+    def validate(self):
         return subprocess.run(
-            "terraform apply --auto-approve", shell=True, cwd=dir, check=True
+            "terraform validate", shell=True, cwd=self.dir, check=True
         )
 
-    def output(self, dir):
+    def plan(self):
+        return subprocess.run("terraform plan", shell=True, cwd=self.dir, check=True)
+
+    def apply(self):
+        return subprocess.run(
+            "terraform apply --auto-approve", shell=True, cwd=self.dir, check=True
+        )
+
+    def output(self):
         output = subprocess.run(
             "terraform output -json",
             shell=True,
-            cwd=dir,
+            cwd=self.dir,
             check=True,
             stdout=subprocess.PIPE,
         )
         return json.loads(output.stdout.decode("utf-8"))
 
-    def destroy(self, dir):
-        return subprocess.run("terraform destroy", shell=True, cwd=dir, check=True)
+    def destroy(self):
+        return subprocess.run(
+            "terraform destroy --auto-approve", shell=True, cwd=self.dir, check=True
+        )

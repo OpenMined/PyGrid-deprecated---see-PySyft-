@@ -13,7 +13,7 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        if not config.app.name == "worker":
+        if config.app.name != "worker":
             # Order matters
             self.build_security_group()
 
@@ -150,12 +150,12 @@ class AWS_Serverfull(AWS):
                 source="terraform-aws-modules/ec2-instance/aws",
                 name=f"pygrid-{self.config.app.name}-instance-{count}",
                 ami=var(self.ami.id),
-                instance_type=self.config.vpc.instance_type.split(" ")[1],
+                instance_type=self.config.vpc.instance_type.InstanceType,
                 associate_public_ip_address=True,
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
                 subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-                user_data=var(f'file("{self.root_dir}/deploy-instance-{count}.sh")'),
+                user_data=var(f'file("{self.TF.dir}/deploy-instance-{count}.sh")'),
                 # user_data=self.exec_script(app),
                 tags={"Name": f"pygrid-{self.config.app.name}-instance-{count}"},
             )
@@ -263,59 +263,62 @@ class AWS_Serverfull(AWS):
         self.tfscript += self.database
 
     def write_exec_script(self, app, index=0):
-        exec_script = "#cloud-boothook\n#!/bin/bash\n"
-        exec_script += textwrap.dedent(
-            f'''
-        ## For debugging
-        # redirect stdout/stderr to a file
-        exec &> log.out
+        self.exec_script = "#cloud-boothook\n#!/bin/bash\n"
+        if self.config.app.name != "worker":
+            self.exec_script += textwrap.dedent(
+                f'''
+            ## For debugging
+            # redirect stdout/stderr to a file
+            exec &> log.out
 
 
-        echo "Simple Web Server for testing the deployment"
-        sudo apt update -y
-        sudo apt install apache2 -y
-        sudo systemctl start apache2
-        echo """
-        <h1 style='color:#f09764; text-align:center'>
-            OpenMined First Server Deployed via Terraform
-        </h1>
-        """ | sudo tee /var/www/html/index.html
+            echo "Simple Web Server for testing the deployment"
+            sudo apt update -y
+            sudo apt install apache2 -y
+            sudo systemctl start apache2
+            echo """
+            <h1 style='color:#f09764; text-align:center'>
+                OpenMined First Server Deployed via Terraform
+            </h1>
+            """ | sudo tee /var/www/html/index.html
 
-        echo "Setup Miniconda environment"
+            echo "Setup Miniconda environment"
 
-        sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-        sudo bash miniconda.sh -b -p miniconda
-        sudo rm miniconda.sh
-        export PATH=/miniconda/bin:$PATH > ~/.bashrc
-        conda init bash
-        source ~/.bashrc
-        conda create -y -n pygrid python=3.7
-        conda activate pygrid
+            sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+            sudo bash miniconda.sh -b -p miniconda
+            sudo rm miniconda.sh
+            export PATH=/miniconda/bin:$PATH > ~/.bashrc
+            conda init bash
+            source ~/.bashrc
+            conda create -y -n pygrid python=3.7
+            conda activate pygrid
 
-        echo "Install poetry..."
-        pip install poetry
+            echo "Install poetry..."
+            pip install poetry
 
-        echo "Install GCC"
-        sudo apt-get install python3-dev -y
-        sudo apt-get install libevent-dev -y
-        sudo apt-get install gcc -y
+            echo "Install GCC"
+            sudo apt-get install python3-dev -y
+            sudo apt-get install libevent-dev -y
+            sudo apt-get install gcc -y
 
-        echo "Cloning PyGrid"
-        git clone https://github.com/OpenMined/PyGrid
-        git checkout pygrid_0.3.0
+            echo "Cloning PyGrid"
+            git clone https://github.com/OpenMined/PyGrid
+            git checkout pygrid_0.3.0
 
-        cd /PyGrid/apps/{self.config.app.name}
+            cd /PyGrid/apps/{self.config.app.name}
 
-        echo "Installing {self.config.app.name} Dependencies"
-        poetry install
+            echo "Installing {self.config.app.name} Dependencies"
+            poetry install
 
-        echo "Setting Database URL"
-        export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+            echo "Setting Database URL"
+            export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
 
-        nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
-        '''
-        )
+            nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
+            '''
+            )
+        else:
+            pass
 
-        with open(f"{self.root_dir}/deploy-instance-{index}.sh", "w") as deploy_file:
-            deploy_file.write(exec_script)
-        # return exec_script
+        with open(f"{self.TF.dir}/deploy-instance-{index}.sh", "w") as deploy_file:
+            deploy_file.write(self.exec_script)
+            # return exec_script

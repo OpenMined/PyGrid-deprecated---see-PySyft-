@@ -1,5 +1,7 @@
 import json
+import os
 from datetime import datetime
+from pathlib import Path
 
 from flask import Flask, Response, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -16,7 +18,7 @@ db = SQLAlchemy(app)
 class Worker(db.Model):
     __tablename__ = "workers"
 
-    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer(), primary_key=True)
     # user_id = db.Column(db.Integer())  # TODO: foreign key
     provider = db.Column(db.String(64))
     region = db.Column(db.String(64))
@@ -38,8 +40,10 @@ def create():
     data = json.loads(request.json)
     config = Config(**data)
 
-    deployed = True
+    deployed = False
     output = None
+
+    config.app.id = db.session.query(Worker).count() + 1
 
     if config.provider == "aws":
         aws_deployment = AWS_Serverfull(config=config)
@@ -51,6 +55,7 @@ def create():
 
     if deployed:
         worker = Worker(
+            id=config.app.id,
             provider=config.provider,
             region=config.vpc.region,
             instance=config.vpc.instance_type.InstanceType,
@@ -93,11 +98,9 @@ def delete_worker(id):
     """Shut down specific worker.
     Only the Node owner and the user who created this worker can access this endpoint.
     """
-
-    config = Config(app="worker", id=id)
-
-    deleted = Provider(config).destroy()
-
+    worker = Worker.query.get(id)
+    config = Config(provider=worker.provider, app=Config(name="worker", id=id))
+    success = Provider(config).destroy()
     return Response(
-        json.dumps({"deleted": deleted}), status=200, mimetype="application/json"
+        json.dumps({"deleted": success}), status=200, mimetype="application/json"
     )

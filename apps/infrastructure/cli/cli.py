@@ -126,7 +126,10 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
             pass
 
         ## Database
-        credentials.db = aws.get_db_config()
+        if config.app.name != "worker":
+            credentials.db = aws.get_db_config()
+
+        # config.credentials = credentials
 
     if click.confirm(
         f"""Your current configration are:
@@ -137,6 +140,7 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
         # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
+
         url = urljoin(config.api_url, "/deploy")
 
         data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
