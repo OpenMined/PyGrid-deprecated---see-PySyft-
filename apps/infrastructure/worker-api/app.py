@@ -1,18 +1,36 @@
 import json
+from datetime import datetime
 
 from flask import Flask, Response, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
 
-from apps.infrastructure.providers import AWS_Serverfull, AWS_Serverless
+from apps.infrastructure.providers import AWS_Serverfull
 from apps.infrastructure.providers.provider import Provider
 from apps.infrastructure.utils import Config
 
-from .models import Worker, db
-
 app = Flask(__name__)
-db.init_app(app)
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///workers.db"
+db = SQLAlchemy(app)
 
 
-@app.route("/workers", methods=["POST"])
+class Worker(db.Model):
+    __tablename__ = "workers"
+
+    id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
+    # user_id = db.Column(db.Integer())  # TODO: foreign key
+    provider = db.Column(db.String(64))
+    region = db.Column(db.String(64))
+    instance = db.Column(db.String(64))
+    created_at = db.Column(db.DateTime, default=datetime.now())
+
+    def __str__(self):
+        return f"<Worker id: {self.id}, Instance: {self.instance_type}>"
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+@app.route("/deploy", methods=["POST"])
 def create():
     """Creates a worker.
     This endpoint can be accessed by a user to create a new worker."""
@@ -20,7 +38,7 @@ def create():
     data = json.loads(request.json)
     config = Config(**data)
 
-    deployed = False
+    deployed = True
     output = None
 
     if config.provider == "aws":
@@ -32,11 +50,13 @@ def create():
         pass
 
     if deployed:
-        # TODO: Use app.instance_type to pull worker specific data from cloud providers
-        # and fill them below
-        worker = Worker(user_id="", vCPU="", RAM="", storage="", GPU="", GPU_memory="")
+        worker = Worker(
+            provider=config.provider,
+            region=config.vpc.region,
+            instance=config.vpc.instance_type.InstanceType,
+        )
         db.session.add(worker)
-        db.commit()
+        db.session.commit()
 
     response = {"deloyed": deployed, "output": output}
     return Response(json.dumps(response), status=200, mimetype="application/json")
@@ -47,9 +67,12 @@ def get_workers():
     """Get all deployed workers.
     Only Node operators can access this endpoint.
     """
-    # TODO: SHOULD WE ALLOW THE USER TO ACCESS ALL IT'S DEPLOYMENTS THROUGH THIS ENDPOINT ?
     workers = Worker.query.order_by(Worker.created_at).all()
-    return Response(json.dumps(workers), status=200, mimetype="applications/json")
+    return Response(
+        json.dumps([worker.as_dict() for worker in workers], default=str),
+        status=200,
+        mimetype="applications/json",
+    )
 
 
 @app.route("/workers/<int:id>", methods=["GET"])
@@ -57,12 +80,12 @@ def get_worker(id):
     """Get specific worker data.
     Only the Node owner and the user who created this worker can access this endpoint.
     """
-    try:
-        worker = Worker.query.get(id)
-        return Response(json.dumps(worker), status=200, mimetype="applications/json")
-    except:
-        response = {"message": "Worker Not Found"}
-        return Response(json.dumps(response), status=404, mimetype="applications/json")
+    worker = Worker.query.get(id)
+    return Response(
+        json.dumps(worker.as_dict(), default=str),
+        status=200,
+        mimetype="applications/json",
+    )
 
 
 @app.route("/workers/<int:id>", methods=["DELETE"])
