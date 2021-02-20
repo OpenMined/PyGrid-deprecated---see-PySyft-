@@ -115,17 +115,17 @@ docker build ./apps/network --file ./apps/network/Dockerfile --tag openmined/gri
 
 ### Manual Start
 
-#### Running a Node
+#### Running a Domain
 
 > ##### Installation
 >
 > First install [`poetry`](https://python-poetry.org/docs/) and run `poetry install` in `apps/node`
 
-To start the PyGrid Node manually, run:
+To start the PyGrid Domain manually, run:
 
 ```
-cd apps/node
-./run.sh --id bob --port 5000 --start_local_db
+cd apps/domain
+./run.sh --port 5000 --start_local_db
 ```
 
 You can pass the arguments or use environment variables to set the network configs.
