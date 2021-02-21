@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -14,6 +15,8 @@ app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///workers.db"
 db = SQLAlchemy(app)
 
+states = {"creating": 0, "failed": 1, "success": 2, "destroyed": 3}
+
 
 class Worker(db.Model):
     __tablename__ = "workers"
@@ -23,7 +26,9 @@ class Worker(db.Model):
     provider = db.Column(db.String(64))
     region = db.Column(db.String(64))
     instance = db.Column(db.String(64))
+    state = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=datetime.now())
+    destroyed_at = db.Column(db.DateTime, default=datetime.now())
 
     def __str__(self):
         return f"<Worker id: {self.id}, Instance: {self.instance_type}>"
@@ -40,27 +45,41 @@ def create():
     data = json.loads(request.json)
     config = Config(**data)
 
+    deployment = None
     deployed = False
-    output = None
+    output = {}
 
     config.app.id = db.session.query(Worker).count() + 1
 
     if config.provider == "aws":
-        aws_deployment = AWS_Serverfull(config=config)
-        deployed, output = aws_deployment.deploy()
+        deployment = AWS_Serverfull(config=config)
     elif config.provider == "azure":
         pass
     elif config.provider == "gcp":
         pass
 
-    if deployed:
+    if deployment.validate():
         worker = Worker(
             id=config.app.id,
             provider=config.provider,
             region=config.vpc.region,
             instance=config.vpc.instance_type.InstanceType,
+            state=states["creating"],
         )
         db.session.add(worker)
+        db.session.commit()
+
+        # deployed, output = deployment.deploy()     # Deploy
+        time.sleep(10)
+        deployed = False
+        output = {}
+
+        worker = Worker.query.get(config.app.id)
+        if deployed:
+            worker.state = states["success"]
+            worker.deployed_at = datetime.now()
+        else:
+            worker.state = states["failed"]
         db.session.commit()
 
     response = {"deloyed": deployed, "output": output}
@@ -99,8 +118,16 @@ def delete_worker(id):
     Only the Node owner and the user who created this worker can access this endpoint.
     """
     worker = Worker.query.get(id)
-    config = Config(provider=worker.provider, app=Config(name="worker", id=id))
-    success = Provider(config).destroy()
-    return Response(
-        json.dumps({"deleted": success}), status=200, mimetype="application/json"
-    )
+    if worker.state == states["success"]:
+        config = Config(provider=worker.provider, app=Config(name="worker", id=id))
+        # success = Provider(config).destroy()
+        success = True
+        if success:
+            worker.state = states["destroyed"]
+            worker.destroyed_at = datetime.now()
+            db.session.commit()
+        return Response(
+            json.dumps({"deleted": success}), status=200, mimetype="application/json"
+        )
+    else:
+        return Response(status=404, mimetype="application/json")

@@ -22,18 +22,28 @@ class Provider:
 
         self.TF = Terraform(dir)
         self.tfscript = terrascript.Terrascript()
+        self.validated = False
 
-    def deploy(self):
+    def validate(self):
         self.TF.write(self.tfscript)
         try:
             self.TF.init()
             self.TF.validate()
+            self.validated = True
+            return True
+        except subprocess.CalledProcessError as err:
+            return False
+
+    def deploy(self):
+        if not self.validated:
+            return (False, {})
+
+        try:
             self.TF.apply()
             output = self.TF.output()
             return (True, output)
         except subprocess.CalledProcessError as err:
-            output = {"ERROR": err}
-            return (False, output)
+            return (False, {"ERROR": err})
 
     def destroy(self):
         try:
