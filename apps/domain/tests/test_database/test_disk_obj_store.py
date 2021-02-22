@@ -6,6 +6,7 @@ from flask import current_app as app
 from syft.core.common import UID
 from syft.core.store import Dataset
 from syft.core.store.storeable_object import StorableObject
+from syft.core.common.serde import _deserialize
 
 from src.main.core.database.store_disk import (
     DiskObjectStore,
@@ -64,13 +65,23 @@ def test_store_item(client, database, cleanup):
     assert database.session.query(BinaryObject).get(dataset.id.value.hex) is not None
 
 
+def test_store_bytes(client, database, cleanup):
+    assert get_metadata(database).length == 0
+
+    storage = DiskObjectStore(database)
+    _id = storage.store_bytes(dataset.to_bytes())
+
+    assert get_metadata(database).length == 1
+    assert database.session.query(BinaryObject).get(_id) is not None
+
+
 def test_contains_true(client, database, cleanup):
     assert get_metadata(database).length == 0
 
     storage = DiskObjectStore(database)
     storage.store(dataset)
 
-    assert storage.__contains__(dataset.id)
+    assert storage.__contains__(dataset.id.value.hex)
 
 
 def test_contains_false(client, database, cleanup):
@@ -78,7 +89,7 @@ def test_contains_false(client, database, cleanup):
 
     storage = DiskObjectStore(database)
 
-    assert not storage.__contains__(dataset.id)
+    assert not storage.__contains__(dataset.id.value.hex)
 
 
 def test_setitem(client, database, cleanup):
@@ -98,7 +109,7 @@ def test_setitem(client, database, cleanup):
         tags=["dummy", "tensor"],
     )
 
-    storage.__setitem__(dataset.id, new_dataset)
+    storage.__setitem__(dataset.id.value.hex, new_dataset)
 
     new_binary = database.session.query(BinaryObject).get(_id).binary
     assert hash(new_binary) != hash(old_binary)
@@ -118,7 +129,7 @@ def test_delitem(client, database, cleanup):
     assert database.session.query(BinaryObject).get(_id) is not None
     assert get_metadata(database).length == 1
 
-    storage.__delitem__(dataset.id)
+    storage.__delitem__(_id)
 
     assert database.session.query(BinaryObject).get(_id) is None
     assert get_metadata(database).length == 0
@@ -164,7 +175,7 @@ def test_get_keys(client, database, cleanup):
     database.session.commit()
 
     keys = storage.keys()
-    assert set(keys) == set([uid1, uid2])
+    assert set(keys) == set([uid1.value.hex, uid2.value.hex])
 
 
 def test_clear(client, database, cleanup):
@@ -273,7 +284,8 @@ def test__getitem__(client, database, cleanup):
     database.session.add(bin_obj)
     database.session.commit()
 
-    retrieved = storage.__getitem__(uid1)
+    retrieved = storage.__getitem__(uid1.value.hex)
+    retrieved = _deserialize(blob=retrieved, from_bytes=True)
     assert retrieved.id == new_dataset1.id
     assert retrieved.description == new_dataset1.description
     assert retrieved.tags == new_dataset1.tags
@@ -300,7 +312,7 @@ def test__getitem__missing(client, database, cleanup):
     database.session.commit()
 
     with pytest.raises(AttributeError):
-        retrieved = storage.__getitem__(uid2)
+        retrieved = storage.__getitem__(uid2.value.hex)
 
 
 def test_get_object(client, database, cleanup):
@@ -322,7 +334,9 @@ def test_get_object(client, database, cleanup):
     database.session.add(bin_obj)
     database.session.commit()
 
-    retrieved = storage.get_object(uid1)
+    retrieved = storage.get_object(uid1.value.hex)
+    retrieved = _deserialize(blob=retrieved, from_bytes=True)
+
     assert retrieved.id == new_dataset1.id
     assert retrieved.description == new_dataset1.description
     assert retrieved.tags == new_dataset1.tags
@@ -348,5 +362,5 @@ def test_get_object_missing(client, database, cleanup):
     database.session.add(bin_obj)
     database.session.commit()
 
-    retrieved = storage.get_object(uid2)
+    retrieved = storage.get_object(uid2.value.hex)
     assert retrieved is None

@@ -1,4 +1,5 @@
 from typing import Optional, Iterable
+from json import loads
 from os.path import getsize
 
 from torch import Tensor
@@ -49,48 +50,66 @@ class DiskObjectStore(ObjectStore):
         self.db.session.add(bin_obj)
         self.db.session.commit()
 
-    def __contains__(self, item: UID) -> bool:
-        self.db.session.rollback()
-        _id = item.value.hex
-        return self.db.session.query(BinaryObject).get(_id) is not None
+    def store_bytes_at(self, key: str, obj: bytes) -> None:
+        bin_obj = self.db.session.query(BinaryObject).get(key)
+        setattr(bin_obj, "binary", obj)
+        self.db.session.commit()
 
-    def __setitem__(self, key: UID, value: Dataset) -> None:
-        obj = self.db.session.query(BinaryObject).get(key.value.hex)
+    def store_bytes(self, obj: bytes) -> str:
+        _id = UID()
+        bin_obj = BinaryObject(id=_id.value.hex, binary=obj)
+        metadata = get_metadata(self.db)
+        metadata.length += 1
+
+        self.db.session.add(bin_obj)
+        self.db.session.commit()
+        return _id.value.hex
+
+    def __contains__(self, key: str) -> bool:
+        self.db.session.rollback()
+        return self.db.session.query(BinaryObject).get(key) is not None
+
+    def __setitem__(self, key: str, value: Dataset) -> None:
+        obj = self.db.session.query(BinaryObject).get(key)
         obj.binary = value.to_bytes()
         self.db.session.commit()
 
-    def __getitem__(self, key: UID) -> Dataset:
+    def __getitem__(self, key: str) -> bytes:
         try:
-            obj = self.db.session.query(BinaryObject).get(key.value.hex)
-            obj = _deserialize(blob=obj.binary, from_bytes=True)
-            return obj
+            obj = self.db.session.query(BinaryObject).get(key)
+            return obj.binary
         except Exception as e:
             logger.trace(f"{type(self)} get item error {key} {e}")
             raise e
 
-    def get_object(self, key: UID) -> Optional[Dataset]:
+    def get_object(self, key: str) -> Optional[Dataset]:
         obj = None
-        if self.db.session.query(BinaryObject).get(key.value.hex) is not None:
+        if self.db.session.query(BinaryObject).get(key) is not None:
             obj = self.__getitem__(key)
         return obj
 
-    def delete(self, key: UID) -> None:
-        obj = self.db.session.query(BinaryObject).get(key.value.hex)
+    def delete(self, key: str) -> None:
+        obj = self.db.session.query(BinaryObject).get(key)
         metadata = get_metadata(self.db)
         metadata.length -= 1
 
         self.db.session.delete(obj)
         self.db.session.commit()
 
-    def __delitem__(self, key: UID) -> None:
+    def __delitem__(self, key: str) -> None:
         self.delete(key=key)
 
     def __len__(self) -> int:
         return get_metadata(self.db).length
 
-    def keys(self) -> Iterable[UID]:
+    def keys(self) -> Iterable[str]:
+        keys = self.db.session.query(BinaryObject.id).all()
+        keys = [k[0] for k in keys]
+        return keys
+
+    def pairs(self):
         ids = self.db.session.query(BinaryObject.id).all()
-        return [UID.from_string(value=_id[0]) for _id in ids]
+        return {key[0]: self.get_object(key) for key in ids}
 
     def clear(self) -> None:
         self.db.session.query(BinaryObject).delete()
