@@ -78,6 +78,9 @@ class UserManager(DatabaseManager):
     def can_triage_requests(self, user_id: str) -> bool:
         return self.role(user_id=user_id).can_triage_requests
 
+    def can_manage_infrastructure(self, user_id: str) -> bool:
+        return self.role(user_id=user_id).can_manage_infrastructure
+
     def role(self, user_id: int):
         try:
             user = self.first(id=user_id)
