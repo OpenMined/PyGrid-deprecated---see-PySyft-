@@ -20,20 +20,31 @@ from .services.setup_service import SetUpService
 from .services.tensor_service import RegisterTensorService
 from .services.role_service import RoleManagerService
 from .services.user_service import UserManagerService
+from .services.dataset_service import DatasetManagerService
 
 # Database Management
 from .database import db
+from .database.store_disk import DiskObjectStore
 from .manager.user_manager import UserManager
 from .manager.role_manager import RoleManager
 from .manager.group_manager import GroupManager
 from .manager.environment_manager import EnvironmentManager
+from .manager.setup_manager import SetupManager
 from .manager.association_request_manager import AssociationRequestManager
+
 
 from nacl.signing import SigningKey
 from nacl.signing import VerifyKey
+from time import sleep
 
 import jwt
 from flask import current_app as app
+from threading import Thread
+
+import syft as sy
+import tenseal as ts
+
+sy.load_lib("tenseal")
 
 
 class GridDomain(Domain):
@@ -64,8 +75,12 @@ class GridDomain(Domain):
         self.users = UserManager(db)
         self.roles = RoleManager(db)
         self.groups = GroupManager(db)
+        self.disk_store = DiskObjectStore(db)
         self.environments = EnvironmentManager(db)
+        self.setup = SetupManager(db)
         self.association_requests = AssociationRequestManager(db)
+
+        self.env_clients = {}
 
         # Grid Domain Services
         self.immediate_services_with_reply.append(AssociationRequestService)
@@ -74,7 +89,12 @@ class GridDomain(Domain):
         self.immediate_services_with_reply.append(RegisterTensorService)
         self.immediate_services_with_reply.append(RoleManagerService)
         self.immediate_services_with_reply.append(UserManagerService)
+        self.immediate_services_with_reply.append(DatasetManagerService)
         self._register_services()
+
+        self.__handlers_flag = True
+        # thread = Thread(target=self.thread_run_handlers)
+        # thread.start()
 
     def login(self, email: str, password: str) -> Dict:
         user = self.users.login(email=email, password=password)
@@ -142,6 +162,29 @@ class GridDomain(Domain):
                 + f"{self.key_emoji(key=self.signing_key.verify_key)}"  # type: ignore
             )
         return res_msg
+
+    def thread_run_handlers(self) -> None:
+        while self.__handlers_flag:
+            sleep(0.1)
+            try:
+                self.clean_up_handlers()
+                self.clean_up_requests()
+                if len(self.request_handlers) > 0:
+                    for request in self.requests:
+                        # check if we have previously already handled this in an earlier iter
+                        if request.id not in self.handled_requests:
+                            for handler in self.request_handlers:
+                                handled = self.check_handler(
+                                    handler=handler, request=request
+                                )
+                                if handled:
+                                    # we handled the request so we can exit the loop
+                                    break
+            except Exception as excp2:
+                print(str(excp2))
+
+    def close(self):
+        self.__handlers_flag = False
 
 
 node = GridDomain(name="om-domain")
