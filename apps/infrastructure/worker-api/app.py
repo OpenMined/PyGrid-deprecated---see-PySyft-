@@ -41,7 +41,7 @@ def get_config(data):
     """Reads environment variables from the domain instance to create a Config
     object for deploying the worker."""
     return Config(
-        app=Config(name="worker", count=1, id=db.session.query(Worker).count()),
+        app=Config(name="worker", count=1, id=db.session.query(Worker).count() + 1),
         apps=[Config(name="worker", count=1)],
         serverless=False,
         websockets=False,

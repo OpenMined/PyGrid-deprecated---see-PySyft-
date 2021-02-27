@@ -350,7 +350,12 @@ class AWS_Serverfull(AWS):
             echo "Installing {self.config.app.name} Dependencies"
             poetry install
 
-            echo "Setting Database URL"
+            echo "Setting environment variables"
+            export CLOUD_PROVIDER={self.config.provider}
+            export REGION={self.config.vpc.region}
+            export VPC_ID={self.vpc.id}
+            export PUBLIC_SUBNET_ID={','.join([public_subnet for _, public_subnet in self.subnets])}
+            export PRIVATE_SUBNET_ID={','.join([private_subnet for private_subnet, _ in self.subnets])}
             export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
 
             nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}

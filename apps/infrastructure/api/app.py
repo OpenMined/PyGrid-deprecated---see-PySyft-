@@ -26,22 +26,27 @@ def deploy():
     data = json.loads(request.json)
     config = Config(**data)
 
+    deployment = None
     deployed = False
     output = None
 
     config.app.id = 0
 
     if config.provider == "aws":
-        if config.serverless:
-            aws_deployment = AWS_Serverless(config)
-            deployed, output = aws_deployment.deploy()
-        else:
-            aws_deployment = AWS_Serverfull(config=config)
-            deployed, output = aws_deployment.deploy()
+        deployment = (
+            AWS_Serverless(config)
+            if config.serverless
+            else AWS_Serverfull(config=config)
+        )
     elif config.provider == "azure":
         pass
     elif config.provider == "gcp":
         pass
+
+    if deployment.validate():
+        # deployed = True
+        # output = {}
+        deployed, output = deployment.deploy()
 
     response = {
         "message": f"Your PyGrid {config.app.name} was deployed successfully"
