@@ -27,14 +27,6 @@ class AWS(Provider):
             region=self.region, shared_credentials_file=self.cred_file
         )
 
-        # Build the Infrastructure
-        self.vpc = None
-        self.subnets = []
-        self.build_vpc()
-        self.build_igw()
-        self.build_public_rt()
-        self.build_subnets()
-
     def build_vpc(self):
         """Adds a VPC."""
         self.vpc = resource.aws_vpc(

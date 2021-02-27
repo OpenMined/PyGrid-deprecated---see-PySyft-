@@ -13,20 +13,37 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        if config.app.name != "worker":
-            # Order matters
-            self.build_security_group()
+        # Build the Infrastructure
+        self.vpc = None
+        self.subnets = []
 
+        self.worker = config.app.name == "worker"
+
+        if self.worker:
+            self.vpc = Config(id=os.environ["VPC_ID"])
+            public_subnet_ids = str(os.environ["PUBLIC_SUBNET_ID"]).split(",")
+            private_subnet_ids = str(os.environ["PRIVATE_SUBNET_ID"]).split(",")
+            self.subnets = [
+                (Config(id=public), Config(id=private))
+                for public, private in zip(public_subnet_ids, private_subnet_ids)
+            ]
+            self.build_security_group()
+            self.build_instance()
+        else:  # Deploy a VPC and domain/network
+            # Order matters
+            self.build_vpc()
+            self.build_igw()
+            self.build_public_rt()
+            self.build_subnets()
+
+            self.build_security_group()
             self.build_database()
 
             # self.writing_exec_script()
             self.build_instance()
             self.build_load_balancer()
 
-            self.output()
-        else:
-            self.build_security_group()
-            self.build_instance()
+        self.output()
 
     def output(self):
         for count in range(self.config.app.count):
@@ -36,19 +53,24 @@ class AWS_Serverfull(AWS):
                 description=f"The public IP address of #{count} instance.",
             )
 
-        self.tfscript += terrascript.Output(
-            "load_balancer_dns",
-            value=var_module(self.load_balancer, "this_elb_dns_name"),
-            description="The DNS name of the ELB.",
-        )
+        if hasattr(self, "load_balancer"):
+            self.tfscript += terrascript.Output(
+                "load_balancer_dns",
+                value=var_module(self.load_balancer, "this_elb_dns_name"),
+                description="The DNS name of the ELB.",
+            )
 
     def build_security_group(self):
         # ----- Security Group ------#
-
+        sg_name = (
+            f"pygrid-{self.config.app.name}-" + f"{str(self.config.app.id)}-sg"
+            if self.worker
+            else "sg"
+        )
         self.security_group = resource.aws_security_group(
             "security_group",
-            name=f"pygrid-{self.config.app.name}-security-group",
-            vpc_id=var(self.vpc.id),
+            name=sg_name,
+            vpc_id=self.vpc.id if self.worker else var(self.vpc.id),
             ingress=[
                 {
                     "description": "HTTPS",
@@ -119,7 +141,7 @@ class AWS_Serverfull(AWS):
                     "self": False,
                 }
             ],
-            tags={"Name": "pygrid-security-group"},
+            tags={"Name": sg_name},
         )
         self.tfscript += self.security_group
 
@@ -141,24 +163,46 @@ class AWS_Serverfull(AWS):
         self.tfscript += self.ami
 
         self.instances = []
+        kwargs = {}
         for count in range(self.config.app.count):
             app = self.config.apps[count]
-            self.write_exec_script(app, index=count)
+            if self.worker:
+                instance_name = (
+                    f"pygrid-{self.config.app.name}-{str(self.config.app.id)}"
+                )
+                kwargs = {
+                    "name": instance_name,
+                    "subnet_ids": [
+                        public_subnet.id for _, public_subnet in self.subnets
+                    ],
+                    "tags": {"Name": instance_name},
+                }
+            else:
+                instance_name = f"pygrid-{self.config.app.name}-instance-{count}"
+                self.write_exec_script(app, index=count)
+                kwargs = {
+                    "name": instance_name,
+                    "subnet_ids": [
+                        var(public_subnet.id) for _, public_subnet in self.subnets
+                    ],
+                    "user_data": var(
+                        f'file("{self.TF.dir}/deploy-instance-{count}.sh")'
+                    ),
+                    "tags": {"Name": instance_name},
+                }
+
             instance = Module(
                 f"pygrid-instance-{count}",
                 instance_count=1,
                 source="terraform-aws-modules/ec2-instance/aws",
-                name=f"pygrid-{self.config.app.name}-instance-{count}",
                 ami=var(self.ami.id),
                 instance_type=self.config.vpc.instance_type.InstanceType,
                 associate_public_ip_address=True,
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
-                subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-                user_data=var(f'file("{self.TF.dir}/deploy-instance-{count}.sh")'),
-                # user_data=self.exec_script(app),
-                tags={"Name": f"pygrid-{self.config.app.name}-instance-{count}"},
+                **kwargs,
             )
+
             self.tfscript += instance
             self.instances.append(instance)
 
