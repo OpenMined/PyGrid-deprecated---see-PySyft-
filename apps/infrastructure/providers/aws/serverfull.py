@@ -1,12 +1,10 @@
 import textwrap
 
-from apps.infrastructure.tf import var
-
 from .aws import *
 
 
 class AWS_Serverfull(AWS):
-    def __init__(self, config) -> None:
+    def __init__(self, config: SimpleNamespace) -> None:
         """
         credentials (dict) : Contains AWS credentials
         """
@@ -19,14 +17,13 @@ class AWS_Serverfull(AWS):
 
             self.build_database()
 
-            # self.writing_exec_script()
-            self.build_instance()
+            self.build_instances()
             self.build_load_balancer()
 
             self.output()
         else:
             self.build_security_group()
-            self.build_instance()
+            self.build_instances()
 
     def output(self):
         for count in range(self.config.app.count):
@@ -42,88 +39,7 @@ class AWS_Serverfull(AWS):
             description="The DNS name of the ELB.",
         )
 
-    def build_security_group(self):
-        # ----- Security Group ------#
-
-        self.security_group = resource.aws_security_group(
-            "security_group",
-            name=f"pygrid-{self.config.app.name}-security-group",
-            vpc_id=var(self.vpc.id),
-            ingress=[
-                {
-                    "description": "HTTPS",
-                    "from_port": 443,
-                    "to_port": 443,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                },
-                {
-                    "description": "HTTP",
-                    "from_port": 80,
-                    "to_port": 80,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                },
-                {
-                    "description": "PyGrid Domains",
-                    "from_port": 5000,
-                    "to_port": 5999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                },
-                {
-                    "description": "PyGrid Workers",
-                    "from_port": 6000,
-                    "to_port": 6999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                },
-                {
-                    "description": "PyGrid Networks",
-                    "from_port": 7000,
-                    "to_port": 7999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                },
-            ],
-            egress=[
-                {
-                    "description": "Egress Connection",
-                    "from_port": 0,
-                    "to_port": 0,
-                    "protocol": "-1",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": False,
-                }
-            ],
-            tags={"Name": "pygrid-security-group"},
-        )
-        self.tfscript += self.security_group
-
-    def build_instance(self):
+    def build_instances(self):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -143,7 +59,7 @@ class AWS_Serverfull(AWS):
         self.instances = []
         for count in range(self.config.app.count):
             app = self.config.apps[count]
-            self.write_exec_script(app, index=count)
+
             instance = Module(
                 f"pygrid-instance-{count}",
                 instance_count=1,
@@ -155,8 +71,8 @@ class AWS_Serverfull(AWS):
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
                 subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-                user_data=var(f'file("{self.root_dir}/deploy-instance-{count}.sh")'),
-                # user_data=self.exec_script(app),
+                # user_data=var(f'file("{self.root_dir}/deploy-instance-{count}.sh")'),
+                user_data=self.write_exec_script(app, index=count),
                 tags={"Name": f"pygrid-{self.config.app.name}-instance-{count}"},
             )
             self.tfscript += instance
@@ -195,6 +111,63 @@ class AWS_Serverfull(AWS):
             tags={"Name": f"pygrid-{self.config.app.name}-load-balancer"},
         )
         self.tfscript += self.load_balancer
+
+    def write_exec_script(self, app, index=0):
+        ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
+
+        # exec_script = "#cloud-boothook\n#!/bin/bash\n"
+        exec_script = "#!/bin/bash\n"
+        exec_script += textwrap.dedent(
+            f"""
+            ## For debugging
+            # redirect stdout/stderr to a file
+            exec &> log.out
+
+
+            echo 'Simple Web Server for testing the deployment'
+            sudo apt update -y
+            sudo apt install apache2 -y
+            sudo systemctl start apache2
+            echo '<h1>OpenMined {self.config.app.name} Server ({index}) Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html
+
+            echo 'Setup Miniconda environment'
+
+            sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+            sudo bash miniconda.sh -b -p miniconda
+            sudo rm miniconda.sh
+            export PATH=/miniconda/bin:$PATH > ~/.bashrc
+            conda init bash
+            source ~/.bashrc
+            conda create -y -n pygrid python=3.7
+            conda activate pygrid
+
+            echo 'Install poetry...'
+            pip install poetry
+
+            echo 'Install GCC'
+            sudo apt-get install python3-dev -y
+            sudo apt-get install libevent-dev -y
+            sudo apt-get install gcc -y
+
+            echo 'Cloning PyGrid'
+            git clone https://github.com/OpenMined/PyGrid
+            git checkout pygrid_0.3.0
+
+            cd /PyGrid/apps/{self.config.app.name}
+
+            echo 'Installing {self.config.app.name} Dependencies'
+            poetry install
+
+            echo 'Setting Database URL'
+            export DATABASE_URL={self.database.engine}+pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}/{self.database.name}
+
+
+            nohup ./run.sh --port {app.port}  --host {app.host} {f'--id {app.id} --network {app.network}' if self.config.app.name == 'domain' else ''}
+        """
+        )
+        # mysql+pymysql://amrmkayid:234567890@pygrid-network-db.cmmptbhxpavm.eu-west-2.rds.amazonaws.com:3306/pygridDB
+
+        return exec_script
 
     def build_database(self):
         """Builds a MySQL central database."""
@@ -262,60 +235,83 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.database
 
-    def write_exec_script(self, app, index=0):
-        exec_script = "#cloud-boothook\n#!/bin/bash\n"
-        exec_script += textwrap.dedent(
-            f'''
-        ## For debugging
-        # redirect stdout/stderr to a file
-        exec &> log.out
+    def build_security_group(self):
+        # ----- Security Group ------#
 
-
-        echo "Simple Web Server for testing the deployment"
-        sudo apt update -y
-        sudo apt install apache2 -y
-        sudo systemctl start apache2
-        echo """
-        <h1 style='color:#f09764; text-align:center'>
-            OpenMined First Server Deployed via Terraform
-        </h1>
-        """ | sudo tee /var/www/html/index.html
-
-        echo "Setup Miniconda environment"
-
-        sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-        sudo bash miniconda.sh -b -p miniconda
-        sudo rm miniconda.sh
-        export PATH=/miniconda/bin:$PATH > ~/.bashrc
-        conda init bash
-        source ~/.bashrc
-        conda create -y -n pygrid python=3.7
-        conda activate pygrid
-
-        echo "Install poetry..."
-        pip install poetry
-
-        echo "Install GCC"
-        sudo apt-get install python3-dev -y
-        sudo apt-get install libevent-dev -y
-        sudo apt-get install gcc -y
-
-        echo "Cloning PyGrid"
-        git clone https://github.com/OpenMined/PyGrid
-        git checkout pygrid_0.3.0
-
-        cd /PyGrid/apps/{self.config.app.name}
-
-        echo "Installing {self.config.app.name} Dependencies"
-        poetry install
-
-        echo "Setting Database URL"
-        export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
-
-        nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
-        '''
+        self.security_group = resource.aws_security_group(
+            "security_group",
+            name=f"pygrid-{self.config.app.name}-security-group",
+            vpc_id=var(self.vpc.id),
+            ingress=[
+                {
+                    "description": "HTTPS",
+                    "from_port": 443,
+                    "to_port": 443,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "HTTP",
+                    "from_port": 80,
+                    "to_port": 80,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Domains",
+                    "from_port": 5000,
+                    "to_port": 5999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Workers",
+                    "from_port": 6000,
+                    "to_port": 6999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {
+                    "description": "PyGrid Networks",
+                    "from_port": 7000,
+                    "to_port": 7999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+            ],
+            egress=[
+                {
+                    "description": "Egress Connection",
+                    "from_port": 0,
+                    "to_port": 0,
+                    "protocol": "-1",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                }
+            ],
+            tags={"Name": "pygrid-security-group"},
         )
-
-        with open(f"{self.root_dir}/deploy-instance-{index}.sh", "w") as deploy_file:
-            deploy_file.write(exec_script)
-        # return exec_script
+        self.tfscript += self.security_group

@@ -13,12 +13,12 @@ from terrascript import Module
 from apps.infrastructure.tf import Terraform
 from apps.infrastructure.utils import Config
 
+from types import SimpleNamespace
+
 
 class Provider:
     def __init__(self, config):
-        self.app_dir = os.path.join(
-            str(Path.home()), ".pygrid", "api", config.app, config.id
-        )
+        self.app_dir = os.path.join(str(Path.home()), ".pygrid", "api", config.app.name)
         os.makedirs(self.app_dir, exist_ok=True)
 
         self.TF = Terraform()

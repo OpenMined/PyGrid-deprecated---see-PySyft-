@@ -1,21 +1,22 @@
-from apps.infrastructure.tf import generate_cidr_block, var, var_module
-
 from ..provider import *
+
+# from ..terraform import generate_cidr_block, var, var_module
+from apps.infrastructure.tf import generate_cidr_block, var, var_module
 
 
 class AWS(Provider):
     """Amazon Web Services (AWS) Cloud Provider."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: SimpleNamespace) -> None:
         """
-        config (Config) : Object storing the required configuration for deployment
+        config (SimpleNamespace) : Object storing the required configuration for deployment
         """
         super().__init__(config)
         self.config = config
 
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.cred_file = os.path.join(credentials_dir, "credentialss.json")
+        self.cred_file = os.path.join(credentials_dir, "credentials.json")
 
         with open(self.cred_file, "w") as f:
             json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
@@ -99,6 +100,7 @@ class AWS(Provider):
                     base_cidr_block=self.vpc.cidr_block, netnum=(2 * i)
                 ),
                 availability_zone=av_zone,
+                map_public_ip_on_launch=True,
                 tags={"Name": f"private-{i}"},
             )
             self.tfscript += private_subnet
@@ -110,6 +112,7 @@ class AWS(Provider):
                     base_cidr_block=self.vpc.cidr_block, netnum=(2 * i + 1)
                 ),
                 availability_zone=av_zone,
+                map_public_ip_on_launch=True,
                 tags={"Name": f"public-{i}"},
             )
             self.tfscript += public_subnet

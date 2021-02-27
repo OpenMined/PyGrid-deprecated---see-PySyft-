@@ -75,7 +75,7 @@ def cli(config: SimpleNamespace, output_file: str, api: str):
 @pass_config
 def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
-    # prev_config = None  # Comment this while developing
+    prev_config = None  # Comment this while developing
 
     if prev_config is not None:
         with open(prev_config, "r") as f:
@@ -134,7 +134,7 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
         \n\nContinue?"""
     ):
 
-        credentials = config.credentials  # Uncomment this while developing
+        # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
         url = urljoin(config.api_url, "/deploy")
 
