@@ -37,19 +37,34 @@ class Worker(db.Model):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
+def get_config(data):
+    """Reads environment variables from the domain instance to create a Config
+    object for deploying the worker."""
+    return Config(
+        app=Config(name="worker", count=1, id=db.session.query(Worker).count()),
+        apps=[Config(name="worker", count=1)],
+        serverless=False,
+        websockets=False,
+        provider=os.environ["CLOUD_PROVIDER"],
+        vpc=Config(
+            region=os.environ["REGION"], instance_type=Config(**data["instance_type"])
+        ),
+        credentials=Config(**data["credentials"]),
+    )
+
+
 @app.route("/deploy", methods=["POST"])
 def create():
     """Creates a worker.
     This endpoint can be accessed by a user to create a new worker."""
 
-    data = json.loads(request.json)
-    config = Config(**data)
+    # data = json.loads(request.json)
+    config = get_config(request.json)
+    print(config)
 
     deployment = None
     deployed = False
     output = {}
-
-    config.app.id = db.session.query(Worker).count() + 1
 
     if config.provider == "aws":
         deployment = AWS_Serverfull(config=config)
@@ -69,10 +84,10 @@ def create():
         db.session.add(worker)
         db.session.commit()
 
-        # deployed, output = deployment.deploy()     # Deploy
-        time.sleep(10)
-        deployed = False
-        output = {}
+        deployed, output = deployment.deploy()  # Deploy
+        # time.sleep(5)
+        # deployed = False
+        # output = {}
 
         worker = Worker.query.get(config.app.id)
         if deployed:
@@ -120,8 +135,7 @@ def delete_worker(id):
     worker = Worker.query.get(id)
     if worker.state == states["success"]:
         config = Config(provider=worker.provider, app=Config(name="worker", id=id))
-        # success = Provider(config).destroy()
-        success = True
+        success = Provider(config).destroy()
         if success:
             worker.state = states["destroyed"]
             worker.destroyed_at = datetime.now()

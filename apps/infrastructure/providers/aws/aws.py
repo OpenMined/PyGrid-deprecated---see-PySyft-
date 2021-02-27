@@ -20,12 +20,12 @@ class AWS(Provider):
         with open(self.cred_file, "w") as f:
             json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
 
-        self.region = config.vpc.region
-        self.av_zones = config.vpc.av_zones
-
         self.tfscript += terrascript.provider.aws(
-            region=self.region, shared_credentials_file=self.cred_file
+            region=self.config.vpc.region, shared_credentials_file=self.cred_file
         )
+
+        self.vpc = None
+        self.subnets = []
 
     def build_vpc(self):
         """Adds a VPC."""
@@ -83,7 +83,7 @@ class AWS(Provider):
         - one Route table : Routes the traffic from the NAT gateway to the private subnet
         """
 
-        for i, av_zone in enumerate(self.av_zones):
+        for i, av_zone in enumerate(self.config.vpc.av_zones):
             private_subnet = resource.aws_subnet(
                 f"private-subnet-{i}",
                 vpc_id=var(self.vpc.id),

@@ -13,10 +13,6 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        # Build the Infrastructure
-        self.vpc = None
-        self.subnets = []
-
         self.worker = config.app.name == "worker"
 
         if self.worker:
@@ -24,8 +20,8 @@ class AWS_Serverfull(AWS):
             public_subnet_ids = str(os.environ["PUBLIC_SUBNET_ID"]).split(",")
             private_subnet_ids = str(os.environ["PRIVATE_SUBNET_ID"]).split(",")
             self.subnets = [
-                (Config(id=public), Config(id=private))
-                for public, private in zip(public_subnet_ids, private_subnet_ids)
+                (Config(id=private), Config(id=public))
+                for private, public in zip(private_subnet_ids, public_subnet_ids)
             ]
             self.build_security_group()
             self.build_instance()
