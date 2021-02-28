@@ -1,8 +1,7 @@
 import boto3
 import click
-from PyInquirer import prompt
-
 from apps.infrastructure.utils import Config, styles
+from PyInquirer import prompt
 
 
 def get_vpc_config() -> Config:

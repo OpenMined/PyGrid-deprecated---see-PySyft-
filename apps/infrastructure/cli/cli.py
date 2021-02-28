@@ -3,12 +3,11 @@ import json
 import os
 import time
 from pathlib import Path
-from urllib.parse import urljoin
 from types import SimpleNamespace
+from urllib.parse import urljoin
 
 import click
 import requests
-
 from apps.infrastructure.cli.providers import aws, azure, gcp
 from apps.infrastructure.utils import COLORS, Config, colored
 
