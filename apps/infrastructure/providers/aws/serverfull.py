@@ -66,7 +66,7 @@ class AWS_Serverfull(AWS):
                 source="terraform-aws-modules/ec2-instance/aws",
                 name=f"pygrid-{self.config.app.name}-instance-{count}",
                 ami=var(self.ami.id),
-                instance_type=self.config.vpc.instance_type.split(" ")[1],
+                instance_type=self.config.vpc.instance_type.InstanceType,
                 associate_public_ip_address=True,
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
@@ -150,22 +150,23 @@ class AWS_Serverfull(AWS):
             sudo apt-get install gcc -y
 
             echo 'Cloning PyGrid'
-            git clone https://github.com/OpenMined/PyGrid
-            git checkout pygrid_0.3.0
+            git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
+            git checkout pygrid_0.4.0
 
             cd /PyGrid/apps/{self.config.app.name}
 
             echo 'Installing {self.config.app.name} Dependencies'
             poetry install
 
+            ## TODO(amr): remove this after poetry updates
+            pip install pymysql
+
             echo 'Setting Database URL'
             export DATABASE_URL={self.database.engine}+pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}/{self.database.name}
 
-
-            nohup ./run.sh --port {app.port}  --host {app.host} {f'--id {app.id} --network {app.network}' if self.config.app.name == 'domain' else ''}
+            nohup ./run.sh --port {app.port}  --host {app.host}
         """
         )
-        # mysql+pymysql://amrmkayid:234567890@pygrid-network-db.cmmptbhxpavm.eu-west-2.rds.amazonaws.com:3306/pygridDB
 
         return exec_script
 
@@ -291,6 +292,17 @@ class AWS_Serverfull(AWS):
                     "description": "PyGrid Networks",
                     "from_port": 7000,
                     "to_port": 7999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": True,
+                },
+                {  ## TODO(amr): remove SSH later in production
+                    "description": "SSH",
+                    "from_port": 22,
+                    "to_port": 22,
                     "protocol": "tcp",
                     "cidr_blocks": ["0.0.0.0/0"],
                     "ipv6_cidr_blocks": ["::/0"],

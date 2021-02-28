@@ -1,10 +1,9 @@
 import json
 
-from flask import Flask, Response, jsonify, request
-
 from apps.infrastructure.providers import AWS_Serverfull, AWS_Serverless
 from apps.infrastructure.providers.provider import Provider
 from apps.infrastructure.utils import Config
+from flask import Flask, Response, jsonify, request
 
 from .models import Worker, db
 
