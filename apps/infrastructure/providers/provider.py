@@ -10,14 +10,14 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from apps.infrastructure.tf import Terraform
+from apps.infrastructure.tf import ROOT_DIR, Terraform
 from apps.infrastructure.utils import Config
 
 
 class Provider:
     def __init__(self, config):
         folder_name = f"{config.provider}-{config.app.name}-{config.app.id}"
-        dir = os.path.join(str(Path.home()), ".pygrid", "api", folder_name)
+        dir = os.path.join(ROOT_DIR, folder_name)
         os.makedirs(dir, exist_ok=True)
 
         self.TF = Terraform(dir)
