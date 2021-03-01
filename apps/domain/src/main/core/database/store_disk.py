@@ -111,6 +111,12 @@ class DiskObjectStore(ObjectStore):
             obj = self.__getitem__(key)
         return obj
 
+    def get_object_info(self, key: str) -> Optional[dict]:
+        obj = self.db.session.query(JsonObject).get(key)
+        if obj is not None:
+            obj = obj.binary
+        return obj
+
     def delete(self, key: str) -> None:
         obj = self.db.session.query(BinaryObject).get(key)
         json_obj = self.db.session.query(JsonObject).get(key)
@@ -135,6 +141,10 @@ class DiskObjectStore(ObjectStore):
     def pairs(self):
         ids = self.db.session.query(BinaryObject.id).all()
         return {key[0]: self.get_object(key) for key in ids}
+
+    def pairs_info(self):
+        ids = self.db.session.query(JsonObject.id).all()
+        return {key[0]: self.get_object_info(key) for key in ids}
 
     def clear(self) -> None:
         self.db.session.query(BinaryObject).delete()

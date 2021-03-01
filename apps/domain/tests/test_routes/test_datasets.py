@@ -179,6 +179,58 @@ def test_get_all_datasets(client, database, cleanup):
     assert b64decode(datasets.get(_id2, None)) == obj2_bytes
 
 
+def test_get_all_datasets_info(client, database, cleanup):
+    new_role = create_role(*owner_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+    new_user = create_user(*user2)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    uid1 = UID()
+    new_dataset = create_dataset(
+        _id=uid1,
+        data=[storable2],
+        description="Dummy tensor 1",
+        tags=["dummy1", "tensor"],
+    )
+    storage = DiskObjectStore(database)
+    obj1_bytes = dataset.to_bytes()
+    obj2_bytes = new_dataset.to_bytes()
+    _id1 = storage.store_bytes(obj1_bytes)
+    _id2 = storage.store_bytes(obj2_bytes)
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    result = client.get(
+        "/dcfl/datasets/info", headers=headers, content_type="application/json"
+    )
+
+    assert result.status_code == 200
+    datasets = result.get_json().get("datasets", None)
+    assert datasets is not None
+    assert datasets.get(_id1, None) is not None
+    assert datasets.get(_id2, None) is not None
+
+    assert dataset.tags == datasets.get(_id1, None)["tags"]
+    assert dataset.description == datasets.get(_id1, None)["description"]
+    assert dataset.read_permissions == datasets.get(_id1, None)["read_permissions"]
+    assert dataset.search_permissions == datasets.get(_id1, None)["search_permissions"]
+
+    assert new_dataset.tags == datasets.get(_id2, None)["tags"]
+    assert new_dataset.description == datasets.get(_id2, None)["description"]
+    assert new_dataset.read_permissions == datasets.get(_id2, None)["read_permissions"]
+    assert (
+        new_dataset.search_permissions == datasets.get(_id2, None)["search_permissions"]
+    )
+
+
 def test_get_specific_dataset(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
@@ -211,6 +263,41 @@ def test_get_specific_dataset(client, database, cleanup):
 
     retrieved = b64decode(retrieved)
     assert retrieved == obj_bytes
+
+
+def test_get_specific_dataset_info(client, database, cleanup):
+    new_role = create_role(*owner_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+    new_user = create_user(*user2)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    obj_bytes = dataset.to_bytes()
+    storage = DiskObjectStore(database)
+    _id = storage.store_bytes(obj_bytes)
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    result = client.get(
+        "/dcfl/datasets/info/{}".format(_id),
+        headers=headers,
+        content_type="application/json",
+    )
+    assert result.status_code == 200
+
+    retrieved = result.get_json().get(_id, None)
+    assert retrieved is not None
+    assert retrieved["tags"] == dataset.tags
+    assert retrieved["description"] == dataset.description
+    assert retrieved["read_permissions"] == dataset.read_permissions
+    assert retrieved["search_permissions"] == dataset.search_permissions
 
 
 def test_update_dataset(client, database, cleanup):
