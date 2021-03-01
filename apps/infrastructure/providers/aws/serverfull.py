@@ -58,10 +58,8 @@ class AWS_Serverfull(AWS):
 
     def build_security_group(self):
         # ----- Security Group ------#
-        sg_name = (
-            f"pygrid-{self.config.app.name}-" + f"{str(self.config.app.id)}-sg"
-            if self.worker
-            else "sg"
+        sg_name = f"pygrid-{self.config.app.name}-" + (
+            f"{str(self.config.app.id)}-sg" if self.worker else "sg"
         )
         self.security_group = resource.aws_security_group(
             "security_group",

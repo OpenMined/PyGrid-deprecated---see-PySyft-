@@ -58,6 +58,7 @@ def get_instance_type(region):
             {"Name": "instance-type", "Values": ["p*"]}
         ],
         "Compute Optimized Instances": [{"Name": "instance-type", "Values": ["c5*"]}],
+        "General Purpose Instances": [{"Name": "instance-type", "Values": ["t2*"]}],
         "Free Tier Instances": [{"Name": "free-tier-eligible", "Values": ["true"]}],
     }
 
