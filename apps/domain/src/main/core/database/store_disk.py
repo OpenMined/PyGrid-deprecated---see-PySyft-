@@ -11,6 +11,7 @@ from syft.core.common.serde import _deserialize
 from syft.core.store.storeable_object import StorableObject
 
 from .bin_storage.bin_obj import BinaryObject
+from .bin_storage.json_obj import JsonObject
 from .bin_storage.metadata import StorageMetadata, get_metadata
 from . import db, BaseModel
 
@@ -33,6 +34,16 @@ def create_dataset(
     return obj
 
 
+def dataset_to_dict(dataset: Dataset) -> dict:
+    _dict = {}
+    _dict["id"] = dataset.id.value.hex
+    _dict["tags"] = dataset.tags
+    _dict["description"] = dataset.description
+    _dict["read_permissions"] = dataset.read_permissions
+    _dict["search_permissions"] = dataset.search_permissions
+    return _dict
+
+
 class DiskObjectStore(ObjectStore):
     def __init__(self, db):
         self.db = db
@@ -52,16 +63,28 @@ class DiskObjectStore(ObjectStore):
 
     def store_bytes_at(self, key: str, obj: bytes) -> None:
         bin_obj = self.db.session.query(BinaryObject).get(key)
+
+        dataset = _deserialize(blob=obj, from_bytes=True)
+        json_obj = self.db.session.query(JsonObject).get(key)
+        _json = dataset_to_dict(dataset)
+
         setattr(bin_obj, "binary", obj)
+        setattr(json_obj, "binary", _json)
         self.db.session.commit()
 
     def store_bytes(self, obj: bytes) -> str:
         _id = UID()
         bin_obj = BinaryObject(id=_id.value.hex, binary=obj)
+
+        dataset = _deserialize(blob=obj, from_bytes=True)
+        json_obj = dataset_to_dict(dataset)
+        json_obj = JsonObject(id=_id.value.hex, binary=json_obj)
+
         metadata = get_metadata(self.db)
         metadata.length += 1
 
         self.db.session.add(bin_obj)
+        self.db.session.add(json_obj)
         self.db.session.commit()
         return _id.value.hex
 
@@ -90,10 +113,12 @@ class DiskObjectStore(ObjectStore):
 
     def delete(self, key: str) -> None:
         obj = self.db.session.query(BinaryObject).get(key)
+        json_obj = self.db.session.query(JsonObject).get(key)
         metadata = get_metadata(self.db)
         metadata.length -= 1
 
         self.db.session.delete(obj)
+        self.db.session.delete(json_obj)
         self.db.session.commit()
 
     def __delitem__(self, key: str) -> None:

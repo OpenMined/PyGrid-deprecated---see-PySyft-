@@ -86,6 +86,7 @@ def cleanup(database):
         database.session.query(Group).delete()
         database.session.query(UserGroup).delete()
         database.session.query(BinaryObject).delete()
+        database.session.query(JsonObject).delete()
         database.session.query(StorageMetadata).delete()
         database.session.commit()
     except:
@@ -127,6 +128,13 @@ def test_create_dataset(client, database, cleanup):
 
     assert retrieved == serialized
     assert database.session.query(BinaryObject).get(_id).binary == obj_bytes
+
+    assert database.session.query(JsonObject).get(_id) is not None
+    assert (
+        database.session.query(JsonObject).get(_id).binary["description"]
+        == dataset.description
+    )
+    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
 
 
 def test_get_all_datasets(client, database, cleanup):
@@ -236,6 +244,13 @@ def test_update_dataset(client, database, cleanup):
 
     assert database.session.query(BinaryObject).get(_id).binary == obj1_bytes
 
+    assert database.session.query(JsonObject).get(_id) is not None
+    assert (
+        database.session.query(JsonObject).get(_id).binary["description"]
+        == dataset.description
+    )
+    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
+
     result = client.put(
         "/dcfl/datasets/{}".format(_id),
         data=dumps({"dataset": b64encode(obj2_bytes).decode(ENCODING)}),
@@ -245,6 +260,15 @@ def test_update_dataset(client, database, cleanup):
 
     assert result.status_code == 204
     assert database.session.query(BinaryObject).get(_id).binary == obj2_bytes
+
+    assert database.session.query(JsonObject).get(_id) is not None
+    assert (
+        database.session.query(JsonObject).get(_id).binary["description"]
+        == new_dataset.description
+    )
+    assert (
+        database.session.query(JsonObject).get(_id).binary["tags"] == new_dataset.tags
+    )
 
 
 def test_delete_dataset(client, database, cleanup):
@@ -270,6 +294,13 @@ def test_delete_dataset(client, database, cleanup):
 
     assert database.session.query(BinaryObject).get(_id).binary == obj_bytes
 
+    assert database.session.query(JsonObject).get(_id) is not None
+    assert (
+        database.session.query(JsonObject).get(_id).binary["description"]
+        == dataset.description
+    )
+    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
+
     result = client.delete(
         "/dcfl/datasets/{}".format(_id),
         headers=headers,
@@ -277,3 +308,5 @@ def test_delete_dataset(client, database, cleanup):
     )
 
     assert result.status_code == 204
+    assert database.session.query(BinaryObject).get(_id) is None
+    assert database.session.query(JsonObject).get(_id) is None
