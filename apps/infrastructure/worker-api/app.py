@@ -49,7 +49,6 @@ def get_config(data):
         vpc=Config(
             region=os.environ["REGION"], instance_type=Config(**data["instance_type"])
         ),
-        credentials=Config(**data["credentials"]),
     )
 
 
