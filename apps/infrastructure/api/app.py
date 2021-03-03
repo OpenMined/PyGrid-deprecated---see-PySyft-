@@ -38,12 +38,9 @@ def deploy():
 
     deployment = None
     deployed = False
-    output = None
     output = {}
 
     config.app.id = db.session.query(Domain).count() + 1
-
-    config.app.id = 0
 
     if config.provider == "aws":
         deployment = (

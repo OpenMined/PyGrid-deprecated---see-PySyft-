@@ -11,8 +11,8 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from apps.infrastructure.tf import ROOT_DIR, Terraform
-from apps.infrastructure.utils import Config
+from ..tf import ROOT_DIR, Terraform
+from ..utils import Config
 
 
 class Provider:
