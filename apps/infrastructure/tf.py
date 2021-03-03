@@ -12,7 +12,7 @@ ROOT_DIR = os.path.join(str(Path.home()), ".pygrid", "api")
 
 
 class Terraform:
-    def __init__(self, dir) -> None:
+    def __init__(self, dir: str) -> None:
         super().__init__()
         self.dir = dir
 

@@ -396,7 +396,8 @@ def delete_autoscaling_condition(autoscaling_id):
 @token_required
 def create_node(current_user):
     # Get request body
-    content = request.get_json()
+    content = json.loads(request.data)
+
     if not content:
         content = {}
 
@@ -415,7 +416,7 @@ def create_node(current_user):
 
 @dcfl_route.route("/workers/<worker_id>", methods=["GET"])
 @token_required
-def get_node(current_user, worker_id):
+def get_worker(current_user, worker_id):
     # Get request body
     content = request.get_json()
     if not content:

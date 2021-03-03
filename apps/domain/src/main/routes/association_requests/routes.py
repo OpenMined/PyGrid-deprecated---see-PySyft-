@@ -23,6 +23,14 @@ def send_association_request(current_user):
     if not content:
         content = {}
 
+    # ADD token parameter
+    token = request.headers.get("token", None)
+    content["token"] = token
+
+    # ADD sender address parameter
+    sender_address = "http://{}".format(request.host)
+    content["sender_address"] = sender_address
+
     status_code, response_msg = error_handler(
         route_logic, SendAssociationRequestMessage, current_user, content
     )
@@ -37,15 +45,14 @@ def send_association_request(current_user):
 
 
 @association_request_route.route("/receive", methods=["POST"])
-@token_required
-def recv_association_request(current_user):
+def recv_association_request():
     # Get request body
     content = request.get_json()
     if not content:
         content = {}
 
     status_code, response_msg = error_handler(
-        route_logic, ReceiveAssociationRequestMessage, current_user, content
+        route_logic, ReceiveAssociationRequestMessage, None, content
     )
 
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
@@ -64,6 +71,14 @@ def reply_association_request(current_user):
     content = request.get_json()
     if not content:
         content = {}
+
+    # ADD token parameter
+    token = request.headers.get("token", None)
+    content["token"] = token
+
+    # ADD sender address parameter
+    sender_address = "http://{}".format(request.host)
+    content["sender_address"] = sender_address
 
     status_code, response_msg = error_handler(
         route_logic, RespondAssociationRequestMessage, current_user, content

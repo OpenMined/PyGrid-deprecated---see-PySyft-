@@ -3,17 +3,24 @@ import secrets
 from typing import List
 from typing import Type
 from typing import Union
+from ..database.environment.environment import Environment
 
 # third party
 from nacl.signing import VerifyKey
+from nacl.encoding import HexEncoder
+from nacl.signing import SigningKey
 
 # syft relative
 from syft.core.node.abstract.node import AbstractNode
 from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithReply
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithoutReply
-from syft.decorators.syft_decorator_impl import syft_decorator
 from syft.core.common.message import ImmediateSyftMessageWithReply
+
+# from syft.grid.client import connect
+from syft.grid.connections.http_connection import HTTPConnection
+from syft.core.node.domain.client import DomainClient
+from ..database.utils import model_to_json
 
 from syft.grid.messages.infra_messages import (
     CreateWorkerMessage,
@@ -31,37 +38,69 @@ from syft.grid.messages.infra_messages import (
     DeleteWorkerResponse,
 )
 
+from ..exceptions import AuthorizationError
 
-@syft_decorator(typechecking=True)
+
 def create_worker_msg(
     msg: CreateWorkerMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> CreateWorkerResponse:
     try:
         # TODO:
         # 1 - Deploy a Worker into the cloud using the parameters in msg.content
         # 2 - Save worker adress/metadata at node.workers
 
-        final_msg = "Worker created succesfully!"
-        success = True
+        _current_user_id = msg.content.get("current_user", None)
 
+        users = node.users
+
+        if not _current_user_id:
+            _current_user_id = users.first(
+                verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+            ).id
+
+        _current_user = node.users.first(id=_current_user_id)
+        env_parameters = {
+            i: msg.content[i]
+            for i in msg.content.keys()
+            if i in list(Environment.__table__.columns.keys())
+        }
+        # env_client = connect(
+        #    url=msg.content["address"],  # Domain Address
+        #    conn_type=HTTPConnection,  # HTTP Connection Protocol
+        #    client_type=DomainClient,
+        #    user_key=SigningKey(
+        #        _current_user.private_key.encode("utf-8"), encoder=HexEncoder
+        #    ),
+        # )
+
+        # env_parameters["syft_address"] = (
+        #    env_client.address.serialize().SerializeToString().decode("ISO-8859-1")
+        # )
+        new_env = node.environments.register(**env_parameters)
+        node.environments.association(user_id=_current_user_id, env_id=new_env.id)
+
+        # node.in_memory_client_registry[env_client.domain_id] = env_client
+
+        final_msg = "Worker created succesfully!"
         return CreateWorkerResponse(
             address=msg.reply_to,
-            success=success,
+            status_code=200,
             content={"msg": final_msg},
         )
     except Exception as e:
         return CreateWorkerResponse(
             address=msg.reply_to,
-            success=False,
+            status_code=500,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def check_worker_deployment_msg(
     msg: CheckWorkerDeploymentMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> CheckWorkerDeploymentResponse:
     try:
         # TODO:
@@ -72,96 +111,176 @@ def check_worker_deployment_msg(
 
         return CheckWorkerDeploymentMessage(
             address=msg.reply_to,
-            success=final_status,
+            status_code=final_status,
             content={"deployment_status": final_msg},
         )
     except Exception as e:
         return CheckWorkerDeploymentMessage(
             address=msg.reply_to,
-            success=False,
+            status_code=500,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def get_worker_msg(
     msg: GetWorkerMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> GetWorkerResponse:
     try:
         # TODO:
         # final_msg = node.workers[msg.content["worker_id"]]
+        worker_id = msg.content.get("worker_id", None)
+        _current_user_id = msg.content.get("current_user", None)
 
-        final_msg = {
-            "worker": {"id": "9846165", "address": "159.156.128.165", "datasets": 25320}
-        }
-        final_status = True
+        users = node.users
+
+        if not _current_user_id:
+            _current_user_id = users.first(
+                verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+            ).id
+        env_ids = [
+            env.id for env in node.environments.get_environments(user=_current_user_id)
+        ]
+
+        if int(worker_id) in env_ids:
+            _msg = model_to_json(node.environments.first(id=int(worker_id)))
+        else:
+            _msg = {}
 
         return GetWorkerResponse(
             address=msg.reply_to,
-            success=final_status,
-            content=final_msg,
+            status_code=200,
+            content=_msg,
         )
     except Exception as e:
-        return CheckWorkerDeploymentMessage(
+        return GetWorkerResponse(
             address=msg.reply_to,
-            success=False,
+            status_code=500,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def get_workers_msg(
     msg: GetWorkersMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> GetWorkersResponse:
     try:
         # TODO:
         # final_msg = node.workers
+        try:
+            _current_user_id = msg.content.get("current_user", None)
+        except Exception:
+            _current_user_id = None
 
-        final_msg = {
-            "workers": [
-                {"id": "546513231a", "address": "159.156.128.165", "datasets": 25320},
-                {"id": "asfa16f5aa", "address": "138.142.125.125", "datasets": 2530},
-                {"id": "af61ea3a3f", "address": "19.16.98.146", "datasets": 2320},
-                {"id": "af4a51adas", "address": "15.59.18.165", "datasets": 5320},
-            ]
-        }
-        final_status = True
+        users = node.users
+
+        if not _current_user_id:
+            _current_user_id = users.first(
+                verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+            ).id
+
+        _current_user = node.users.first(id=_current_user_id)
+
+        envs = node.environments.get_environments(user=_current_user_id)
+
+        _msg = [model_to_json(node.environments.first(id=env.id)) for env in envs]
 
         return GetWorkersResponse(
             address=msg.reply_to,
-            success=final_status,
-            content=final_msg,
+            status_code=200,
+            content=_msg,
         )
     except Exception as e:
         return GetWorkersResponse(
             address=msg.reply_to,
-            success=False,
+            status_code=False,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def del_worker_msg(
     msg: DeleteWorkerMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> DeleteWorkerResponse:
+    # Get Payload Content
+    _worker_id = msg.content.get("worker_id", None)
+    _current_user_id = msg.content.get("current_user", None)
+
+    users = node.users
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    _current_user = users.first(id=_current_user_id)
+
+    # Owner / Admin
+    if users.can_manage_infrastructure(user_id=_current_user_id):
+        node.environments.delete_associations(environment_id=_worker_id)
+        node.environments.delete(id=_worker_id)
+    else:  # Env Owner
+        envs = [
+            int(env.id)
+            for env in node.environments.get_environments(user=_current_user_id)
+        ]
+        if int(_worker_id) in envs:
+            node.environments.delete_associations(environment_id=_worker_id)
+            node.environments.delete(id=_worker_id)
+        else:
+            raise AuthorizationError(
+                "You're not allowed to delete this environment information!"
+            )
+
     return DeleteWorkerResponse(
         address=msg.reply_to,
-        success=True,
+        status_code=200,
         content={"msg": "Worker was deleted succesfully!"},
     )
 
 
-@syft_decorator(typechecking=True)
 def update_worker_msg(
     msg: UpdateWorkerMessage,
     node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> UpdateWorkerResponse:
+    # Get Payload Content
+    _worker_id = msg.content.get("worker_id", None)
+    _current_user_id = msg.content.get("current_user", None)
+
+    env_parameters = {
+        i: msg.content[i]
+        for i in msg.content.keys()
+        if i in list(Environment.__table__.columns.keys())
+    }
+
+    users = node.users
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    _current_user = users.first(id=_current_user_id)
+
+    # Owner / Admin
+    if users.can_manage_infrastructure(user_id=_current_user_id):
+        node.environments.modify({"id": _worker_id}, env_parameters)
+    else:  # Env Owner
+        envs = [
+            int(env.id)
+            for env in node.environments.get_environments(user=_current_user_id)
+        ]
+        if int(_worker_id) in envs:
+            node.environments.modify({"id": _worker_id}, env_parameters)
+        else:
+            raise AuthorizationError(
+                "You're not allowed to update this environment information!"
+            )
     return UpdateWorkerResponse(
         address=msg.reply_to,
-        success=True,
+        status_code=200,
         content={"msg": "Worker was updated succesfully!"},
     )
 
@@ -199,7 +318,7 @@ class DomainInfrastructureService(ImmediateNodeServiceWithReply):
         DeleteWorkerResponse,
     ]:
         return DomainInfrastructureService.msg_handler_map[type(msg)](
-            msg=msg, node=node
+            msg=msg, node=node, verify_key=verify_key
         )
 
     @staticmethod

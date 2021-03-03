@@ -3,6 +3,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from types import SimpleNamespace
 
 import terrascript
 import terrascript.data as data
@@ -17,10 +18,10 @@ from apps.infrastructure.utils import Config
 class Provider:
     def __init__(self, config):
         folder_name = f"{config.provider}-{config.app.name}-{config.app.id}"
-        dir = os.path.join(ROOT_DIR, folder_name)
-        os.makedirs(dir, exist_ok=True)
+        _dir = os.path.join(ROOT_DIR, folder_name)
+        os.makedirs(_dir, exist_ok=True)
 
-        self.TF = Terraform(dir)
+        self.TF = Terraform(dir=_dir)
         self.tfscript = terrascript.Terrascript()
         self.validated = False
 

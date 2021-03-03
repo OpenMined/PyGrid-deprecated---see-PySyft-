@@ -1,6 +1,6 @@
 import boto3
 import click
-from PyInquirer import Separator, prompt
+from PyInquirer import prompt
 
 from apps.infrastructure.utils import Config, styles
 

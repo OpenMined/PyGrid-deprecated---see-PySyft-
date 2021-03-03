@@ -8,7 +8,6 @@ from urllib.parse import urljoin
 
 import click
 import requests
-from PyInquirer import Separator, prompt
 
 from apps.infrastructure.cli.providers import aws, azure, gcp
 from apps.infrastructure.utils import COLORS, Config, colored

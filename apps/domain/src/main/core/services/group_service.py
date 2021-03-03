@@ -6,13 +6,13 @@ from typing import Union
 
 # third party
 from nacl.signing import VerifyKey
+from nacl.encoding import HexEncoder
 
 # syft relative
 from syft.core.node.abstract.node import AbstractNode
 from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithReply
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithoutReply
-from syft.decorators.syft_decorator_impl import syft_decorator
 from syft.core.common.message import ImmediateSyftMessageWithReply
 
 from syft.grid.messages.group_messages import (
@@ -28,59 +28,178 @@ from syft.grid.messages.group_messages import (
     GetGroupsResponse,
 )
 
+from ..database.utils import model_to_json
+from ..exceptions import AuthorizationError, GroupNotFoundError, MissingRequestKeyError
 
-@syft_decorator(typechecking=True)
+
 def create_group_msg(
     msg: CreateGroupMessage,
+    node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> CreateGroupResponse:
+    _current_user_id = msg.content.get("current_user", None)
+    _group_name = msg.content.get("name", None)
+    _users = msg.content.get("users", None)
+
+    users = node.users
+
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    # Checks
+    _is_allowed = node.users.can_create_groups(user_id=_current_user_id)
+
+    if not _group_name:
+        raise MissingRequestKeyError("Invalid group name!")
+    elif _is_allowed:
+        node.groups.create(group_name=_group_name, users=_users)
+    else:
+        raise AuthorizationError("You're not allowed to create groups!")
+
     return CreateGroupResponse(
         address=msg.reply_to,
-        success=True,
-        content={"msg": "Association request sent!"},
+        status_code=200,
+        content={"msg": "Group created successfully!"},
     )
 
 
-@syft_decorator(typechecking=True)
 def update_group_msg(
     msg: UpdateGroupMessage,
+    node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> UpdateGroupResponse:
+    _current_user_id = msg.content.get("current_user", None)
+    _group_id = msg.content.get("group_id", None)
+    _group_name = msg.content.get("name", None)
+    _users = msg.content.get("users", None)
+
+    users = node.users
+
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    # Checks
+    _is_allowed = node.users.can_create_groups(user_id=_current_user_id)
+
+    if not node.groups.contain(id=_group_id):
+        raise GroupNotFoundError("Group ID not found!")
+    elif _is_allowed:
+        node.groups.update(group_id=_group_id, group_name=_group_name, users=_users)
+    else:
+        raise AuthorizationError("You're not allowed to get this group!")
+
     return UpdateGroupResponse(
         address=msg.reply_to,
-        success=True,
-        content={"msg": "Association request received!"},
+        status_code=200,
+        content={"msg": "Group updated successfully!"},
     )
 
 
-@syft_decorator(typechecking=True)
 def get_group_msg(
     msg: GetGroupMessage,
+    node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> GetGroupResponse:
+    _current_user_id = msg.content.get("current_user", None)
+    _group_id = msg.content.get("group_id", None)
+
+    users = node.users
+
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    # Checks
+    _is_allowed = node.users.can_create_groups(user_id=_current_user_id)
+
+    if not node.groups.contain(id=_group_id):
+        raise GroupNotFoundError("Group ID not found!")
+    elif _is_allowed:
+        _group = node.groups.first(id=_group_id)
+    else:
+        raise AuthorizationError("You're not allowed to get this group!")
+
+    _msg = model_to_json(_group)
+    _msg["users"] = node.groups.get_users(group_id=_group_id)
+
     return GetGroupResponse(
         address=msg.reply_to,
-        success=True,
-        content={"msg": "Association request was replied!"},
+        status_code=200,
+        content=_msg,
     )
 
 
-@syft_decorator(typechecking=True)
 def get_all_groups_msg(
     msg: GetGroupsMessage,
+    node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> GetGroupsResponse:
+
+    try:
+        _current_user_id = msg.content.get("current_user", None)
+    except Exception:
+        _current_user_id = None
+
+    users = node.users
+
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    # Checks
+    _is_allowed = node.users.can_create_groups(user_id=_current_user_id)
+    if _is_allowed:
+        _groups = node.groups.all()
+    else:
+        raise AuthorizationError("You're not allowed to get the groups!")
+
+    _groups = [model_to_json(group) for group in _groups]
+    for group in _groups:
+        group["users"] = node.groups.get_users(group_id=group["id"])
+
     return GetGroupsResponse(
         address=msg.reply_to,
-        success=True,
-        content={"association-request": {"ID": "51613546", "address": "156.89.33.200"}},
+        status_code=200,
+        content=_groups,
     )
 
 
-@syft_decorator(typechecking=True)
 def del_group_msg(
     msg: DeleteGroupMessage,
+    node: AbstractNode,
+    verify_key: VerifyKey,
 ) -> DeleteGroupResponse:
+    _current_user_id = msg.content.get("current_user", None)
+    _group_id = msg.content.get("group_id", None)
+
+    users = node.users
+
+    if not _current_user_id:
+        _current_user_id = users.first(
+            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+        ).id
+
+    # Checks
+    _is_allowed = node.users.can_create_groups(user_id=_current_user_id)
+
+    if not node.groups.contain(id=_group_id):
+        raise GroupNotFoundError("Group ID not found!")
+    elif _is_allowed:
+        node.groups.delete_association(group=_group_id)
+        node.groups.delete(id=_group_id)
+    else:
+        raise AuthorizationError("You're not allowed to delete this group!")
+
     return DeleteGroupResponse(
         address=msg.reply_to,
-        success=True,
-        content={"msg": "Association request deleted!"},
+        status_code=200,
+        content={"msg": "User deleted successfully!"},
     )
 
 
@@ -113,7 +232,9 @@ class GroupManagerService(ImmediateNodeServiceWithReply):
         GetGroupsResponse,
         DeleteGroupResponse,
     ]:
-        return GroupManagerService.msg_handler_map[type(msg)](msg=msg)
+        return GroupManagerService.msg_handler_map[type(msg)](
+            msg=msg, node=node, verify_key=verify_key
+        )
 
     @staticmethod
     def message_handler_types() -> List[Type[ImmediateSyftMessageWithReply]]:

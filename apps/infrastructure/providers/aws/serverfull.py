@@ -1,12 +1,10 @@
 import textwrap
 
-from apps.infrastructure.tf import var
-
 from .aws import *
 
 
 class AWS_Serverfull(AWS):
-    def __init__(self, config) -> None:
+    def __init__(self, config: SimpleNamespace) -> None:
         """
         credentials (dict) : Contains AWS credentials
         """
@@ -35,8 +33,7 @@ class AWS_Serverfull(AWS):
             self.build_security_group()
             self.build_database()
 
-            # self.writing_exec_script()
-            self.build_instance()
+            self.build_instances()
             self.build_load_balancer()
 
         self.output()
@@ -179,9 +176,7 @@ class AWS_Serverfull(AWS):
                     "subnet_ids": [
                         var(public_subnet.id) for _, public_subnet in self.subnets
                     ],
-                    "user_data": var(
-                        f'file("{self.TF.dir}/deploy-instance-{count}.sh")'
-                    ),
+                    "user_data": self.write_exec_script(app, index=count),
                     "tags": {"Name": instance_name},
                 }
 
@@ -233,6 +228,69 @@ class AWS_Serverfull(AWS):
             tags={"Name": f"pygrid-{self.config.app.name}-load-balancer"},
         )
         self.tfscript += self.load_balancer
+
+    def write_exec_script(self, app, index=0):
+        ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
+
+        # exec_script = "#cloud-boothook\n#!/bin/bash\n"
+        exec_script = "#!/bin/bash\n"
+        exec_script += textwrap.dedent(
+            f"""
+            ## For debugging
+            # redirect stdout/stderr to a file
+            exec &> log.out
+
+
+            echo 'Simple Web Server for testing the deployment'
+            sudo apt update -y
+            sudo apt install apache2 -y
+            sudo systemctl start apache2
+            echo '<h1>OpenMined {self.config.app.name} Server ({index}) Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html
+
+            echo 'Setup Miniconda environment'
+
+            sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+            sudo bash miniconda.sh -b -p miniconda
+            sudo rm miniconda.sh
+            export PATH=/miniconda/bin:$PATH > ~/.bashrc
+            conda init bash
+            source ~/.bashrc
+            conda create -y -n pygrid python=3.7
+            conda activate pygrid
+
+            echo 'Install poetry...'
+            pip install poetry
+
+            echo 'Install GCC'
+            sudo apt-get install python3-dev -y
+            sudo apt-get install libevent-dev -y
+            sudo apt-get install gcc -y
+
+            echo 'Cloning PyGrid'
+            git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
+            git checkout pygrid_0.4.0
+
+            cd /PyGrid/apps/{self.config.app.name}
+
+            echo 'Installing {self.config.app.name} Dependencies'
+            poetry install
+
+            ## TODO(amr): remove this after poetry updates
+            pip install pymysql
+
+            echo "Setting environment variables"
+            export CLOUD_PROVIDER={self.config.provider}
+            export REGION={self.config.vpc.region}
+            export VPC_ID={self.vpc.id}
+            export PUBLIC_SUBNET_ID={','.join([public_subnet.id for _, public_subnet in self.subnets])}
+            export PRIVATE_SUBNET_ID={','.join([private_subnet.id for private_subnet, _ in self.subnets])}
+            export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+
+            nohup ./run.sh --port {app.port}  --host {app.host}
+        """
+        )
+
+        return exec_script
 
     def build_database(self):
         """Builds a MySQL central database."""
@@ -299,69 +357,3 @@ class AWS_Serverfull(AWS):
             tags={"Name": f"pygrid-{self.config.app.name}-mysql-database"},
         )
         self.tfscript += self.database
-
-    def write_exec_script(self, app, index=0):
-        self.exec_script = "#cloud-boothook\n#!/bin/bash\n"
-        if self.config.app.name != "worker":
-            self.exec_script += textwrap.dedent(
-                f'''
-            ## For debugging
-            # redirect stdout/stderr to a file
-            exec &> log.out
-
-
-            echo "Simple Web Server for testing the deployment"
-            sudo apt update -y
-            sudo apt install apache2 -y
-            sudo systemctl start apache2
-            echo """
-            <h1 style='color:#f09764; text-align:center'>
-                OpenMined First Server Deployed via Terraform
-            </h1>
-            """ | sudo tee /var/www/html/index.html
-
-            echo "Setup Miniconda environment"
-
-            sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-            sudo bash miniconda.sh -b -p miniconda
-            sudo rm miniconda.sh
-            export PATH=/miniconda/bin:$PATH > ~/.bashrc
-            conda init bash
-            source ~/.bashrc
-            conda create -y -n pygrid python=3.7
-            conda activate pygrid
-
-            echo "Install poetry..."
-            pip install poetry
-
-            echo "Install GCC"
-            sudo apt-get install python3-dev -y
-            sudo apt-get install libevent-dev -y
-            sudo apt-get install gcc -y
-
-            echo "Cloning PyGrid"
-            git clone https://github.com/OpenMined/PyGrid
-            git checkout pygrid_0.3.0
-
-            cd /PyGrid/apps/{self.config.app.name}
-
-            echo "Installing {self.config.app.name} Dependencies"
-            poetry install
-
-            echo "Setting environment variables"
-            export CLOUD_PROVIDER={self.config.provider}
-            export REGION={self.config.vpc.region}
-            export VPC_ID={self.vpc.id}
-            export PUBLIC_SUBNET_ID={','.join([public_subnet.id for _, public_subnet in self.subnets])}
-            export PRIVATE_SUBNET_ID={','.join([private_subnet.id for private_subnet, _ in self.subnets])}
-            export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
-
-            nohup ./run.sh --port {app.port}  --host {app.host} {f"--id {app.id} --network {app.network}" if self.config.app.name == "domain" else ""}
-            '''
-            )
-        else:
-            pass
-
-        with open(f"{self.TF.dir}/deploy-instance-{index}.sh", "w") as deploy_file:
-            deploy_file.write(self.exec_script)
-            # return exec_script

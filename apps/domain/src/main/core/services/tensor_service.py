@@ -11,14 +11,15 @@ from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey
 
 # syft relative
+from syft.core.common.group import VerifyAll
 from syft.core.node.abstract.node import AbstractNode
 from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithReply
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithoutReply
-from syft.decorators.syft_decorator_impl import syft_decorator
 from syft.core.common.message import ImmediateSyftMessageWithReply
 from syft.core.common.uid import UID
 from syft.core.node.common.action.save_object_action import SaveObjectAction
+from syft.core.store.storeable_object import StorableObject
 
 from syft.grid.messages.tensor_messages import (
     CreateTensorMessage,
@@ -34,7 +35,6 @@ from syft.grid.messages.tensor_messages import (
 )
 
 
-@syft_decorator(typechecking=True)
 def create_tensor_msg(
     msg: CreateTensorMessage,
     node: AbstractNode,
@@ -48,12 +48,18 @@ def create_tensor_msg(
 
         id_at_location = UID()
 
-        obj_msg = SaveObjectAction(
-            id_at_location=id_at_location,
-            obj=new_tensor,
-            address=node.address,
-            anyone_can_search_for_this=payload.get("searchable", False),
+        # Step 2: create message which contains object to send
+        storable = StorableObject(
+            id=id_at_location,
+            data=new_tensor,
+            tags=new_tensor.tags,
+            description=new_tensor.description,
+            search_permissions={VerifyAll(): None}
+            if payload.get("searchable", False)
+            else {},
         )
+
+        obj_msg = SaveObjectAction(obj=storable, address=node.address)
 
         signed_message = obj_msg.sign(
             signing_key=SigningKey(
@@ -65,7 +71,7 @@ def create_tensor_msg(
 
         return CreateTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={
                 "msg": "Tensor created succesfully!",
                 "tensor_id": str(id_at_location.value),
@@ -74,12 +80,11 @@ def create_tensor_msg(
     except Exception as e:
         return CreateTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def update_tensor_msg(
     msg: UpdateTensorMessage,
     node: AbstractNode,
@@ -93,12 +98,18 @@ def update_tensor_msg(
 
         key = UID.from_string(value=payload["tensor_id"])
 
-        obj_msg = SaveObjectAction(
-            id_at_location=key,
-            obj=new_tensor,
-            address=node.address,
-            anyone_can_search_for_this=payload.get("searchable", False),
+        # Step 2: create message which contains object to send
+        storable = StorableObject(
+            id=key,
+            data=new_tensor,
+            tags=new_tensor.tags,
+            description=new_tensor.description,
+            search_permissions={VerifyAll(): None}
+            if payload.get("searchable", False)
+            else {},
         )
+
+        obj_msg = SaveObjectAction(obj=storable, address=node.address)
 
         signed_message = obj_msg.sign(
             signing_key=SigningKey(
@@ -110,18 +121,17 @@ def update_tensor_msg(
 
         return UpdateTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"msg": "Tensor modified succesfully!"},
         )
     except Exception as e:
         return UpdateTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def get_tensor_msg(
     msg: GetTensorMessage,
     node: AbstractNode,
@@ -134,7 +144,7 @@ def get_tensor_msg(
         tensor = node.store[key]
         return GetTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={
                 "tensor": {
                     "id": payload["tensor_id"],
@@ -146,12 +156,11 @@ def get_tensor_msg(
     except Exception as e:
         return GetTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"error": str(e)},
         )
 
 
-@syft_decorator(typechecking=True)
 def get_tensors_msg(
     msg: GetTensorsMessage,
     node: AbstractNode,
@@ -171,7 +180,7 @@ def get_tensors_msg(
             )
         return GetTensorsResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"tensors": result},
         )
     except Exception as e:
@@ -180,7 +189,6 @@ def get_tensors_msg(
         )
 
 
-@syft_decorator(typechecking=True)
 def del_tensor_msg(
     msg: DeleteTensorMessage,
     node: AbstractNode,
@@ -194,7 +202,7 @@ def del_tensor_msg(
 
         return DeleteTensorResponse(
             address=msg.reply_to,
-            success=True,
+            status_code=200,
             content={"msg": "Tensor deleted successfully!"},
         )
     except Exception as e:
