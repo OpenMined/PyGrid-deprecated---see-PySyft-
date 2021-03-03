@@ -20,7 +20,7 @@ def metadata_route():
         "metadata": node.get_metadata_for_client()
         .serialize()
         .SerializeToString()
-        .decode("ISO-8859-1"),
+        .decode("ISO-8859-1")
     }
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
@@ -39,3 +39,9 @@ def root_route():
     else:
         node.recv_eventual_msg_without_reply(msg=obj_msg)
     return ""
+
+
+@root_route.route("/", methods=["GET"])
+def get_setup():
+    response = {"message": "Domain API deployment successful"}
+    return Response(json.dumps(response), status=200, mimetype="application/json")
