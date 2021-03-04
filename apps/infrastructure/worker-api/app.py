@@ -55,7 +55,9 @@ def get_config(data):
 @app.route("/deploy", methods=["POST"])
 def create():
     """Creates a worker.
-    This endpoint can be accessed by a user to create a new worker."""
+
+    This endpoint can be accessed by a user to create a new worker.
+    """
 
     # data = json.loads(request.json)
     config = get_config(request.json)
@@ -103,6 +105,7 @@ def create():
 @app.route("/workers", methods=["GET"])
 def get_workers():
     """Get all deployed workers.
+
     Only Node operators can access this endpoint.
     """
     workers = Worker.query.order_by(Worker.created_at).all()
@@ -116,7 +119,9 @@ def get_workers():
 @app.route("/workers/<int:id>", methods=["GET"])
 def get_worker(id):
     """Get specific worker data.
-    Only the Node owner and the user who created this worker can access this endpoint.
+
+    Only the Node owner and the user who created this worker can access
+    this endpoint.
     """
     worker = Worker.query.get(id)
     return Response(
@@ -129,7 +134,9 @@ def get_worker(id):
 @app.route("/workers/<int:id>", methods=["DELETE"])
 def delete_worker(id):
     """Shut down specific worker.
-    Only the Node owner and the user who created this worker can access this endpoint.
+
+    Only the Node owner and the user who created this worker can access
+    this endpoint.
     """
     worker = Worker.query.get(id)
     if worker.state == states["success"]:

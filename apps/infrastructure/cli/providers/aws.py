@@ -140,8 +140,8 @@ def get_instance_type(region):
 
 
 def get_vpc_ip_config() -> Config:
-    """Assists the user in entering configuration related to IP address of VPC.
-    """
+    """Assists the user in entering configuration related to IP address of
+    VPC."""
 
     cidr_blocks = prompt(
         [

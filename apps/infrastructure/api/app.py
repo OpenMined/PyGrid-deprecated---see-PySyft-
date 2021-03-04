@@ -86,6 +86,7 @@ def deploy():
 @app.route("/domains", methods=["GET"])
 def get_domains():
     """Get all deployed domains.
+
     Only Node operators can access this endpoint.
     """
     domains = Domain.query.order_by(Domain.created_at).all()
@@ -99,7 +100,9 @@ def get_domains():
 @app.route("/domains/<int:id>", methods=["GET"])
 def get_domain(id):
     """Get specific domain data.
-    Only the Node owner and the user who created this worker can access this endpoint.
+
+    Only the Node owner and the user who created this worker can access
+    this endpoint.
     """
     domain = Domain.query.get(id)
     return Response(
