@@ -18,7 +18,8 @@ from syft.core.node.common.service.node_service import ImmediateNodeServiceWitho
 from syft.core.common.message import ImmediateSyftMessageWithReply
 
 # from syft.grid.client import connect
-from syft.grid.connections.http_connection import HTTPConnection
+from syft.grid.client.client import connect
+from syft.grid.client.grid_connection import GridHTTPConnection
 from syft.core.node.domain.client import DomainClient
 from ..database.utils import model_to_json
 
@@ -61,27 +62,37 @@ def create_worker_msg(
             ).id
 
         _current_user = node.users.first(id=_current_user_id)
+
+        # Filter environments parameters
         env_parameters = {
             i: msg.content[i]
             for i in msg.content.keys()
             if i in list(Environment.__table__.columns.keys())
         }
-        # env_client = connect(
-        #    url=msg.content["address"],  # Domain Address
-        #    conn_type=HTTPConnection,  # HTTP Connection Protocol
-        #    client_type=DomainClient,
-        #    user_key=SigningKey(
-        #        _current_user.private_key.encode("utf-8"), encoder=HexEncoder
-        #    ),
-        # )
 
-        # env_parameters["syft_address"] = (
-        #    env_client.address.serialize().SerializeToString().decode("ISO-8859-1")
-        # )
+        # Connect to the worker
+        env_client = connect(
+            url=msg.content["url"],  # Domain Address
+            conn_type=GridHTTPConnection,  # HTTP Connection Protocol
+            client_type=DomainClient,
+            user_key=SigningKey(
+                _current_user.private_key.encode("utf-8"), encoder=HexEncoder
+            ),
+        )
+
+        # Fill Worker Syft Address Column
+        env_parameters["address"] = (
+            serialize(env_client.address).SerializeToString().decode("ISO-8859-1")
+        )
+
+        # Create Environment Object
         new_env = node.environments.register(**env_parameters)
+
+        # Create User Environment Association
         node.environments.association(user_id=_current_user_id, env_id=new_env.id)
 
-        # node.in_memory_client_registry[env_client.domain_id] = env_client
+        # ADD new connection obj in memory registry.
+        node.in_memory_client_registry[env_client.domain_id] = env_client
 
         final_msg = "Worker created succesfully!"
         return CreateWorkerResponse(
@@ -139,11 +150,27 @@ def get_worker_msg(
             _current_user_id = users.first(
                 verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
             ).id
-        env_ids = [
-            env.id for env in node.environments.get_environments(user=_current_user_id)
-        ]
 
-        if int(worker_id) in env_ids:
+        _current_user = node.users.first(id=_current_user_id)
+
+        _model = node.environments.get_environments(
+            user=_current_user_id, environment=worker_id
+        )
+        if _model:
+            syft_addr_pb = Address_PB()
+
+            _raw_address = _model[0].address.encode("ISO-8859-1")
+            syft_addr_pb.ParseFromString(_raw_address)
+            syft_addr = deserialize(blob=syft_addr_pb)
+            if not node.in_memory_client_registry.get(syft_addr.domain_id, None):
+                env_client = connect(
+                    url=_model[0].url,  # Domain Address
+                    conn_type=GridHTTPConnection,  # HTTP Connection Protocol
+                    client_type=DomainClient,
+                    user_key=SigningKey(
+                        _current_user.private_key.encode("utf-8"), encoder=HexEncoder
+                    ),
+                )
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
             _msg = {}
