@@ -1,6 +1,5 @@
-from ..blueprint import dcfl_blueprint as dcfl_route
-from flask import request, Response
-import json
+"""from ..blueprint import dcfl_blueprint as dcfl_route from flask import
+request, Response import json.
 
 from syft.grid.messages.infra_messages import (
     CreateWorkerMessage,
@@ -15,7 +14,6 @@ from ...auth import error_handler, token_required
 from ....core.task_handler import route_logic
 
 
-"""
 ## Nodes CRUD
 @dcfl_route.route("/nodes", methods=["POST"])
 @token_required
@@ -389,7 +387,7 @@ def delete_autoscaling_condition(autoscaling_id):
     return Response(
         json.dumps(response_body), status=status_code, mimetype="application/json"
     )
-"""
+
 
 ## Workers CRUD
 @dcfl_route.route("/workers", methods=["POST"])
@@ -494,3 +492,4 @@ def delete_node(current_user, worker_id):
         status=status_code,
         mimetype="application/json",
     )
+"""

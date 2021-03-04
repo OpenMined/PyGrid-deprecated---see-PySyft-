@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 
 import click
 import requests
+
 from apps.infrastructure.cli.providers import aws, azure, gcp
 from apps.infrastructure.utils import COLORS, Config, colored
 
@@ -117,14 +118,17 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
         if config.provider == "aws":
             config.vpc = aws.get_vpc_config()
             if not config.serverless:
-                config.vpc.instance_type = aws.get_instance_type()
+                config.vpc.instance_type = aws.get_instance_type(config.vpc.region)
         elif config.provider == "gcp":
             pass
         elif config.provider == "azure":
             pass
 
         ## Database
-        credentials.db = aws.get_db_config()
+        if config.app.name != "worker":
+            credentials.db = aws.get_db_config()
+
+        # config.credentials = credentials
 
     if click.confirm(
         f"""Your current configration are:
@@ -135,6 +139,7 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
         # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
+
         url = urljoin(config.api_url, "/deploy")
 
         data = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
@@ -153,7 +158,7 @@ def get_app_arguments(config):
         f"How many apps do you want to deploy", type=int, default=1
     )
     apps = []
-    for count in range(config.app.count):
+    for count in range(1, config.app.count + 1):
         if config.app.name == "domain":
             id = click.prompt(
                 f"#{count}: PyGrid Domain ID",
@@ -199,7 +204,7 @@ def get_app_arguments(config):
                 type=str,
                 default=os.environ.get("GRID_WORKER_HOST", "0.0.0.0"),
             )
-            app = Config(port=port, host=host, network=network)
+            app = Config(port=port, host=host)
 
         apps.append(app)
     config.apps = apps

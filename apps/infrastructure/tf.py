@@ -1,11 +1,14 @@
 import json
+import os
 import subprocess
+from pathlib import Path
 
 var = lambda x: "${" + x + "}"
 var_module = lambda x, y: var(f"module.{x._name}.{y}")
 generate_cidr_block = lambda base_cidr_block, netnum: var(
     f'cidrsubnet("{base_cidr_block}", 8, {netnum})'
 )
+ROOT_DIR = os.path.join(str(Path.home()), ".pygrid", "api")
 
 
 class Terraform:
@@ -19,7 +22,12 @@ class Terraform:
             json.dump(tfscript, tfjson, indent=2, sort_keys=False)
 
     def init(self):
-        return subprocess.run("terraform init", shell=True, cwd=self.dir, check=True)
+        return subprocess.run(
+            f"terraform init -input=false -plugin-dir={ROOT_DIR}",
+            shell=True,
+            cwd=self.dir,
+            check=True,
+        )
 
     def validate(self):
         return subprocess.run(

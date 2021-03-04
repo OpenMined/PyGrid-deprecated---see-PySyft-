@@ -4,11 +4,12 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from flask import Flask, Response, jsonify, request
+from loguru import logger
+
 from apps.infrastructure.providers import AWS_Serverfull, AWS_Serverless
 from apps.infrastructure.providers.provider import Provider
 from apps.infrastructure.utils import Config
-from flask import Flask, Response, jsonify, request
-from loguru import logger
 
 from .models import Domain, db
 
@@ -35,17 +36,18 @@ def deploy():
     data = json.loads(request.data.decode("utf-8"))
     config = Config(**data)
 
+    deployment = None
     deployed = False
-    output = None
     output = {}
 
     config.app.id = db.session.query(Domain).count() + 1
 
     if config.provider == "aws":
-        if config.serverless:
-            deployment = AWS_Serverless(config=config)
-        else:
-            deployment = AWS_Serverfull(config=config)
+        deployment = (
+            AWS_Serverless(config)
+            if config.serverless
+            else AWS_Serverfull(config=config)
+        )
     elif config.provider == "azure":
         pass
     elif config.provider == "gcp":
@@ -72,9 +74,10 @@ def deploy():
             domain.state = states["failed"]
         db.session.commit()
     else:
-        deployed, output = False, {
-            "failure": f"Your attempt to deploy PyGrid {config.app.name} failed"
-        }
+        deployed, output = (
+            False,
+            {"failure": f"Your attempt to deploy PyGrid {config.app.name} failed"},
+        )
 
     response = {"deloyed": deployed, "output": output}
     return Response(json.dumps(response), status=200, mimetype="application/json")
@@ -83,6 +86,7 @@ def deploy():
 @app.route("/domains", methods=["GET"])
 def get_domains():
     """Get all deployed domains.
+
     Only Node operators can access this endpoint.
     """
     domains = Domain.query.order_by(Domain.created_at).all()
@@ -96,7 +100,9 @@ def get_domains():
 @app.route("/domains/<int:id>", methods=["GET"])
 def get_domain(id):
     """Get specific domain data.
-    Only the Node owner and the user who created this worker can access this endpoint.
+
+    Only the Node owner and the user who created this worker can access
+    this endpoint.
     """
     domain = Domain.query.get(id)
     return Response(

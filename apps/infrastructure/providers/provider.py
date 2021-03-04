@@ -11,22 +11,21 @@ import terrascript.provider as provider
 import terrascript.resource as resource
 from terrascript import Module
 
-from ..tf import Terraform
+from ..tf import ROOT_DIR, Terraform
 from ..utils import Config
 
 
 class Provider:
-    def __init__(self, config: SimpleNamespace):
+    def __init__(self, config):
         folder_name = f"{config.provider}-{config.app.name}-{config.app.id}"
-        self.app_dir = os.path.join(str(Path.home()), ".pygrid", "api", folder_name)
-        os.makedirs(self.app_dir, exist_ok=True)
+        _dir = os.path.join(ROOT_DIR, folder_name)
+        os.makedirs(_dir, exist_ok=True)
 
-        self.TF = Terraform(dir=self.app_dir)
+        self.TF = Terraform(dir=_dir)
         self.tfscript = terrascript.Terrascript()
         self.validated = False
 
     def validate(self):
-        ## Writing the terraform file
         self.TF.write(self.tfscript)
         try:
             self.TF.init()

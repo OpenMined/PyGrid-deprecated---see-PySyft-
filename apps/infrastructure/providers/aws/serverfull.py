@@ -11,19 +11,32 @@ class AWS_Serverfull(AWS):
 
         super().__init__(config)
 
-        if not config.app.name == "worker":
-            # Order matters
-            self.build_security_group()
+        self.worker = config.app.name == "worker"
 
+        if self.worker:
+            self.vpc = Config(id=os.environ["VPC_ID"])
+            public_subnet_ids = str(os.environ["PUBLIC_SUBNET_ID"]).split(",")
+            private_subnet_ids = str(os.environ["PRIVATE_SUBNET_ID"]).split(",")
+            self.subnets = [
+                (Config(id=private), Config(id=public))
+                for private, public in zip(private_subnet_ids, public_subnet_ids)
+            ]
+            self.build_security_group()
+            self.build_instance()
+        else:  # Deploy a VPC and domain/network
+            # Order matters
+            self.build_vpc()
+            self.build_igw()
+            self.build_public_rt()
+            self.build_subnets()
+
+            self.build_security_group()
             self.build_database()
 
             self.build_instances()
             self.build_load_balancer()
 
-            self.output()
-        else:
-            self.build_security_group()
-            self.build_instances()
+        self.output()
 
     def output(self):
         for count in range(self.config.app.count):
@@ -33,13 +46,97 @@ class AWS_Serverfull(AWS):
                 description=f"The public IP address of #{count} instance.",
             )
 
-        self.tfscript += terrascript.Output(
-            "load_balancer_dns",
-            value=var_module(self.load_balancer, "this_elb_dns_name"),
-            description="The DNS name of the ELB.",
-        )
+        if hasattr(self, "load_balancer"):
+            self.tfscript += terrascript.Output(
+                "load_balancer_dns",
+                value=var_module(self.load_balancer, "this_elb_dns_name"),
+                description="The DNS name of the ELB.",
+            )
 
-    def build_instances(self):
+    def build_security_group(self):
+        # ----- Security Group ------#
+        sg_name = f"pygrid-{self.config.app.name}-" + (
+            f"{str(self.config.app.id)}-sg" if self.worker else "sg"
+        )
+        self.security_group = resource.aws_security_group(
+            "security_group",
+            name=sg_name,
+            vpc_id=self.vpc.id if self.worker else var(self.vpc.id),
+            ingress=[
+                {
+                    "description": "HTTPS",
+                    "from_port": 443,
+                    "to_port": 443,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                },
+                {
+                    "description": "HTTP",
+                    "from_port": 80,
+                    "to_port": 80,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                },
+                {
+                    "description": "PyGrid Domains",
+                    "from_port": 5000,
+                    "to_port": 5999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                },
+                {
+                    "description": "PyGrid Workers",
+                    "from_port": 6000,
+                    "to_port": 6999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                },
+                {
+                    "description": "PyGrid Networks",
+                    "from_port": 7000,
+                    "to_port": 7999,
+                    "protocol": "tcp",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                },
+            ],
+            egress=[
+                {
+                    "description": "Egress Connection",
+                    "from_port": 0,
+                    "to_port": 0,
+                    "protocol": "-1",
+                    "cidr_blocks": ["0.0.0.0/0"],
+                    "ipv6_cidr_blocks": ["::/0"],
+                    "prefix_list_ids": [],
+                    "security_groups": [],
+                    "self": False,
+                }
+            ],
+            tags={"Name": sg_name},
+        )
+        self.tfscript += self.security_group
+
+    def build_instance(self):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -57,24 +154,44 @@ class AWS_Serverfull(AWS):
         self.tfscript += self.ami
 
         self.instances = []
+        kwargs = {}
         for count in range(self.config.app.count):
             app = self.config.apps[count]
+            if self.worker:
+                instance_name = (
+                    f"pygrid-{self.config.app.name}-{str(self.config.app.id)}"
+                )
+                kwargs = {
+                    "name": instance_name,
+                    "subnet_ids": [
+                        public_subnet.id for _, public_subnet in self.subnets
+                    ],
+                    "tags": {"Name": instance_name},
+                }
+            else:
+                instance_name = f"pygrid-{self.config.app.name}-instance-{count}"
+                self.write_exec_script(app, index=count)
+                kwargs = {
+                    "name": instance_name,
+                    "subnet_ids": [
+                        var(public_subnet.id) for _, public_subnet in self.subnets
+                    ],
+                    "user_data": self.write_exec_script(app, index=count),
+                    "tags": {"Name": instance_name},
+                }
 
             instance = Module(
                 f"pygrid-instance-{count}",
                 instance_count=1,
                 source="terraform-aws-modules/ec2-instance/aws",
-                name=f"pygrid-{self.config.app.name}-instance-{count}",
                 ami=var(self.ami.id),
                 instance_type=self.config.vpc.instance_type.InstanceType,
                 associate_public_ip_address=True,
                 monitoring=True,
                 vpc_security_group_ids=[var(self.security_group.id)],
-                subnet_ids=[var(public_subnet.id) for _, public_subnet in self.subnets],
-                # user_data=var(f'file("{self.root_dir}/deploy-instance-{count}.sh")'),
-                user_data=self.write_exec_script(app, index=count),
-                tags={"Name": f"pygrid-{self.config.app.name}-instance-{count}"},
+                **kwargs,
             )
+
             self.tfscript += instance
             self.instances.append(instance)
 
@@ -161,8 +278,13 @@ class AWS_Serverfull(AWS):
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
-            echo 'Setting Database URL'
-            export DATABASE_URL={self.database.engine}+pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}/{self.database.name}
+            echo "Setting environment variables"
+            export CLOUD_PROVIDER={self.config.provider}
+            export REGION={self.config.vpc.region}
+            export VPC_ID={self.vpc.id}
+            export PUBLIC_SUBNET_ID={','.join([public_subnet.id for _, public_subnet in self.subnets])}
+            export PRIVATE_SUBNET_ID={','.join([private_subnet.id for private_subnet, _ in self.subnets])}
+            export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
 
             nohup ./run.sh --port {app.port}  --host {app.host}
         """
@@ -235,95 +357,3 @@ class AWS_Serverfull(AWS):
             tags={"Name": f"pygrid-{self.config.app.name}-mysql-database"},
         )
         self.tfscript += self.database
-
-    def build_security_group(self):
-        # ----- Security Group ------#
-
-        self.security_group = resource.aws_security_group(
-            "security_group",
-            name=f"pygrid-{self.config.app.name}-security-group",
-            vpc_id=var(self.vpc.id),
-            ingress=[
-                {
-                    "description": "HTTPS",
-                    "from_port": 443,
-                    "to_port": 443,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-                {
-                    "description": "HTTP",
-                    "from_port": 80,
-                    "to_port": 80,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-                {
-                    "description": "PyGrid Domains",
-                    "from_port": 5000,
-                    "to_port": 5999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-                {
-                    "description": "PyGrid Workers",
-                    "from_port": 6000,
-                    "to_port": 6999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-                {
-                    "description": "PyGrid Networks",
-                    "from_port": 7000,
-                    "to_port": 7999,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-                {  ## TODO(amr): remove SSH later in production
-                    "description": "SSH",
-                    "from_port": 22,
-                    "to_port": 22,
-                    "protocol": "tcp",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                },
-            ],
-            egress=[
-                {
-                    "description": "Egress Connection",
-                    "from_port": 0,
-                    "to_port": 0,
-                    "protocol": "-1",
-                    "cidr_blocks": ["0.0.0.0/0"],
-                    "ipv6_cidr_blocks": ["::/0"],
-                    "prefix_list_ids": [],
-                    "security_groups": [],
-                    "self": True,
-                }
-            ],
-            tags={"Name": "pygrid-security-group"},
-        )
-        self.tfscript += self.security_group

@@ -20,7 +20,7 @@ def metadata_route():
         "metadata": node.get_metadata_for_client()
         .serialize()
         .SerializeToString()
-        .decode("ISO-8859-1"),
+        .decode("ISO-8859-1")
     }
     return Response(json.dumps(response_body), status=200, mimetype="application/json")
 
