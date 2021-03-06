@@ -23,16 +23,18 @@ from ....core.node import node
 @token_required
 def create_dataset(current_user):
     # Get request body
-    content = request.get_json()
+    content = request.get_data()
+
     if not content:
         content = {}
+    else:
+        content = loads(content)
     content["current_user"] = current_user
     status_code, response_msg = error_handler(
         route_logic, CreateDatasetMessage, current_user, content
     )
 
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
-
     return Response(
         dumps(response),
         status=status_code,
@@ -118,18 +120,16 @@ def get_all_datasets_info(current_user):
 @token_required
 def update_dataset(current_user, dataset_id):
     # Get request body
-    content = request.get_json()
-    if not content:
-        content = {}
+    content = {}
+    dataset = request.get_json()
     content["current_user"] = current_user
     content["dataset_id"] = dataset_id
+    content["dataset"] = dataset
     status_code, response_msg = error_handler(
         route_logic, UpdateDatasetMessage, current_user, content
     )
 
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
-    if status_code == 200:
-        status_code = 204
 
     return Response(
         dumps(response),

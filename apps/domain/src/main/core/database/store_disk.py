@@ -1,7 +1,12 @@
 from typing import Optional, Iterable
 from json import loads
+from io import StringIO
+from copy import deepcopy
 from os.path import getsize
 
+import pandas as pd
+import numpy as np
+import torch as th
 from torch import Tensor
 from loguru import logger
 from flask import current_app as app
@@ -53,13 +58,87 @@ class DiskObjectStore(ObjectStore):
         db_path = uri[10:]
         return getsize(db_path)
 
-    def store(self, obj: Dataset) -> None:
+    def store(self, obj: Dataset, _json: dict) -> None:
         bin_obj = BinaryObject(id=obj.id.value.hex, binary=obj.to_bytes())
+        json_obj = JsonObject(id=_json["id"], binary=_json)
         metadata = get_metadata(self.db)
         metadata.length += 1
 
         self.db.session.add(bin_obj)
+        self.db.session.add(json_obj)
         self.db.session.commit()
+
+    def store_json(self, df_json: dict) -> dict:
+        _json = deepcopy(df_json)
+        mapping = []
+        # Separate CSV from metadata
+        for el in _json["tensors"].copy():
+            _id = UID()
+            _json["tensors"][el]["id"] = _id.value.hex
+            mapping.append((el, _id, _json["tensors"][el].pop("content", None)))
+
+        # Create storables from UID/CSV
+        # Update metadata
+        storables = []
+        for idx, (name, _id, raw_file) in enumerate(mapping):
+            _tensor = pd.read_csv(StringIO(raw_file))
+            _tensor = th.tensor(_tensor.values.astype(np.float32))
+
+            _json["tensors"][name]["shape"] = [int(x) for x in _tensor.size()]
+            _json["tensors"][name]["dtype"] = "{}".format(_tensor.dtype)
+            storables.append(StorableObject(id=_id, data=_tensor))
+
+        # Ensure we have same ID in metadata and dataset
+        _id = UID()
+        df = Dataset(id=_id, data=storables)
+        _json["id"] = _id.value.hex
+
+        bin_obj = BinaryObject(id=df.id.value.hex, binary=df.to_bytes())
+        json_obj = JsonObject(id=_json["id"], binary=_json)
+        metadata = get_metadata(self.db)
+        metadata.length += 1
+
+        self.db.session.add(bin_obj)
+        self.db.session.add(json_obj)
+        self.db.session.commit()
+        return _json
+
+    def update_dataset(self, key: str, df_json: dict) -> dict:
+        _json = deepcopy(df_json)
+        json_obj = self.db.session.query(JsonObject).get(key)
+        bin_obj = self.db.session.query(BinaryObject).get(key)
+
+        mapping = []
+        # Separate CSV from metadata
+        for el in _json["tensors"].copy():
+            _id = UID()
+            _json["tensors"][el]["id"] = _id.value.hex
+            mapping.append((el, _id, _json["tensors"][el].pop("content", None)))
+
+        # Create storables from UID/CSV
+        # Update metadata
+        storables = []
+        for idx, (name, _id, raw_file) in enumerate(mapping):
+            _tensor = pd.read_csv(StringIO(raw_file))
+            _tensor = th.tensor(_tensor.values.astype(np.float32))
+
+            _json["tensors"][name]["shape"] = [int(x) for x in _tensor.size()]
+            _json["tensors"][name]["dtype"] = "{}".format(_tensor.dtype)
+            storables.append(StorableObject(id=_id, data=_tensor))
+
+        # Ensure we have same ID in metadata and dataset
+        _id = json_obj.id
+        _id = UID.from_string(_id)
+        df = Dataset(id=_id, data=storables)
+        _json["id"] = _id.value.hex
+
+        metadata = get_metadata(self.db)
+        metadata.length += 1
+
+        setattr(bin_obj, "binary", df.to_bytes())
+        setattr(json_obj, "binary", _json)
+        self.db.session.commit()
+        return _json
 
     def store_bytes_at(self, key: str, obj: bytes) -> None:
         bin_obj = self.db.session.query(BinaryObject).get(key)
@@ -111,7 +190,7 @@ class DiskObjectStore(ObjectStore):
             obj = self.__getitem__(key)
         return obj
 
-    def get_object_info(self, key: str) -> Optional[dict]:
+    def get_dataset_metadata(self, key: str) -> Optional[dict]:
         obj = self.db.session.query(JsonObject).get(key)
         if obj is not None:
             obj = obj.binary
@@ -142,9 +221,9 @@ class DiskObjectStore(ObjectStore):
         ids = self.db.session.query(BinaryObject.id).all()
         return {key[0]: self.get_object(key) for key in ids}
 
-    def pairs_info(self):
+    def get_all_datasets_metadata(self):
         ids = self.db.session.query(JsonObject.id).all()
-        return {key[0]: self.get_object_info(key) for key in ids}
+        return [self.get_dataset_metadata(key) for key in ids]
 
     def clear(self) -> None:
         self.db.session.query(BinaryObject).delete()

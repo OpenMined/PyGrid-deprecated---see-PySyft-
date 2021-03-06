@@ -1,6 +1,7 @@
 from base64 import b64encode, b64decode
 from json import dumps
 
+from syft.core.common.serde import _deserialize
 from syft.core.store.storeable_object import StorableObject
 from syft.core.store import Dataset
 from syft.core.common import UID
@@ -76,6 +77,36 @@ dataset = create_dataset(
     tags=["dummy", "tensor"],
 )
 
+tensor1 = {
+    "content": "1, 2, 3, 4\n10, 20, 30, 40",
+    "manifest": "Suspendisse et fermentum lectus",
+    "description": "Dummy tensor",
+    "tags": ["dummy", "tensor"],
+}
+
+tensor2 = {
+    "content": "-1, -2, -3, -4,\n-100, -200, -300, -400",
+    "manifest": "Suspendisse et fermentum lectus",
+    "description": "Negative Dummy tensor",
+    "tags": ["negative", "dummy", "tensor"],
+}
+
+tensor3 = {
+    "content": "11, 22, 33, 44\n111, 222, 333, 444",
+    "manifest": "Aenean at dictum ipsum",
+    "description": "NewDummy tensor",
+    "tags": ["new", "dummy", "tensor"],
+}
+
+dataset = {
+    "name": "Dummy Dataset",
+    "description": "Neque porro quisquam",
+    "manifest": "Sed vehicula mauris non turpis sollicitudin congue.",
+    "tags": ["#hashtag", "#dummy", "#original"],
+    "created_at": "05/12/2018",
+    "tensors": {"train": tensor1.copy(), "test": tensor2.copy()},
+}
+
 
 @pytest.fixture
 def cleanup(database):
@@ -105,36 +136,52 @@ def test_create_dataset(client, database, cleanup):
 
     database.session.commit()
 
-    obj_bytes = dataset.to_bytes()
-    serialized = b64encode(obj_bytes)
-    serialized = serialized.decode(ENCODING)
-
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
-    payload = {"dataset": serialized}
+
+    file1 = open("tests/test_routes/mtcars_train.csv", "rb")
+    file1 = file1.read().decode("utf-8")
+    file2 = open("tests/test_routes/mtcars_test.csv", "rb")
+    file2 = file2.read().decode("utf-8")
+
+    payload = {
+        "dataset": {
+            "name": "Cars dataset",
+            "description": " ... ",
+            "manifest": "Columns: mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb",
+            "tags": ["#hashtag", "#diabetes"],
+            "created_at": "05/12/2020",
+            "tensors": {
+                "train": {"content": file1, "manifest": ""},
+                "test": {"content": file2, "manifest": ""},
+            },
+        }
+    }
+
     result = client.post(
         "/dcfl/datasets",
         headers=headers,
         data=dumps(payload),
-        content_type="application/json",
+        content_type="multipart/form-data",
     )
 
     assert result.status_code == 200
 
-    _id = [v for v in result.get_json().keys()][0]
-    retrieved = [v for v in result.get_json().values()][0]
-
-    assert retrieved == serialized
-    assert database.session.query(BinaryObject).get(_id).binary == obj_bytes
+    _id = result.get_json().get("id", None)
+    assert database.session.query(BinaryObject).get(_id) is not None
+    assert database.session.query(BinaryObject).get(_id).binary is not None
+    df = database.session.query(BinaryObject).get(_id).binary
+    assert _deserialize(blob=df, from_bytes=True).id.value.hex == _id
 
     assert database.session.query(JsonObject).get(_id) is not None
-    assert (
-        database.session.query(JsonObject).get(_id).binary["description"]
-        == dataset.description
-    )
-    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
+    assert database.session.query(JsonObject).get(_id).binary is not None
+    _json = database.session.query(JsonObject).get(_id).binary
+    assert _json["id"] == _id
+    assert _json["tags"] == payload["dataset"]["tags"]
+    assert _json["manifest"] == payload["dataset"]["manifest"]
+    assert _json["created_at"] == payload["dataset"]["created_at"]
 
 
 def test_get_all_datasets(client, database, cleanup):
@@ -149,18 +196,18 @@ def test_get_all_datasets(client, database, cleanup):
 
     database.session.commit()
 
-    uid1 = UID()
-    new_dataset = create_dataset(
-        _id=uid1,
-        data=[storable2],
-        description="Dummy tensor 1",
-        tags=["dummy1", "tensor"],
-    )
+    new_dataset = {
+        "name": "Dummy Dataset 1",
+        "description": "Lorem ipsum dolor",
+        "manifest": "Etiam vestibulum velit a tellus aliquet varius",
+        "tags": ["#hashtag", "#dummy"],
+        "created_at": "05/12/2019",
+        "tensors": {"train": tensor2.copy()},
+    }
+
     storage = DiskObjectStore(database)
-    obj1_bytes = dataset.to_bytes()
-    obj2_bytes = new_dataset.to_bytes()
-    _id1 = storage.store_bytes(obj1_bytes)
-    _id2 = storage.store_bytes(obj2_bytes)
+    df_json1 = storage.store_json(dataset)
+    df_json2 = storage.store_json(new_dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -173,10 +220,8 @@ def test_get_all_datasets(client, database, cleanup):
     assert result.status_code == 200
     datasets = result.get_json().get("datasets", None)
     assert datasets is not None
-    assert datasets.get(_id1, None) is not None
-    assert datasets.get(_id2, None) is not None
-    assert b64decode(datasets.get(_id1, None)) == obj1_bytes
-    assert b64decode(datasets.get(_id2, None)) == obj2_bytes
+    assert datasets.get(df_json1["id"], None) is not None
+    assert datasets.get(df_json2["id"], None) is not None
 
 
 def test_get_all_datasets_info(client, database, cleanup):
@@ -191,18 +236,17 @@ def test_get_all_datasets_info(client, database, cleanup):
 
     database.session.commit()
 
-    uid1 = UID()
-    new_dataset = create_dataset(
-        _id=uid1,
-        data=[storable2],
-        description="Dummy tensor 1",
-        tags=["dummy1", "tensor"],
-    )
+    new_dataset = {
+        "name": "Dummy Dataset 1",
+        "description": "Lorem ipsum dolor",
+        "manifest": "Etiam vestibulum velit a tellus aliquet varius",
+        "tags": ["#hashtag", "#dummy"],
+        "created_at": "05/12/2019",
+        "tensors": {"train": tensor2.copy()},
+    }
     storage = DiskObjectStore(database)
-    obj1_bytes = dataset.to_bytes()
-    obj2_bytes = new_dataset.to_bytes()
-    _id1 = storage.store_bytes(obj1_bytes)
-    _id2 = storage.store_bytes(obj2_bytes)
+    df_json1 = storage.store_json(dataset)
+    df_json2 = storage.store_json(new_dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -213,56 +257,14 @@ def test_get_all_datasets_info(client, database, cleanup):
     )
 
     assert result.status_code == 200
-    datasets = result.get_json().get("datasets", None)
-    assert datasets is not None
-    assert datasets.get(_id1, None) is not None
-    assert datasets.get(_id2, None) is not None
 
-    assert dataset.tags == datasets.get(_id1, None)["tags"]
-    assert dataset.description == datasets.get(_id1, None)["description"]
-    assert dataset.read_permissions == datasets.get(_id1, None)["read_permissions"]
-    assert dataset.search_permissions == datasets.get(_id1, None)["search_permissions"]
+    assert df_json1["id"] in [el["id"] for el in result.get_json()]
+    assert df_json1["description"] in [el["description"] for el in result.get_json()]
+    assert df_json1["manifest"] in [el["manifest"] for el in result.get_json()]
 
-    assert new_dataset.tags == datasets.get(_id2, None)["tags"]
-    assert new_dataset.description == datasets.get(_id2, None)["description"]
-    assert new_dataset.read_permissions == datasets.get(_id2, None)["read_permissions"]
-    assert (
-        new_dataset.search_permissions == datasets.get(_id2, None)["search_permissions"]
-    )
-
-
-def test_get_specific_dataset(client, database, cleanup):
-    new_role = create_role(*owner_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user1)
-    database.session.add(new_user)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-
-    database.session.commit()
-
-    obj_bytes = dataset.to_bytes()
-    storage = DiskObjectStore(database)
-    _id = storage.store_bytes(obj_bytes)
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    headers = {
-        "token": token.decode("UTF-8"),
-    }
-    result = client.get(
-        "/dcfl/datasets/{}".format(_id),
-        headers=headers,
-        content_type="application/json",
-    )
-    assert result.status_code == 200
-
-    retrieved = result.get_json().get(_id, None)
-    assert retrieved is not None
-
-    retrieved = b64decode(retrieved)
-    assert retrieved == obj_bytes
+    assert df_json2["id"] in [el["id"] for el in result.get_json()]
+    assert df_json2["description"] in [el["description"] for el in result.get_json()]
+    assert df_json2["manifest"] in [el["manifest"] for el in result.get_json()]
 
 
 def test_get_specific_dataset_info(client, database, cleanup):
@@ -277,27 +279,25 @@ def test_get_specific_dataset_info(client, database, cleanup):
 
     database.session.commit()
 
-    obj_bytes = dataset.to_bytes()
     storage = DiskObjectStore(database)
-    _id = storage.store_bytes(obj_bytes)
+    df_metadata = storage.store_json(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/dcfl/datasets/info/{}".format(_id),
+        "/dcfl/datasets/info/{}".format(df_metadata["id"]),
         headers=headers,
         content_type="application/json",
     )
-    assert result.status_code == 200
 
-    retrieved = result.get_json().get(_id, None)
-    assert retrieved is not None
-    assert retrieved["tags"] == dataset.tags
-    assert retrieved["description"] == dataset.description
-    assert retrieved["read_permissions"] == dataset.read_permissions
-    assert retrieved["search_permissions"] == dataset.search_permissions
+    assert result.status_code == 200
+    assert result.get_json()["id"] == df_metadata["id"]
+    assert result.get_json()["tags"] == df_metadata["tags"]
+    assert result.get_json()["name"] == df_metadata["name"]
+    assert result.get_json()["manifest"] == df_metadata["manifest"]
+    assert result.get_json()["description"] == df_metadata["description"]
 
 
 def test_update_dataset(client, database, cleanup):
@@ -312,50 +312,48 @@ def test_update_dataset(client, database, cleanup):
 
     database.session.commit()
 
-    uid1 = UID()
-    new_dataset = create_dataset(
-        _id=uid1,
-        data=[storable2],
-        description="Dummy tensor 1",
-        tags=["dummy1", "tensor"],
-    )
+    new_dataset = {
+        "name": "Dummy Dataset 1",
+        "description": "Lorem ipsum dolor",
+        "manifest": "Etiam vestibulum velit a tellus aliquet varius",
+        "tags": ["#tensor", "#dummy1"],
+        "created_at": "19/06/1972",
+        "tensors": {"train": tensor2.copy()},
+    }
     storage = DiskObjectStore(database)
-    obj1_bytes = dataset.to_bytes()
-    obj2_bytes = new_dataset.to_bytes()
-    _id = storage.store_bytes(obj1_bytes)
+    df_json1 = storage.store_json(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    assert database.session.query(BinaryObject).get(_id).binary == obj1_bytes
-
-    assert database.session.query(JsonObject).get(_id) is not None
-    assert (
-        database.session.query(JsonObject).get(_id).binary["description"]
-        == dataset.description
-    )
-    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
+    assert database.session.query(BinaryObject).get(df_json1["id"]).binary is not None
+    assert database.session.query(JsonObject).get(df_json1["id"]) is not None
+    assert database.session.query(JsonObject).get(df_json1["id"]).binary == df_json1
 
     result = client.put(
-        "/dcfl/datasets/{}".format(_id),
-        data=dumps({"dataset": b64encode(obj2_bytes).decode(ENCODING)}),
+        "/dcfl/datasets/{}".format(df_json1["id"]),
+        data=dumps(new_dataset),
         headers=headers,
         content_type="application/json",
     )
 
-    assert result.status_code == 204
-    assert database.session.query(BinaryObject).get(_id).binary == obj2_bytes
+    assert result.status_code == 200
+    assert result.get_json()["id"] == df_json1["id"]
 
-    assert database.session.query(JsonObject).get(_id) is not None
-    assert (
-        database.session.query(JsonObject).get(_id).binary["description"]
-        == new_dataset.description
-    )
-    assert (
-        database.session.query(JsonObject).get(_id).binary["tags"] == new_dataset.tags
-    )
+    assert database.session.query(BinaryObject).get(df_json1["id"]).binary is not None
+    assert database.session.query(JsonObject).get(df_json1["id"]) is not None
+
+    metadata = database.session.query(JsonObject).get(df_json1["id"])
+    assert metadata is not None
+    metadata = metadata.binary
+
+    assert metadata["description"] == new_dataset["description"]
+    assert metadata["manifest"] == new_dataset["manifest"]
+    assert metadata["created_at"] == new_dataset["created_at"]
+    assert metadata["tags"] == new_dataset["tags"]
+    assert metadata["name"] == new_dataset["name"]
 
 
 def test_delete_dataset(client, database, cleanup):
@@ -371,22 +369,24 @@ def test_delete_dataset(client, database, cleanup):
     database.session.commit()
 
     storage = DiskObjectStore(database)
-    obj_bytes = dataset.to_bytes()
-    _id = storage.store_bytes(obj_bytes)
+    df_json1 = storage.store_json(dataset)
+    _id = df_json1["id"]
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    assert database.session.query(BinaryObject).get(_id).binary == obj_bytes
+    assert database.session.query(BinaryObject).get(_id) is not None
+    assert database.session.query(BinaryObject).get(_id).binary is not None
 
     assert database.session.query(JsonObject).get(_id) is not None
+    assert database.session.query(JsonObject).get(_id).binary is not None
     assert (
         database.session.query(JsonObject).get(_id).binary["description"]
-        == dataset.description
+        == dataset["description"]
     )
-    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset.tags
+    assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset["tags"]
 
     result = client.delete(
         "/dcfl/datasets/{}".format(_id),
