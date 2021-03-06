@@ -22,7 +22,7 @@ class AWS_Serverfull(AWS):
                 for private, public in zip(private_subnet_ids, public_subnet_ids)
             ]
             self.build_security_group()
-            self.build_instance()
+            self.build_instances()
         else:  # Deploy a VPC and domain/network
             # Order matters
             self.build_vpc()
@@ -136,7 +136,7 @@ class AWS_Serverfull(AWS):
         )
         self.tfscript += self.security_group
 
-    def build_instance(self):
+    def build_instances(self):
         self.ami = terrascript.data.aws_ami(
             "ubuntu",
             most_recent=True,
@@ -238,7 +238,7 @@ class AWS_Serverfull(AWS):
             f"""
             ## For debugging
             # redirect stdout/stderr to a file
-            exec &> log.out
+            exec &> server_log.out
 
 
             echo 'Simple Web Server for testing the deployment'
@@ -247,6 +247,7 @@ class AWS_Serverfull(AWS):
             sudo systemctl start apache2
             echo '<h1>OpenMined {self.config.app.name} Server ({index}) Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html
 
+            exec &> conda_log.out
             echo 'Setup Miniconda environment'
 
             sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -258,35 +259,58 @@ class AWS_Serverfull(AWS):
             conda create -y -n pygrid python=3.7
             conda activate pygrid
 
+            exec &> poetry_log.out
             echo 'Install poetry...'
             pip install poetry
 
+            exec &> gcc_log.out
             echo 'Install GCC'
             sudo apt-get install python3-dev -y
             sudo apt-get install libevent-dev -y
             sudo apt-get install gcc -y
 
+            exec &> grid_log.out
             echo 'Cloning PyGrid'
             git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
-            git checkout pygrid_0.4.0
+            git checkout infra_workers_0.3
 
             cd /PyGrid/apps/{self.config.app.name}
 
+            exec &> dependencies_log.out
             echo 'Installing {self.config.app.name} Dependencies'
             poetry install
 
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
+            exec &> env_vars.out
             echo "Setting environment variables"
-            export CLOUD_PROVIDER={self.config.provider}
-            export REGION={self.config.vpc.region}
-            export VPC_ID={self.vpc.id}
-            export PUBLIC_SUBNET_ID={','.join([public_subnet.id for _, public_subnet in self.subnets])}
-            export PRIVATE_SUBNET_ID={','.join([private_subnet.id for private_subnet, _ in self.subnets])}
-            export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+            # export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+            export DATABASE_URL="sqlite:///pygrid.db"
 
-            nohup ./run.sh --port {app.port}  --host {app.host}
+            # exec &> start_app.out
+            # nohup ./run.sh --port {app.port}  --host {app.host}
+            cd /
+
+            exec &> terraform_plugins.out
+            echo "Downloading terraform plugins"
+            export PLUGIN_DIR=/home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
+            mkdir -p $PLUGIN_DIR
+            wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
+            unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d $PLUGIN_DIR
+
+            cd /PyGrid/apps/infrastructure/
+            exec &> worker_api.out
+            echo "Writing environment variables"
+            touch .env
+            echo "CLOUD_PROVIDER={self.config.provider}" >> .env
+            echo "REGION={self.config.vpc.region}" >> .env
+            echo "VPC_ID={var(self.vpc.id)}" >> .env
+            echo "PUBLIC_SUBNET_ID={','.join([var(public_subnet.id) for _, public_subnet in self.subnets])}" >> .env
+            echo "PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}" >> .env
+            echo "DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}" >> .env
+
+            python -m worker-api --port 5001
         """
         )
 

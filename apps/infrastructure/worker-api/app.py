@@ -7,9 +7,9 @@ from pathlib import Path
 from flask import Flask, Response, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 
-from apps.infrastructure.providers import AWS_Serverfull
-from apps.infrastructure.providers.provider import Provider
-from apps.infrastructure.utils import Config
+from ..providers import AWS_Serverfull
+from ..providers.provider import Provider
+from ..utils import Config
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///workers.db"
