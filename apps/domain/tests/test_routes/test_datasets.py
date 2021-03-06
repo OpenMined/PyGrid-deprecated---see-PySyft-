@@ -147,17 +147,15 @@ def test_create_dataset(client, database, cleanup):
     file2 = file2.read().decode("utf-8")
 
     payload = {
-        "dataset": {
-            "name": "Cars dataset",
-            "description": " ... ",
-            "manifest": "Columns: mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb",
-            "tags": ["#hashtag", "#diabetes"],
-            "created_at": "05/12/2020",
-            "tensors": {
-                "train": {"content": file1, "manifest": ""},
-                "test": {"content": file2, "manifest": ""},
-            },
-        }
+        "name": "Cars dataset",
+        "description": " ... ",
+        "manifest": "Columns: mpg,cyl,disp,hp,drat,wt,qsec,vs,am,gear,carb",
+        "tags": ["#hashtag", "#diabetes"],
+        "created_at": "05/12/2020",
+        "tensors": {
+            "train": {"content": file1, "manifest": ""},
+            "test": {"content": file2, "manifest": ""},
+        },
     }
 
     result = client.post(
@@ -179,12 +177,12 @@ def test_create_dataset(client, database, cleanup):
     assert database.session.query(JsonObject).get(_id).binary is not None
     _json = database.session.query(JsonObject).get(_id).binary
     assert _json["id"] == _id
-    assert _json["tags"] == payload["dataset"]["tags"]
-    assert _json["manifest"] == payload["dataset"]["manifest"]
-    assert _json["created_at"] == payload["dataset"]["created_at"]
+    assert _json["tags"] == payload["tags"]
+    assert _json["manifest"] == payload["manifest"]
+    assert _json["created_at"] == payload["created_at"]
 
 
-def test_get_all_datasets(client, database, cleanup):
+def test_get_all_datasets_metadata(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
     new_role = create_role(*user_role)
@@ -204,7 +202,6 @@ def test_get_all_datasets(client, database, cleanup):
         "created_at": "05/12/2019",
         "tensors": {"train": tensor2.copy()},
     }
-
     storage = DiskObjectStore(database)
     df_json1 = storage.store_json(dataset)
     df_json2 = storage.store_json(new_dataset)
@@ -218,45 +215,6 @@ def test_get_all_datasets(client, database, cleanup):
     )
 
     assert result.status_code == 200
-    datasets = result.get_json().get("datasets", None)
-    assert datasets is not None
-    assert datasets.get(df_json1["id"], None) is not None
-    assert datasets.get(df_json2["id"], None) is not None
-
-
-def test_get_all_datasets_info(client, database, cleanup):
-    new_role = create_role(*owner_role)
-    database.session.add(new_role)
-    new_role = create_role(*user_role)
-    database.session.add(new_role)
-    new_user = create_user(*user1)
-    database.session.add(new_user)
-    new_user = create_user(*user2)
-    database.session.add(new_user)
-
-    database.session.commit()
-
-    new_dataset = {
-        "name": "Dummy Dataset 1",
-        "description": "Lorem ipsum dolor",
-        "manifest": "Etiam vestibulum velit a tellus aliquet varius",
-        "tags": ["#hashtag", "#dummy"],
-        "created_at": "05/12/2019",
-        "tensors": {"train": tensor2.copy()},
-    }
-    storage = DiskObjectStore(database)
-    df_json1 = storage.store_json(dataset)
-    df_json2 = storage.store_json(new_dataset)
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    headers = {
-        "token": token.decode("UTF-8"),
-    }
-    result = client.get(
-        "/dcfl/datasets/info", headers=headers, content_type="application/json"
-    )
-
-    assert result.status_code == 200
 
     assert df_json1["id"] in [el["id"] for el in result.get_json()]
     assert df_json1["description"] in [el["description"] for el in result.get_json()]
@@ -267,7 +225,7 @@ def test_get_all_datasets_info(client, database, cleanup):
     assert df_json2["manifest"] in [el["manifest"] for el in result.get_json()]
 
 
-def test_get_specific_dataset_info(client, database, cleanup):
+def test_get_specific_dataset_metadata(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
     new_role = create_role(*user_role)
@@ -287,7 +245,7 @@ def test_get_specific_dataset_info(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/dcfl/datasets/info/{}".format(df_metadata["id"]),
+        "/dcfl/datasets/{}".format(df_metadata["id"]),
         headers=headers,
         content_type="application/json",
     )
