@@ -239,8 +239,6 @@ class AWS_Serverfull(AWS):
             ## For debugging
             # redirect stdout/stderr to a file
             exec &> server_log.out
-
-
             echo 'Simple Web Server for testing the deployment'
             sudo apt update -y
             sudo apt install apache2 -y
@@ -249,7 +247,6 @@ class AWS_Serverfull(AWS):
 
             exec &> conda_log.out
             echo 'Setup Miniconda environment'
-
             sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
             sudo bash miniconda.sh -b -p miniconda
             sudo rm miniconda.sh
@@ -283,25 +280,18 @@ class AWS_Serverfull(AWS):
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
-            exec &> env_vars.out
-            echo "Setting environment variables"
-            # export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
-            export DATABASE_URL="sqlite:///pygrid.db"
-
-            # exec &> start_app.out
-            # nohup ./run.sh --port {app.port}  --host {app.host}
-            cd /
-
             exec &> terraform_plugins.out
-            echo "Downloading terraform plugins"
+            echo "Downloading Terraform plugins"
             mkdir -p /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
             wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
             sudo apt-get install zip unzip
             unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
 
-            cd /PyGrid/apps/infrastructure/
-            exec &> worker_api.out
-            echo "Writing environment variables"
+            exec &> env_vars.out
+            echo "Setting environment variables"
+            # export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
+            export DATABASE_URL="sqlite:///pygrid.db"
+
             touch .env
             echo "CLOUD_PROVIDER={self.config.provider}" >> .env
             echo "REGION={self.config.vpc.region}" >> .env
@@ -310,8 +300,8 @@ class AWS_Serverfull(AWS):
             echo "PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}" >> .env
             echo "DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}" >> .env
 
-            pip install flask flask-sqlalchemy
-            python -m worker_api --port 5001
+            exec &> start_app.out
+            nohup ./run.sh --port {app.port}  --host {app.host}
         """
         )
 
