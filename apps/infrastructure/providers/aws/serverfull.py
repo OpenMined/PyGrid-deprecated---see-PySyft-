@@ -294,10 +294,10 @@ class AWS_Serverfull(AWS):
 
             exec &> terraform_plugins.out
             echo "Downloading terraform plugins"
-            export PLUGIN_DIR=/home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
-            mkdir -p $PLUGIN_DIR
+            mkdir -p /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
             wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
-            unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d $PLUGIN_DIR
+            sudo apt-get install zip unzip
+            unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
 
             cd /PyGrid/apps/infrastructure/
             exec &> worker_api.out
@@ -310,7 +310,8 @@ class AWS_Serverfull(AWS):
             echo "PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}" >> .env
             echo "DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}" >> .env
 
-            python -m worker-api --port 5001
+            pip install flask flask-sqlalchemy
+            python -m worker_api --port 5001
         """
         )
 

@@ -93,7 +93,7 @@ def get_instance_type(region):
     # Sort instances
     sorted_instances = (
         sorted(instances, key=lambda i: i["GpuInfo"]["TotalGpuMemoryInMiB"])
-        if instance_category is "Accelerated Computing Instances(GPU)"
+        if instance_category == "Accelerated Computing Instances(GPU)"
         else sorted(instances, key=lambda i: i["VCpuInfo"]["DefaultVCpus"])
     )
 
