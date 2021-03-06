@@ -1,7 +1,7 @@
 from base64 import b64encode, b64decode
 from json import dumps
 
-from syft.core.common.serde import _deserialize
+from syft import deserialize
 from syft.core.store.storeable_object import StorableObject
 from syft.core.store import Dataset
 from syft.core.common import UID
@@ -171,7 +171,7 @@ def test_create_dataset(client, database, cleanup):
     assert database.session.query(BinaryObject).get(_id) is not None
     assert database.session.query(BinaryObject).get(_id).binary is not None
     df = database.session.query(BinaryObject).get(_id).binary
-    assert _deserialize(blob=df, from_bytes=True).id.value.hex == _id
+    assert deserialize(blob=df, from_bytes=True).id.value.hex == _id
 
     assert database.session.query(JsonObject).get(_id) is not None
     assert database.session.query(JsonObject).get(_id).binary is not None

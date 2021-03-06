@@ -12,7 +12,7 @@ from loguru import logger
 from flask import current_app as app
 from syft.core.common.uid import UID
 from syft.core.store import ObjectStore, Dataset
-from syft.core.common.serde import _deserialize
+from syft import deserialize, serialize
 from syft.core.store.storeable_object import StorableObject
 
 from .bin_storage.bin_obj import BinaryObject
@@ -59,7 +59,9 @@ class DiskObjectStore(ObjectStore):
         return getsize(db_path)
 
     def store(self, obj: Dataset, _json: dict) -> None:
-        bin_obj = BinaryObject(id=obj.id.value.hex, binary=obj.to_bytes())
+        bin_obj = BinaryObject(
+            id=obj.id.value.hex, binary=serialize(obj, to_bytes=True)
+        )
         json_obj = JsonObject(id=_json["id"], binary=_json)
         metadata = get_metadata(self.db)
         metadata.length += 1
@@ -93,7 +95,7 @@ class DiskObjectStore(ObjectStore):
         df = Dataset(id=_id, data=storables)
         _json["id"] = _id.value.hex
 
-        bin_obj = BinaryObject(id=df.id.value.hex, binary=df.to_bytes())
+        bin_obj = BinaryObject(id=df.id.value.hex, binary=serialize(df, to_bytes=True))
         json_obj = JsonObject(id=_json["id"], binary=_json)
         metadata = get_metadata(self.db)
         metadata.length += 1
@@ -135,7 +137,7 @@ class DiskObjectStore(ObjectStore):
         metadata = get_metadata(self.db)
         metadata.length += 1
 
-        setattr(bin_obj, "binary", df.to_bytes())
+        setattr(bin_obj, "binary", serialize(df, to_bytes=True))
         setattr(json_obj, "binary", _json)
         self.db.session.commit()
         return _json
@@ -143,7 +145,7 @@ class DiskObjectStore(ObjectStore):
     def store_bytes_at(self, key: str, obj: bytes) -> None:
         bin_obj = self.db.session.query(BinaryObject).get(key)
 
-        dataset = _deserialize(blob=obj, from_bytes=True)
+        dataset = deserialize(blob=obj, from_bytes=True)
         json_obj = self.db.session.query(JsonObject).get(key)
         _json = dataset_to_dict(dataset)
 
@@ -155,7 +157,7 @@ class DiskObjectStore(ObjectStore):
         _id = UID()
         bin_obj = BinaryObject(id=_id.value.hex, binary=obj)
 
-        dataset = _deserialize(blob=obj, from_bytes=True)
+        dataset = deserialize(blob=obj, from_bytes=True)
         json_obj = dataset_to_dict(dataset)
         json_obj = JsonObject(id=_id.value.hex, binary=json_obj)
 
@@ -173,7 +175,7 @@ class DiskObjectStore(ObjectStore):
 
     def __setitem__(self, key: str, value: Dataset) -> None:
         obj = self.db.session.query(BinaryObject).get(key)
-        obj.binary = value.to_bytes()
+        obj.binary = serialize(value, to_bytes=True)
         self.db.session.commit()
 
     def __getitem__(self, key: str) -> bytes:
@@ -232,7 +234,7 @@ class DiskObjectStore(ObjectStore):
 
     def values(self) -> Iterable[Dataset]:
         binaries = self.db.session.query(BinaryObject.binary).all()
-        binaries = [_deserialize(blob=b[0], from_bytes=True) for b in binaries]
+        binaries = [deserialize(blob=b[0], from_bytes=True) for b in binaries]
         return binaries
 
     def __str__(self) -> str:
