@@ -1,15 +1,15 @@
-import json
-
-from flask import Response, request
-from nacl.encoding import HexEncoder
-# syft absolute
-from syft.core.common.message import (SignedImmediateSyftMessageWithoutReply,
-                                      SignedImmediateSyftMessageWithReply)
-from syft.core.common.serde.deserialize import _deserialize
-
+from .blueprint import root_blueprint as root_route
 from ...core.node import node
 from ...core.task_handler import executor
-from .blueprint import root_blueprint as root_route
+
+# syft absolute
+from syft.core.common.message import SignedImmediateSyftMessageWithReply
+from syft.core.common.message import SignedImmediateSyftMessageWithoutReply
+from syft.core.common.serde.deserialize import _deserialize
+
+from flask import request, Response
+import json
+from nacl.encoding import HexEncoder
 
 executor_running = False
 
