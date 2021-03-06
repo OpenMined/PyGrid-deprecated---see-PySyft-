@@ -1,15 +1,15 @@
-from .blueprint import root_blueprint as root_route
-from ...core.node import node
-from ...core.task_handler import executor
+import json
 
+from flask import Response, request
+from nacl.encoding import HexEncoder
 # syft absolute
-from syft.core.common.message import SignedImmediateSyftMessageWithReply
-from syft.core.common.message import SignedImmediateSyftMessageWithoutReply
+from syft.core.common.message import (SignedImmediateSyftMessageWithoutReply,
+                                      SignedImmediateSyftMessageWithReply)
 from syft.core.common.serde.deserialize import _deserialize
 
-from flask import request, Response
-import json
-from nacl.encoding import HexEncoder
+from ...core.node import node
+from ...core.task_handler import executor
+from .blueprint import root_blueprint as root_route
 
 executor_running = False
 
@@ -39,9 +39,3 @@ def root_route():
     else:
         node.recv_eventual_msg_without_reply(msg=obj_msg)
     return ""
-
-
-@root_route.route("/", methods=["GET"])
-def get_setup():
-    response = {"message": "Domain API deployment successful"}
-    return Response(json.dumps(response), status=200, mimetype="application/json")
