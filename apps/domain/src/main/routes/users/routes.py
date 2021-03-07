@@ -13,7 +13,7 @@ from syft.grid.messages.user_messages import (
 
 from ..auth import error_handler, token_required, optional_token
 from ...core.task_handler import route_logic, task_handler
-from ...core.node import node
+from ...core.node import get_node
 from ...core.exceptions import MissingRequestKeyError
 
 
@@ -46,7 +46,7 @@ def login_route():
 
         # Execute task
         response_body = task_handler(
-            route_function=node.login,
+            route_function=get_node().login,
             data=content,
             mandatory={
                 "password": MissingRequestKeyError,
