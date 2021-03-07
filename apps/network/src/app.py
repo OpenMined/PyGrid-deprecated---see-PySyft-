@@ -37,7 +37,7 @@ from main.routes import (
     root_blueprint,
 )
 import config
-from main.core.node import create_domain_app
+from main.core.node import create_network_app
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
 
@@ -80,7 +80,7 @@ def create_app(args, secret_key=DEFAULT_SECRET_KEY, debug=False) -> Flask:
     # sockets = Sockets(app)
 
     # Create Domain APP
-    app = create_domain_app(app=app, args=args)
+    app = create_network_app(app=app, args=args)
 
     app.debug = debug
     app.config["SECRET_KEY"] = secret_key
