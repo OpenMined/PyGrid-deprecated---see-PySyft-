@@ -13,7 +13,7 @@ class RequestManager(DatabaseManager):
     schema = Request
 
     def __init__(self, database):
-        self._schema = Request.schema
+        self._schema = RequestManager.schema
         self.db = database
 
     def first(self, **kwargs) -> Union[None, List]:
@@ -23,17 +23,16 @@ class RequestManager(DatabaseManager):
 
         return result
 
-    def create_request(self, user_id, object_id):
+    def create_request(self, user_id, object_id, reason, request_type):
         date = datetime.now()
 
         return self.register(
-            date=date,
             user_id=user_id,
-            object_id=object_id
+            object_id=object_id,
+            date=date,
+            reason=reason,
+            request_type=request_type,
         )
 
     def set(self, request_id, status):
-        self.modify(
-            {"id": request_id},
-            {"status": status}
-        )
+        self.modify({"id": request_id}, {"status": status})
