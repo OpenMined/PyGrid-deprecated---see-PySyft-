@@ -143,6 +143,7 @@ def test_delete_autoscaling_condition(client):
 """
 
 
+@pytest.mark.skip(reason="Should be made in integration tests")
 def test_create_worker(client, database, cleanup):
     new_role = create_role(*admin_role)
     database.session.add(new_role)
@@ -183,6 +184,7 @@ def test_create_worker(client, database, cleanup):
     assert user_env.environment == 1
 
 
+@pytest.mark.skip(reason="Should be made in integration tests")
 def test_get_all_workers(client, database, cleanup):
     new_role = create_role(*admin_role)
     database.session.add(new_role)
@@ -279,6 +281,7 @@ def test_get_all_workers(client, database, cleanup):
     ]
 
 
+@pytest.mark.skip(reason="Should be made in integration tests")
 def test_get_specific_worker(client, database, cleanup):
     new_role = create_role(*admin_role)
     database.session.add(new_role)
