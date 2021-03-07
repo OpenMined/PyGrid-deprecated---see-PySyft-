@@ -72,3 +72,9 @@ class RequestError(PyGridError):
     def __init__(self):
         message = "Request ID not found!"
         super().__init__(message)
+
+class InvalidParameterValueError(PyGridError):
+    def __init__(self, message=""):
+        if not message:
+            message = "Passed paramater value not valid!"
+        super().__init__(message)
