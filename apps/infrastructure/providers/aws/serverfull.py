@@ -233,10 +233,6 @@ class AWS_Serverfull(AWS):
         ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
 
         # exec_script = "#cloud-boothook\n#!/bin/bash\n"
-        wrap = lambda x: "{" + x + "}"
-        credentials = wrap(
-            f"aws_access_key_id: {self.config.credentials.cloud.aws_access_key_id}, aws_secret_access_key: {self.config.credentials.cloud.aws_secret_access_key}"
-        )
         exec_script = "#!/bin/bash\n"
         exec_script += textwrap.dedent(
             f"""
@@ -270,6 +266,11 @@ class AWS_Serverfull(AWS):
             sudo apt-get install libevent-dev -y
             sudo apt-get install gcc -y
 
+            exec &> terraform_install.out
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" -y
+            sudo apt-get update -y && sudo apt-get install terraform -y
+
             ## TODO : Remove the assumption that ubuntu is the username
             exec &> terraform_plugins.out
             echo "Downloading terraform plugins"
@@ -289,8 +290,9 @@ class AWS_Serverfull(AWS):
             export PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}
 
             echo "Writing cloud credentials file"
-            mkdir -p /home/ubuntu/.aws/api
-            jq -n '{credentials}' >> /home/ubuntu/.aws/api/credentials.json
+            mkdir -p /home/ubuntu/.aws/
+            echo "aws_access_key_id={self.config.credentials.cloud.aws_access_key_id}" >> /home/ubuntu/.aws/credentials
+            echo "aws_secret_access_key={self.config.credentials.cloud.aws_secret_access_key}" >> /home/ubuntu/.aws/credentials
 
             exec &> grid_log.out
             echo 'Cloning PyGrid'

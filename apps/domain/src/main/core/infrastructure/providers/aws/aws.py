@@ -14,13 +14,14 @@ class AWS(Provider):
         self.config = config
 
         # credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
+        # NOTE: Loading credentials from a normal file rather than a .json file
         credentials_dir = os.path.join("/home/ubuntu/.aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
-        self.cred_file = os.path.join(credentials_dir, "credentials.json")
+        self.cred_file = os.path.join(credentials_dir, "credentials")
 
-        if not os.path.exists(self.cred_file):
-            with open(self.cred_file, "w") as f:
-                json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
+        # if not os.path.exists(self.cred_file):
+        #     with open(self.cred_file, "w") as f:
+        #         json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
 
         self.tfscript += terrascript.provider.aws(
             region=self.config.vpc.region, shared_credentials_file=self.cred_file
