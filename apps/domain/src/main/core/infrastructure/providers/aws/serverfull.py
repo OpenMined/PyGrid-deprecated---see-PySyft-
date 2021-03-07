@@ -280,31 +280,10 @@ class AWS_Serverfull(AWS):
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
-            exec &> terraform_plugins.out
-            echo "Downloading Terraform plugins"
-            mkdir -p /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
-            wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
-            sudo apt-get install zip unzip
-            unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d /home/$USER/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
-
-            exec &> env_vars.out
-            echo "Setting environment variables"
-            # export DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}
-            export DATABASE_URL="sqlite:///pygrid.db"
-
-            touch .env
-            echo "CLOUD_PROVIDER={self.config.provider}" >> .env
-            echo "REGION={self.config.vpc.region}" >> .env
-            echo "VPC_ID={var(self.vpc.id)}" >> .env
-            echo "PUBLIC_SUBNET_ID={','.join([var(public_subnet.id) for _, public_subnet in self.subnets])}" >> .env
-            echo "PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}" >> .env
-            echo "DATABASE_URL={self.database.engine}:pymysql://{self.database.username}:{self.database.password}@{var(self.database.endpoint)}://{self.database.name}" >> .env
-
             exec &> start_app.out
             nohup ./run.sh --port {app.port}  --host {app.host}
         """
         )
-
         return exec_script
 
     def build_database(self):
