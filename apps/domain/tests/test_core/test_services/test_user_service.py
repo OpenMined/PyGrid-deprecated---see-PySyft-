@@ -7,7 +7,7 @@ from src.main.core.exceptions import (
     UserNotFoundError,
     MissingRequestKeyError,
 )
-from src.main.core.node import GridDomain
+from src.main.core.nodes.domain import GridDomain
 from src.main.core.database import expand_user_object
 from nacl.signing import SigningKey
 from nacl.signing import VerifyKey
