@@ -7,9 +7,11 @@ class Request(BaseModel):
     Columns:
         id (Integer, Primary Key): Cycle ID.
         date (TIME): Start time.
-        user_id (Integer, Foregn Key): 
-        object_id (Integer):
+        user_id (Integer, Foreign Key): User that created the request.
+        object_id (Integer): Target object to change in permisions.
+        reason String: Motivation of the request.
         status (String): The status of the request, wich can be 'pending', 'accepted' or 'denied'.
+        request_type (String): Wheter the type of the request is 'permissions' or 'budget'.
     """
 
     __tablename__ = "request"
@@ -18,7 +20,9 @@ class Request(BaseModel):
     date = db.Column(db.DateTime())
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     object_id = db.Column(db.Integer())
-    status = db.Column(db.String(255), default='pending')
+    reason = db.Column(db.String(255))
+    status = db.Column(db.String(255), default="pending")
+    request_type = db.Column(db.String(255))
 
     def __str__(self):
-        return f"< Request id : {self.id}, user: {self.user_id},  Date: {self.date}, Object: {self.object_id}, status: {self.status} >"
+        return f"< Request id : {self.id}, user: {self.user_id}, Date: {self.date}, Object: {self.object_id}, reason: {self.reason}, status: {self.status}, type: {self.type} >"
