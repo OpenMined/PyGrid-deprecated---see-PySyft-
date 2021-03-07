@@ -16,11 +16,16 @@ class AWS(Provider):
         credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         os.makedirs(credentials_dir, exist_ok=True)
         self.cred_file = os.path.join(credentials_dir, "credentials.json")
-        print(self.cred_file)
 
         if not os.path.exists(self.cred_file):
-            with open(self.cred_file, "w") as f:
-                json.dump(vars(config.credentials.cloud), f, indent=2, sort_keys=False)
+            try:
+                with open(self.cred_file, "w") as f:
+                    json.dump(
+                        vars(config.credentials.cloud), f, indent=2, sort_keys=False
+                    )
+            except:
+                with open(self.cred_file, "w") as f:
+                    json.dump({"file": self.cred_file}, f, indent=2, sort_keys=False)
 
         self.tfscript += terrascript.provider.aws(
             region=self.config.vpc.region, shared_credentials_file=self.cred_file
