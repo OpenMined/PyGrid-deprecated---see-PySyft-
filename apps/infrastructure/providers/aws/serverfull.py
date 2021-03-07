@@ -273,7 +273,7 @@ class AWS_Serverfull(AWS):
 
             ## TODO : Remove the assumption that ubuntu is the username
             exec &> terraform_plugins.out
-            echo "Downloading terraform plugins"
+            echo "Downloading Terraform plugins"
             mkdir -p /home/ubuntu/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
             wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
             sudo apt-get install zip unzip
@@ -290,9 +290,8 @@ class AWS_Serverfull(AWS):
             export PRIVATE_SUBNET_ID={','.join([var(private_subnet.id) for private_subnet, _ in self.subnets])}
 
             echo "Writing cloud credentials file"
-            mkdir -p /home/ubuntu/.aws/
-            echo "aws_access_key_id={self.config.credentials.cloud.aws_access_key_id}" >> /home/ubuntu/.aws/credentials
-            echo "aws_secret_access_key={self.config.credentials.cloud.aws_secret_access_key}" >> /home/ubuntu/.aws/credentials
+            export AWS_ACCESS_KEY_ID={self.config.credentials.cloud.aws_access_key_id}
+            export AWS_SECRET_ACCESS_KEY={self.config.credentials.cloud.aws_secret_access_key}
 
             exec &> grid_log.out
             echo 'Cloning PyGrid'
