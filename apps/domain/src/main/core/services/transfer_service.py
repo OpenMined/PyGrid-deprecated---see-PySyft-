@@ -3,10 +3,14 @@ import secrets
 from typing import List
 from typing import Type
 from typing import Union
+import torch as th
 
 # third party
 from nacl.signing import VerifyKey
 from nacl.encoding import HexEncoder
+from syft.grid.client.client import connect
+from syft.grid.client.grid_connection import GridHTTPConnection
+from syft.core.node.domain.client import DomainClient
 
 # syft relative
 from syft.core.node.abstract.node import AbstractNode
@@ -17,6 +21,7 @@ from syft.core.common.message import ImmediateSyftMessageWithReply
 from syft.core.common.serde.deserialize import _deserialize
 from syft.proto.core.io.address_pb2 import Address as Address_PB
 from syft.core.common.uid import UID
+from threading import Thread
 
 from syft.grid.messages.transfer_messages import (
     LoadObjectMessage,
@@ -24,95 +29,87 @@ from syft.grid.messages.transfer_messages import (
     SaveObjectMessage,
     SaveObjectResponse,
 )
+import traceback
+from ...utils.executor import executor
 
 
-def create_initial_setup(
-    msg: LoadObjectMessage,
-    node: AbstractNode,
-    verify_key: VerifyKey,
-) -> LoadObjectResponse:
-    _worker_address = msg.content.get("address", None)
-    _obj_id = msg.content.get("uid", None)
-    _searchable = msg.content.get("searchable", False)
-    _current_user_id = msg.content.get("current_user", None)
-
-    users = node.users
-
-    if not _current_user_id:
-        _current_user_id = users.first(
-            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
-        ).id
-
-    __allowed = users.can_edit_roles(user_id=_current_user_id)
-
-    addr_pb = Address_PB()
-    addr_pb.ParseFromString(_worker_address.encode("ISO-8859-1"))
-    _syft_address = _deserialize(blob=addr_pb)
-
-    _syft_id = UID.from_string(value=_obj_id)
-
-    _worker_client = node.in_memory_client_registry[_syft_address.domain_id]
-
-    try:
-        _obj = node.store[_syft_id]
-    except Exception:
-        raise Exception("Object Not Found!")
-
-    _obj.data.send(_worker_client, searchable=_searchable)
-
-    return LoadObjectResponse(
-        address=msg.reply_to,
-        status_code=200,
-        content={"msg": "Object loaded successfully!"},
+def send_obj(obj, node):
+    y_s = obj.data.send(
+        node.domain_client, searchable=True, tags=obj.tags, description=obj.description
     )
 
 
-def get_setup(
-    msg: SaveObjectMessage,
-    node: AbstractNode,
-    verify_key: VerifyKey,
-) -> SaveObjectResponse:
-    try:
-        return SaveObjectResponse(
-            address=msg.reply_to,
-            status_code=200,
-            content={"setup": node.setup_configs},
-        )
-    except Exception as e:
-        return SaveObjectResponse(
-            address=msg.reply_to,
-            success=False,
-            content={"error": str(e)},
-        )
-
-
 class TransferObjectService(ImmediateNodeServiceWithReply):
-
-    msg_handler_map = {
-        LoadObjectMessage: create_initial_setup,
-        SaveObjectMessage: get_setup,
-    }
-
     @staticmethod
     @service_auth(guests_welcome=True)
     def process(
         node: AbstractNode,
         msg: Union[
             LoadObjectMessage,
-            SaveObjectMessage,
         ],
         verify_key: VerifyKey,
     ) -> Union[LoadObjectResponse, SaveObjectResponse,]:
+        _worker_address = msg.content.get("address", None)
+        _obj_id = msg.content.get("uid", None)
+        _current_user_id = msg.content.get("current_user", None)
+
+        users = node.users
+
+        if not _current_user_id:
+            _current_user_id = users.first(
+                verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+            ).id
+
+        addr_pb = Address_PB()
+        addr_pb.ParseFromString(_worker_address.encode("ISO-8859-1"))
+        _syft_address = _deserialize(blob=addr_pb)
+
+        _syft_id = UID.from_string(value=_obj_id)
+
+        _worker_client = node.in_memory_client_registry[_syft_address.domain_id]
+
         try:
-            return TransferObjectService.msg_handler_map[type(msg)](
-                msg=msg, node=node, verify_key=verify_key
-            )
-        except Exception as e:
-            print("n\n\n\ My Exception: \n\n", str(e))
+            _obj = node.store[_syft_id]
+        except Exception:
+            raise Exception("Object Not Found!")
+
+        _obj.data.send(
+            _worker_client,
+            searchable=True,
+            tags=_obj.tags,
+            description=_obj.description,
+        )
+
+        return LoadObjectResponse(
+            address=msg.reply_to,
+            status_code=200,
+            content={"msg": "Object loaded successfully!"},
+        )
 
     @staticmethod
     def message_handler_types() -> List[Type[ImmediateSyftMessageWithReply]]:
-        return [
-            LoadObjectMessage,
-            SaveObjectMessage,
-        ]
+        return [LoadObjectMessage]
+
+
+class SaveObjectService(ImmediateNodeServiceWithoutReply):
+    @staticmethod
+    @service_auth(guests_welcome=True)
+    def process(
+        node: AbstractNode,
+        msg: SaveObjectMessage,
+        verify_key: VerifyKey,
+    ) -> None:
+        _obj_id = msg.content.get("uid", None)
+
+        _syft_id = UID.from_string(value=_obj_id)
+
+        try:
+            _obj = node.store[_syft_id]
+        except Exception:
+            raise Exception("Object Not Found!")
+
+        executor.submit(send_obj, _obj, node)
+
+    @staticmethod
+    def message_handler_types() -> List[Type[ImmediateSyftMessageWithReply]]:
+        return [SaveObjectMessage]
