@@ -15,7 +15,7 @@ class AWS(Provider):
 
         # credentials_dir = os.path.join(str(Path.home()), ".aws/api/")
         # NOTE: Loading credentials from a normal file rather than a .json file
-        credentials_dir = os.path.join("/home/ubuntu/.aws/api/")
+        credentials_dir = os.path.join("/home/ubuntu/.aws/")
         os.makedirs(credentials_dir, exist_ok=True)
         self.cred_file = os.path.join(credentials_dir, "credentials")
 
