@@ -16,13 +16,14 @@ from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithReply
 from syft.core.node.common.service.node_service import ImmediateNodeServiceWithoutReply
 from syft.core.common.message import ImmediateSyftMessageWithReply
+from syft.proto.core.io.address_pb2 import Address as Address_PB
 
 # from syft.grid.client import connect
 from syft.grid.client.client import connect
 from syft.grid.client.grid_connection import GridHTTPConnection
 from syft.core.node.domain.client import DomainClient
 from ..database.utils import model_to_json
-
+from syft import serialize, deserialize
 from syft.grid.messages.infra_messages import (
     CreateWorkerMessage,
     CreateWorkerResponse,
@@ -153,24 +154,27 @@ def get_worker_msg(
 
         _current_user = node.users.first(id=_current_user_id)
 
-        _model = node.environments.get_environments(
+        _user_env = node.environments.get_environments(
             user=_current_user_id, environment=worker_id
         )
-        if _model:
+        if _user_env:
+            env = node.environments.first(id=worker_id)
             syft_addr_pb = Address_PB()
 
-            _raw_address = _model[0].address.encode("ISO-8859-1")
+            _raw_address = env.address.encode("ISO-8859-1")
             syft_addr_pb.ParseFromString(_raw_address)
             syft_addr = deserialize(blob=syft_addr_pb)
             if not node.in_memory_client_registry.get(syft_addr.domain_id, None):
                 env_client = connect(
-                    url=_model[0].url,  # Domain Address
+                    url=env.url,  # Domain Address
                     conn_type=GridHTTPConnection,  # HTTP Connection Protocol
                     client_type=DomainClient,
                     user_key=SigningKey(
                         _current_user.private_key.encode("utf-8"), encoder=HexEncoder
                     ),
                 )
+                # ADD new connection obj in memory registry.
+                node.in_memory_client_registry[env_client.domain_id] = env_client
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
             _msg = {}
