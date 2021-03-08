@@ -188,6 +188,24 @@ def update_request_msg(
                 message='Request status should be either "accepted" or "denied"'
             )
 
+        if status == "accepted":
+            request = requests.first(id=request_id)
+            object_id = request.object_id
+
+            # Accessing and updating the datase metadata
+            storage = node.disk_store
+            read_permission = {
+                "verify_key": verify_key.encode(encoder=HexEncoder).decode("utf-8"),
+                "request_id": request_id,
+            }
+            storage.update_dataset_metadata(
+                key=object_id, read_permissions=read_permission
+            )
+
+        # TODO:
+        # 1 - The logic to change a user privacy budget needs to be implemented
+        # as soon as this logic is ready in PySyft.
+
         requests.set(request_id=request_id, status=status)
     else:
         raise AuthorizationError("You're not allowed to update Request information!")
