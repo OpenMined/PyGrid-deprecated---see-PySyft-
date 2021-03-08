@@ -171,7 +171,7 @@ def update_request_msg(
             verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
         ).id
 
-    # Check if name/address fields are empty
+    # Check if status field is empty
     missing_paramaters = not status
     if missing_paramaters:
         raise MissingRequestKeyError(
@@ -203,8 +203,8 @@ def update_request_msg(
             )
 
         # TODO:
-        # 1 - The logic to change a user privacy budget needs to be implemented
-        # as soon as this logic is ready in PySyft.
+        # 1 - The logic to change a user privacy budget needs to be implemented,
+        # as soon as this logic is ready this need to be updated.
 
         requests.set(request_id=request_id, status=status)
     else:
