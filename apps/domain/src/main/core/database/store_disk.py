@@ -145,6 +145,9 @@ class DiskObjectStore(ObjectStore):
     def update_dataset_metadata(self, key: str, **kwargs) -> None:
         json_obj = self.db.session.query(JsonObject).get(key)
 
+        if json_obj is None:
+            return
+
         _json = deepcopy(json_obj.binary)
 
         for att, value in kwargs.items():
