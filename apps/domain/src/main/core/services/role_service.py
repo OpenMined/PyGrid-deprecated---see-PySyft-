@@ -27,7 +27,7 @@ from syft.grid.messages.role_messages import (
     GetRolesMessage,
     GetRolesResponse,
 )
-from ..exceptions import AuthorizationError, MissingRequestKeyError
+from ..exceptions import AuthorizationError, MissingRequestKeyError, RoleNotFoundError
 from ..database.utils import model_to_json
 
 
@@ -59,6 +59,15 @@ def create_role_msg(
         raise MissingRequestKeyError(
             message="Invalid request payload, empty fields (name)!"
         )
+
+    # Check if this role name was already registered
+    try:
+        node.roles.first(name=_name)
+        raise AuthorizationError(
+            message="You can't create a new Role using this email!"
+        )
+    except RoleNotFoundError:
+        pass
 
     if __allowed:
         node.roles.register(
