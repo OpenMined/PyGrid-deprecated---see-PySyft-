@@ -429,12 +429,9 @@ class UserManagerService(ImmediateNodeServiceWithReply):
         DeleteUserResponse,
         SearchUsersResponse,
     ]:
-        try:
-            return UserManagerService.msg_handler_map[type(msg)](
-                msg=msg, node=node, verify_key=verify_key
-            )
-        except Exception as e:
-            print("\n\nMy exception >> ", str(e), "\n\n")
+        return UserManagerService.msg_handler_map[type(msg)](
+            msg=msg, node=node, verify_key=verify_key
+        )
 
     @staticmethod
     def message_handler_types() -> List[Type[ImmediateSyftMessageWithReply]]:
