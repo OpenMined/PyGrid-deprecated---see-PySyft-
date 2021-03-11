@@ -16,10 +16,6 @@ from syft.core.node.common.service.node_service import (
 from syft.core.node.domain.client import DomainClient
 # from syft.grid.client import connect
 from syft.grid.connections.http_connection import HTTPConnection
-from syft.grid.messages.infra_messages import (  # CheckWorkerDeploymentMessage,; CheckWorkerDeploymentResponse,; UpdateWorkerMessage,; UpdateWorkerResponse,
-    CreateWorkerMessage, CreateWorkerResponse, DeleteWorkerMessage,
-    DeleteWorkerResponse, GetWorkerMessage, GetWorkerResponse,
-    GetWorkersMessage, GetWorkersResponse)
 
 from ...core.database.environment.environment import Environment, states
 from ...core.infrastructure import AWS_Serverfull, Config
@@ -27,6 +23,20 @@ from ..database.environment.environment import Environment
 from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError, MissingRequestKeyError
 
+from syft.grid.messages.infra_messages import (  # CheckWorkerDeploymentMessage,; CheckWorkerDeploymentResponse,; UpdateWorkerMessage,; UpdateWorkerResponse,
+    CreateWorkerMessage,
+    CreateWorkerResponse,
+    DeleteWorkerMessage,
+    DeleteWorkerResponse,
+    GetWorkerMessage,
+    GetWorkerResponse,
+    GetWorkersMessage,
+    GetWorkersResponse,
+)
+
+#TODO: Modify existing routes or add new ones, to
+# 1. allow admin to get all workers deployed by a specific user
+# 2. allow admin to get all workers deployed by all users
 
 def create_worker_msg(
     msg: CreateWorkerMessage, node: AbstractNode, verify_key: VerifyKey
@@ -127,15 +137,19 @@ def get_worker_msg(
         worker_id = msg.content.get("worker_id", None)
         _current_user_id = msg.content.get("current_user", None)
 
+        users = node.users
+
         if not _current_user_id:
-            _current_user_id = node.users.first(
+            _current_user_id = users.first(
                 verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
             ).id
         env_ids = [
             env.id for env in node.environments.get_environments(user=_current_user_id)
         ]
 
-        if int(worker_id) in env_ids:
+        _is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
+
+        if (int(worker_id) in env_ids) or _is_admin:
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
             _msg = {}
