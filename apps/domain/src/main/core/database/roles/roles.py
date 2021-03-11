@@ -11,7 +11,7 @@ class Role(BaseModel):
     can_create_users = db.Column(db.Boolean(), default=False)
     can_create_groups = db.Column(db.Boolean(), default=False)
     can_edit_roles = db.Column(db.Boolean(), default=False)
-    can_manage_environments = db.Column(db.Boolean(), default=False)
+    can_manage_infrastructure = db.Column(db.Boolean(), default=False)
     can_upload_data = db.Column(db.Boolean(), default=False)
 
     def __str__(self):
@@ -22,7 +22,7 @@ class Role(BaseModel):
             f"can_create_users: {self.can_create_users}, "
             f"can_create_groups: {self.can_create_groups}, "
             f"can_edit_roles: {self.can_edit_roles}, "
-            f"can_manage_environments: {self.can_manage_environments}>, "
+            f"can_manage_infrastructure: {self.can_manage_infrastructure}>, "
             f"can_upload_data: {self.can_upload_data}>"
         )
 
@@ -34,7 +34,7 @@ def create_role(
     can_create_users,
     can_create_groups,
     can_edit_roles,
-    can_manage_environments,
+    can_manage_infrastructure,
     can_upload_data,
 ):
     new_role = Role(
@@ -44,7 +44,7 @@ def create_role(
         can_create_users=can_create_users,
         can_create_groups=can_create_groups,
         can_edit_roles=can_edit_roles,
-        can_manage_environments=can_manage_environments,
+        can_manage_infrastructure=can_manage_infrastructure,
         can_upload_data=can_upload_data,
     )
     return new_role
