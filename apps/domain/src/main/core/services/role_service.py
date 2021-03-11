@@ -27,7 +27,12 @@ from syft.grid.messages.role_messages import (
     GetRolesMessage,
     GetRolesResponse,
 )
-from ..exceptions import AuthorizationError, MissingRequestKeyError, RoleNotFoundError, RequestError
+from ..exceptions import (
+    AuthorizationError,
+    MissingRequestKeyError,
+    RoleNotFoundError,
+    RequestError,
+)
 from ..database.utils import model_to_json
 
 
