@@ -63,9 +63,7 @@ def create_role_msg(
     # Check if this role name was already registered
     try:
         node.roles.first(name=_name)
-        raise AuthorizationError(
-            message="You can't create a new Role using this email!"
-        )
+        raise AuthorizationError(message="The role name already exists!")
     except RoleNotFoundError:
         pass
 
