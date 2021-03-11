@@ -11,11 +11,11 @@ class Environment(BaseModel):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String(255))
     state = db.Column(db.Integer)
-    address = db.Column(db.String(255))
-    syft_address = db.Column(db.String(255))
-    provider = db.Column(db.String(64))
-    region = db.Column(db.String(64))
-    instance_type = db.Column(db.String(64))
+    provider = db.Column(db.String(255))
+    region = db.Column(db.String(255))
+    instance_type = db.Column(db.String(255))
+    address = db.Column(db.String(255), default="0.0.0.0")
+    syft_address = db.Column(db.String(255), default="")  # TODO
     created_at = db.Column(db.DateTime, default=datetime.now())
     destroyed_at = db.Column(db.DateTime, default=datetime.now())
 
