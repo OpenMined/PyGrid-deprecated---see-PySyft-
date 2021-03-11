@@ -14,16 +14,14 @@ from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import (
     ImmediateNodeServiceWithoutReply, ImmediateNodeServiceWithReply)
 from syft.core.node.domain.client import DomainClient
-# from syft.grid.client import connect
 from syft.grid.connections.http_connection import HTTPConnection
 
-from ...core.database.environment.environment import Environment, states
-from ...core.infrastructure import AWS_Serverfull, Config
-from ..database.environment.environment import Environment
+from ...core.database.environment.environment import states
+from ...core.infrastructure import AWS_Serverfull, Config, Provider
 from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError, MissingRequestKeyError
 
-from syft.grid.messages.infra_messages import (  # CheckWorkerDeploymentMessage,; CheckWorkerDeploymentResponse,; UpdateWorkerMessage,; UpdateWorkerResponse,
+from syft.grid.messages.infra_messages import (
     CreateWorkerMessage,
     CreateWorkerResponse,
     DeleteWorkerMessage,
@@ -34,9 +32,10 @@ from syft.grid.messages.infra_messages import (  # CheckWorkerDeploymentMessage,
     GetWorkersResponse,
 )
 
-#TODO: Modify existing routes or add new ones, to
+# TODO: Modify existing routes or add new ones, to
 # 1. allow admin to get all workers deployed by a specific user
 # 2. allow admin to get all workers deployed by all users
+
 
 def create_worker_msg(
     msg: CreateWorkerMessage, node: AbstractNode, verify_key: VerifyKey
@@ -82,10 +81,11 @@ def create_worker_msg(
             node.environments.association(user_id=_current_user_id, env_id=new_env.id)
 
             deployed, output = deployment.deploy()  # Deploy
+
             node.environments.set(
                 id=config.app.id,
                 state=states["success"] if deployed else states["failed"],
-                address="0.0.0.0",  # TODO: Pass in the IP address
+                address=output["instance_0_endpoint"]["value"][0],
             )
             if deployed:
                 pass
@@ -192,40 +192,51 @@ def get_workers_msg(
 def del_worker_msg(
     msg: DeleteWorkerMessage, node: AbstractNode, verify_key: VerifyKey
 ) -> DeleteWorkerResponse:
-    # Get Payload Content
-    _worker_id = msg.content.get("worker_id", None)
-    _current_user_id = msg.content.get("current_user", None)
+    try:
+        # Get Payload Content
+        _worker_id = msg.content.get("worker_id", None)
+        _current_user_id = msg.content.get("current_user", None)
 
-    users = node.users
-    if not _current_user_id:
-        _current_user_id = users.first(
-            verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
-        ).id
+        users = node.users
+        if not _current_user_id:
+            _current_user_id = users.first(
+                verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
+            ).id
 
-    _current_user = users.first(id=_current_user_id)
+        # _current_user = users.first(id=_current_user_id)
+        _is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
 
-    # Owner / Admin
-    if users.can_manage_infrastructure(user_id=_current_user_id):
-        node.environments.delete_associations(environment_id=_worker_id)
-        node.environments.delete(id=_worker_id)
-    else:  # Env Owner
         envs = [
             int(env.id)
             for env in node.environments.get_environments(user=_current_user_id)
         ]
-        if int(_worker_id) in envs:
-            node.environments.delete_associations(environment_id=_worker_id)
-            node.environments.delete(id=_worker_id)
-        else:
+        _created_by_current_user = int(_worker_id) in envs
+
+        # Owner / Admin
+        if not _is_admin and not _created_by_current_user:
             raise AuthorizationError(
                 "You're not allowed to delete this environment information!"
             )
 
-    return DeleteWorkerResponse(
-        address=msg.reply_to,
-        status_code=200,
-        content={"msg": "Worker was deleted succesfully!"},
-    )
+        _env = node.environment.first(id=_worker_id)
+        _config = Config(provider=_env.provider, app=Config(name="worker", id=_worker_id))
+        success = Provider(_config).destroy()
+
+        if success:
+            node.environments.delete_associations(environment_id=_worker_id)
+            node.environments.delete(id=_worker_id)
+        else:
+            raise Exception("Worker deletion failed")
+
+        return DeleteWorkerResponse(
+            address=msg.reply_to,
+            status_code=200,
+            content={"msg": "Worker was deleted succesfully!"},
+        )
+    except Exception as e:
+        return DeleteWorkerResponse(
+            address=msg.reply_to, status_code=False, content={"error": str(e)}
+        )
 
 
 # def update_worker_msg(
