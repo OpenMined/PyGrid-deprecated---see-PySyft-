@@ -27,7 +27,7 @@ from syft.grid.messages.role_messages import (
     GetRolesMessage,
     GetRolesResponse,
 )
-from ..exceptions import AuthorizationError, MissingRequestKeyError, RoleNotFoundError
+from ..exceptions import AuthorizationError, MissingRequestKeyError, RoleNotFoundError, RequestError
 from ..database.utils import model_to_json
 
 
@@ -63,7 +63,7 @@ def create_role_msg(
     # Check if this role name was already registered
     try:
         node.roles.first(name=_name)
-        raise AuthorizationError(message="The role name already exists!")
+        raise RequestError(message="The role name already exists!")
     except RoleNotFoundError:
         pass
 
