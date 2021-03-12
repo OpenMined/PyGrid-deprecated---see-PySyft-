@@ -82,7 +82,7 @@ def create_worker_msg(
             if deployed:
                 node.environments.set(
                     id=config.app.id,
-                    deployed_at=datetime.now(),
+                    craeted_at=datetime.now(),
                     state=states["success"],
                     address=output["instance_0_endpoint"]["value"][0],
                 )
@@ -181,7 +181,7 @@ def get_workers_msg(
                 include_all
                 or (env.state == states["success"])
                 or (include_failed and env.state == states["failed"])
-                or (include_destroyed and env.state == "destroyed")
+                or (include_destroyed and env.state == states["destroyed"])
             ):
                 workers.append(model_to_json(node.environments.first(id=env.id)))
 
