@@ -431,13 +431,21 @@ def create_worker(current_user):
     )
 
 
-@dcfl_route.route("/workers", methods=["GET", "POST"])
+@dcfl_route.route("/workers", methods=["GET"])
 @token_required
 def get_all_workers(current_user):
     # Get request body
     content = request.get_json()
     if not content:
-        content = {}
+        content = {
+            "include_all": request.args.get("include_all", default=False, type=bool),
+            "include_failed": request.args.get(
+                "include_failed", default=False, type=bool
+            ),
+            "include_destroyed": request.args.get(
+                "include_destroyed", default=False, type=bool
+            ),
+        }
 
     status_code, response_msg = error_handler(
         route_logic, GetWorkersMessage, current_user, content
