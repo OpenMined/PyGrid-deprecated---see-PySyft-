@@ -394,14 +394,15 @@ def delete_autoscaling_condition(autoscaling_id):
 import json
 
 from flask import Response, request
-from syft.grid.messages.infra_messages import (CreateWorkerMessage,
-                                               DeleteWorkerMessage,
-                                               GetWorkerMessage,
-                                               GetWorkersMessage)
 
 from ....core.task_handler import route_logic
 from ...auth import error_handler, token_required
 from ..blueprint import dcfl_blueprint as dcfl_route
+
+from syft.grid.messages.infra_messages import CreateWorkerMessage  # noqa isort:skip
+from syft.grid.messages.infra_messages import DeleteWorkerMessage  # noqa isort:skip
+from syft.grid.messages.infra_messages import GetWorkerMessage  # noqa isort:skip
+from syft.grid.messages.infra_messages import GetWorkersMessage  # noqa isort:skip
 
 
 @dcfl_route.route("/check")
@@ -444,7 +445,9 @@ def get_all_workers(current_user):
 
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
     return Response(
-        json.dumps(response), status=status_code, mimetype="application/json"
+        json.dumps(response, default=str),
+        status=status_code,
+        mimetype="application/json",
     )
 
 
@@ -462,7 +465,9 @@ def get_worker(current_user, worker_id):
     )
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
     return Response(
-        json.dumps(response), status=status_code, mimetype="application/json"
+        json.dumps(response, default=str),
+        status=status_code,
+        mimetype="application/json",
     )
 
 

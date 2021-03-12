@@ -55,5 +55,5 @@ class EnvironmentManager(DatabaseManager):
     def set(self, id, state, address):
         self.modify(
             {"id": id},
-            {"state": state, "deployed_at": datetime.now(), "address": address},
+            {"state": state, "created_at": datetime.now(), "address": address},
         )
