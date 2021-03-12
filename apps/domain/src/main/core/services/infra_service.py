@@ -15,22 +15,19 @@ from syft.core.node.common.service.node_service import (
     ImmediateNodeServiceWithoutReply, ImmediateNodeServiceWithReply)
 from syft.core.node.domain.client import DomainClient
 from syft.grid.connections.http_connection import HTTPConnection
+from syft.grid.messages.infra_messages import (CreateWorkerMessage,
+                                               CreateWorkerResponse,
+                                               DeleteWorkerMessage,
+                                               DeleteWorkerResponse,
+                                               GetWorkerMessage,
+                                               GetWorkerResponse,
+                                               GetWorkersMessage,
+                                               GetWorkersResponse)
 
 from ...core.database.environment.environment import states
 from ...core.infrastructure import AWS_Serverfull, Config, Provider
 from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError, MissingRequestKeyError
-
-from syft.grid.messages.infra_messages import (
-    CreateWorkerMessage,
-    CreateWorkerResponse,
-    DeleteWorkerMessage,
-    DeleteWorkerResponse,
-    GetWorkerMessage,
-    GetWorkerResponse,
-    GetWorkersMessage,
-    GetWorkersResponse,
-)
 
 # TODO: Modify existing routes or add new ones, to
 # 1. allow admin to get all workers deployed by a specific user
@@ -218,8 +215,10 @@ def del_worker_msg(
                 "You're not allowed to delete this environment information!"
             )
 
-        _env = node.environment.first(id=_worker_id)
-        _config = Config(provider=_env.provider, app=Config(name="worker", id=_worker_id))
+        _env = node.environments.first(id=_worker_id)
+        _config = Config(
+            provider=_env.provider, app=Config(name="worker", id=_worker_id)
+        )
         success = Provider(_config).destroy()
 
         if success:

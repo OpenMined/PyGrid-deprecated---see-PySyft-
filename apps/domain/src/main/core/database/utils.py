@@ -8,7 +8,13 @@ def model_to_json(model):
     """Returns a JSON representation of an SQLAlchemy-backed object."""
     json = {}
     for col in model.__mapper__.attrs.keys():
-        if col != "hashed_password" and col != "salt" and col != "date":
+        if (
+            col != "hashed_password"
+            and col != "salt"
+            and col != "date"
+            and col != "created_at"
+            and col != "destroyed_at"
+        ):
             json[col] = getattr(model, col)
 
     return json
