@@ -82,7 +82,7 @@ def create_worker_msg(
             if deployed:
                 node.environments.set(
                     id=config.app.id,
-                    craeted_at=datetime.now(),
+                    created_at=datetime.now(),
                     state=states["success"],
                     address=output["instance_0_endpoint"]["value"][0],
                 )
@@ -177,13 +177,14 @@ def get_workers_msg(
 
         workers = []
         for env in envs:
+            _env = node.environments.first(id=env.id)
             if (
                 include_all
-                or (env.state == states["success"])
-                or (include_failed and env.state == states["failed"])
-                or (include_destroyed and env.state == states["destroyed"])
+                or (_env.state == states["success"])
+                or (include_failed and _env.state == states["failed"])
+                or (include_destroyed and _env.state == states["destroyed"])
             ):
-                workers.append(model_to_json(node.environments.first(id=env.id)))
+                workers.append(model_to_json(_env))
 
         _msg = {"workers": workers}
 
@@ -237,7 +238,7 @@ def del_worker_msg(
         return DeleteWorkerResponse(
             address=msg.reply_to,
             status_code=200,
-            content={"msg": "Worker was deleted succesfully!"},
+            content={"msg": "Worker was deleted successfully!"},
         )
     except Exception as e:
         return DeleteWorkerResponse(

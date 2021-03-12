@@ -9,7 +9,6 @@ class Environment(BaseModel):
     __tablename__ = "environment"
 
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    name = db.Column(db.String(255))
     state = db.Column(db.Integer)
     provider = db.Column(db.String(255))
     region = db.Column(db.String(255))
