@@ -436,15 +436,18 @@ def create_worker(current_user):
 def get_all_workers(current_user):
     # Get request body
     content = request.get_json()
+
+    include_all = request.args.get("include_all", default="false", type=str)
+    include_failed = request.args.get("include_failed", default="false", type=str)
+    include_destroyed = request.args.get("include_destroyed", default="false", type=str)
+
+    parse = lambda x: str(x).lower() == "true"
+
     if not content:
         content = {
-            "include_all": request.args.get("include_all", default=False, type=bool),
-            "include_failed": request.args.get(
-                "include_failed", default=False, type=bool
-            ),
-            "include_destroyed": request.args.get(
-                "include_destroyed", default=False, type=bool
-            ),
+            "include_all": parse(include_all),
+            "include_failed": parse(include_failed),
+            "include_destroyed": parse(include_destroyed),
         }
 
     status_code, response_msg = error_handler(
