@@ -52,8 +52,5 @@ class EnvironmentManager(DatabaseManager):
             raise EnvironmentNotFoundError
         return results
 
-    def set(self, id, state, address):
-        self.modify(
-            {"id": id},
-            {"state": state, "created_at": datetime.now(), "address": address},
-        )
+    def set(self, id, **kwargs):
+        self.modify({"id": id}, {**kwargs})

@@ -431,7 +431,7 @@ def create_worker(current_user):
     )
 
 
-@dcfl_route.route("/workers", methods=["GET"])
+@dcfl_route.route("/workers", methods=["GET", "POST"])
 @token_required
 def get_all_workers(current_user):
     # Get request body

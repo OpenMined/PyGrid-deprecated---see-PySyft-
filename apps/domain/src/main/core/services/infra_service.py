@@ -79,16 +79,17 @@ def create_worker_msg(
 
             deployed, output = deployment.deploy()  # Deploy
 
-            node.environments.set(
-                id=config.app.id,
-                state=states["success"] if deployed else states["failed"],
-                address=output["instance_0_endpoint"]["value"][0],
-            )
             if deployed:
-                pass
+                node.environments.set(
+                    id=config.app.id,
+                    deployed_at=datetime.now(),
+                    state=states["success"],
+                    address=output["instance_0_endpoint"]["value"][0],
+                )
                 # TODO: Modify this (@ionesio)
                 # node.in_memory_client_registry[output.] = env_client
             else:
+                node.environments.set(id=config.app.id, state=states["failed"])
                 raise Exception("Worker creation failed!")
 
         final_msg = "Worker created successfully!"
@@ -144,9 +145,9 @@ def get_worker_msg(
             env.id for env in node.environments.get_environments(user=_current_user_id)
         ]
 
-        _is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
+        is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
 
-        if (int(worker_id) in env_ids) or _is_admin:
+        if (int(worker_id) in env_ids) or is_admin:
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
             _msg = {}
@@ -163,21 +164,28 @@ def get_workers_msg(
 ) -> GetWorkersResponse:
     try:
         _current_user_id = msg.content.get("current_user", None)
+        include_all = msg.content.get("include_all", False)
+        include_failed = msg.content.get("include_failed", False)
+        include_destroyed = msg.content.get("include_destroyed", False)
 
         if not _current_user_id:
             _current_user_id = node.users.first(
                 verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
             ).id
 
-        _current_user = node.users.first(id=_current_user_id)
-
         envs = node.environments.get_environments(user=_current_user_id)
 
-        _msg = {
-            "workers": [
-                model_to_json(node.environments.first(id=env.id)) for env in envs
-            ]
-        }
+        workers = []
+        for env in envs:
+            if (
+                include_all
+                or (env.state == states["success"])
+                or (include_failed and env.state == states["failed"])
+                or (include_destroyed and env.state == "destroyed")
+            ):
+                workers.append(model_to_json(node.environments.first(id=env.id)))
+
+        _msg = {"workers": workers}
 
         return GetWorkersResponse(address=msg.reply_to, status_code=200, content=_msg)
     except Exception as e:
@@ -191,7 +199,7 @@ def del_worker_msg(
 ) -> DeleteWorkerResponse:
     try:
         # Get Payload Content
-        _worker_id = msg.content.get("worker_id", None)
+        worker_id = msg.content.get("worker_id", None)
         _current_user_id = msg.content.get("current_user", None)
 
         users = node.users
@@ -201,29 +209,28 @@ def del_worker_msg(
             ).id
 
         # _current_user = users.first(id=_current_user_id)
-        _is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
+        is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
 
         envs = [
             int(env.id)
             for env in node.environments.get_environments(user=_current_user_id)
         ]
-        _created_by_current_user = int(_worker_id) in envs
+        created_by_current_user = int(worker_id) in envs
 
         # Owner / Admin
-        if not _is_admin and not _created_by_current_user:
+        if not is_admin and not created_by_current_user:
             raise AuthorizationError(
                 "You're not allowed to delete this environment information!"
             )
 
-        _env = node.environments.first(id=_worker_id)
-        _config = Config(
-            provider=_env.provider, app=Config(name="worker", id=_worker_id)
-        )
-        success = Provider(_config).destroy()
+        env = node.environments.first(id=worker_id)
+        _config = Config(provider=env.provider, app=Config(name="worker", id=worker_id))
 
+        success = Provider(_config).destroy()
         if success:
-            node.environments.delete_associations(environment_id=_worker_id)
-            node.environments.delete(id=_worker_id)
+            node.environments.set(
+                id=worker_id, state=states["destroyed"], destroyed_at=datetime.now()
+            )
         else:
             raise Exception("Worker deletion failed")
 
