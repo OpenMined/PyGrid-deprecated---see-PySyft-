@@ -22,12 +22,7 @@ class Terraform:
             json.dump(tfscript, tfjson, indent=2, sort_keys=False)
 
     def init(self):
-        return subprocess.run(
-            f"terraform init -input=false -plugin-dir={ROOT_DIR}",
-            shell=True,
-            cwd=self.dir,
-            check=True,
-        )
+        return subprocess.run(f"terraform init", shell=True, cwd=self.dir, check=True)
 
     def validate(self):
         return subprocess.run(

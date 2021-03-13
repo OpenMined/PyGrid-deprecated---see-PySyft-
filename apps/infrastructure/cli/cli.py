@@ -50,14 +50,7 @@ def cli(config: SimpleNamespace, output_file: str, api: str):
     config.output_file = f"{config.pygrid_root_path}/{output_file}"
 
 
-## TODO: Load prev config
 @cli.command()
-@click.option(
-    "--prev-config",
-    prompt="Load prev Config? (This feature is only for dev purpose, you can skip it by pressing Enter)",
-    default=prev_config,
-    help="If there is a previous configuration file",
-)
 @click.option(
     "--provider",
     prompt="Cloud Provider: ",
@@ -75,60 +68,51 @@ def cli(config: SimpleNamespace, output_file: str, api: str):
 @pass_config
 def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
 
-    prev_config = None  # Comment this while developing
+    config.provider = provider.lower()
 
-    if prev_config is not None:
-        with open(prev_config, "r") as f:
-            click.echo("loading previous configurations...")
-            config.update(**json.load(f))
-    else:
-        config.provider = provider.lower()
+    # Store credentials in a separate object, thus not logging it in output
+    # when asking the user to confirm the current configuration
+    credentials = Config()
 
-        # Store credentials in a separate object, thus not logging it in output
-        # when asking the user to confirm the current configuration
-        credentials = Config()
+    ## credentials file
+    with open(
+        click.prompt(
+            f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
+            type=str,
+            default=f"{Path.home()}/.{config.provider}/credentials.json",
+        ),
+        "r",
+    ) as f:
+        credentials.cloud = json.load(f)
 
-        ## credentials file
-        with open(
-            click.prompt(
-                f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
-                type=str,
-                default=f"{Path.home()}/.{config.provider}/credentials.json",
-            ),
-            "r",
-        ) as f:
-            credentials.cloud = json.load(f)
+    ## Get app config and arguments
+    config.app = Config(name=app.lower())
 
-        ## Get app config and arguments
-        config.app = Config(name=app.lower())
+    ## Deployment type
+    config.serverless = False
+    if not config.app.name in ["domain", "worker"]:
+        config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
-        ## Deployment type
-        config.serverless = False
-        if not config.app.name in ["domain", "worker"]:
-            config.serverless = click.confirm(f"Do you want to deploy serverless?")
+    ## Websockets
+    if not config.serverless:
+        config.websockets = click.confirm(f"Will you need to support Websockets?")
 
-        ## Websockets
+    if not config.serverless:
+        get_app_arguments(config)
+
+    ## Prompting user to provide configuration for the selected cloud
+    if config.provider == "aws":
+        config.vpc = aws.get_vpc_config()
         if not config.serverless:
-            config.websockets = click.confirm(f"Will you need to support Websockets?")
+            config.vpc.instance_type = aws.get_instance_type(config.vpc.region)
+    elif config.provider == "gcp":
+        pass
+    elif config.provider == "azure":
+        pass
 
-        if not config.serverless:
-            get_app_arguments(config)
-
-        ## Prompting user to provide configuration for the selected cloud
-        if config.provider == "aws":
-            config.vpc = aws.get_vpc_config()
-            if not config.serverless:
-                config.vpc.instance_type = aws.get_instance_type(config.vpc.region)
-        elif config.provider == "gcp":
-            pass
-        elif config.provider == "azure":
-            pass
-
-        ## Database
-        if config.app.name != "worker":
-            credentials.db = aws.get_db_config()
-
-        # config.credentials = credentials
+    ## Database
+    if config.app.name != "worker":
+        credentials.db = aws.get_db_config()
 
     if click.confirm(
         f"""Your current configration are:
@@ -137,7 +121,6 @@ def deploy(config: SimpleNamespace, prev_config: str, provider: str, app: str):
         \n\nContinue?"""
     ):
 
-        # credentials = config.credentials  # Uncomment this while developing
         config.credentials = credentials
 
         url = urljoin(config.api_url, "/deploy")
