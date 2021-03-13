@@ -405,12 +405,6 @@ from syft.grid.messages.infra_messages import GetWorkerMessage  # noqa isort:ski
 from syft.grid.messages.infra_messages import GetWorkersMessage  # noqa isort:skip
 
 
-@dcfl_route.route("/check")
-def check():
-    response = {"message": "Can access worker api"}
-    return Response(json.dumps(response), status=200, content_type="application/json")
-
-
 @dcfl_route.route("/workers", methods=["POST"])
 @token_required
 def create_worker(current_user):

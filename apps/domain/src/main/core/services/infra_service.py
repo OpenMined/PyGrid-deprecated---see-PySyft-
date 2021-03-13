@@ -209,7 +209,6 @@ def del_worker_msg(
                 verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
             ).id
 
-        # _current_user = users.first(id=_current_user_id)
         is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
 
         envs = [
@@ -220,9 +219,7 @@ def del_worker_msg(
 
         # Owner / Admin
         if not is_admin and not created_by_current_user:
-            raise AuthorizationError(
-                "You're not allowed to delete this environment information!"
-            )
+            raise AuthorizationError("You're not allowed to delete this worker!")
 
         env = node.environments.first(id=worker_id)
         _config = Config(provider=env.provider, app=Config(name="worker", id=worker_id))
