@@ -16,6 +16,7 @@ from .groups.groups import Group
 from .groups.usergroup import UserGroup
 from .roles.roles import Role, create_role
 from .users.user import User, create_user
+from .setup.setup import SetupConfig, create_setup
 from .bin_storage.bin_obj import BinaryObject
 from .bin_storage.json_obj import JsonObject
 from .bin_storage.metadata import StorageMetadata
