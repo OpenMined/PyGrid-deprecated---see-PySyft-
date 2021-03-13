@@ -450,9 +450,7 @@ def get_all_workers(current_user):
 
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
     return Response(
-        json.dumps(response, default=str),
-        status=status_code,
-        mimetype="application/json",
+        json.dumps(response), status=status_code, mimetype="application/json"
     )
 
 
@@ -470,9 +468,7 @@ def get_worker(current_user, worker_id):
     )
     response = response_msg if isinstance(response_msg, dict) else response_msg.content
     return Response(
-        json.dumps(response, default=str),
-        status=status_code,
-        mimetype="application/json",
+        json.dumps(response), status=status_code, mimetype="application/json"
     )
 
 
