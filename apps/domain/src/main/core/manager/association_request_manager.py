@@ -36,21 +36,19 @@ class AssociationRequestManager(DatabaseManager):
             sender_address=sender_address,
             handshake_value=handshake_value,
         )
-    
+
     def associations(self):
         return list(self.db.session.query(Association).all())
-    
-    def association(self,**kwargs):
+
+    def association(self, **kwargs):
         return self.db.session.query(Association).filter_by(**kwargs).first()
-    
+
     def set(self, handshake, value):
         accepted_value = value == "accept"
         if accepted_value:
             req = self.first(handshake_value=handshake)
             new_association = Association(
-                name=req.name,
-                address=req.address,
-                date=datetime.now()
+                name=req.name, address=req.address, date=datetime.now()
             )
             self.db.session.add(new_association)
         self.modify(
