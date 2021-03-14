@@ -4,9 +4,11 @@ from ...core.node import get_node
 # syft absolute
 from syft.core.common.message import SignedImmediateSyftMessageWithReply
 from syft.core.common.message import SignedImmediateSyftMessageWithoutReply
+
 from syft.core.common.serde.deserialize import _deserialize
 from syft import serialize
 from syft.core.common.serde.serialize import _serialize
+from syft import deserialize
 
 from flask import request, Response
 import json
@@ -28,7 +30,7 @@ def metadata_route():
 @root_route.route("/pysyft", methods=["POST"])
 def root_route():
     data = request.get_data()
-    obj_msg = _deserialize(blob=data, from_bytes=True)
+    obj_msg = deserialize(blob=data, from_bytes=True)
     if isinstance(obj_msg, SignedImmediateSyftMessageWithReply):
         reply = get_node().recv_immediate_msg_with_reply(msg=obj_msg)
         r = Response(response=_serialize(obj=reply, to_bytes=True), status=200)

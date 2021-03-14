@@ -105,7 +105,7 @@ def update_role_msg(
         "can_upload_data": msg.content.get("can_upload_data", None),
     }
 
-    filter_parameters = lambda key: params[key]
+    filter_parameters = lambda key: (params[key] != None)
     filtered_parameters = filter(filter_parameters, params.keys())
     role_parameters = {key: params[key] for key in filtered_parameters}
 
