@@ -5,24 +5,30 @@ from datetime import datetime
 from typing import List, Type, Union
 
 from nacl.encoding import HexEncoder
+
 # third party
 from nacl.signing import SigningKey, VerifyKey
 from syft.core.common.message import ImmediateSyftMessageWithReply
+
 # syft relative
 from syft.core.node.abstract.node import AbstractNode
 from syft.core.node.common.service.auth import service_auth
 from syft.core.node.common.service.node_service import (
-    ImmediateNodeServiceWithoutReply, ImmediateNodeServiceWithReply)
+    ImmediateNodeServiceWithoutReply,
+    ImmediateNodeServiceWithReply,
+)
 from syft.core.node.domain.client import DomainClient
 from syft.grid.connections.http_connection import HTTPConnection
-from syft.grid.messages.infra_messages import (CreateWorkerMessage,
-                                               CreateWorkerResponse,
-                                               DeleteWorkerMessage,
-                                               DeleteWorkerResponse,
-                                               GetWorkerMessage,
-                                               GetWorkerResponse,
-                                               GetWorkersMessage,
-                                               GetWorkersResponse)
+from syft.grid.messages.infra_messages import (
+    CreateWorkerMessage,
+    CreateWorkerResponse,
+    DeleteWorkerMessage,
+    DeleteWorkerResponse,
+    GetWorkerMessage,
+    GetWorkerResponse,
+    GetWorkersMessage,
+    GetWorkersResponse,
+)
 
 from ...core.database.environment.environment import states
 from ...core.infrastructure import AWS_Serverfull, Config, Provider

@@ -13,7 +13,6 @@ from syft import deserialize, serialize
 from syft.core.common.serde.serialize import _serialize
 
 
-
 executor_running = False
 
 
