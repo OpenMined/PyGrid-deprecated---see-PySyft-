@@ -1,7 +1,5 @@
-"""
-from ..blueprint import dcfl_blueprint as dcfl_route
-from flask import request, Response
-import json
+"""from ..blueprint import dcfl_blueprint as dcfl_route from flask import
+request, Response import json.
 
 from syft.grid.messages.infra_messages import (
     CreateWorkerMessage,
