@@ -1,6 +1,7 @@
 import os
-from flask_sqlalchemy import SQLAlchemy
+
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_mixins import AllFeaturesMixin
 from sqlalchemy_utils.functions import database_exists
 
@@ -12,6 +13,9 @@ class BaseModel(db.Model, AllFeaturesMixin):
     pass
 
 
+from .bin_storage.bin_obj import BinaryObject
+from .bin_storage.json_obj import JsonObject
+from .bin_storage.metadata import StorageMetadata
 from .groups.groups import Group
 from .groups.usergroup import UserGroup
 from .roles.roles import Role, create_role
