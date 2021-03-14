@@ -4,11 +4,9 @@ from ...core.node import get_node
 # syft absolute
 from syft.core.common.message import SignedImmediateSyftMessageWithReply
 from syft.core.common.message import SignedImmediateSyftMessageWithoutReply
-
 from syft.core.common.serde.deserialize import _deserialize
-from syft import serialize
 from syft.core.common.serde.serialize import _serialize
-from syft import deserialize
+from syft import deserialize, serialize
 
 from flask import request, Response
 import json
