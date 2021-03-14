@@ -11,12 +11,12 @@ class Association(BaseModel):
         network_address (String) : Network Address.
     """
 
-    __tablename__ = "association_request"
+    __tablename__ = "association"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.DateTime())
-    network = db.Column(db.String(255))
-    network_address = db.Column(db.String(255))
+    name = db.Column(db.String(255))
+    address = db.Column(db.String(255))
 
     def __str__(self):
-        return f"< Association id : {self.id}, Network: {self.network}, Network Address: {self.network_address}, Date: {self.date}>"
+        return f"< Association id : {self.id}, Name: {self.name}, Address: {self.address}, Date: {self.date}>"
