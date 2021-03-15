@@ -12,7 +12,7 @@ PyGrid platform is composed by three different components.
 
 - **Network** - A Flask-based application used to manage, monitor, control, and route instructions to various PyGrid Nodes.
 - **Node** - A Flask-based application used to store private data and models for federated learning, as well as to issue instructions to various PyGrid Workers.
-- **Worker** - An emphemeral instance, managed by a PyGrid Node, that is used to compute data.
+- **Worker** - An ephemeral instance, managed by a PyGrid Node, that is used to compute data.
 
 ## Use Cases
 
@@ -37,6 +37,8 @@ _Note:_ For posterity sake, we previously used to refer to this process as "stat
 ![Cycled MCFL](https://github.com/OpenMined/PyGrid/blob/dev/assets/MCFL-cycled.png?raw=true)
 
 #### Data-centric FL
+
+To view the current roadmap for data-centric FL, [please click here](https://docs.google.com/document/d/1_aFR69cTw3BnSLk0jYOd-vXMhNrZkbuEezST-mM2q1k/edit?usp=sharing).
 
 Data-centric FL is the same problem as model-centric FL, but from the opposite perspective. The most likely scenario for data-centric FL is where a person or organization has data they want to protect in PyGrid (instead of hosting the model, they host data). This would allow a data scientist who is not the data owner, to make requests for training or inference against that data. The following workflow will take place:
 
@@ -78,10 +80,10 @@ Before starting the grid platform locally using Docker, we need to set up the do
 
 ```
 127.0.0.1 network
-127.0.0.1 bob
 127.0.0.1 alice
-127.0.0.1 bill
-127.0.0.1 james
+127.0.0.1 bob
+127.0.0.1 charlie
+127.0.0.1 dan
 ```
 
 Note that you're not restricted to running 4 nodes and a network. You could instead run just a single node if you'd like - this is often all you need for model-centric federated learning. For the sake of our example, we'll use the network running 4 nodes underneath but you're welcome to modify it to your needs.
@@ -106,18 +108,21 @@ This will download the latest Openmined Docker images and start a grid platform 
 If you want to build your own custom images, you may do so using the following command for the Node:
 
 ```
-docker build . --file ./apps/node/Dockerfile --tag openmined/grid-node:mybuildname
+docker build ./apps/node --file ./apps/node/Dockerfile --tag openmined/grid-node:mybuildname
 ```
 
 Or for the Network:
 
 ```
-docker build . --file ./apps/node/Dockerfile --tag openmined/grid-node:mybuildname
+docker build ./apps/network --file ./apps/network/Dockerfile --tag openmined/grid-network:mybuildname
 ```
 
 ### Manual Start
 
 #### Running a Node
+
+> ##### Installation
+> First install [`poetry`](https://python-poetry.org/docs/) and run `poetry install` in `apps/node`
 
 To start the PyGrid Node manually, run:
 
@@ -132,15 +137,15 @@ You can pass the arguments or use environment variables to set the network confi
 
 - `-h, --help` - Shows the help message and exit
 - `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
-- `--host [HOST]` - The Network host
+- `--host [HOST]` - The Node host
 - `--num_replicas [NUM]` - The number of replicas to provide fault tolerance to model hosting
 - `--id [ID]` - The ID of the Node
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
 **Environment Variables**
 
-- `GRID_NETWORK_PORT` - Port to run server on
-- `GRID_NETWORK_HOST` - The Network host
+- `GRID_NODE_PORT` - Port to run server on
+- `GRID_NODE_HOST` - The Node host
 - `NUM_REPLICAS` - Number of replicas to provide fault tolerance to model hosting
 - `DATABASE_URL` - The Node database URL
 - `SECRET_KEY` - The secret key
@@ -151,7 +156,7 @@ To start the PyGrid Network manually, run:
 
 ```
 cd apps/network
-./run.sh --port 5000 --start_local_db
+./run.sh --port 7000 --start_local_db
 ```
 
 You can pass the arguments or use environment variables to set the network configs.
@@ -159,7 +164,7 @@ You can pass the arguments or use environment variables to set the network confi
 **Arguments**
 
 - `-h, --help` - Shows the help message and exit
-- `-p [PORT], --port [PORT]` - Port to run server on (default: 5000)
+- `-p [PORT], --port [PORT]` - Port to run server on (default: 7000)
 - `--host [HOST]` - The Network host
 - `--start_local_db` - If this flag is used a SQLAlchemy DB URI is generated to use a local db
 
@@ -169,6 +174,33 @@ You can pass the arguments or use environment variables to set the network confi
 - `GRID_NETWORK_HOST` - The Network host
 - `DATABASE_URL` - The Network database URL
 - `SECRET_KEY` - The secret key
+
+## PyGrid CLI
+
+OpenMined PyGrid CLI is used for Infrastructure Management to deploy various PyGrid components to various cloud providers ([AWS](https://aws.amazon.com/), [GCP](https://cloud.google.com/), [Azure](https://azure.microsoft.com/)).
+
+To get started, install the CLI first through this command:
+
+```shell
+pip install -e .
+```
+
+### Running CLI
+
+#### Install Terraform
+Check Instructions here: https://learn.hashicorp.com/tutorials/terraform/install-cli
+
+#### Deploy a Node to AWS
+
+```shell
+pygrid deploy --provider aws --app node
+```
+
+#### Deploy a Network to AWS
+
+```shell
+pygrid deploy --provider azure --app network
+```
 
 ## Contributing
 

@@ -24,7 +24,7 @@ from ..socket_handler import SocketHandler
 handler = SocketHandler()
 
 
-def host_federated_training(message: dict, socket=None) -> str:
+def host_federated_training(message: dict, socket=None) -> dict:
     """This will allow for training cycles to begin on end-user devices.
 
     Args:
@@ -71,10 +71,10 @@ def host_federated_training(message: dict, socket=None) -> str:
         MSG_FIELD.DATA: response,
     }
 
-    return json.dumps(response)
+    return response
 
 
-def assign_worker_id(message: dict, socket=None) -> str:
+def assign_worker_id(message: dict, socket=None) -> dict:
     """New workers should receive a unique worker ID after authenticate on
     PyGrid platform.
 
@@ -128,7 +128,7 @@ def requires_speed_test(model_name, model_version):
     )
 
 
-def authenticate(message: dict, socket=None) -> str:
+def authenticate(message: dict, socket=None) -> dict:
     """Check the submitted token and assign the worker a new id.
 
     Args:
@@ -163,10 +163,10 @@ def authenticate(message: dict, socket=None) -> str:
         MSG_FIELD.TYPE: MODEL_CENTRIC_FL_EVENTS.AUTHENTICATE,
         MSG_FIELD.DATA: response,
     }
-    return json.dumps(response)
+    return response
 
 
-def cycle_request(message: dict, socket=None) -> str:
+def cycle_request(message: dict, socket=None) -> dict:
     """This event is where the worker is attempting to join an active federated
     learning cycle.
 
@@ -231,10 +231,10 @@ def cycle_request(message: dict, socket=None) -> str:
         MSG_FIELD.TYPE: MODEL_CENTRIC_FL_EVENTS.CYCLE_REQUEST,
         MSG_FIELD.DATA: response,
     }
-    return json.dumps(response)
+    return response
 
 
-def report(message: dict, socket=None) -> str:
+def report(message: dict, socket=None) -> dict:
     """This method will allow a worker that has been accepted into a cycle and
     finished training a model on their device to upload the resulting model
     diff.
@@ -268,4 +268,4 @@ def report(message: dict, socket=None) -> str:
         MSG_FIELD.TYPE: MODEL_CENTRIC_FL_EVENTS.REPORT,
         MSG_FIELD.DATA: response,
     }
-    return json.dumps(response)
+    return response
