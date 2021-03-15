@@ -36,6 +36,8 @@ from main.routes import (
     association_requests_blueprint,
     root_blueprint,
 )
+
+from main import ws
 import config
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
@@ -92,9 +94,10 @@ def create_app(
         association_requests_blueprint, url_prefix=r"/association-requests/"
     )
 
+
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
-    # sockets.register_blueprint()
+    sockets.register_blueprint(ws, url_prefix=r"/")
 
     app.debug = debug
     app.config["SECRET_KEY"] = secret_key
