@@ -13,6 +13,12 @@ from ..syft_assets import plans, protocols
 from .config import Config
 from .fl_process import FLProcess
 
+class ConfigManager(DatabaseManager):
+    schema = Config
+
+    def __init__(self, database):
+        self._schema = ConfigManager.schema
+        self.db = database
 
 class ProcessManager(DatabaseManager):
 
@@ -21,8 +27,8 @@ class ProcessManager(DatabaseManager):
     def __init__(self, database):
         self._schema = ProcessManager.schema
         self.db = database
-        # self._processes = DatabaseManager(FLProcess)
-        # self._configs = DatabaseManager(Config)
+
+        self._configs = ConfigManager(database)
 
     def create(
         self,

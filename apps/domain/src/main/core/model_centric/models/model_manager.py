@@ -11,11 +11,28 @@ from ...manager.database_manager import DatabaseManager
 from ..models.ai_model import Model, ModelCheckPoint
 
 
+class ModelCheckPointManager(DatabaseManager):
+
+    schema = ModelCheckPoint
+
+    def __init__(self, database):
+        self._schema = ModelCheckPointManager.schema
+        self.db = database
+
+class _ModelManager(DatabaseManager):
+
+    schema = Model
+
+    def __init__(self, database):
+        self._schema = _ModelManager.schema
+        self.db = database
+
 class ModelManager(DatabaseManager):
+
     def __init__(self, database):
         self.db=database
-        # self._models = Warehouse(Model)
-        # self._model_checkpoints = Warehouse(ModelCheckPoint)
+        self._models = _ModelManager(database)
+        self._model_checkpoints = ModelCheckPointManager(database)
 
     def create(self, model, process):
         # Register new model

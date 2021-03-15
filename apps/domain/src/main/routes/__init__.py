@@ -14,6 +14,6 @@ from .association_requests.routes import *
 from .setup.routes import *
 from .data_centric.datasets.routes import *
 from .data_centric.requests.routes import *
-from .data_centric.infrastructure.routes import *
+from .data_centric.workers.routes import *
 from .data_centric.tensors.routes import *
 from .model_centric.routes import *

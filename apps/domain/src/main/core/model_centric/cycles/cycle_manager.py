@@ -20,11 +20,26 @@ from .cycle import Cycle
 from .worker_cycle import WorkerCycle
 
 
+class WorkerCycleManager(DatabaseManager):
+    schema = WorkerCycle
+
+    def __init__(self, database):
+        self._schema = WorkerCycleManager.schema
+        self.db = database
+
+class _CycleManager(DatabaseManager):
+    schema = Cycle
+
+    def __init__(self, database):
+        self._schema = _CycleManager.schema
+        self.db = database
+
 class CycleManager(DatabaseManager):
     def __init__(self, database):
         self.db = database
-        # self._cycles = Warehouse(Cycle)
-        # self._worker_cycles = Warehouse(WorkerCycle)
+
+        self._cycles = _CycleManager(database)
+        self._worker_cycles = WorkerCycleManager(database)
 
     def create(self, fl_process_id: int, version: str, cycle_time: int):
         """Create a new federated learning cycle.
