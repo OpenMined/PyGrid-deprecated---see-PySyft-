@@ -3,6 +3,7 @@ import secrets
 from typing import List
 from typing import Type
 from typing import Union
+from datetime import datetime
 
 # third party
 from nacl.signing import VerifyKey
@@ -31,10 +32,57 @@ from ..exceptions import (
 from ..database.setup.setup import SetupConfig
 from ..database.utils import model_to_json
 
+from ...core.database.environment.environment import states
+from ...core.infrastructure import Config, Provider, AWS_Serverfull, AWS_Serverless
+
 
 def create_initial_setup(
     msg: CreateInitialSetUpMessage, node: AbstractNode, verify_key: VerifyKey
 ) -> CreateInitialSetUpResponse:
+    def deploy(config):
+        deployment = None
+        deployed = False
+
+        if config.provider == "aws":
+            deployment = (
+                AWS_Serverless(config)
+                if config.serverless
+                else AWS_Serverfull(config=config)
+            )
+        elif config.provider == "azure":
+            pass
+        elif config.provider == "gcp":
+            pass
+
+        if deployment.validate():
+            env_parameters = {
+                "id": config.app.id,
+                "app_name": msg.content.get("node_name", ""),
+                "state": states["creating"],
+                "provider": config.provider,
+                "region": config.vpc.region,
+                "instance_type": config.vpc.instance_type.InstanceType,
+            }
+            new_env = node.environments.register(**env_parameters)
+            node.environments.association(user_id=_current_user_id, env_id=new_env.id)
+
+            # deployed, output = deployment.deploy()  # Deploy
+            # TODO(amr): remove this ... purpose for testing deployment only!
+            deployed, output = True, {}
+
+            if deployed:
+                node.environments.set(
+                    id=config.app.id,
+                    created_at=datetime.now(),
+                    state=states["success"],
+                    # address=output["instance_0_endpoint"]["value"][0],
+                )
+            else:
+                node.environments.set(id=config.app.id, state=states["failed"])
+                raise Exception("Domain setup creation failed!")
+
+        final_msg = "Domain created successfully!"
+        return final_msg
 
     _email = msg.content.get("email", None)
     _password = msg.content.get("password", None)
@@ -100,6 +148,14 @@ def create_initial_setup(
         private_key=_node_private_key,
         verify_key=_verify_key,
     )
+
+    _mandatory_infra = msg.content.get("infra", None)
+    if not _mandatory_infra:
+        raise MissingRequestKeyError(
+            message="Invalid infra request payload, empty fields (infra config)!"
+        )
+
+    deploy(Config(**_mandatory_infra))
 
     # Final status / message
     final_msg = "Running initial setup!"
