@@ -32,8 +32,10 @@ class PlanManager(DatabaseManager):
             plans_converted = {}
             for idx, plan_ser in plans.items():
                 try:
-                    plan = self.deserialize_plan(plan_ser)
-                except:
+                    # plan = self.deserialize_plan(plan_ser)
+                    plans_converted[idx] = plan_ser
+                except Exception as e:
+                    print(f"PlanInvalidError {e}")
                     raise PlanInvalidError()
                 # try:
                 #     plan_ops = self.trim_plan(plan, "default")
@@ -52,11 +54,11 @@ class PlanManager(DatabaseManager):
 
             # Register new Plans into the database
             for key, plan in plans_converted.items():
-                self._plans.register(
+                super().register(
                     name=key,
-                    value=plan["list"],
-                    value_ts=plan["torchscript"],
-                    value_tfjs=plan["tfjs"],
+                    value=plan,
+                    value_ts=None,
+                    value_tfjs=None,
                     plan_flprocess=process,
                 )
         else:
@@ -73,7 +75,7 @@ class PlanManager(DatabaseManager):
         Raises:
             PlanNotFound (PyGridError) : If Plan not found.
         """
-        _plans = self._plans.query(**kwargs)
+        _plans = self.query(**kwargs)
 
         if not _plans:
             raise PlanNotFoundError
@@ -90,7 +92,7 @@ class PlanManager(DatabaseManager):
         Raises:
             PlanNotFound (PyGridError) : If Plan not found.
         """
-        _plan = self._plans.first(**kwargs)
+        _plan = super().first(**kwargs)
 
         if not _plan:
             raise PlanNotFoundError
@@ -103,7 +105,7 @@ class PlanManager(DatabaseManager):
         Args:
             query: Query used to identify the plan object.
         """
-        self._plans.delete(**kwargs)
+        super().delete(**kwargs)
 
     @staticmethod
     def deserialize_plan(bin: bin) -> "sy.Plan":

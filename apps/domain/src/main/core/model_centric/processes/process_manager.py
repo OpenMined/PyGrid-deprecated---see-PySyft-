@@ -20,6 +20,13 @@ class ConfigManager(DatabaseManager):
         self._schema = ConfigManager.schema
         self.db = database
 
+class FLProcessManager(DatabaseManager):
+    schema = FLProcess
+
+    def __init__(self, database):
+        self._schema = FLProcessManager.schema
+        self.db = database
+
 class ProcessManager(DatabaseManager):
 
     schema = FLProcess
@@ -29,6 +36,7 @@ class ProcessManager(DatabaseManager):
         self.db = database
 
         self._configs = ConfigManager(database)
+        self._processes = FLProcessManager(database)
 
     def create(
         self,
@@ -60,7 +68,7 @@ class ProcessManager(DatabaseManager):
             raise FLProcessConflict
 
         # Create a new process
-        fl_process = self.register(name=name, version=version)
+        fl_process = self._processes.register(name=name, version=version)
 
         # Register client protocols
         protocols.register(fl_process, client_protocols)
@@ -116,6 +124,7 @@ class ProcessManager(DatabaseManager):
         Raises:
             PlanNotFoundError (PyGridError) : If Plan not found.
         """
+        print(kwargs)
         _plans = plans.get(**kwargs)
 
         if not _plans:

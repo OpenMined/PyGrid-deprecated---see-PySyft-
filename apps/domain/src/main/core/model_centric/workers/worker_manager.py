@@ -9,9 +9,10 @@ from .worker import Worker
 
 
 class WorkerManager(DatabaseManager):
+    schema = Worker
     def __init__(self, database):
+        self._schema = WorkerManager.schema
         self.db=database
-        # self._workers = Warehouse(Worker)
 
     def create(self, worker_id: str):
         """ Register a new worker
@@ -20,16 +21,16 @@ class WorkerManager(DatabaseManager):
             Returns:
                 worker: a Worker instance.
         """
-        new_worker = self._workers.register(id=worker_id)
+        new_worker = self.register(id=worker_id)
         return new_worker
 
-    def delete(self, **kwargs):
-        """Remove a registered worker.
+    # def delete(self, **kwargs):
+    #     """Remove a registered worker.
 
-        Args:
-            worker_id: Id used identify the desired worker.
-        """
-        self._workers.delete(**kwargs)
+    #     Args:
+    #         worker_id: Id used identify the desired worker.
+    #     """
+    #     self.delete(**kwargs)
 
     def get(self, **kwargs):
         """Retrieve the desired worker.
@@ -39,16 +40,12 @@ class WorkerManager(DatabaseManager):
         Returns:
             worker: worker Instance or None if it wasn't found.
         """
-        _worker = self._workers.first(**kwargs)
+        _worker = self.first(**kwargs)
 
         if not _worker:
             raise WorkerNotFoundError
 
-        return self._workers.first(**kwargs)
-
-    def update(self, worker):
-        """Update Workers Attributes."""
-        return self._workers.update()
+        return self.first(**kwargs)
 
     def is_eligible(self, worker_id: str, server_config: dict):
         """Check if Worker is eligible to join in an new cycle by using its
@@ -60,7 +57,7 @@ class WorkerManager(DatabaseManager):
         Returns:
             result: Boolean flag.
         """
-        _worker = self._workers.first(id=worker_id)
+        _worker = self.first(id=worker_id)
         logging.info(
             f"Checking worker [{_worker}] against server_config [{server_config}]"
         )

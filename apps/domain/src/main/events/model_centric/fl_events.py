@@ -208,7 +208,8 @@ def cycle_request(message: dict, socket=None) -> dict:
                 # Require fields to present when FL model has speed req's
                 raise PyGridError(f"'{request_field}' is required")
 
-        worker_manager.update(worker)  # Update database worker attributes
+        # worker_manager.modify(worker)  # Update database worker attributes
+        worker_manager.db.session.commit() # Update database worker attributes
 
         # The last time this worker was assigned for this model/version.
         last_participation = processes.last_cycle(worker_id, name, version)

@@ -181,6 +181,8 @@ def download_model():
             raise InvalidRequestKeyError
 
         _last_checkpoint = model_manager.load(model_id=model_id)
+        print("AAA")
+        print(_last_checkpoint.value)
 
         return send_file(
             io.BytesIO(_last_checkpoint.value), mimetype="application/octet-stream"

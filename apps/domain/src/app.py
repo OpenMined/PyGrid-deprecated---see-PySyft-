@@ -35,6 +35,7 @@ from main.routes import (
     dcfl_blueprint,
     association_requests_blueprint,
     root_blueprint,
+    mcfl_blueprint,
 )
 
 from main import ws
@@ -89,6 +90,7 @@ def create_app(
     app.register_blueprint(setup_blueprint, url_prefix=r"/setup/")
     app.register_blueprint(groups_blueprint, url_prefix=r"/groups")
     app.register_blueprint(dcfl_blueprint, url_prefix=r"/dcfl/")
+    app.register_blueprint(mcfl_blueprint, url_prefix=r"/model-centric/")
     app.register_blueprint(root_blueprint, url_prefix=r"/")
     app.register_blueprint(
         association_requests_blueprint, url_prefix=r"/association-requests/"

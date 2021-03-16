@@ -162,7 +162,7 @@ class CycleManager(DatabaseManager):
         return _worker_cycle.request_key == request_key
 
     def count(self, **kwargs):
-        return self._cycles.count(**kwargs)
+        return len(self._cycles)
 
     def submit_worker_diff(self, worker_id: str, request_key: str, diff: bin):
         """Submit reported diff
