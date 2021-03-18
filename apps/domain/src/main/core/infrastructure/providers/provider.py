@@ -17,7 +17,7 @@ from ..utils import Config
 
 class Provider:
     def __init__(self, config):
-        folder_name = f"{config.provider}-{config.app.name}-{config.app.id}"
+        folder_name = f"{config.provider}-{config.app.name}"
         _dir = os.path.join(ROOT_DIR, folder_name)
         os.makedirs(_dir, exist_ok=True)
 
