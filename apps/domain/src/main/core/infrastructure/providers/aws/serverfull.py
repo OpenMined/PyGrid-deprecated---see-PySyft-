@@ -281,7 +281,7 @@ class AWS_Serverfull(AWS):
             pip install pymysql
 
             exec &> start_app.out
-            nohup ./run.sh --port {app.port}  --host {app.host}
+            nohup ./run.sh --port {app.port}  --host 0.0.0.0
         """
         )
         return exec_script

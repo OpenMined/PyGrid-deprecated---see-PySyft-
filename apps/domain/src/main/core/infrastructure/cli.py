@@ -87,8 +87,9 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
 
     ## Deployment type
     config.serverless = False
-    if config.app.name == "network":
-        config.serverless = click.confirm(f"Do you want to deploy serverless?")
+    # TODO: Uncomment this after updating serverless deployment
+    # if config.app.name == "network":
+    #     config.serverless = click.confirm(f"Do you want to deploy serverless?")
 
     ## Websockets
     if not config.serverless:
@@ -121,27 +122,10 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
         \n\nContinue?"""
     ):
 
-        # config.credentials = credentials
-        click.echo(colored("START DEPLOYINGGG... 🔃", color=COLORS.red))
+        config.credentials = credentials
+        click.echo(colored("STARTING DEPLOYMENT... 🔃", color=COLORS.green))
 
-        if config.provider == "aws":
-            deployment = (
-                AWS_Serverless(config)
-                if config.serverless
-                else AWS_Serverfull(config=config)
-            )
-        elif config.provider == "azure":
-            deployment = AZURE(config)
-        elif config.provider == "gcp":
-            deployment = GCP(config)
-
-        if deployment.validate():
-            deployed, output = deployment.deploy()
-        else:
-            deployed, output = (
-                False,
-                {"failure": f"Your attempt to deploy PyGrid {config.app.name} failed"},
-            )
+        deployed, output = _deploy(config)
         click.echo(
             f"""\n\n\nYour deployment has {'successed' if deployed else 'failed'}
             \n\n\nPlease check the output below for more details"""
@@ -149,9 +133,35 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
         click.echo(output)
 
 
+def _deploy(config):
+    deployment = None
+    if config.provider == "aws":
+        deployment = (
+            AWS_Serverless(config)
+            if config.serverless
+            else AWS_Serverfull(config=config)
+        )
+    elif config.provider == "azure":
+        deployment = AZURE(config)
+    elif config.provider == "gcp":
+        deployment = GCP(config)
+
+    if deployment.validate():
+        # deployed, output = True, {}
+        deployed, output = deployment.deploy()
+    else:
+        deployed, output = (
+            False,
+            {"failure": f"Your attempt to deploy PyGrid {config.app.name} failed"},
+        )
+    return deployed, output
+
+
 def get_app_arguments(config):
     config.app.count = click.prompt(
-        f"How many apps do you want to deploy", type=int, default=1
+        f"How many servers do you wish to deploy? (All are managed under the load balancer)",
+        type=int,
+        default=1,
     )
     apps = []
     for count in range(1, config.app.count + 1):
@@ -166,37 +176,14 @@ def get_app_arguments(config):
                 type=str,
                 default=os.environ.get("GRID_DOMAIN_PORT", 5000),
             )
-            host = click.prompt(
-                f"#{count}: Grid DOMAIN host",
-                type=str,
-                default=os.environ.get("GRID_DOMAIN_HOST", "0.0.0.0"),
-            )
-            app = Config(id=id, port=port, host=host)
-        elif config.app.name == "network":
+            app = Config(id=id, port=port)
+        else:  # Network
             port = click.prompt(
                 f"#{count}: Port number of the socket.io server",
                 type=str,
                 default=os.environ.get("GRID_NETWORK_PORT", f"{7000 + count}"),
             )
-            host = click.prompt(
-                f"#{count}: Grid Network host",
-                type=str,
-                default=os.environ.get("GRID_NETWORK_HOST", "0.0.0.0"),
-            )
-            app = Config(port=port, host=host)
-        else:
-            port = click.prompt(
-                f"#{count}: Port number of the socket.io server",
-                type=str,
-                default=os.environ.get("GRID_WORKER_PORT", 5000),
-            )
-            host = click.prompt(
-                f"#{count}: Grid DOMAIN host",
-                type=str,
-                default=os.environ.get("GRID_WORKER_HOST", "0.0.0.0"),
-            )
-            app = Config(port=port, host=host)
-
+            app = Config(port=port)
         apps.append(app)
     config.apps = apps
 
