@@ -136,7 +136,7 @@ def get_instance_type(region):
         style=styles.second,
     )["instance"]
 
-    return Config(**parsed_instances[instance])
+    return Config(InstanceType=parsed_instances[instance]["InstanceType"])
 
 
 def get_vpc_ip_config() -> Config:

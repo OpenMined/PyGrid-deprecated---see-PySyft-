@@ -167,9 +167,7 @@ class AWS_Serverfull(AWS):
         for count in range(self.config.app.count):
             app = self.config.apps[count]
             if self.worker:
-                instance_name = (
-                    f"pygrid-{self.config.app.name}-{str(self.config.app.id)}"
-                )
+                instance_name = f"pygrid-worker-{str(self.config.app.id)}"
                 kwargs = {
                     "name": instance_name,
                     "subnet_ids": [

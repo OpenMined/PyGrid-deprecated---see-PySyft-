@@ -80,7 +80,7 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
         ),
         "r",
     ) as f:
-        credentials.cloud = json.load(f)
+        credentials.cloud = Config(**json.load(f))
 
     ## Get app config and arguments
     config.app = Config(name=app.lower())
@@ -126,11 +126,13 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
         click.echo(colored("STARTING DEPLOYMENT... 🔃", color=COLORS.green))
 
         deployed, output = _deploy(config)
-        click.echo(
-            f"""\n\n\nYour deployment has {'successed' if deployed else 'failed'}
-            \n\n\nPlease check the output below for more details"""
+
+        msg, color = (
+            ("\nDEPLOYMENT SUCCESSFUL\n", COLORS.green)
+            if deployed
+            else ("\nDEPLOYMENT FAILED\n", COLORS.red)
         )
-        click.echo(output)
+        click.echo(msg, color=color)
 
 
 def _deploy(config):
