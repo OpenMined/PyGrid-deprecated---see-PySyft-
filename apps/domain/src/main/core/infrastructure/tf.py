@@ -8,7 +8,7 @@ var_module = lambda x, y: var(f"module.{x._name}.{y}")
 generate_cidr_block = lambda base_cidr_block, netnum: var(
     f'cidrsubnet("{base_cidr_block}", 8, {netnum})'
 )
-ROOT_DIR = os.path.join(str(Path.home()), ".pygrid", "apps")
+PLUGIN_DIR = os.path.join(str(Path.home()), ".pygrid", "apps")
 
 
 class Terraform:
@@ -22,12 +22,7 @@ class Terraform:
             json.dump(tfscript, tfjson, indent=2, sort_keys=False)
 
     def init(self):
-        return subprocess.run(
-            f"terraform init",
-            shell=True,
-            cwd=self.dir,
-            check=True,
-        )
+        return subprocess.run(f"terraform init", shell=True, cwd=self.dir, check=True)
 
     def validate(self):
         return subprocess.run(

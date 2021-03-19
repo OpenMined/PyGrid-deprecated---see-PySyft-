@@ -9,11 +9,14 @@ class AWS_Serverfull(AWS):
         credentials (dict) : Contains AWS credentials
         """
 
-        super().__init__(config)
-
         self.worker = config.app.name == "worker"
 
         if self.worker:
+            config.root_dir = os.path.join(
+                "/home/ubuntu/.pygrid/apps/aws/workers/", config.app.id
+            )
+            super().__init__(config)
+
             self.vpc = Config(id=os.environ["VPC_ID"])
             public_subnet_ids = str(os.environ["PUBLIC_SUBNET_ID"]).split(",")
             private_subnet_ids = str(os.environ["PRIVATE_SUBNET_ID"]).split(",")
@@ -23,7 +26,13 @@ class AWS_Serverfull(AWS):
             ]
             self.build_security_group()
             self.build_instances()
+
         else:  # Deploy a VPC and domain/network
+            config.root_dir = os.path.join(
+                str(Path.home()), ".pygrid", "apps", config.app.name
+            )
+            super().__init__(config)
+
             # Order matters
             self.build_vpc()
             self.build_igw()
@@ -296,7 +305,7 @@ class AWS_Serverfull(AWS):
             exec &> grid_log.out
             echo 'Cloning PyGrid'
             git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
-            git checkout infra_workers_0.3
+            git checkout cli_integrated
 
             cd /PyGrid/apps/{self.config.app.name}
 
@@ -309,7 +318,7 @@ class AWS_Serverfull(AWS):
 
             exec &> start_app.out
             nohup ./run.sh --port {app.port}  --host 0.0.0.0
-        """
+            """
         )
         return exec_script
 
