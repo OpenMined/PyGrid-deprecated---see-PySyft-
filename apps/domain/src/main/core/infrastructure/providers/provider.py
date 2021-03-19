@@ -16,9 +16,9 @@ from ..utils import Config
 
 
 class Provider:
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, provider):
         os.makedirs(root_dir, exist_ok=True)
-        self.TF = Terraform(dir=root_dir)
+        self.TF = Terraform(dir=root_dir, provider=provider)
         self.tfscript = terrascript.Terrascript()
         self.validated = False
 

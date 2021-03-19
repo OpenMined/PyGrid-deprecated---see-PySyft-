@@ -269,6 +269,7 @@ class AWS_Serverfull(AWS):
 
             exec &> gcc_log.out
             echo 'Install GCC'
+            sudo apt-get install zip unzip -y
             sudo apt-get install python3-dev -y
             sudo apt-get install libevent-dev -y
             sudo apt-get install gcc -y
@@ -277,14 +278,6 @@ class AWS_Serverfull(AWS):
             curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
             sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" -y
             sudo apt-get update -y && sudo apt-get install terraform -y
-
-            ## TODO : Remove the assumption that ubuntu is the username
-            exec &> terraform_plugins.out
-            echo "Downloading Terraform plugins"
-            mkdir -p /home/ubuntu/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
-            wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_linux_amd64.zip
-            sudo apt-get install zip unzip
-            unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d /home/ubuntu/.pygrid/api/registry.terraform.io/hashicorp/aws/3.30.0/linux_amd64/
 
             exec &> env_vars.out
             echo "Setting environment variables"

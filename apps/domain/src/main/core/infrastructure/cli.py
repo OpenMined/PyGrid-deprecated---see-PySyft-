@@ -132,7 +132,7 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
             if deployed
             else ("\nDEPLOYMENT FAILED\n", COLORS.red)
         )
-        click.echo(msg, color=color)
+        click.echo(colored(msg, color=color))
 
 
 def _deploy(config):
