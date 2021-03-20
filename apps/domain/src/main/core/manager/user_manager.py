@@ -18,6 +18,17 @@ class UserManager(DatabaseManager):
         self.roles = RoleManager(database)
         self.db = database
 
+    @property
+    def common_users(self) -> list:
+        return list(super().query(role=self.roles.user_role.id))
+
+    @property
+    def org_users(self) -> list:
+        owner = list(super().query(role=self.roles.owner_role.id))
+        co_users = list(super().query(role=self.roles.compliance_officer_role.id))
+        admin_users = list(super().query(role=self.roles.admin_role.id))
+        return owner + co_users + admin_users
+
     def signup(
         self, email: str, password: str, role: int, private_key: str, verify_key: str
     ):
