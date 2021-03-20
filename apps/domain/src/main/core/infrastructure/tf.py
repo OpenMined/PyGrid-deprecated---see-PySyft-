@@ -33,7 +33,6 @@ class Terraform:
         else:
             return False
 
-
     def validate(self):
         return subprocess.run(
             "terraform validate", shell=True, cwd=self.dir, check=True
