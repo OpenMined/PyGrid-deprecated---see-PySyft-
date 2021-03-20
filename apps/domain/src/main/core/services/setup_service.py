@@ -52,7 +52,7 @@ def create_initial_setup(
         "cache_strategy": msg.content.get("cache_strategy", ""),
         "replicate_db": msg.content.get("replicate_db", False),
         "auto_scale": msg.content.get("auto_scale", ""),
-        "tensor_expiration_policy": msg.content.get("tensor_expiration_policy", -1),
+        "tensor_expiration_policy": msg.content.get("tensor_expiration_policy", 0),
         "allow_user_signup": msg.content.get("allow_user_signup", False),
     }
 

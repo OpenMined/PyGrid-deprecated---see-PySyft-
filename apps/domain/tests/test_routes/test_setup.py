@@ -100,6 +100,6 @@ def test_get_setup(client, database, cleanup):
         "cache_strategy": "",
         "replicate_db": False,
         "auto_scale": "",
-        "tensor_expiration_policy": -1,
+        "tensor_expiration_policy": 0,
         "allow_user_signup": False,
     }

@@ -13,7 +13,7 @@ class SetupConfig(BaseModel):
     cache_strategy = db.Column(db.String(255), default="")
     replicate_db = db.Column(db.Boolean(), default=False)
     auto_scale = db.Column(db.String(255), default="")
-    tensor_expiration_policy = db.Column(db.Integer(), default=-1)
+    tensor_expiration_policy = db.Column(db.Integer(), default=0)
     allow_user_signup = db.Column(db.Boolean(), default=False)
 
     def __str__(self):
