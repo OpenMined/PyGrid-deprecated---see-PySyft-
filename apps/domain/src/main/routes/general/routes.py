@@ -1,10 +1,8 @@
-
 import json
 from nacl.encoding import HexEncoder
 from flask import Response, request
 
 from ...core.node import get_node
-from ...core.task_handler import executor
 from .blueprint import root_blueprint as root_route
 
 # syft absolute
