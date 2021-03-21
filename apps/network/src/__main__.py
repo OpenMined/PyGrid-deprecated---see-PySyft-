@@ -69,4 +69,12 @@ if __name__ == "__main__":
     )
     server.serve_forever()
 else:
-    app = create_app()
+    args = {
+        "port": os.environ.get("GRID_NODE_PORT", 5000),
+        "host": os.environ.get("GRID_NODE_HOST", "0.0.0.0"),
+        "domain_address": os.environ.get("GRID_DOMAIN_ADDRESS", "0.0.0.0:5000"),
+        "name": os.environ.get("GRID_NODE_NAME", "OpenMined"),
+        "start_local_db": os.environ.get("LOCAL_DATABASE", False),
+    }
+    args_obj = type("args", (object,), args)()
+    app = create_app(args=args_obj)

@@ -57,29 +57,24 @@ def cleanup(database):
 
 
 def test_initial_setup(client, database, cleanup):
-    new_role = create_role(*admin_role)
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
-    new_user = create_user(*user1)
-    database.session.add(new_user)
-
     database.session.commit()
-
-    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
-    headers = {
-        "token": token.decode("UTF-8"),
-    }
 
     result = client.post(
         "/setup/",
-        data={"setup": "setup_configs_sample"},
-        headers=headers,
+        json={
+            "email": "ionesio@email.com",
+            "password": "testing",
+            "node_name": "OpenMined Node",
+        },
     )
     assert result.status_code == 200
     assert result.get_json() == {"msg": "Running initial setup!"}
 
 
 def test_get_setup(client, database, cleanup):
-    new_role = create_role(*admin_role)
+    new_role = create_role(*owner_role)
     database.session.add(new_role)
     new_user = create_user(*user1)
     database.session.add(new_user)
@@ -90,9 +85,31 @@ def test_get_setup(client, database, cleanup):
     headers = {
         "token": token.decode("UTF-8"),
     }
+    client.post(
+        "/setup/",
+        json={
+            "email": "ionesio@email.com",
+            "password": "testing",
+            "node_name": "OpenMined Node",
+        },
+    )
+
     result = client.get(
         "/setup/",
         headers=headers,
     )
+
     assert result.status_code == 200
-    assert result.get_json() == {"setup": {}}
+    assert result.get_json() == {
+        "id": 1,
+        "node_name": "OpenMined Node",
+        "private_key": "",
+        "aws_credentials": "",
+        "gcp_credentials": "",
+        "azure_credentials": "",
+        "cache_strategy": "",
+        "replicate_db": False,
+        "auto_scale": "",
+        "tensor_expiration_policy": 0,
+        "allow_user_signup": False,
+    }

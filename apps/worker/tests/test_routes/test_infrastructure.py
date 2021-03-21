@@ -140,7 +140,7 @@ def test_delete_autoscaling_condition(client):
     result = client.delete("/dcfl/nodes/autoscaling/6413568")
     assert result.status_code == 200
     assert result.get_json() == {"msg": "Autoscaling condition deleted succesfully!"}
-"""
+
 
 
 @pytest.mark.skip(reason="Should be made in integration tests")
@@ -362,3 +362,4 @@ def test_delete_worker(client, database, cleanup):
     )
     # assert result.status_code == 200
     # assert result.get_json() == {"msg": "Worker was deleted succesfully!"}
+"""
