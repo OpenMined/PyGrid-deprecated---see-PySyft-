@@ -69,7 +69,7 @@ def create_request_msg(
             message='Request type should be either "permissions” or “budget”.'
         )
 
-    requests = node.requests
+    requests = node.data_requests
     request_obj = requests.create_request(
         user_id=current_user.id,
         user_name=current_user.email,
@@ -103,7 +103,7 @@ def get_request_msg(
             verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
         ).id
 
-    requests = node.requests
+    requests = node.data_requests
     request = requests.first(id=request_id)
 
     # A user can get a request if he's the owner of that request
@@ -143,7 +143,7 @@ def get_all_request_msg(
     allowed = users.can_triage_requests(user_id=current_user_id)
 
     if allowed:
-        requests = node.requests
+        requests = node.data_requests
         requests = requests.all()
         requests_json = [model_to_json(requests) for requests in requests]
     else:
@@ -184,7 +184,7 @@ def update_request_msg(
     allowed = users.can_triage_requests(user_id=current_user_id)
 
     if allowed:
-        requests = node.requests
+        requests = node.data_requests
 
         if status not in ["accepted", "denied"]:
             raise InvalidParameterValueError(
@@ -237,7 +237,7 @@ def del_request_msg(
             verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
         ).id
 
-    requests = node.requests
+    requests = node.data_requests
     request = requests.first(id=request_id)
 
     # Only the creator of a request may delete their request.
