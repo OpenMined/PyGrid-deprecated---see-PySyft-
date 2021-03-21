@@ -1,4 +1,3 @@
-
 from .nodes.domain import GridDomain
 from .nodes.network import GridNetwork
 from .nodes.worker import GridWorker
@@ -17,6 +16,7 @@ from ..routes import (
     dcfl_blueprint,
     association_requests_blueprint,
     root_blueprint,
+    search_blueprint,
 )
 
 node = None
@@ -50,6 +50,15 @@ def create_network_app(app, args):
     test_config = None
     if args.start_local_db:
         test_config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///nodedatabase.db"}
+
+    app.register_blueprint(roles_blueprint, url_prefix=r"/roles")
+    app.register_blueprint(users_blueprint, url_prefix=r"/users")
+    app.register_blueprint(setup_blueprint, url_prefix=r"/setup")
+    app.register_blueprint(root_blueprint, url_prefix=r"/")
+    app.register_blueprint(search_blueprint, url_prefix=r"/search")
+    app.register_blueprint(
+        association_requests_blueprint, url_prefix=r"/association-requests/"
+    )
 
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
@@ -89,7 +98,6 @@ def create_network_app(app, args):
 
 
 def create_domain_app(app, args):
-
     test_config = None
     if args.start_local_db:
         test_config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///nodedatabase.db"}
