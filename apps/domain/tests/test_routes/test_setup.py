@@ -85,10 +85,20 @@ def test_get_setup(client, database, cleanup):
     headers = {
         "token": token.decode("UTF-8"),
     }
+    client.post(
+        "/setup/",
+        json={
+            "email": "ionesio@email.com",
+            "password": "testing",
+            "node_name": "OpenMined Node",
+        },
+    )
+
     result = client.get(
         "/setup/",
         headers=headers,
     )
+
     assert result.status_code == 200
     assert result.get_json() == {
         "id": 1,
