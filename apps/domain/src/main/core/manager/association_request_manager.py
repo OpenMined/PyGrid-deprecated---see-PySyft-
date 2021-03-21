@@ -27,6 +27,9 @@ class AssociationRequestManager(DatabaseManager):
 
     def create_association_request(self, name, address, sender_address):
         date = datetime.now()
+        if super().first(name=name):
+            raise Exception("Association request name already exists!")
+
         handshake_value = self.__generate_hash(name)
 
         return self.register(
