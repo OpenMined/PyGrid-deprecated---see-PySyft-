@@ -120,7 +120,6 @@ def create_worker_msg(
         )
 
 
-
 def get_worker_msg(
     msg: GetWorkerMessage, node: AbstractNode, verify_key: VerifyKey
 ) -> GetWorkerResponse:
@@ -135,7 +134,7 @@ def get_worker_msg(
             _current_user_id = users.first(
                 verify_key=verify_key.encode(encoder=HexEncoder).decode("utf-8")
             ).id
-        
+
         env_ids = [
             env.id for env in node.environments.get_environments(user=_current_user_id)
         ]
