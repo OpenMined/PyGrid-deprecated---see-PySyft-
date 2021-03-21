@@ -34,6 +34,7 @@ from ..manager.group_manager import GroupManager
 from ..manager.environment_manager import EnvironmentManager
 from ..manager.setup_manager import SetupManager
 from ..manager.association_request_manager import AssociationRequestManager
+from ..services.broadcast_search import BroadcastSearchService
 
 from nacl.signing import SigningKey
 from nacl.signing import VerifyKey
@@ -84,6 +85,7 @@ class GridNetwork(Domain):
         self.immediate_services_with_reply.append(SetUpService)
         self.immediate_services_with_reply.append(RoleManagerService)
         self.immediate_services_with_reply.append(UserManagerService)
+        self.immediate_services_with_reply.append(BroadcastSearchService)
         self._register_services()
 
         self.__handlers_flag = True
