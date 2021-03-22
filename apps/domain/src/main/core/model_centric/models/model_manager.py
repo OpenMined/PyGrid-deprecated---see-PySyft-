@@ -9,6 +9,9 @@ import syft as sy
 from ...exceptions import ModelNotFoundError
 from ...manager.database_manager import DatabaseManager
 from ..models.ai_model import Model, ModelCheckPoint
+from syft.proto.lib.python.list_pb2 import List as ListPB
+from syft import deserialize, serialize
+from syft.lib.python.list import List
 
 
 class ModelCheckPointManager(DatabaseManager):
@@ -55,7 +58,7 @@ class ModelManager(DatabaseManager):
             model_checkpoint: ModelCheckpoint instance.
         """
 
-        checkpoints_count = self._model_checkpoints.count(model_id=model_id)
+        checkpoints_count = len(self._model_checkpoints.query(model_id=model_id))
 
         # Reset "latest" alias
         self._model_checkpoints.modify(
@@ -97,25 +100,15 @@ class ModelManager(DatabaseManager):
     @staticmethod
     def serialize_model_params(params):
         """Serializes list of tensors into State/protobuf."""
-        model_params_state = State(
-            state_placeholders=[PlaceHolder().instantiate(param) for param in params]
-        )
-
-        # make fake local worker for serialization
-        worker = sy.VirtualWorker(hook=None)
-
-        pb = protobuf.serde._bufferize(worker, model_params_state)
-        serialized_state = pb.SerializeToString()
-
-        return serialized_state
+        pb = serialize(List(params))
+        serialized_params = pb.SerializeToString()
+        return serialized_params
 
     @staticmethod
     def unserialize_model_params(bin: bin):
         """Unserializes model or checkpoint or diff stored in db to list of
         tensors."""
-        state = StatePB()
+        state = ListPB()
         state.ParseFromString(bin)
-        worker = sy.VirtualWorker(hook=None)
-        state = protobuf.serde._unbufferize(worker, state)
-        model_params = state.tensors()
-        return model_params
+        params = deserialize(state)
+        return params

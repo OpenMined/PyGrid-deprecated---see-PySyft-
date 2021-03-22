@@ -187,7 +187,8 @@ class CycleManager(DatabaseManager):
         _worker_cycle.is_completed = True
         _worker_cycle.completed_at = datetime.utcnow()
         _worker_cycle.diff = diff
-        self._worker_cycles.update()
+
+        self._worker_cycles.db.session.commit()
 
         # Run cycle end task async to we don't block report request
         # (for prod we probably should be replace this with Redis queue + separate worker)
@@ -206,7 +207,7 @@ class CycleManager(DatabaseManager):
         server_config, _ = process_manager.get_configs(id=cycle.fl_process_id)
         logging.info("server_config: %s" % json.dumps(server_config, indent=2))
 
-        received_diffs = self._worker_cycles.count(cycle_id=cycle_id, is_completed=True)
+        received_diffs = len(self._worker_cycles.query(cycle_id=cycle_id, is_completed=True))
         logging.info("# of diffs: %d" % received_diffs)
 
         min_diffs = server_config.get("min_diffs", None)
@@ -280,9 +281,13 @@ class CycleManager(DatabaseManager):
             # each diff is list [param1, param2, ...] of len == model params
             # diff_avg is list [param1_avg, param2_avg, ...] of len == model params
             if iterative_plan:
+                # print(diffs[0])
+                # for i in range(100):
+                #     print(len(diffs))
                 diff_avg = diffs[0]
                 for i, diff in enumerate(diffs[1:]):
-                    diff_avg = avg_plan(list(diff_avg), diff, th.tensor([i + 1]))
+                    diff_avg = avg_plan(avg=list(diff_avg), item=diff,
+                                        num=th.tensor([i + 1]))
             else:
                 diff_avg = avg_plan(diffs)
 
@@ -306,10 +311,17 @@ class CycleManager(DatabaseManager):
         logging.info("diff_avg shapes: %s" % str([d.shape for d in diff_avg]))
 
         # apply avg diff!
+        # _updated_model_params = [
+        #     diff_param
+        #     for model_param, diff_param in zip(model_params, diff_avg)
+        # ]
         _updated_model_params = [
             model_param - diff_param
             for model_param, diff_param in zip(model_params, diff_avg)
         ]
+
+        print(_updated_model_params[0])
+
         logging.info(
             "_updated_model_params shapes: %s"
             % str([p.shape for p in _updated_model_params])
@@ -322,11 +334,11 @@ class CycleManager(DatabaseManager):
 
         # mark current cycle completed
         cycle.is_completed = True
-        self._cycles.update()
+        self._cycles.db.session.commit()
 
-        completed_cycles_num = self._cycles.count(
+        completed_cycles_num = len(self._cycles.query(
             fl_process_id=cycle.fl_process_id, is_completed=True
-        )
+        ))
         logging.info("completed_cycles_num: %d" % completed_cycles_num)
         max_cycles = server_config.get("num_cycles", 0)
         if completed_cycles_num < max_cycles or max_cycles == 0:
@@ -334,6 +346,6 @@ class CycleManager(DatabaseManager):
             _new_cycle = self.create(
                 cycle.fl_process_id, cycle.version, server_config.get("cycle_length")
             )
-            logging.info("new cycle: %s" % str(_new_cycle))
+            logging.info("Creating new cycle: %s" % str(_new_cycle))
         else:
             logging.info("FL is done!")

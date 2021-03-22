@@ -29,7 +29,6 @@ def complete_cycle(cycle_manager, cycle_id):
     logging.info("running complete_cycle")
     try:
         cycle_manager.complete_cycle(cycle_id)
-        return True
     except Exception as e:
         logging.error(
             "Error in complete_cycle task: %s %s" % (str(e), traceback.format_exc())

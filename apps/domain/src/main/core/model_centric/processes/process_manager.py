@@ -124,7 +124,6 @@ class ProcessManager(DatabaseManager):
         Raises:
             PlanNotFoundError (PyGridError) : If Plan not found.
         """
-        print(kwargs)
         _plans = plans.get(**kwargs)
 
         if not _plans:

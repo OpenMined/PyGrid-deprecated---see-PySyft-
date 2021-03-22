@@ -120,9 +120,15 @@ class FLController:
         #     last_participation + server.config["do_not_reuse_workers_until_cycle"]
         #     >= _cycle.sequence
         # )
+        n_completed_cycles = cycle_manager.count(
+            fl_process_id=_fl_process.id, is_completed=True
+        )
 
-        _accepted = (not _assigned) and _comp_bandwidth and _allowed
+        _max_cycles = server_config["num_cycles"]
+
+        _accepted = (not _assigned) and _comp_bandwidth and _allowed and n_completed_cycles < _max_cycles
         logging.info(f"Worker is accepted: {_accepted}")
+
 
         if _accepted:
             # Assign
@@ -156,11 +162,6 @@ class FLController:
                 MSG_FIELD.MODEL_ID: _model.id,
             }
         else:
-            n_completed_cycles = cycle_manager.count(
-                fl_process_id=_fl_process.id, is_completed=True
-            )
-
-            _max_cycles = server_config["num_cycles"]
 
             response = {CYCLE.STATUS: "rejected"}
 
