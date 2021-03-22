@@ -48,7 +48,6 @@ class BroadcastSearchService(ImmediateNodeServiceWithReply):
             domain = connect(
                 url=url,  # Domain Address
                 conn_type=GridHTTPConnection,  # HTTP Connection Protocol
-                client_type=DomainClient,
             )
 
             for data in domain.store:
