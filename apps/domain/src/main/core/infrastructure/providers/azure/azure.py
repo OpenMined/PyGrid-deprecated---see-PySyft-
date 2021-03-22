@@ -13,7 +13,7 @@ class AZURE(Provider):
     """Azure Cloud Provider."""
 
     def __init__(self, config: SimpleNamespace) -> None:
-        super().__init__(config)
+        super().__init__(config.root_dir, "azure")
 
         self.config = config
 

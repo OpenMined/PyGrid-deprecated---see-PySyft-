@@ -12,7 +12,7 @@ class GCP(Provider):
     """Google Cloud Provider."""
 
     def __init__(self, config: SimpleNamespace) -> None:
-        super().__init__(config)
+        super().__init__(config.root_dir, "gcp")
 
         self.config = config
 
