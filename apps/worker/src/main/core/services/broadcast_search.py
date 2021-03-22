@@ -61,7 +61,7 @@ class BroadcastSearchService(ImmediateNodeServiceWithReply):
         match_nodes = [node.address for node in filtered_nodes]
 
         return NetworkSearchResponse(
-            address=msg.reply_to, status_code=200, content={"msg": match_nodes}
+            address=msg.reply_to, status_code=200, content={"match-nodes": match_nodes}
         )
 
     @staticmethod
