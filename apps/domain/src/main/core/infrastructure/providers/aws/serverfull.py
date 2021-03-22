@@ -13,7 +13,7 @@ class AWS_Serverfull(AWS):
 
         if self.worker:
             config.root_dir = os.path.join(
-                "/home/ubuntu/.pygrid/apps/aws/workers/", config.app.id
+                "/home/ubuntu/.pygrid/apps/aws/workers/", str(config.app.id)
             )
             super().__init__(config)
 
@@ -29,7 +29,7 @@ class AWS_Serverfull(AWS):
 
         else:  # Deploy a VPC and domain/network
             config.root_dir = os.path.join(
-                str(Path.home()), ".pygrid", "apps", config.app.name
+                str(Path.home()), ".pygrid", "apps", str(config.app.name)
             )
             super().__init__(config)
 
