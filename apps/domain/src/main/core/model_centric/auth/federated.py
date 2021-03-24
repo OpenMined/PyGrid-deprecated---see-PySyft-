@@ -13,7 +13,6 @@ from ..processes import process_manager
 
 
 def verify_token(auth_token, model_name, model_version=None):
-
     kwargs = {"name": model_name}
     if model_version:
         kwargs["version"] = model_version
