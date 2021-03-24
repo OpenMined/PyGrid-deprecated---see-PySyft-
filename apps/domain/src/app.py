@@ -8,38 +8,36 @@
 - Import order : python std libraries, extendend libs, internal source code.
 """
 
-# Std Python imports
-from typing import Optional
-from typing import Dict
 import logging
 import os
+
+# Std Python imports
+from typing import Dict, Optional
+
+import config
 
 # Extended Python imports
 from flask import Flask
 from flask_sockets import Sockets
-
 from geventwebsocket.websocket import Header
-from sqlalchemy_utils.functions import database_exists
-from nacl.signing import SigningKey
-from nacl.encoding import HexEncoder
-from syft.core.node.domain.domain import Domain
-
+from main import ws
+from main.routes import (
+    association_requests_blueprint,
+    dcfl_blueprint,
+    groups_blueprint,
+    mcfl_blueprint,
+    roles_blueprint,
+    root_blueprint,
+    setup_blueprint,
+    users_blueprint,
+)
 
 # Internal imports
 from main.utils.monkey_patch import mask_payload_fast
-from main.routes import (
-    roles_blueprint,
-    users_blueprint,
-    setup_blueprint,
-    groups_blueprint,
-    dcfl_blueprint,
-    association_requests_blueprint,
-    root_blueprint,
-    mcfl_blueprint,
-)
-
-from main import ws
-import config
+from nacl.encoding import HexEncoder
+from nacl.signing import SigningKey
+from sqlalchemy_utils.functions import database_exists
+from syft.core.node.domain.domain import Domain
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
 
@@ -96,7 +94,6 @@ def create_app(
         association_requests_blueprint, url_prefix=r"/association-requests/"
     )
 
-
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
     sockets.register_blueprint(ws, url_prefix=r"/")
@@ -104,7 +101,7 @@ def create_app(
     app.debug = debug
     app.config["SECRET_KEY"] = secret_key
 
-    from main.core.database import db, set_database_config, seed_db, User, Role
+    from main.core.database import Role, User, db, seed_db, set_database_config
     from main.core.node import node
     from main.core.task_handler import executor
 

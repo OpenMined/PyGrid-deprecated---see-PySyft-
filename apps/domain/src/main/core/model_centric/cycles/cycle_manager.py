@@ -27,12 +27,14 @@ class WorkerCycleManager(DatabaseManager):
         self._schema = WorkerCycleManager.schema
         self.db = database
 
+
 class _CycleManager(DatabaseManager):
     schema = Cycle
 
     def __init__(self, database):
         self._schema = _CycleManager.schema
         self.db = database
+
 
 class CycleManager(DatabaseManager):
     def __init__(self, database):
@@ -166,14 +168,14 @@ class CycleManager(DatabaseManager):
 
     def submit_worker_diff(self, worker_id: str, request_key: str, diff: bin):
         """Submit reported diff
-           Args:
-                worker_id: Worker's ID.
-                request_key: request (token) used by this worker during this cycle.
-                diff: Model params trained by this worker.
-           Returns:
-                cycle_id : Cycle's ID.
-           Raises:
-                ProcessLookupError : If Not found any relation between the worker/cycle.
+        Args:
+             worker_id: Worker's ID.
+             request_key: request (token) used by this worker during this cycle.
+             diff: Model params trained by this worker.
+        Returns:
+             cycle_id : Cycle's ID.
+        Raises:
+             ProcessLookupError : If Not found any relation between the worker/cycle.
         """
         _worker_cycle = self._worker_cycles.first(
             worker_id=worker_id, request_key=request_key
@@ -207,7 +209,9 @@ class CycleManager(DatabaseManager):
         server_config, _ = process_manager.get_configs(id=cycle.fl_process_id)
         logging.info("server_config: %s" % json.dumps(server_config, indent=2))
 
-        received_diffs = len(self._worker_cycles.query(cycle_id=cycle_id, is_completed=True))
+        received_diffs = len(
+            self._worker_cycles.query(cycle_id=cycle_id, is_completed=True)
+        )
         logging.info("# of diffs: %d" % received_diffs)
 
         min_diffs = server_config.get("min_diffs", None)
@@ -286,8 +290,9 @@ class CycleManager(DatabaseManager):
                 #     print(len(diffs))
                 diff_avg = diffs[0]
                 for i, diff in enumerate(diffs[1:]):
-                    diff_avg = avg_plan(avg=list(diff_avg), item=diff,
-                                        num=th.tensor([i + 1]))
+                    diff_avg = avg_plan(
+                        avg=list(diff_avg), item=diff, num=th.tensor([i + 1])
+                    )
             else:
                 diff_avg = avg_plan(diffs)
 
@@ -336,9 +341,9 @@ class CycleManager(DatabaseManager):
         cycle.is_completed = True
         self._cycles.db.session.commit()
 
-        completed_cycles_num = len(self._cycles.query(
-            fl_process_id=cycle.fl_process_id, is_completed=True
-        ))
+        completed_cycles_num = len(
+            self._cycles.query(fl_process_id=cycle.fl_process_id, is_completed=True)
+        )
         logging.info("completed_cycles_num: %d" % completed_cycles_num)
         max_cycles = server_config.get("num_cycles", 0)
         if completed_cycles_num < max_cycles or max_cycles == 0:

@@ -15,16 +15,8 @@ from requests_toolbelt import MultipartEncoder
 # It's a mockup endpoint and should be removed soon.
 from scipy.stats import poisson
 
-# Local imports
-from .blueprint import mcfl_blueprint
 from ...core.codes import CYCLE, MSG_FIELD, RESPONSE_MSG
 from ...core.exceptions import InvalidRequestKeyError, ModelNotFoundError, PyGridError
-from ...events.model_centric.fl_events import (
-    assign_worker_id,
-    cycle_request,
-    report,
-    requires_speed_test,
-)
 from ...core.model_centric.auth.federated import verify_token
 from ...core.model_centric.controller import processes
 from ...core.model_centric.cycles import cycle_manager
@@ -32,11 +24,20 @@ from ...core.model_centric.models import model_manager
 from ...core.model_centric.processes import process_manager
 from ...core.model_centric.syft_assets import plans, protocols
 from ...core.model_centric.workers import worker_manager
+from ...events.model_centric.fl_events import (
+    assign_worker_id,
+    cycle_request,
+    report,
+    requires_speed_test,
+)
+
+# Local imports
+from .blueprint import mcfl_blueprint
 
 
 @mcfl_blueprint.route("/cycle-request", methods=["POST"])
 def worker_cycle_request():
-    """" This endpoint is where the worker is attempting to join an active
+    """This endpoint is where the worker is attempting to join an active
     federated learning cycle."""
     response_body = {}
     status_code = None

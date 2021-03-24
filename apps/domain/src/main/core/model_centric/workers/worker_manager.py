@@ -10,16 +10,17 @@ from .worker import Worker
 
 class WorkerManager(DatabaseManager):
     schema = Worker
+
     def __init__(self, database):
         self._schema = WorkerManager.schema
-        self.db=database
+        self.db = database
 
     def create(self, worker_id: str):
-        """ Register a new worker
-            Args:
-                worker_id: id used to identify the new worker.
-            Returns:
-                worker: a Worker instance.
+        """Register a new worker
+        Args:
+            worker_id: id used to identify the new worker.
+        Returns:
+            worker: a Worker instance.
         """
         new_worker = self.register(id=worker_id)
         return new_worker

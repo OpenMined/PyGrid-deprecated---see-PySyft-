@@ -29,18 +29,18 @@ class FLController:
         server_averaging_plan,
         client_protocols=None,
     ):
-        """ Register a new federated learning process
-            Args:
-                model: Model object.
-                client_plans : an object containing syft plans.
-                client_protocols : an object containing syft protocols.
-                client_config: the client configurations
-                server_averaging_plan: a function that will instruct PyGrid on how to average model diffs that are returned from the workers.
-                server_config: the server configurations
-            Returns:
-                process : FLProcess Instance.
-            Raises:
-                FLProcessConflict (PyGridError) : If Process Name/Version already exists.
+        """Register a new federated learning process
+        Args:
+            model: Model object.
+            client_plans : an object containing syft plans.
+            client_protocols : an object containing syft protocols.
+            client_config: the client configurations
+            server_averaging_plan: a function that will instruct PyGrid on how to average model diffs that are returned from the workers.
+            server_config: the server configurations
+        Returns:
+            process : FLProcess Instance.
+        Raises:
+            FLProcessConflict (PyGridError) : If Process Name/Version already exists.
         """
         cycle_len = server_config["cycle_length"]
 
@@ -80,14 +80,14 @@ class FLController:
         return cycle_manager.last_participation(process, worker_id)
 
     def assign(self, name: str, version: str, worker, last_participation: int):
-        """ Assign a new worker the specified federated training worker cycle
-            Args:
-                name: Federated learning process name.
-                version: Federated learning process version.
-                worker: Worker Object.
-                last_participation: The last time that this worker worked on this fl process.
-            Return:
-                last_participation: Index of the last cycle assigned to this worker.
+        """Assign a new worker the specified federated training worker cycle
+        Args:
+            name: Federated learning process name.
+            version: Federated learning process version.
+            worker: Worker Object.
+            last_participation: The last time that this worker worked on this fl process.
+        Return:
+            last_participation: Index of the last cycle assigned to this worker.
         """
         _accepted = False
 
@@ -126,9 +126,13 @@ class FLController:
 
         _max_cycles = server_config["num_cycles"]
 
-        _accepted = (not _assigned) and _comp_bandwidth and _allowed and n_completed_cycles < _max_cycles
+        _accepted = (
+            (not _assigned)
+            and _comp_bandwidth
+            and _allowed
+            and n_completed_cycles < _max_cycles
+        )
         logging.info(f"Worker is accepted: {_accepted}")
-
 
         if _accepted:
             # Assign

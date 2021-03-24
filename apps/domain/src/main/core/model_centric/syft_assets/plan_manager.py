@@ -1,6 +1,8 @@
 # Syft assets module imports
 # Syft dependencies
 import syft as sy
+from syft import deserialize, serialize
+
 # from syft.execution.translation.default import PlanTranslatorDefault
 # from syft.execution.translation.threepio import PlanTranslatorTfjs
 # from syft.execution.translation.torchscript import PlanTranslatorTorchscript
@@ -12,7 +14,6 @@ from ...exceptions import PlanInvalidError, PlanNotFoundError, PlanTranslationEr
 # PyGrid imports
 from ...manager.database_manager import DatabaseManager
 from .plan import Plan
-from syft import deserialize
 
 # Make fake local worker for serialization
 # worker = sy.VirtualMachine()
@@ -20,6 +21,7 @@ from syft import deserialize
 
 class PlanManager(DatabaseManager):
     schema = Plan
+
     def __init__(self, database):
         self._schema = PlanManager.schema
         self.db = database
@@ -119,39 +121,39 @@ class PlanManager(DatabaseManager):
     @staticmethod
     def serialize_plan(plan: "sy.Plan") -> bin:
         """Serialize a Plan."""
-        pb = protobuf.serde._bufferize(worker, plan)
+        pb = serialize(plan)
         serialized_plan = pb.SerializeToString()
         return serialized_plan
 
-    @staticmethod
-    def trim_plan(plan: "sy.Plan", variant: str) -> "sy.Plan":
-        """Trim Plan to specified variant."""
+    # @staticmethod
+    # def trim_plan(plan: "sy.Plan", variant: str) -> "sy.Plan":
+    #     """Trim Plan to specified variant."""
 
-        type_translators = {
-            "torchscript": PlanTranslatorTorchscript,
-            "default": PlanTranslatorDefault,
-        }
+    #     type_translators = {
+    #         "torchscript": PlanTranslatorTorchscript,
+    #         "default": PlanTranslatorDefault,
+    #     }
 
-        fw_translators = {"tfjs": PlanTranslatorTfjs}
+    #     fw_translators = {"tfjs": PlanTranslatorTfjs}
 
-        if variant not in type_translators and variant not in fw_translators:
-            raise PlanTranslationError
+    #     if variant not in type_translators and variant not in fw_translators:
+    #         raise PlanTranslationError
 
-        plan_copy = plan.copy()
+    #     plan_copy = plan.copy()
 
-        if variant in type_translators:
-            for name, cls in type_translators.items():
-                if name != variant:
-                    plan_copy.remove_translation(cls)
+    #     if variant in type_translators:
+    #         for name, cls in type_translators.items():
+    #             if name != variant:
+    #                 plan_copy.remove_translation(cls)
 
-        if variant in fw_translators:
-            # First, leave only default translation
-            for name, cls in type_translators.items():
-                if name != "default":
-                    plan_copy.remove_translation(cls)
-            # Set actions to be specific type
-            plan_copy.base_framework = variant
-            # Remove other actions
-            plan_copy.roles = None
+    #     if variant in fw_translators:
+    #         # First, leave only default translation
+    #         for name, cls in type_translators.items():
+    #             if name != "default":
+    #                 plan_copy.remove_translation(cls)
+    #         # Set actions to be specific type
+    #         plan_copy.base_framework = variant
+    #         # Remove other actions
+    #         plan_copy.roles = None
 
-        return plan_copy
+    #     return plan_copy

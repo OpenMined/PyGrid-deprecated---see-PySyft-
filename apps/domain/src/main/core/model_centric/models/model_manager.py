@@ -1,17 +1,18 @@
 # PyGrid imports
 # Syft dependencies
 import syft as sy
-# from syft.execution.placeholder import PlaceHolder
-# from syft.execution.state import State
-# from syft.serde import protobuf
-# from syft_proto.execution.v1.state_pb2 import State as StatePB
+from syft import deserialize, serialize
+from syft.lib.python.list import List
+from syft.proto.lib.python.list_pb2 import List as ListPB
 
 from ...exceptions import ModelNotFoundError
 from ...manager.database_manager import DatabaseManager
 from ..models.ai_model import Model, ModelCheckPoint
-from syft.proto.lib.python.list_pb2 import List as ListPB
-from syft import deserialize, serialize
-from syft.lib.python.list import List
+
+# from syft.execution.placeholder import PlaceHolder
+# from syft.execution.state import State
+# from syft.serde import protobuf
+# from syft_proto.execution.v1.state_pb2 import State as StatePB
 
 
 class ModelCheckPointManager(DatabaseManager):
@@ -22,6 +23,7 @@ class ModelCheckPointManager(DatabaseManager):
         self._schema = ModelCheckPointManager.schema
         self.db = database
 
+
 class _ModelManager(DatabaseManager):
 
     schema = Model
@@ -30,10 +32,10 @@ class _ModelManager(DatabaseManager):
         self._schema = _ModelManager.schema
         self.db = database
 
-class ModelManager(DatabaseManager):
 
+class ModelManager(DatabaseManager):
     def __init__(self, database):
-        self.db=database
+        self.db = database
         self._models = _ModelManager(database)
         self._model_checkpoints = ModelCheckPointManager(database)
 

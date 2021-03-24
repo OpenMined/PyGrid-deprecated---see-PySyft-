@@ -8,10 +8,12 @@ from ...exceptions import (
 
 # PyGrid imports
 from ...manager.database_manager import DatabaseManager
+
 # from ...warehouse import Warehouse
 from ..syft_assets import plans, protocols
 from .config import Config
 from .fl_process import FLProcess
+
 
 class ConfigManager(DatabaseManager):
     schema = Config
@@ -20,12 +22,14 @@ class ConfigManager(DatabaseManager):
         self._schema = ConfigManager.schema
         self.db = database
 
+
 class FLProcessManager(DatabaseManager):
     schema = FLProcess
 
     def __init__(self, database):
         self._schema = FLProcessManager.schema
         self.db = database
+
 
 class ProcessManager(DatabaseManager):
 
@@ -46,18 +50,18 @@ class ProcessManager(DatabaseManager):
         server_config,
         server_avg_plan,
     ):
-        """ Register a new federated learning process
-            Args:
-                client_config: the client configurations
-                client_plans: an object containing syft plans.
-                client_protocols: an object containing syft protocols.
-                server_config: the server configurations
-                server_avg_plan: a function that will instruct PyGrid on how to average model
-                    diffs that are returned from the workers.
-            Returns:
-                process : FLProcess Instance.
-            Raises:
-                FLProcessConflict (PyGridError) : If Process Name/Version already exists.
+        """Register a new federated learning process
+        Args:
+            client_config: the client configurations
+            client_plans: an object containing syft plans.
+            client_protocols: an object containing syft protocols.
+            server_config: the server configurations
+            server_avg_plan: a function that will instruct PyGrid on how to average model
+                diffs that are returned from the workers.
+        Returns:
+            process : FLProcess Instance.
+        Raises:
+            FLProcessConflict (PyGridError) : If Process Name/Version already exists.
         """
 
         name = client_config["name"]

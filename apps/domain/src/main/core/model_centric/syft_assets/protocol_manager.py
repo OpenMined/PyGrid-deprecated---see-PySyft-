@@ -8,8 +8,9 @@ from .protocol import Protocol
 
 class ProtocolManager(DatabaseManager):
     schema = Protocol
+
     def __init__(self, database):
-        self.db=database
+        self.db = database
         self._schema = ProtocolManager.schema
         # self._protocols = DatabaseManager(Protocol)
 

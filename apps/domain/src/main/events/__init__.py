@@ -5,6 +5,7 @@ import json
 # External imports
 # from syft.codes import REQUEST_MSG
 
+
 class REQUEST_MSG(object):  # noqa: N801
     TYPE_FIELD = "type"
     GET_ID = "get-id"
@@ -16,9 +17,10 @@ class REQUEST_MSG(object):  # noqa: N801
     RUN_INFERENCE = "run-inference"
     AUTHENTICATE = "authentication"
 
+
 from .. import ws
 from ..core.codes import *
-from ..core.codes import USER_EVENTS, ROLE_EVENTS, GROUP_EVENTS
+from ..core.codes import GROUP_EVENTS, ROLE_EVENTS, USER_EVENTS
 from .model_centric.fl_events import *
 from .model_centric.socket_handler import SocketHandler
 
