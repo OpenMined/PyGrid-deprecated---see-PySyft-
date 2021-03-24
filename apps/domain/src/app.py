@@ -21,6 +21,13 @@ from flask import Flask
 from flask_sockets import Sockets
 from geventwebsocket.websocket import Header
 from main import ws
+from nacl.signing import SigningKey
+from nacl.encoding import HexEncoder
+from syft.core.node.domain.domain import Domain
+
+
+# Internal imports
+from main.utils.monkey_patch import mask_payload_fast
 from main.routes import (
     association_requests_blueprint,
     dcfl_blueprint,
