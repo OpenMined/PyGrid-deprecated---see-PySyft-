@@ -122,6 +122,10 @@ class DiskObjectStore(ObjectStore):
             read_permissions=metadata_dict["read_permissions"],
             search_permissions={},
         )
+
+        if self.__contains__(key):
+            self.delete(key)
+
         self.db.session.add(bin_obj)
         self.db.session.add(metadata_obj)
         self.db.session.commit()
