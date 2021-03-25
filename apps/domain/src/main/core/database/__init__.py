@@ -21,6 +21,7 @@ from .users.user import User, create_user
 from .requests.request import Request
 from .setup.setup import SetupConfig, create_setup
 from .bin_storage.json_obj import JsonObject
+from .bin_storage.bin_obj import BinObject, ObjectMetadata
 from .bin_storage.metadata import StorageMetadata
 from .utils import model_to_json, expand_user_object
 
