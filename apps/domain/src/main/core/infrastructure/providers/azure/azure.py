@@ -253,7 +253,8 @@ class AZURE(Provider):
         self.tfscript += self.lb_backend_address
 
     def build_database(self):
-        "https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/sql_database"
+        """https://registry.terraform.io/providers/hashicorp/azurerm/latest/doc
+        s/resources/sql_database."""
         self.sql_server = azurerm_sql_server(
             f"pygrid_sql_server",
             name=f"pygrid_sql_server",
