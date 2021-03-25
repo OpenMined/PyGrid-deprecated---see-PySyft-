@@ -72,18 +72,17 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
     credentials = Config()
 
     # credentials file
-    with open(
-        click.prompt(
-            f"Please enter path to your  {colored(f'{config.provider} credentials')} json file",
-            type=str,
-            default=f"{Path.home()}/.{config.provider}/credentials.json",
-        ),
-        "r",
-    ) as f:
+    cred_prompt = f"Please enter path to your  {colored(f'{config.provider} credentials')} json file"
+    cred_default_path = f"{Path.home()}/.{config.provider}/credentials.json"
+    with open(click.prompt(cred_prompt, type=str, default=cred_default_path), "r") as f:
         credentials.cloud = Config(**json.load(f))
 
     ## Get app config and arguments
     config.app = Config(name=app.lower())
+
+    config.root_dir = os.path.join(
+        str(Path.home()), ".pygrid", "apps", str(config.provider), str(config.app.name)
+    )
 
     ## Deployment type
     config.serverless = False
@@ -112,17 +111,15 @@ def deploy(config: SimpleNamespace, provider: str, app: str):
     credentials.db = aws_utils.get_db_config()
 
     ## TODO(amr): [clean] For quick dev stuff
-    # with open("/Users/amrmkayid/.pygrid/cli/config_azure.json", "rb") as config_json:
+    # with open("/Users/amrmkayid/.pygrid/cli/azure.json", "rb") as config_json:
     #     config = Config(**json.load(config_json))
 
+    config_json = json.dumps(vars(config), indent=2, default=lambda o: o.__dict__)
     if click.confirm(
-        f"""Your current configration are:
-        \n\n{colored((json.dumps(vars(config),
-                        indent=2, default=lambda o: o.__dict__)))}
-        \n\nContinue?"""
+        f"""Your current configration are:\n\n{colored(config_json)}\n\nContinue?"""
     ):
 
-        config.credentials = credentials
+        # config.credentials = credentials
         click.echo(colored("STARTING DEPLOYMENT... 🔃", color=COLORS.green))
 
         deployed, output = _deploy(config)
