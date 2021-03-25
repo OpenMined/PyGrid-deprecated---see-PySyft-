@@ -29,7 +29,7 @@ class GCP(Provider):
     def build(self) -> bool:
         app = self.config.app.name
         self.vpc = Module(
-            "pygrid_vpc",
+            "pygrid-vpc",
             source="terraform-google-modules/network/google",
             project_id=self.config.gcp.project_id,
             network_name=f"pygrid-{app}-vpc",
@@ -37,7 +37,7 @@ class GCP(Provider):
             auto_create_subnetworks=True,
             subnets=[
                 {
-                    "subnet_name": "pygrid_subnet",
+                    "subnet_name": "pygrid-subnet",
                     "subnet_ip": "10.10.10.0/24",
                     "subnet_region": self.config.gcp.region,
                 }
@@ -88,7 +88,7 @@ class GCP(Provider):
         print(images)
         print(image_type)
         image = terrascript.data.google_compute_image(
-            name + image_type,
+            f"{name}-{image_type}",
             project=images[image_type][0],
             family=images[image_type][1],
         )
@@ -161,7 +161,7 @@ class GCP(Provider):
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
-            nohup ./run.sh --port {app.port}  --host {app.host}
+            nohup ./run.sh --port {app.port}  --start_local_db
         """
         )
         return exec_script
