@@ -286,14 +286,17 @@ def test_update_dataset(client, database, cleanup):
         "tensors": {"train": tensor2.copy()},
     }
     storage = DiskObjectStore(database)
-    df_json1 = storage.store_json(dataset)
+    df_json1 = store_json(database, dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    assert database.session.query(BinaryObject).get(df_json1["id"]).binary is not None
+    assert (
+        database.session.query(DatasetGroup).filter_by(dataset=df_json1["id"]).all()
+        is not None
+    )
     assert database.session.query(JsonObject).get(df_json1["id"]) is not None
     assert database.session.query(JsonObject).get(df_json1["id"]).binary == df_json1
 
@@ -307,7 +310,16 @@ def test_update_dataset(client, database, cleanup):
     assert result.status_code == 200
     assert result.get_json()["id"] == df_json1["id"]
 
-    assert database.session.query(BinaryObject).get(df_json1["id"]).binary is not None
+    assert (
+        database.session.query(DatasetGroup).filter_by(dataset=df_json1["id"]).all()
+        is not None
+    )
+    assert (
+        len(
+            database.session.query(DatasetGroup).filter_by(dataset=df_json1["id"]).all()
+        )
+        == 1
+    )
     assert database.session.query(JsonObject).get(df_json1["id"]) is not None
 
     metadata = database.session.query(JsonObject).get(df_json1["id"])

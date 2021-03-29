@@ -62,3 +62,52 @@ def get_dataset_metadata(db, key: str) -> Optional[dict]:
 def get_all_datasets_metadata(db):
     ids = db.session.query(JsonObject.id).all()
     return [get_dataset_metadata(db, key) for key in ids]
+
+
+def update_dataset(db, key: str, df_json: dict) -> dict:
+    _json = deepcopy(df_json)
+    storage = DiskObjectStore(db)
+
+    json_obj = db.session.query(JsonObject).get(key)
+    past_json = json_obj.binary
+    past_ids = [x["id"] for x in past_json["tensors"].values()]
+
+    mapping = []
+    # Separate CSV from metadata
+    for el in _json["tensors"].copy():
+        if (
+            _json["tensors"][el].get("id", None) is not None
+            and _json["tensors"][el].get("id", None) in past_ids
+        ):
+            _json["tensors"][el]["id"] = past_json["tensors"][el]["id"]
+        else:
+            _id = UID()
+            _json["tensors"][el]["id"] = str(_id.value)
+        mapping.append((el, _id, _json["tensors"][el].pop("content", None)))
+
+    # Ensure we have same ID in metadata and dataset
+    df_id = past_json["id"]
+    _json["id"] = df_id
+
+    # Clean existing storables in storage
+    db.session.query(DatasetGroup).filter_by(dataset=df_id).delete(
+        synchronize_session=False
+    )
+    for key in past_ids:
+        storage.delete(key)
+
+    # Create storables from UID/CSV. Update metadata
+    storables = []
+    for idx, (name, _id, raw_file) in enumerate(mapping):
+        _tensor = pd.read_csv(StringIO(raw_file))
+        _tensor = th.tensor(_tensor.values.astype(np.float32))
+
+        _json["tensors"][name]["shape"] = [int(x) for x in _tensor.size()]
+        _json["tensors"][name]["dtype"] = "{}".format(_tensor.dtype)
+        storage.__setitem__(_id, StorableObject(id=_id, data=_tensor))
+        # Ensure we have same ID in metadata and dataset
+        db.session.add(DatasetGroup(bin_object=str(_id.value), dataset=df_id))
+
+    setattr(json_obj, "binary", _json)
+    db.session.commit()
+    return _json
