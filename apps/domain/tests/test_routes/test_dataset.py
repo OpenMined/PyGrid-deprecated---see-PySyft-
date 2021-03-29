@@ -16,6 +16,8 @@ from src.main.core.database.store_disk import (
 )
 from src.main.core.database.bin_storage.metadata import StorageMetadata, get_metadata
 from src.main.core.database.bin_storage.bin_obj import BinObject
+from src.main.core.database.dataset.utils import store_json
+
 from src.main.core.database import *
 
 ENCODING = "UTF-8"
@@ -208,8 +210,8 @@ def test_get_all_datasets_metadata(client, database, cleanup):
         "tensors": {"train": tensor2.copy()},
     }
     storage = DiskObjectStore(database)
-    df_json1 = storage.store_json(dataset)
-    df_json2 = storage.store_json(new_dataset)
+    df_json1 = store_json(database, dataset)
+    df_json2 = store_json(database, new_dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -243,7 +245,7 @@ def test_get_specific_dataset_metadata(client, database, cleanup):
     database.session.commit()
 
     storage = DiskObjectStore(database)
-    df_metadata = storage.store_json(dataset)
+    df_metadata = store_json(database, dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {

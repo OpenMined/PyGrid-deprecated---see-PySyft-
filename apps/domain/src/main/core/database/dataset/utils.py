@@ -1,3 +1,4 @@
+from typing import Optional, Iterable
 from copy import deepcopy
 from io import StringIO
 
@@ -49,3 +50,15 @@ def store_json(db, df_json: dict) -> dict:
     db.session.add(json_obj)
     db.session.commit()
     return _json
+
+
+def get_dataset_metadata(db, key: str) -> Optional[dict]:
+    obj = db.session.query(JsonObject).get(key)
+    if obj is not None:
+        obj = obj.binary
+    return obj
+
+
+def get_all_datasets_metadata(db):
+    ids = db.session.query(JsonObject.id).all()
+    return [get_dataset_metadata(db, key) for key in ids]

@@ -40,7 +40,11 @@ from ..exceptions import (
     AuthorizationError,
 )
 from ..database.utils import model_to_json
-from ..database.dataset.utils import store_json
+from ..database.dataset.utils import (
+    store_json,
+    get_all_datasets_metadata,
+    get_dataset_metadata,
+)
 from ..database import expand_user_object
 
 ENCODING = "UTF-8"
@@ -83,7 +87,7 @@ def get_dataset_metadata_msg(
     _allowed = users.can_triage_requests(user_id=_current_user_id)
     if _allowed:
         storage = node.disk_store
-        _msg = storage.get_dataset_metadata(_dataset_id)
+        _msg = get_dataset_metadata(storage.db, _dataset_id)
     else:
         raise AuthorizationError("You're not allowed to get a Dataset!")
 
@@ -106,7 +110,7 @@ def get_all_datasets_metadata_msg(
     _allowed = users.can_triage_requests(user_id=_current_user_id)
     if _allowed:
         storage = node.disk_store
-        _msg = storage.get_all_datasets_metadata()
+        _msg = get_all_datasets_metadata(storage.db)
     else:
         raise AuthorizationError("You're not allowed to get Datasets!")
 
