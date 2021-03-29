@@ -40,6 +40,7 @@ from ..exceptions import (
     AuthorizationError,
 )
 from ..database.utils import model_to_json
+from ..database.dataset.utils import store_json
 from ..database import expand_user_object
 
 ENCODING = "UTF-8"
@@ -58,7 +59,7 @@ def create_dataset_msg(
     if _allowed:
         _dataset = msg.content.get("dataset", None)
         storage = node.disk_store
-        _json = storage.store_json(_dataset)
+        _json = store_json(storage.db, _dataset)
     else:
         raise AuthorizationError("You're not allowed to upload data!")
 

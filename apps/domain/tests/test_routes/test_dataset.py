@@ -12,11 +12,10 @@ import jwt
 
 from src.main.core.database.store_disk import (
     DiskObjectStore,
-    create_dataset,
     create_storable,
 )
 from src.main.core.database.bin_storage.metadata import StorageMetadata, get_metadata
-from src.main.core.database.bin_storage.bin_obj import BinaryObject
+from src.main.core.database.bin_storage.bin_obj import BinObject
 from src.main.core.database import *
 
 ENCODING = "UTF-8"
@@ -70,12 +69,12 @@ storable3 = create_storable(
     tags=["new", "dummy", "tensor"],
 )
 
-dataset = create_dataset(
-    _id=UID(),
-    data=[storable, storable2],
-    description="Dummy tensor",
-    tags=["dummy", "tensor"],
-)
+# dataset = create_dataset(
+#    _id=UID(),
+#    data=[storable, storable2],
+#    description="Dummy tensor",
+#    tags=["dummy", "tensor"],
+# )
 
 tensor1 = {
     "content": "1, 2, 3, 4\n10, 20, 30, 40",
@@ -116,7 +115,7 @@ def cleanup(database):
         database.session.query(Role).delete()
         database.session.query(Group).delete()
         database.session.query(UserGroup).delete()
-        database.session.query(BinaryObject).delete()
+        database.session.query(BinObject).delete()
         database.session.query(JsonObject).delete()
         database.session.query(StorageMetadata).delete()
         database.session.commit()
@@ -168,13 +167,19 @@ def test_create_dataset(client, database, cleanup):
     assert result.status_code == 200
 
     _id = result.get_json().get("id", None)
-    assert database.session.query(BinaryObject).get(_id) is not None
-    assert database.session.query(BinaryObject).get(_id).binary is not None
-    df = database.session.query(BinaryObject).get(_id).binary
-    assert deserialize(blob=df, from_bytes=True).id.value.hex == _id
+    storables = (
+        database.session.query(DatasetGroup.bin_object).filter_by(dataset=_id).all()
+    )
+    assert storables is not None
+    assert len(storables) == 2
+    storables = [el[0] for el in storables]
+
+    assert database.session.query(BinObject).get(storables[0]) is not None
+    assert database.session.query(BinObject).get(storables[1]) is not None
 
     assert database.session.query(JsonObject).get(_id) is not None
     assert database.session.query(JsonObject).get(_id).binary is not None
+
     _json = database.session.query(JsonObject).get(_id).binary
     assert _json["id"] == _id
     assert _json["tags"] == payload["tags"]
