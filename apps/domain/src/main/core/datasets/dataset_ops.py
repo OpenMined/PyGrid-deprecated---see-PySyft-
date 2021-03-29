@@ -8,14 +8,15 @@ import pandas as pd
 from syft.core.common.uid import UID
 from syft.core.store.storeable_object import StorableObject
 
-from ..bin_storage.bin_obj import BinObject, ObjectMetadata
-from ..bin_storage.json_obj import JsonObject
-from ..store_disk import DiskObjectStore
-from ..bin_storage.metadata import get_metadata
-from .datasetgroup import DatasetGroup
+from ..database import db
+from ..database.bin_storage.bin_obj import BinObject, ObjectMetadata
+from ..database.bin_storage.json_obj import JsonObject
+from ..database.store_disk import DiskObjectStore
+from ..database.bin_storage.metadata import get_metadata
+from ..database.dataset.datasetgroup import DatasetGroup
 
 
-def store_json(db, df_json: dict) -> dict:
+def create_dataset(df_json: dict) -> dict:
     _json = deepcopy(df_json)
     storage = DiskObjectStore(db)
     mapping = []
@@ -53,19 +54,19 @@ def store_json(db, df_json: dict) -> dict:
     return _json
 
 
-def get_dataset_metadata(db, key: str) -> Optional[dict]:
+def get_dataset_metadata(key: str) -> Optional[dict]:
     obj = db.session.query(JsonObject).get(key)
     if obj is not None:
         obj = obj.binary
     return obj
 
 
-def get_all_datasets_metadata(db):
+def get_all_datasets_metadata():
     ids = db.session.query(JsonObject.id).all()
-    return [get_dataset_metadata(db, key) for key in ids]
+    return [get_dataset_metadata(key) for key in ids]
 
 
-def update_dataset(db, key: str, df_json: dict) -> dict:
+def update_dataset(key: str, df_json: dict) -> dict:
     _json = deepcopy(df_json)
     storage = DiskObjectStore(db)
 
@@ -114,7 +115,7 @@ def update_dataset(db, key: str, df_json: dict) -> dict:
     return _json
 
 
-def delete_dataset(db, key: str) -> None:
+def delete_dataset(key: str) -> None:
     storage = DiskObjectStore(db)
     ids = db.session.query(DatasetGroup.bin_object).filter_by(dataset=key).all()
     ids = [x[0] for x in ids]

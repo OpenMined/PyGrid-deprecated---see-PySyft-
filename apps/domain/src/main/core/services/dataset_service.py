@@ -40,8 +40,8 @@ from ..exceptions import (
     AuthorizationError,
 )
 from ..database.utils import model_to_json
-from ..database.dataset.utils import (
-    store_json,
+from ..datasets.dataset_ops import (
+    create_dataset,
     update_dataset,
     delete_dataset,
     get_all_datasets_metadata,
@@ -65,7 +65,7 @@ def create_dataset_msg(
     if _allowed:
         _dataset = msg.content.get("dataset", None)
         storage = node.disk_store
-        _json = store_json(storage.db, _dataset)
+        _json = create_dataset(_dataset)
     else:
         raise AuthorizationError("You're not allowed to upload data!")
 
@@ -89,7 +89,7 @@ def get_dataset_metadata_msg(
     _allowed = users.can_triage_requests(user_id=_current_user_id)
     if _allowed:
         storage = node.disk_store
-        _msg = get_dataset_metadata(storage.db, _dataset_id)
+        _msg = get_dataset_metadata(_dataset_id)
     else:
         raise AuthorizationError("You're not allowed to get a Dataset!")
 
@@ -112,7 +112,7 @@ def get_all_datasets_metadata_msg(
     _allowed = users.can_triage_requests(user_id=_current_user_id)
     if _allowed:
         storage = node.disk_store
-        _msg = get_all_datasets_metadata(storage.db)
+        _msg = get_all_datasets_metadata()
     else:
         raise AuthorizationError("You're not allowed to get Datasets!")
 
@@ -138,7 +138,7 @@ def update_dataset_msg(
     _msg = {}
     if _allowed:
         storage = node.disk_store
-        _msg = update_dataset(storage.db, _dataset_id, dataset)
+        _msg = update_dataset(_dataset_id, dataset)
 
     else:
         raise AuthorizationError("You're not allowed to upload data!")
@@ -163,7 +163,7 @@ def delete_dataset_msg(
 
     if _allowed:
         storage = node.disk_store
-        delete_dataset(storage.db, _dataset_id)
+        delete_dataset(_dataset_id)
 
     else:
         raise AuthorizationError("You're not allowed to upload data!")

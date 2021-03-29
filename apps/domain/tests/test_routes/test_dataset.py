@@ -16,7 +16,7 @@ from src.main.core.database.store_disk import (
 )
 from src.main.core.database.bin_storage.metadata import StorageMetadata, get_metadata
 from src.main.core.database.bin_storage.bin_obj import BinObject
-from src.main.core.database.dataset.utils import store_json
+from src.main.core.datasets.dataset_ops import create_dataset
 
 from src.main.core.database import *
 
@@ -70,13 +70,6 @@ storable3 = create_storable(
     description="NewDummy tensor",
     tags=["new", "dummy", "tensor"],
 )
-
-# dataset = create_dataset(
-#    _id=UID(),
-#    data=[storable, storable2],
-#    description="Dummy tensor",
-#    tags=["dummy", "tensor"],
-# )
 
 tensor1 = {
     "content": "1, 2, 3, 4\n10, 20, 30, 40",
@@ -210,8 +203,8 @@ def test_get_all_datasets_metadata(client, database, cleanup):
         "tensors": {"train": tensor2.copy()},
     }
     storage = DiskObjectStore(database)
-    df_json1 = store_json(database, dataset)
-    df_json2 = store_json(database, new_dataset)
+    df_json1 = create_dataset(dataset)
+    df_json2 = create_dataset(new_dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -245,7 +238,7 @@ def test_get_specific_dataset_metadata(client, database, cleanup):
     database.session.commit()
 
     storage = DiskObjectStore(database)
-    df_metadata = store_json(database, dataset)
+    df_metadata = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -286,7 +279,7 @@ def test_update_dataset(client, database, cleanup):
         "tensors": {"train": tensor2.copy()},
     }
     storage = DiskObjectStore(database)
-    df_json1 = store_json(database, dataset)
+    df_json1 = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -346,7 +339,7 @@ def test_delete_dataset(client, database, cleanup):
     database.session.commit()
 
     storage = DiskObjectStore(database)
-    df_json1 = store_json(storage.db, dataset)
+    df_json1 = create_dataset(dataset)
     _id = df_json1["id"]
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
