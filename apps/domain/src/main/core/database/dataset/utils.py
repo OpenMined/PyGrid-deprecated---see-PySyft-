@@ -8,6 +8,7 @@ import pandas as pd
 from syft.core.common.uid import UID
 from syft.core.store.storeable_object import StorableObject
 
+from ..bin_storage.bin_obj import BinObject, ObjectMetadata
 from ..bin_storage.json_obj import JsonObject
 from ..store_disk import DiskObjectStore
 from ..bin_storage.metadata import get_metadata
@@ -111,3 +112,28 @@ def update_dataset(db, key: str, df_json: dict) -> dict:
     setattr(json_obj, "binary", _json)
     db.session.commit()
     return _json
+
+
+def delete_dataset(db, key: str) -> None:
+    storage = DiskObjectStore(db)
+    ids = db.session.query(DatasetGroup.bin_object).filter_by(dataset=key).all()
+    ids = [x[0] for x in ids]
+
+    for _id in ids:
+        bin_obj = db.session.query(BinObject).filter_by(id=_id).first()
+        metadata = db.session.query(ObjectMetadata).filter_by(obj=key).first()
+
+        if bin_obj is not None:
+            db.session.delete(bin_obj)
+        if metadata is not None:
+            db.session.delete(metadata)
+
+    db.session.query(DatasetGroup).filter_by(dataset=key).delete(
+        synchronize_session=False
+    )
+    json_obj = db.session.query(JsonObject).get(key)
+    metadata = get_metadata(db)
+    metadata.length -= 1
+
+    db.session.delete(json_obj)
+    db.session.commit()

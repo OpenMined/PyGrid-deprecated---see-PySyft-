@@ -346,7 +346,7 @@ def test_delete_dataset(client, database, cleanup):
     database.session.commit()
 
     storage = DiskObjectStore(database)
-    df_json1 = storage.store_json(dataset)
+    df_json1 = store_json(storage.db, dataset)
     _id = df_json1["id"]
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
@@ -354,8 +354,12 @@ def test_delete_dataset(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
 
-    assert database.session.query(BinaryObject).get(_id) is not None
-    assert database.session.query(BinaryObject).get(_id).binary is not None
+    assert database.session.query(DatasetGroup).filter_by(dataset=_id).all() is not None
+
+    storable_ids = (
+        database.session.query(DatasetGroup.bin_object).filter_by(dataset=_id).all()
+    )
+    storable_ids = [x[0] for x in storable_ids]
 
     assert database.session.query(JsonObject).get(_id) is not None
     assert database.session.query(JsonObject).get(_id).binary is not None
@@ -372,5 +376,10 @@ def test_delete_dataset(client, database, cleanup):
     )
 
     assert result.status_code == 204
-    assert database.session.query(BinaryObject).get(_id) is None
+
+    for strbl_id in storable_ids:
+        assert db.session.query(BinObject).filter_by(id=strbl_id).first() is None
+        assert db.session.query(ObjectMetadata).filter_by(id=strbl_id).first() is None
+
+    assert database.session.query(DatasetGroup).filter_by(dataset=_id).all() == []
     assert database.session.query(JsonObject).get(_id) is None

@@ -43,6 +43,7 @@ from ..database.utils import model_to_json
 from ..database.dataset.utils import (
     store_json,
     update_dataset,
+    delete_dataset,
     get_all_datasets_metadata,
     get_dataset_metadata,
 )
@@ -162,7 +163,7 @@ def delete_dataset_msg(
 
     if _allowed:
         storage = node.disk_store
-        storage.delete(_dataset_id)
+        delete_dataset(storage.db, _dataset_id)
 
     else:
         raise AuthorizationError("You're not allowed to upload data!")
