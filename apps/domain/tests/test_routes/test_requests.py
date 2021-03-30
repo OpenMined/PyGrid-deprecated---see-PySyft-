@@ -78,7 +78,6 @@ def test_create_request(client, database, cleanup):
     storage = DiskObjectStore(database)
     dataset_json = create_dataset(dataset)
 
-    # object_id = "61612325"
     object_id = dataset_json["tensors"]["train"]["id"]
     reason = "sample reason"
     request_type = "permissions"
@@ -110,13 +109,15 @@ def test_get_specific_request(client, database, cleanup):
     database.session.add(new_user)
 
     database.session.commit()
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    object_id = "61612325"
+    object_id = dataset_json["tensors"]["train"]["id"]
     reason = "this is a sample reason"
     request_type = "budget"
 
@@ -137,15 +138,14 @@ def test_get_specific_request(client, database, cleanup):
         headers=headers,
         content_type="application/json",
     )
-    response = result.get_json()
 
     assert create.status_code == 200
     assert result.status_code == 200
-    assert response["id"] == request_id
-    assert response["object_id"] == object_id
-    assert response["reason"] == reason
-    assert response["request_type"] == request_type
-    assert response["status"] == "pending"
+    assert result.get_json()["id"] == request_id
+    assert result.get_json()["object_id"] == object_id
+    assert result.get_json()["reason"] == reason
+    assert result.get_json()["request_type"] == request_type
+    assert result.get_json()["status"] == "pending"
 
 
 def test_get_all_requests(client, database, cleanup):
@@ -155,13 +155,15 @@ def test_get_all_requests(client, database, cleanup):
     database.session.add(new_user)
 
     database.session.commit()
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    object_id = "61612325"
+    object_id = dataset_json["tensors"]["train"]["id"]
     reason = "sample reason"
     request_type = "permissions"
 
@@ -175,13 +177,11 @@ def test_get_all_requests(client, database, cleanup):
         headers=headers,
     )
 
-    object_id = "61612325"
-    reason = "sample reason"
-    request_type = "permissions"
-
     result = client.get(
         "/dcfl/requests", headers=headers, content_type="application/json"
     )
+
+    # import pdb; pdb.set_trace()
 
     response = result.get_json()
     assert result.status_code == 200
