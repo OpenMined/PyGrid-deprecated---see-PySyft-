@@ -5,6 +5,8 @@ import pytest
 from flask import current_app as app
 
 from src.main.core.database import *
+from src.main.core.datasets.dataset_ops import create_dataset
+from src.main.core.database.store_disk import DiskObjectStore
 import time
 
 owner_role = ("Owner", True, True, True, True, True, True, True)
@@ -17,6 +19,29 @@ user1 = (
     1,
 )
 
+tensor1 = {
+    "content": "1, 2, 3, 4\n10, 20, 30, 40",
+    "manifest": "Suspendisse et fermentum lectus",
+    "description": "Dummy tensor",
+    "tags": ["dummy", "tensor"],
+}
+
+tensor2 = {
+    "content": "-1, -2, -3, -4,\n-100, -200, -300, -400",
+    "manifest": "Suspendisse et fermentum lectus",
+    "description": "Negative Dummy tensor",
+    "tags": ["negative", "dummy", "tensor"],
+}
+
+dataset = {
+    "name": "Dummy Dataset",
+    "description": "Neque porro quisquam",
+    "manifest": "Sed vehicula mauris non turpis sollicitudin congue.",
+    "tags": ["#hashtag", "#dummy", "#original"],
+    "created_at": "05/12/2018",
+    "tensors": {"train": tensor1.copy(), "test": tensor2.copy()},
+}
+
 
 @pytest.fixture
 def cleanup(database):
@@ -27,12 +52,16 @@ def cleanup(database):
         database.session.query(Group).delete()
         database.session.query(UserGroup).delete()
         database.session.query(Request).delete()
+        database.session.query(DatasetGroup).delete()
+        database.session.query(BinObject).delete()
+        database.session.query(JsonObject).delete()
+        database.session.query(StorageMetadata).delete()
+
         database.session.commit()
     except:
         database.session.rollback()
 
 
-@pytest.mark.skip(reason="This test need to be updated!")
 def test_create_request(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
@@ -46,7 +75,11 @@ def test_create_request(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
 
-    object_id = "61612325"
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
+
+    # object_id = "61612325"
+    object_id = dataset_json["tensors"]["train"]["id"]
     reason = "sample reason"
     request_type = "permissions"
 
@@ -62,8 +95,8 @@ def test_create_request(client, database, cleanup):
     )
 
     response = result.get_json()
+
     assert result.status_code == 200
-    assert response["id"] == 1
     assert response["object_id"] == object_id
     assert response["reason"] == reason
     assert response["request_type"] == request_type
