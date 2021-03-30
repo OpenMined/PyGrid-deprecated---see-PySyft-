@@ -63,22 +63,22 @@ class Terraform:
         )
 
     def install_plugins(self, dir):
-        zip_file_suffix = str(platform.system()).lower()
-        if zip_file_suffix == "":
+        _os = str(platform.system()).lower()
+        if _os == "":
             raise Exception("Can not determine operating system")
-        elif zip_file_suffix == "java":
+        elif _os == "java":
             raise Exception("Terraform does not support this operating system")
 
         file_dir = os.path.join(
-            dir, f"registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
+            dir, f"registry.terraform.io/hashicorp/aws/3.30.0/{_os}_amd64/"
         )
         if not os.path.exists(file_dir):
             return subprocess.run(
                 f"""
                 echo "Install terraform plugins"
-                mkdir -p "registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
-                wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_{zip_file_suffix}_amd64.zip
-                unzip terraform-provider-aws_3.30.0_{zip_file_suffix}_amd64.zip -d "registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
+                mkdir -p "registry.terraform.io/hashicorp/aws/3.30.0/{_os}_amd64/"
+                wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_{_os}_amd64.zip
+                unzip terraform-provider-aws_3.30.0_{_os}_amd64.zip -d "registry.terraform.io/hashicorp/aws/3.30.0/{_os}_amd64/"
                 """
                 if self.provider == "aws"
                 else "",
