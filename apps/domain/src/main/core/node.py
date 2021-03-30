@@ -116,8 +116,6 @@ def create_domain_app(app, args, testing=False):
         association_requests_blueprint, url_prefix=r"/association-requests/"
     )
 
-    # Register global middlewares
-    app.wsgi_app = SleepyUntilConfigured(app.wsgi_app)
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
     # sockets.register_blueprint()
@@ -130,8 +128,11 @@ def create_domain_app(app, args, testing=False):
     # Set SQLAlchemy configs
     set_database_config(app, test_config=test_config)
     s = app.app_context().push()
-
     db.create_all()
+
+    # Register global middlewares
+    # Always after context is pushed 
+    app.wsgi_app = SleepyUntilConfigured(app.wsgi_app)
 
     if not testing:
         if len(db.session.query(Role).all()) == 0:
