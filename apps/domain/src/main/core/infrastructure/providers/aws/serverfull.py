@@ -174,7 +174,9 @@ class AWS_Serverfull(AWS):
             else:
                 instance_name = f"pygrid-{self.config.app.name}-instance-{count}"
                 user_data = self.write_domain_exec_script(app, index=count)
-                subnet_ids = [var(public_subnet.id) for _, public_subnet in self.subnets]
+                subnet_ids = [
+                    var(public_subnet.id) for _, public_subnet in self.subnets
+                ]
 
             instance = Module(
                 f"pygrid-instance-{count}",
@@ -188,7 +190,7 @@ class AWS_Serverfull(AWS):
                 vpc_security_group_ids=[var(self.security_group.id)],
                 subnet_ids=subnet_ids,
                 user_data=user_data,
-                tags={"Name": instance_name}
+                tags={"Name": instance_name},
             )
 
             self.tfscript += instance
