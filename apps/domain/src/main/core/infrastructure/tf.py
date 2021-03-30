@@ -78,7 +78,7 @@ class Terraform:
                 echo "Install terraform plugins"
                 mkdir -p "registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
                 wget https://releases.hashicorp.com/terraform-provider-aws/3.30.0/terraform-provider-aws_3.30.0_{zip_file_suffix}_amd64.zip
-                unzip terraform-provider-aws_3.30.0_linux_amd64.zip -d "registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
+                unzip terraform-provider-aws_3.30.0_{zip_file_suffix}_amd64.zip -d "registry.terraform.io/hashicorp/aws/3.30.0/{zip_file_suffix}_amd64/"
                 """
                 if self.provider == "aws"
                 else "",
