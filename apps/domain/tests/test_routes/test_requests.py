@@ -239,7 +239,6 @@ def test_update_request(client, database, cleanup):
     assert response["status"] == "accepted"
 
 
-@pytest.mark.skip(reason="Should be made in integration tests")
 def test_delete_request(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
@@ -247,13 +246,15 @@ def test_delete_request(client, database, cleanup):
     database.session.add(new_user)
 
     database.session.commit()
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    object_id = "61612325"
+    object_id = dataset_json["tensors"]["train"]["id"]
     reason = "this is a sample reason"
     request_type = "budget"
 
@@ -267,7 +268,7 @@ def test_delete_request(client, database, cleanup):
         headers=headers,
     )
 
-    request_id = "1"
+    request_id = create.get_json()["id"]
 
     result = client.delete(
         "/dcfl/requests/" + request_id,
