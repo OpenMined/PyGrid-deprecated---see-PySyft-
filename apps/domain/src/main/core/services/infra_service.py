@@ -104,7 +104,7 @@ def create_worker_msg(
 
         config = Config(
             app=Config(name="worker", count=1, id=len(node.environments.all()) + 1),
-            apps=[Config(name="worker", count=1)],
+            apps=[Config(name="worker", count=1, port=5001)],
             serverless=False,
             websockets=False,
             provider=os.environ["CLOUD_PROVIDER"],
@@ -135,25 +135,16 @@ def create_worker_msg(
             new_env = node.environments.register(**env_parameters)
             deployed, output = deployment.deploy()  # Deploy
             if deployed:
-                worker_client = connect(
-                    url="http://" + output["instance_0_endpoint"]["value"][0],
-                    conn_type=GridHTTPConnection,  # HTTP Connection Protocol
-                )
-
                 node.environments.set(
                     id=config.app.id,
                     created_at=datetime.now(),
                     state=states["success"],
                     address=output["instance_0_endpoint"]["value"][0],
-                    syft_address=serialize(worker_client.address)
-                    .SerializeToString()
-                    .decode("ISO-8859-1"),
                 )
 
                 node.environments.association(
                     user_id=_current_user_id, env_id=new_env.id
                 )
-                node.in_memory_client_registry[worker_client.domain_id] = worker_client
             else:
                 node.environments.set(id=config.app.id, state=states["failed"])
                 raise Exception("Worker creation failed!")
@@ -188,7 +179,26 @@ def get_worker_msg(
         is_admin = users.can_manage_infrastructure(user_id=_current_user_id)
 
         if (int(worker_id) in env_ids) or is_admin:
+            worker = node.environments.first(id=int(worker_id))
+            try:
+                worker_client = connect(
+                    url="http://" + worker.address + ":5000",
+                    conn_type=GridHTTPConnection,  # HTTP Connection Protocol
+                )
 
+                node.environments.set(
+                    id=worker.id,
+                    syft_address=serialize(worker_client.address)
+                    .SerializeToString()
+                    .decode("ISO-8859-1"),
+                )
+
+                node.in_memory_client_registry[worker_client.domain_id] = worker_client
+            except Exception as e:
+                print("Exception type: ", type(e))
+                return GetWorkerResponse(
+                    address=msg.reply_to, status_code=500, content={"error": str(e)}
+                )
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
             _msg = {}
@@ -205,7 +215,7 @@ def get_workers_msg(
 ) -> GetWorkersResponse:
     try:
         _current_user_id = msg.content.get("current_user", None)
-        include_all = msg.content.get("include_all", False)
+        include_all = msg.content.get("include_all", True)
         include_failed = msg.content.get("include_failed", False)
         include_destroyed = msg.content.get("include_destroyed", False)
 
