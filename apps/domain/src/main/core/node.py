@@ -5,6 +5,8 @@ from ..utils.monkey_patch import mask_payload_fast
 from nacl.signing import SigningKey
 from nacl.encoding import HexEncoder
 
+from .sleepy_until_configured import SleepyUntilConfigured
+
 # Threads
 from ..utils.executor import executor
 
@@ -114,6 +116,8 @@ def create_domain_app(app, args, testing=False):
         association_requests_blueprint, url_prefix=r"/association-requests/"
     )
 
+    # Register global middlewares
+    app.wsgi_app = SleepyUntilConfigured(app.wsgi_app)
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
     # sockets.register_blueprint()
