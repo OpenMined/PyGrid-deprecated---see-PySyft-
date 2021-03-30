@@ -9,11 +9,6 @@ from ...exceptions import ModelNotFoundError
 from ...manager.database_manager import DatabaseManager
 from ..models.ai_model import Model, ModelCheckPoint
 
-# from syft.execution.placeholder import PlaceHolder
-# from syft.execution.state import State
-# from syft.serde import protobuf
-# from syft_proto.execution.v1.state_pb2 import State as StatePB
-
 
 class ModelCheckPointManager(DatabaseManager):
 

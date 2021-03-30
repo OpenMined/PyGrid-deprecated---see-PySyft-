@@ -9,7 +9,6 @@ from ...exceptions import (
 # PyGrid imports
 from ...manager.database_manager import DatabaseManager
 
-# from ...warehouse import Warehouse
 from ..syft_assets import plans, protocols
 from .config import Config
 from .fl_process import FLProcess

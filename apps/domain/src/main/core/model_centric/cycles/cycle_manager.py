@@ -285,9 +285,6 @@ class CycleManager(DatabaseManager):
             # each diff is list [param1, param2, ...] of len == model params
             # diff_avg is list [param1_avg, param2_avg, ...] of len == model params
             if iterative_plan:
-                # print(diffs[0])
-                # for i in range(100):
-                #     print(len(diffs))
                 diff_avg = diffs[0]
                 for i, diff in enumerate(diffs[1:]):
                     diff_avg = avg_plan(
@@ -315,17 +312,10 @@ class CycleManager(DatabaseManager):
 
         logging.info("diff_avg shapes: %s" % str([d.shape for d in diff_avg]))
 
-        # apply avg diff!
-        # _updated_model_params = [
-        #     diff_param
-        #     for model_param, diff_param in zip(model_params, diff_avg)
-        # ]
         _updated_model_params = [
             model_param - diff_param
             for model_param, diff_param in zip(model_params, diff_avg)
         ]
-
-        print(_updated_model_params[0])
 
         logging.info(
             "_updated_model_params shapes: %s"

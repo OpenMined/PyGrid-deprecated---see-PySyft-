@@ -96,8 +96,6 @@ def assign_worker_id(message: dict, socket=None) -> dict:
         # Create worker instance
         worker_manager.create(worker_id)
 
-        requires_speed_test = True
-
         response[CYCLE.STATUS] = RESPONSE_MSG.SUCCESS
         response[MSG_FIELD.WORKER_ID] = worker_id
 
@@ -116,7 +114,6 @@ def requires_speed_test(model_name, model_version):
 
     server_config, _ = process_manager.get_configs(**kwargs)
 
-    #
     return (
         True
         if (
@@ -253,7 +250,6 @@ def report(message: dict, socket=None) -> dict:
         request_key = data.get(CYCLE.KEY, None)
 
         # It's simpler for client (and more efficient for bandwidth) to use base64
-        # diff = unhexlify()
         diff = base64.b64decode(data.get(CYCLE.DIFF, None).encode())
 
         # Submit model diff and run cycle and task async to avoid block report request
