@@ -76,7 +76,7 @@ def create_request_msg(
     object_id = msg.content.get("object_id", None)
     reason = msg.content.get("reason", None)
     request_type = msg.content.get("request_type", None)
-    object_type = msg.content.get("object_type", "")
+    object_type = msg.content.get("object_type", "storable object")
 
     users = node.users
 
@@ -96,9 +96,7 @@ def create_request_msg(
 
     if _duplicate_request:
         raise DuplicateRequestException(
-            f"You have already requested {msg.object_id} ",
-            node.data_requests.all(),
-            "My Requests",
+            "You have already requested {}".format(msg.content["object_id"])
         )
 
     # Check if object_id/reason/request_type fields are empty

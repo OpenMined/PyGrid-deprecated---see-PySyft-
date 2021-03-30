@@ -102,6 +102,57 @@ def test_create_request(client, database, cleanup):
     assert response["status"] == "pending"
 
 
+def test_create_duplicate_fail(client, database, cleanup):
+    new_role = create_role(*owner_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+
+    database.session.commit()
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+
+    object_id = dataset_json["tensors"]["train"]["id"]
+    reason = "sample reason"
+    request_type = "permissions"
+
+    result1 = client.post(
+        "/dcfl/requests",
+        json={
+            "object_id": object_id,
+            "reason": reason,
+            "request_type": request_type,
+        },
+        headers=headers,
+    )
+
+    result1 = client.get(
+        "/dcfl/requests", headers=headers, content_type="application/json"
+    )
+
+    result2 = client.post(
+        "/dcfl/requests",
+        json={
+            "object_id": object_id,
+            "reason": reason,
+            "request_type": request_type,
+        },
+        headers=headers,
+    )
+
+    assert result1.status_code == 200
+    assert object_id in [el["object_id"] for el in result1.get_json()]
+    assert reason in [el["reason"] for el in result1.get_json()]
+    assert request_type in [el["request_type"] for el in result1.get_json()]
+
+    assert result2.status_code == 403
+
+
 def test_get_specific_request(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
