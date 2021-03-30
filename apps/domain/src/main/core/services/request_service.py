@@ -63,6 +63,7 @@ from ..exceptions import (
     InvalidParameterValueError,
 )
 from ..database.utils import model_to_json
+from ..datasets.dataset_ops import update_dataset_metadata
 
 
 def create_request_msg(
@@ -251,9 +252,8 @@ def update_request_msg(
                 "verify_key": verify_key.encode(encoder=HexEncoder).decode("utf-8"),
                 "request_id": request_id,
             }
-            storage.update_dataset_metadata(
-                key=object_id, read_permissions=read_permission
-            )
+
+            update_dataset_metadata(key=object_id, read_permissions=read_permission)
 
         # TODO:
         # 1 - The logic to change a user privacy budget needs to be implemented,

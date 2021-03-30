@@ -181,8 +181,6 @@ def test_get_all_requests(client, database, cleanup):
         "/dcfl/requests", headers=headers, content_type="application/json"
     )
 
-    # import pdb; pdb.set_trace()
-
     response = result.get_json()
     assert result.status_code == 200
     assert object_id in [el["object_id"] for el in response]
@@ -190,7 +188,6 @@ def test_get_all_requests(client, database, cleanup):
     assert request_type in [el["request_type"] for el in response]
 
 
-@pytest.mark.skip(reason="Should be made in integration tests")
 def test_update_request(client, database, cleanup):
     new_role = create_role(*owner_role)
     database.session.add(new_role)
@@ -198,13 +195,15 @@ def test_update_request(client, database, cleanup):
     database.session.add(new_user)
 
     database.session.commit()
+    storage = DiskObjectStore(database)
+    dataset_json = create_dataset(dataset)
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
     }
 
-    object_id = "61612325"
+    object_id = dataset_json["tensors"]["train"]["id"]
     reason = "this is a sample reason"
     request_type = "budget"
 
@@ -219,7 +218,7 @@ def test_update_request(client, database, cleanup):
     )
 
     status = "accepted"
-    request_id = "1"
+    request_id = create.get_json()["id"]
 
     client.put(
         "/dcfl/requests/" + request_id,
@@ -236,8 +235,8 @@ def test_update_request(client, database, cleanup):
 
     response = result.get_json()
     assert result.status_code == 200
-    assert response["id"] == int(request_id)
-    # assert response["status"] == "accepted"
+    assert response["id"] == request_id
+    assert response["status"] == "accepted"
 
 
 @pytest.mark.skip(reason="Should be made in integration tests")
