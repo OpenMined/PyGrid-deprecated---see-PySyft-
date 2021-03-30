@@ -134,6 +134,11 @@ class AssociationRequestError(PyGridError):
         super().__init__(message)
 
 
+class AssociationError(PyGridError):
+    def __init__(self):
+        message = "Association ID not found!"
+
+
 class RequestError(PyGridError):
     def __init__(self):
         message = "Request ID not found!"

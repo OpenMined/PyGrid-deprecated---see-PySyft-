@@ -45,6 +45,8 @@ from nacl.encoding import HexEncoder
 from nacl.signing import SigningKey
 from sqlalchemy_utils.functions import database_exists
 from syft.core.node.domain.domain import Domain
+import config
+from main.core.node import create_domain_app
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
 
@@ -69,7 +71,7 @@ logger = logging.getLogger()
 
 
 def create_app(
-    test_config: Optional[Dict] = None, secret_key=DEFAULT_SECRET_KEY, debug=False
+    args, secret_key=DEFAULT_SECRET_KEY, debug=False, testing=False
 ) -> Flask:
     """This method creates a new Flask App instance and attach it with some
     HTTP/Websocket bluetprints.
@@ -104,6 +106,10 @@ def create_app(
     # Register WebSocket blueprints
     # Here you should add all the blueprints related to WebSocket routes.
     sockets.register_blueprint(ws, url_prefix=r"/")
+    # sockets = Sockets(app)
+
+    # Create Domain APP
+    app = create_domain_app(app=app, args=args, testing=testing)
 
     app.debug = debug
     app.config["SECRET_KEY"] = secret_key
