@@ -177,7 +177,6 @@ class AWS_Serverfull(AWS):
                 }
             else:
                 instance_name = f"pygrid-{self.config.app.name}-instance-{count}"
-                self.write_exec_script(app, index=count)
                 kwargs = {
                     "name": instance_name,
                     "subnet_ids": [

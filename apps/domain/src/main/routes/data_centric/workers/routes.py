@@ -388,10 +388,12 @@ def delete_autoscaling_condition(autoscaling_id):
         json.dumps(response_body), status=status_code, mimetype="application/json"
     )
 """
-
 import json
 
 from flask import Response, request
+from syft.grid.messages.infra_messages import (
+    GetWorkerInstanceTypeMessage,
+)  # noqa isort:skip
 
 from ....core.task_handler import route_logic
 from ...auth import error_handler, token_required
@@ -401,6 +403,24 @@ from syft.grid.messages.infra_messages import CreateWorkerMessage  # noqa isort:
 from syft.grid.messages.infra_messages import DeleteWorkerMessage  # noqa isort:skip
 from syft.grid.messages.infra_messages import GetWorkerMessage  # noqa isort:skip
 from syft.grid.messages.infra_messages import GetWorkersMessage  # noqa isort:skip
+
+
+@dcfl_route.route("/workers/instances", methods=["GET"])
+@token_required
+def get_worker_instance_types(current_user):
+    content = request.get_json()
+
+    if not content:
+        content = {}
+
+    status_code, response_msg = error_handler(
+        route_logic, GetWorkerInstanceTypeMessage, current_user, content
+    )
+
+    response = response_msg if isinstance(response_msg, dict) else response_msg.content
+    return Response(
+        json.dumps(response), status=status_code, mimetype="application/json"
+    )
 
 
 @dcfl_route.route("/workers", methods=["POST"])
