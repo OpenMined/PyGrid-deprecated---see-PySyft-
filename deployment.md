@@ -58,7 +58,7 @@ gcloud auth application-default login
 
 #### AZURE credentials
 
-You need to these keys
+You need these keys
 
 ```shell
 application_id = "APPLICATION_ID"
@@ -199,6 +199,6 @@ Serverless deployment has risen in popularity in recent years for a variety of r
 
 As such, PyGrid Domains and Networks, which are simply message forwarding services and API’s with an attached SQL database, are great candidates for serverless deployment. Workers, on the other hand, due to their specific hardware requirements necessary for computation, should always be deployed in a “serverfull” (traditional) configuration. While this may sound expensive, if a Worker is deployed to a cloud provider then the data scientist has the ability to turn on and off the instance (the Worker) at their discretion.
 
-Note: The PyGrid team wrote an initial serverless deployment setup for Domains and Networks. But, currently this functionality does not exist in a completed form. The current constraints are actually due to the fact that `PySyft` has a hard dependency on PyTorch at the moment. Currently it’s not possible to utilize only the class structure required for parsing messages from PySyft without having to install PyTorch as well. Serverless functions often come with file size constraints, making this impossible or unrealistic. It’s the PyGrid team’s hope that this dependency is later marked as optional, allowing the team to simply utilize the PySyft class structure inside of PyGrid, without depending on any deep learning framework functionality.
+*Note: The PyGrid team wrote an initial serverless deployment setup for Domains and Networks. But, currently this functionality does not exist in a completed form. The current constraints are actually due to the fact that `PySyft` has a hard dependency on PyTorch at the moment. Currently it’s not possible to utilize only the class structure required for parsing messages from PySyft without having to install PyTorch as well. Serverless functions often come with file size constraints, making this impossible or unrealistic. It’s the PyGrid team’s hope that this dependency is later marked as optional, allowing the team to simply utilize the PySyft class structure inside of PyGrid, without depending on any deep learning framework functionality.*
 
 If serverless deployment becomes a reality for Domains and Networks, then it is our suggestion that you deploy Domains and Networks in a serverless configuration. This is the optimal method of deployment given cost, scaling concerns, and maintenance effort. Using this method, it could mean that a data owner would be able to host their private data in a PyGrid serverless deployment, and never need to be concerned with ongoing scale or maintenance of their deployment - truly a “set it and forget it” situation.
