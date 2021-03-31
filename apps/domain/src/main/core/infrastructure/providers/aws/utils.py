@@ -51,17 +51,38 @@ def get_vpc_config() -> Config:
     return Config(region=region, av_zones=av_zones)
 
 
-def get_instance_type(region):
+instance_type_filters = {
+    "Accelerated Computing Instances(GPU)": [
+        {"Name": "instance-type", "Values": ["p*"]}
+    ],
+    "Compute Optimized Instances": [{"Name": "instance-type", "Values": ["c5*"]}],
+    "General Purpose Instances": [{"Name": "instance-type", "Values": ["t2*"]}],
+    "Free Tier Instances": [{"Name": "free-tier-eligible", "Values": ["true"]}],
+}
 
-    instance_type_filters = {
-        "Accelerated Computing Instances(GPU)": [
-            {"Name": "instance-type", "Values": ["p*"]}
-        ],
-        "Compute Optimized Instances": [{"Name": "instance-type", "Values": ["c5*"]}],
-        "General Purpose Instances": [{"Name": "instance-type", "Values": ["t2*"]}],
-        "Free Tier Instances": [{"Name": "free-tier-eligible", "Values": ["true"]}],
+
+def get_all_instance_types_by_filter(client, filter):
+    response = client.describe_instance_types(Filters=instance_type_filters[filter])
+    instances = response["InstanceTypes"]
+
+    while "NextToken" in response.keys():
+        response = client.describe_instance_types(
+            Filters=instance_type_filters[filter], NextToken=response["NextToken"]
+        )
+        instances += response["InstanceTypes"]
+    return instances
+
+
+def get_all_instance_types(region):
+    client = boto3.client("ec2", region_name=region)
+    instance_types = {
+        category: get_all_instance_types_by_filter(client, filter)
+        for category, filter in instance_type_filters.values()
     }
+    return instance_types
 
+
+def get_instance_type(region):
     # Choose instance category
     client = boto3.client("ec2", region_name=region)
     instance_category = prompt(
@@ -89,6 +110,14 @@ def get_instance_type(region):
             NextToken=response["NextToken"],
         )
         instances += response["InstanceTypes"]
+
+    # filter = instance_type_filters[instance_category]
+    # instances = get_all_instance_types_by_filter(client, filter)
+
+    if len(instances) == 0:
+        raise Exception(
+            "This region has no instances belonging to your chosen instance category. \nPlease choose a different pair of region and instance category"
+        )
 
     # Sort instances
     sorted_instances = (
