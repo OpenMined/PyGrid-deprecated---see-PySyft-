@@ -11,6 +11,14 @@ Check Instructions here:
 
 ## Installing the CLI
 
+### Using pip (recommended)
+
+```shell
+pip install pygrid-cli
+```
+
+### Manual install
+
 To get started, install the CLI first through thess commands:
 
 Clone PyGrid Repo:
