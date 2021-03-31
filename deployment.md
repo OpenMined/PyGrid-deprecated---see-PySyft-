@@ -38,17 +38,14 @@ aws_access_key_id=XXXXXXXXXXXXXX
 aws_secret_access_key=XXXXXXXXXXXXXXXXXXXX
 ```
 
-- Resources to create new IAM user with programmatic access:
-https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html
-- Instructions for finding your keys are here:
-https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys
+- [Instructions to create new IAM user with programmatic access](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html)
+- [Instructions for finding your keys](https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.html#access-keys-and-secret-access-keys)
 
 #### GCP credentials
 
 You will need to use a [GCP service account](https://cloud.google.com/docs/authentication/getting-started) to provide authentication and obtain required credentials
 
-Instructions for adding credentials here:
-https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started#adding-credentials
+[Instructions for adding credentials](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/getting_started#adding-credentials)
 
 Or through using [GCloud CLI](https://cloud.google.com/sdk/docs/install) and loggining to your GCP provider through this command:
 
@@ -70,11 +67,8 @@ key = "KEY"
 and provide them to PyGrid CLI as AZURE credentials
 
 
-- Instructions for finding values for subscription_id:
-https://blogs.msdn.microsoft.com/mschray/2015/05/13/getting-your-azure-guid-subscription-id/
-
-- Instructions for finding values for tenant_id, application_id, key:
-https://docs.microsoft.com/en-ca/azure/active-directory/develop/howto-create-service-principal-portal
+- [Instructions for finding values for subscription_id](https://blogs.msdn.microsoft.com/mschray/2015/05/13/getting-your-azure-guid-subscription-id/)
+- [Instructions for finding values for tenant_id, application_id, and key](https://docs.microsoft.com/en-ca/azure/active-directory/develop/howto-create-service-principal-portal)
 
 
 ## Installing the CLI
