@@ -10,7 +10,7 @@ with open(os.path.join(here, "deployment.md"), encoding="utf-8") as f:
 
 setup(
     name="pygrid-cli",
-    version="0.0.1-alpha",
+    version="0.5.0",
     description="OpenMined PyGrid CLI for Infrastructure and cloud deployment",
     long_description=long_description,
     long_description_content_type="text/markdown",
