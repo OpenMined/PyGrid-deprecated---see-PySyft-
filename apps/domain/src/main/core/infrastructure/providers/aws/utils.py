@@ -62,22 +62,28 @@ instance_type_filters = {
 
 
 def get_all_instance_types_by_filter(client, filter):
-    response = client.describe_instance_types(Filters=instance_type_filters[filter])
+    response = client.describe_instance_types(Filters=filter)
     instances = response["InstanceTypes"]
 
     while "NextToken" in response.keys():
         response = client.describe_instance_types(
-            Filters=instance_type_filters[filter], NextToken=response["NextToken"]
+            Filters=filter, NextToken=response["NextToken"]
         )
         instances += response["InstanceTypes"]
     return instances
 
 
+def get_all_instance_names_by_filter(client, filter):
+    instances = get_all_instance_types_by_filter(client, filter)
+    instance_names = [i["InstanceType"] for i in instances]
+    return instance_names
+
+
 def get_all_instance_types(region):
     client = boto3.client("ec2", region_name=region)
     instance_types = {
-        category: get_all_instance_types_by_filter(client, filter)
-        for category, filter in instance_type_filters.values()
+        category: get_all_instance_names_by_filter(client, filter)
+        for category, filter in instance_type_filters.items()
     }
     return instance_types
 
@@ -98,21 +104,8 @@ def get_instance_type(region):
         style=styles.second,
     )["instanceCategory"]
 
-    # Get all instances in specific category
-    response = client.describe_instance_types(
-        Filters=instance_type_filters[instance_category]
-    )
-    instances = response["InstanceTypes"]
-
-    while "NextToken" in response.keys():
-        response = client.describe_instance_types(
-            Filters=instance_type_filters[instance_category],
-            NextToken=response["NextToken"],
-        )
-        instances += response["InstanceTypes"]
-
-    # filter = instance_type_filters[instance_category]
-    # instances = get_all_instance_types_by_filter(client, filter)
+    filter = instance_type_filters[instance_category]
+    instances = get_all_instance_types_by_filter(client, filter)
 
     if len(instances) == 0:
         raise Exception(
