@@ -49,6 +49,7 @@ from ...core.infrastructure import (
 )
 from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError, MissingRequestKeyError
+import requests
 
 # TODO: Modify existing routes or add new ones, to
 # 1. allow admin to get all workers deployed by a specific user
@@ -126,30 +127,25 @@ def create_worker_msg(
             pass
 
         if deployment.validate():
-            env_parameters = {
-                "id": config.app.id,
-                "state": states["creating"],
-                "provider": config.provider,
-                "region": config.vpc.region,
-                "instance_type": config.vpc.instance_type.InstanceType,
-            }
-            new_env = node.environments.register(**env_parameters)
             deployed, output = deployment.deploy()  # Deploy
             if deployed:
-                node.environments.set(
-                    id=config.app.id,
-                    created_at=datetime.now(),
-                    state=states["success"],
-                    address=output["instance_0_endpoint"]["value"][0]
+                env_parameters = {
+                    "id": config.app.id,
+                    "provider": config.provider,
+                    "region": config.vpc.region,
+                    "instance_type": config.vpc.instance_type.InstanceType,
+                    "created_at": datetime.now(),
+                    "state": states["success"],
+                    "address": output["instance_0_endpoint"]["value"][0]
                     + ":"
                     + str(_worker_port),
-                )
-
+                }
+                new_env = node.environments.register(**env_parameters)
                 node.environments.association(
                     user_id=_current_user_id, env_id=new_env.id
                 )
             else:
-                node.environments.set(id=config.app.id, state=states["failed"])
+                # node.environments.set(id=config.app.id, state=states["failed"])
                 raise Exception("Worker creation failed!")
         final_msg = "Worker created successfully!"
         return CreateWorkerResponse(
@@ -183,6 +179,7 @@ def get_worker_msg(
 
         if (int(worker_id) in env_ids) or is_admin:
             worker = node.environments.first(id=int(worker_id))
+
             try:
                 worker_client = connect(
                     url="http://" + worker.address,
@@ -198,9 +195,10 @@ def get_worker_msg(
 
                 node.in_memory_client_registry[worker_client.domain_id] = worker_client
             except Exception as e:
-                print("Exception type: ", type(e))
                 return GetWorkerResponse(
-                    address=msg.reply_to, status_code=500, content={"error": str(e)}
+                    address=msg.reply_to,
+                    status_code=500,
+                    content={"error": str(e)},
                 )
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:
