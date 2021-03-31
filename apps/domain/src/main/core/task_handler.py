@@ -22,6 +22,10 @@ from .exceptions import (
     InvalidCredentialsError,
 )
 
+from flask_executor import Executor
+
+executor = Executor()  # noqa: 401
+
 
 def process_as_syft_message(message_class, message_content, sign_key):
     message = message_class(**message_content)

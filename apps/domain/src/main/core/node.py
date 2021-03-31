@@ -14,6 +14,7 @@ from ..routes import (
     setup_blueprint,
     groups_blueprint,
     dcfl_blueprint,
+    # mcfl_blueprint,
     association_requests_blueprint,
     root_blueprint,
     search_blueprint,
@@ -109,6 +110,7 @@ def create_domain_app(app, args, testing=False):
     app.register_blueprint(setup_blueprint, url_prefix=r"/setup/")
     app.register_blueprint(groups_blueprint, url_prefix=r"/groups")
     app.register_blueprint(dcfl_blueprint, url_prefix=r"/dcfl/")
+    # app.register_blueprint(mcfl_blueprint, url_prefix=r"/model-centric/")
     app.register_blueprint(root_blueprint, url_prefix=r"/")
     app.register_blueprint(
         association_requests_blueprint, url_prefix=r"/association-requests/"
