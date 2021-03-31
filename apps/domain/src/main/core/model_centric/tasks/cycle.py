@@ -2,8 +2,8 @@
 import logging
 import traceback
 
-# Local imports
-from ...task_handler import executor
+# Threads
+from ....utils.executor import executor
 
 
 def run_task_once(name, func, *args):
