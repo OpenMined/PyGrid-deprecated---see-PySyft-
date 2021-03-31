@@ -1,4 +1,4 @@
-# Deployment & CLI
+# Deployment using PyGrid CLI
 
 OpenMined PyGrid CLI provide the necessary support for Infrastructure and Deployment management of various PyGrid apps (Domains and Networks) to the main cloud providers ([AWS](https://aws.amazon.com/), [GCP](https://cloud.google.com/), [Azure](https://azure.microsoft.com/)) through the usage of [Terraform](https://www.terraform.io/) and [TerraScript](https://github.com/mjuenema/python-terrascript) integrated within the CLI.
 
