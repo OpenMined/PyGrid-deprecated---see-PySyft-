@@ -10,13 +10,13 @@ Check Instructions here:
 
 ## Cloud Providers
 
-PyGrid CLI provide the full suport for the following cloud providers
+PyGrid CLI provides full support for the following cloud providers
 
-- **Amazon Web Services ([AWS](https://aws.amazon.com/))**: Serverfull deployment
+- **Amazon Web Services ([AWS](https://aws.amazon.com/))**
 
-- **Google Cloud Platform ([GCP](https://cloud.google.com/))**: Serverfull deployment
+- **Google Cloud Platform ([GCP](https://cloud.google.com/))**
 
-- **Microsoft Cloud Computing Services [Azure](https://azure.microsoft.com/en-us/)**: Serverfull deployment
+- **Microsoft Cloud Computing Services ([Azure](https://azure.microsoft.com/en-us/)**)
 
 ### Getting Cloud Credentials
 
