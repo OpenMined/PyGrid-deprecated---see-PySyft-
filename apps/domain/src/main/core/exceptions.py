@@ -85,8 +85,11 @@ class InvalidParameterValueError(PyGridError):
             message = "Passed paramater value not valid!"
         super().__init__(message)
 
+
 class AppInSleepyMode(PyGridError):
     def __init__(self, message=""):
         if not message:
-            message = "This app is in sleep mode. Please undergo the initial setup first"
+            message = (
+                "This app is in sleep mode. Please undergo the initial setup first"
+            )
         super().__init__(message)

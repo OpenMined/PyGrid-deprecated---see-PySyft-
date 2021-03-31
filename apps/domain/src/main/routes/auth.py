@@ -19,6 +19,7 @@ from ..core.exceptions import (
 )
 from ..core.database import User, db
 
+
 def token_required_factory(get_token, format_result, optional=False):
     def decorator(f):
         @wraps(f)

@@ -131,8 +131,8 @@ def create_domain_app(app, args, testing=False):
     db.create_all()
 
     # Register global middlewares
-    # Always after context is pushed 
-    app.wsgi_app = SleepyUntilConfigured(app,app.wsgi_app)
+    # Always after context is pushed
+    app.wsgi_app = SleepyUntilConfigured(app, app.wsgi_app)
 
     if not testing:
         if len(db.session.query(Role).all()) == 0:
