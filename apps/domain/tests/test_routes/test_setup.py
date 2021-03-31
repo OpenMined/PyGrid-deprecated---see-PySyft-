@@ -66,7 +66,7 @@ def test_initial_setup(client, database, cleanup):
         json={
             "email": "ionesio@email.com",
             "password": "testing",
-            "node_name": "OpenMined Node",
+            "domain_name": "OpenMined Domain",
         },
     )
     assert result.status_code == 200
@@ -90,7 +90,7 @@ def test_get_setup(client, database, cleanup):
         json={
             "email": "ionesio@email.com",
             "password": "testing",
-            "node_name": "OpenMined Node",
+            "domain_name": "OpenMined Domain",
         },
     )
 
@@ -102,14 +102,14 @@ def test_get_setup(client, database, cleanup):
     assert result.status_code == 200
     assert result.get_json() == {
         "id": 1,
-        "node_name": "OpenMined Node",
+        "domain_name": "OpenMined Domain",
         "private_key": "",
         "aws_credentials": "",
         "gcp_credentials": "",
         "azure_credentials": "",
         "cache_strategy": "",
         "replicate_db": False,
-        "auto_scale": "",
+        "auto_scale": False,
         "tensor_expiration_policy": 0,
         "allow_user_signup": False,
     }
