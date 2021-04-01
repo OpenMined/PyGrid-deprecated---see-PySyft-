@@ -9,6 +9,7 @@ from flask import current_app as app
 import torch as th
 import pytest
 import jwt
+import os
 
 from src.main.core.database.store_disk import (
     DiskObjectStore,
@@ -135,9 +136,10 @@ def test_create_dataset(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
 
-    file1 = open("tests/test_routes/mtcars_train.csv", "rb")
+    folder = os.path.dirname(__file__)
+    file1 = open(f"{folder}/mtcars_train.csv", "rb")
     file1 = file1.read().decode("utf-8")
-    file2 = open("tests/test_routes/mtcars_test.csv", "rb")
+    file2 = open(f"{folder}/mtcars_test.csv", "rb")
     file2 = file2.read().decode("utf-8")
 
     payload = {
@@ -153,7 +155,7 @@ def test_create_dataset(client, database, cleanup):
     }
 
     result = client.post(
-        "/dcfl/datasets",
+        "/data-centric/datasets",
         headers=headers,
         data=dumps(payload),
         content_type="multipart/form-data",
@@ -211,7 +213,7 @@ def test_get_all_datasets_metadata(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/dcfl/datasets", headers=headers, content_type="application/json"
+        "/data-centric/datasets", headers=headers, content_type="application/json"
     )
 
     assert result.status_code == 200
@@ -245,7 +247,7 @@ def test_get_specific_dataset_metadata(client, database, cleanup):
         "token": token.decode("UTF-8"),
     }
     result = client.get(
-        "/dcfl/datasets/{}".format(df_metadata["id"]),
+        "/data-centric/datasets/{}".format(df_metadata["id"]),
         headers=headers,
         content_type="application/json",
     )
@@ -294,7 +296,7 @@ def test_update_dataset(client, database, cleanup):
     assert database.session.query(JsonObject).get(df_json1["id"]).binary == df_json1
 
     result = client.put(
-        "/dcfl/datasets/{}".format(df_json1["id"]),
+        "/data-centric/datasets/{}".format(df_json1["id"]),
         data=dumps(new_dataset),
         headers=headers,
         content_type="application/json",
@@ -363,7 +365,7 @@ def test_delete_dataset(client, database, cleanup):
     assert database.session.query(JsonObject).get(_id).binary["tags"] == dataset["tags"]
 
     result = client.delete(
-        "/dcfl/datasets/{}".format(_id),
+        "/data-centric/datasets/{}".format(_id),
         headers=headers,
         content_type="application/json",
     )

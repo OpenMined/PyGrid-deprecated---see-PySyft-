@@ -13,9 +13,82 @@ class AuthorizationError(PyGridError):
         super().__init__(message)
 
 
+class OwnerAlreadyExistsError(PyGridError):
+    def __init__(self, message=""):
+        if not message:
+            message = "This PyGrid domain already has an owner!"
+        super().__init__(message)
+
+
 class RoleNotFoundError(PyGridError):
     def __init__(self):
         message = "Role ID not found!"
+        super().__init__(message)
+
+
+class ModelNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Model ID not found!"
+        super().__init__(message)
+
+
+class CycleNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Cycle not found!"
+        super().__init__(message)
+
+
+class PlanNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Plan ID not found!"
+        super().__init__(message)
+
+
+class ProcessNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Not found any process related with this cycle and worker ID."
+        super().__init__(message)
+
+
+class ProtocolNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Protocol ID not found!"
+        super().__init__(message)
+
+
+class PlanInvalidError(PyGridError):
+    def __init__(self):
+        message = "Plan is not valid"
+        super().__init__(message)
+
+
+class PlanTranslationError(PyGridError):
+    def __init__(self):
+        message = "Failed to translate a Plan"
+        super().__init__(message)
+
+
+class WorkerNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Worker ID not found!"
+        super().__init__(message)
+
+
+class ProtocolNotFoundError(PyGridError):
+    def __init__(self):
+        message = "Protocol ID not found!"
+        super().__init__(message)
+
+
+class FLProcessConflict(PyGridError):
+    def __init__(self):
+        message = "FL Process already exists."
+        super().__init__(message)
+
+
+class MaxCycleLimitExceededError(PyGridError):
+    def __init__(self):
+        message = "There are no cycles remaining"
         super().__init__(message)
 
 

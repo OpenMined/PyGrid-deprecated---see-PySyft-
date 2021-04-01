@@ -70,9 +70,9 @@ from syft.core.node.common.service.obj_search_permission_service import (
     ImmediateObjectSearchPermissionUpdateService,
 )
 
-# import tenseal as ts
+import tenseal as ts
 
-# sy.load_lib("tenseal")
+sy.load("tenseal")
 
 
 class GridDomain(Domain):

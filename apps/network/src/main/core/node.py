@@ -46,7 +46,7 @@ def create_worker_app(app, args):
     return app
 
 
-def create_network_app(app, args):
+def create_network_app(app, args, testing=False):
     test_config = None
     if args.start_local_db:
         test_config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///nodedatabase.db"}
@@ -64,7 +64,7 @@ def create_network_app(app, args):
     # Here you should add all the blueprints related to WebSocket routes.
     # sockets.register_blueprint()
 
-    from .database import db, set_database_config, seed_db, User, Role
+    from .database import db, set_database_config, seed_network_db, User, Role
 
     global node
     node = GridNetwork(name=args.name)
@@ -75,9 +75,9 @@ def create_network_app(app, args):
 
     db.create_all()
 
-    if True:  # not app.config["TESTING"]:
+    if not testing:
         if len(db.session.query(Role).all()) == 0:
-            seed_db()
+            seed_network_db()
 
         role = db.session.query(Role.id).filter_by(name="Owner").first()
         user = User.query.filter_by(role=role.id).first()
@@ -97,7 +97,7 @@ def create_network_app(app, args):
     return app
 
 
-def create_domain_app(app, args):
+def create_domain_app(app, args, testing=False):
     test_config = None
     if args.start_local_db:
         test_config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///nodedatabase.db"}
@@ -129,7 +129,7 @@ def create_domain_app(app, args):
 
     db.create_all()
 
-    if not app.config["TESTING"]:
+    if not testing:
         if len(db.session.query(Role).all()) == 0:
             seed_db()
 
@@ -142,6 +142,7 @@ def create_domain_app(app, args):
             node.signing_key = signing_key
             node.verify_key = node.signing_key.verify_key
             node.root_verify_key = node.verify_key
+
     db.session.commit()
 
     app.config["EXECUTOR_PROPAGATE_EXCEPTIONS"] = True

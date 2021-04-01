@@ -41,6 +41,8 @@ from syft.proto.core.io.address_pb2 import Address as Address_PB
 from ...core.database.environment.environment import states
 from ...core.infrastructure import (
     AWS_Serverfull,
+    AZURE,
+    GCP,
     Config,
     Provider,
     aws_utils,
@@ -49,13 +51,22 @@ from ...core.infrastructure import (
 )
 from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError, MissingRequestKeyError
+import requests
 
 # TODO: Modify existing routes or add new ones, to
 # 1. allow admin to get all workers deployed by a specific user
 # 2. allow admin to get all workers deployed by all users
 
-SUPPORTED_PROVIDERS = ["aws"]  # todo: add azure and gcp after testing worker deployment
-PROVIDER_UTILS = {"aws": aws_utils}
+SUPPORTED_PROVIDERS = [
+    "aws",
+    "azure",
+    "gcp",
+]  # todo: add azure and gcp after testing worker deployment
+PROVIDER_UTILS = {
+    "aws": aws_utils,
+    "azure": azure_utils,
+    "gcp": gcp_utils,
+}
 
 
 def get_worker_instance_types_msg(
@@ -74,7 +85,14 @@ def get_worker_instance_types_msg(
         # But to deploy other instance types, example those which are costly, they would need to ask permission
         # This servide would then return only those instance types which the users has the permission to deploy
 
-        _msg = PROVIDER_UTILS[provider].get_all_instance_types(region)
+        if provider == "aws":
+            _msg = PROVIDER_UTILS[provider].get_all_instance_types(region)
+        elif provider == "gcp":
+            zone = os.environ.get("ZONE", None)
+            _msg = PROVIDER_UTILS[provider].get_all_instance_types(zone=zone)
+        elif provider == "azure":
+            location = os.environ.get("location", None)
+            _msg = PROVIDER_UTILS[provider].get_all_instance_types(location=location)
 
         return GetWorkerInstanceTypesResponse(
             address=msg.reply_to, status_code=200, content=_msg
@@ -108,10 +126,25 @@ def create_worker_msg(
             apps=[Config(name="worker", count=1, port=_worker_port)],
             serverless=False,
             websockets=False,
-            provider=os.environ["CLOUD_PROVIDER"],
+            provider=os.getenv("CLOUD_PROVIDER", "AWS"),
+            ##TODO(amr): encapsulate each cloud provider to config to aws, azure, gcp
             vpc=Config(
-                region=os.environ["REGION"],
+                region=os.getenv("REGION", None),
                 instance_type=Config(InstanceType=instance_type),
+            ),
+            azure=Config(
+                location=os.getenv("location", None),
+                subscription_id=os.getenv("subscription_id", None),
+                client_id=os.getenv("client_id", None),
+                client_secret=os.getenv("client_secret", None),
+                tenant_id=os.getenv("tenant_id", None),
+                vm_size=instance_type,
+            ),
+            gcp=Config(
+                project_id=os.getenv("project_id", None),
+                region=os.getenv("region", None),
+                zone=os.getenv("zone", None),
+                machine_type=instance_type,
             ),
         )
 
@@ -121,35 +154,40 @@ def create_worker_msg(
         if config.provider == "aws":
             deployment = AWS_Serverfull(config=config)
         elif config.provider == "azure":
-            pass
+            deployment = AZURE(config=config)
         elif config.provider == "gcp":
-            pass
+            deployment = GCP(config=config)
 
         if deployment.validate():
-            env_parameters = {
-                "id": config.app.id,
-                "state": states["creating"],
-                "provider": config.provider,
-                "region": config.vpc.region,
-                "instance_type": config.vpc.instance_type.InstanceType,
-            }
-            new_env = node.environments.register(**env_parameters)
             deployed, output = deployment.deploy()  # Deploy
             if deployed:
-                node.environments.set(
-                    id=config.app.id,
-                    created_at=datetime.now(),
-                    state=states["success"],
-                    address=output["instance_0_endpoint"]["value"][0]
+                env_parameters = {
+                    "id": config.app.id,
+                    "provider": config.provider,
+                    "created_at": datetime.now(),
+                    "state": states["success"],
+                    "address": output["instance_0_endpoint"]["value"][0]
                     + ":"
                     + str(_worker_port),
-                )
+                }
+                if config.provider == "aws":
+                    env_parameters["region"] = config.vpc.region
+                    env_parameters[
+                        "instance_type"
+                    ] = config.vpc.instance_type.InstanceType
+                elif config.provider == "azure":
+                    env_parameters["region"] = config.azure.location
+                    env_parameters["instance_type"] = config.azure.vm_size
+                elif config.provider == "gcp":
+                    env_parameters["region"] = config.gcp.region
+                    env_parameters["instance_type"] = config.gcp.machine_type
 
+                new_env = node.environments.register(**env_parameters)
                 node.environments.association(
                     user_id=_current_user_id, env_id=new_env.id
                 )
             else:
-                node.environments.set(id=config.app.id, state=states["failed"])
+                # node.environments.set(id=config.app.id, state=states["failed"])
                 raise Exception("Worker creation failed!")
         final_msg = "Worker created successfully!"
         return CreateWorkerResponse(
@@ -183,6 +221,7 @@ def get_worker_msg(
 
         if (int(worker_id) in env_ids) or is_admin:
             worker = node.environments.first(id=int(worker_id))
+
             try:
                 worker_client = connect(
                     url="http://" + worker.address,
@@ -198,9 +237,10 @@ def get_worker_msg(
 
                 node.in_memory_client_registry[worker_client.domain_id] = worker_client
             except Exception as e:
-                print("Exception type: ", type(e))
                 return GetWorkerResponse(
-                    address=msg.reply_to, status_code=500, content={"error": str(e)}
+                    address=msg.reply_to,
+                    status_code=500,
+                    content={"error": str(e)},
                 )
             _msg = model_to_json(node.environments.first(id=int(worker_id)))
         else:

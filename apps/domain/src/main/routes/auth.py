@@ -16,6 +16,7 @@ from ..core.exceptions import (
     AuthorizationError,
     MissingRequestKeyError,
     InvalidCredentialsError,
+    OwnerAlreadyExistsError,
 )
 from ..core.database import User, db
 
@@ -86,11 +87,13 @@ def error_handler(f, *args, **kwargs):
     except (GroupNotFoundError, RoleNotFoundError, UserNotFoundError) as e:
         status_code = 404  # Resource not found
         response_body[RESPONSE_MSG.ERROR] = str(e)
+    except (OwnerAlreadyExistsError) as e:
+        status_code = 409  # Conflict!
+        response_body[RESPONSE_MSG.ERROR] = str(e)
     except (TypeError, MissingRequestKeyError, PyGridError, JSONDecodeError) as e:
         status_code = 400  # Bad Request
         response_body[RESPONSE_MSG.ERROR] = str(e)
     except Exception as e:
-        print(type(e), str(e))
         status_code = 500  # Internal Server Error
         response_body[RESPONSE_MSG.ERROR] = str(e)
 
