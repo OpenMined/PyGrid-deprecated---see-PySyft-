@@ -88,7 +88,7 @@ def test_get_setup(client, database, cleanup):
             "node_name": "OpenMined Node",
         },
     )
-    #assert result.status_code == 200
+    # assert result.status_code == 200
     assert result.get_json() == {"msg": "Running initial setup!"}
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
