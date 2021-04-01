@@ -28,7 +28,7 @@ from ..exceptions import (
     MissingRequestKeyError,
     InvalidParameterValueError,
     AuthorizationError,
-    OwnerAlreadyExistsError
+    OwnerAlreadyExistsError,
 )
 from ..database.setup.setup import SetupConfig
 from ..database.utils import model_to_json

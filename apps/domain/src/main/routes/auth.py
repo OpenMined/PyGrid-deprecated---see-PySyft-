@@ -16,7 +16,7 @@ from ..core.exceptions import (
     AuthorizationError,
     MissingRequestKeyError,
     InvalidCredentialsError,
-    OwnerAlreadyExistsError
+    OwnerAlreadyExistsError,
 )
 from ..core.database import User, db
 

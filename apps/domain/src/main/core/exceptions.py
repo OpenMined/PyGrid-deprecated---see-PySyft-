@@ -12,11 +12,13 @@ class AuthorizationError(PyGridError):
             message = "User is not authorized for this operation!"
         super().__init__(message)
 
+
 class OwnerAlreadyExistsError(PyGridError):
     def __init__(self, message=""):
         if not message:
             message = "This PyGrid domain already has an owner!"
         super().__init__(message)
+
 
 class RoleNotFoundError(PyGridError):
     def __init__(self):
