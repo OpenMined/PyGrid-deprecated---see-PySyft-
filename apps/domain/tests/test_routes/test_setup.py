@@ -81,6 +81,15 @@ def test_get_setup(client, database, cleanup):
 
     database.session.commit()
 
+    result = client.post(
+        "/setup/",
+        json={
+            "email": "owner@email.com",
+            "password": "testing",
+            "node_name": "OpenMined Node",
+        },
+    )
+
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
         "token": token.decode("UTF-8"),
