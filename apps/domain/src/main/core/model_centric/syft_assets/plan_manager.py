@@ -88,7 +88,7 @@ class PlanManager(DatabaseManager):
         super().delete(**kwargs)
 
     @staticmethod
-    def deserialize_plan(bin: bin) -> "sy.Plan":
+    def deserialize_plan(bin: bytes) -> "sy.Plan":
         """Deserialize a Plan."""
         pb = PlanPB()
         pb.ParseFromString(bin)
