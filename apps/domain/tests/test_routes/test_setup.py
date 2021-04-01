@@ -64,7 +64,7 @@ def test_initial_setup(client, database, cleanup):
     result = client.post(
         "/setup/",
         json={
-            "email": "ionesio@email.com",
+            "email": "owner@email.com",
             "password": "testing",
             "node_name": "OpenMined Node",
         },
@@ -88,7 +88,7 @@ def test_get_setup(client, database, cleanup):
     client.post(
         "/setup/",
         json={
-            "email": "ionesio@email.com",
+            "email": "owner@email.com",
             "password": "testing",
             "node_name": "OpenMined Node",
         },
