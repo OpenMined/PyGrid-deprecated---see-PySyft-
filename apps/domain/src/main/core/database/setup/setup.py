@@ -17,7 +17,7 @@ class SetupConfig(BaseModel):
     allow_user_signup = db.Column(db.Boolean(), default=False)
 
     def __str__(self):
-        return f"<Node Name: {self.domain_name}, Private Key: {self.private_key}, AWS Credentials: {self.aws_credentials}, GCP Credentials: {self.gcp_credentials}, Azure Credentials: {self.azure_credentials}, Cache Strategy: {self.cache_strategy}, Replicate Database: {self.replicate_db}, Auto Scale: {self.auto_scale}, Tensor Exp Policy: {self.tensor_expiration_policy}, Allow User Signup: {self.allow_user_signup}>"
+        return f"<Domain Name: {self.domain_name}, Private Key: {self.private_key}, AWS Credentials: {self.aws_credentials}, GCP Credentials: {self.gcp_credentials}, Azure Credentials: {self.azure_credentials}, Cache Strategy: {self.cache_strategy}, Replicate Database: {self.replicate_db}, Auto Scale: {self.auto_scale}, Tensor Exp Policy: {self.tensor_expiration_policy}, Allow User Signup: {self.allow_user_signup}>"
 
 
 def create_setup(**kwargs):

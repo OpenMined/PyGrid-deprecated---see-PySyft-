@@ -7,14 +7,14 @@ from syft.grid.messages.setup_messages import (
     GetSetUpMessage,
 )
 
-from ..auth import error_handler, token_required, optional_token
+from ..auth import error_handler, token_required, optional_token, setup_token
 from ...core.task_handler import route_logic
 
 from main.core.node import get_node
 
 
 @setup_route.route("/", methods=["POST"])
-@optional_token
+@setup_token
 def initial_setup(current_user):
     # Get request body
     content = request.get_json()

@@ -39,7 +39,7 @@ import config
 from main.core.node import create_domain_app
 
 DEFAULT_SECRET_KEY = "justasecretkeythatishouldputhere"
-
+SETUP_SECRET_KEY = "9G9MJ06OQH"
 # Masking/Unmasking is a process used to guarantee some level of security
 # during the transportation of the messages across proxies (as described in WebSocket RFC).
 # Since the masking process needs to iterate over the message payload,
@@ -83,6 +83,7 @@ def create_app(
 
     app.debug = debug
     app.config["SECRET_KEY"] = secret_key
-
+    app.config["SETUP_SECRET_KEY"] = SETUP_SECRET_KEY
+    
     # Send app instance
     return app

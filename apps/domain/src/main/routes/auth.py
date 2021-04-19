@@ -15,6 +15,7 @@ from ..core.exceptions import (
     GroupNotFoundError,
     AuthorizationError,
     MissingRequestKeyError,
+    MissingSetupKeyError,
     InvalidCredentialsError,
     OwnerAlreadyExistsError,
 )
@@ -55,6 +56,32 @@ def token_required_factory(get_token, format_result, optional=False):
     return decorator
 
 
+def setup_token_required(get_token, format_result, optional=False):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            status_code = 200
+            mimetype = "application/json"
+            response_body = {}
+            try:
+                token = get_token(optional=optional)
+            except Exception as e:
+                status_code = 400  # Bad Request
+                response_body[RESPONSE_MSG.ERROR] = str(e)
+                return format_result(response_body, status_code, mimetype)
+        
+            if token == app.config["SETUP_SECRET_KEY"]:
+                return f(None, *args, **kwargs)
+            else:
+                status_code = 403  # Unauthorized
+                response_body[RESPONSE_MSG.ERROR] = str(InvalidCredentialsError())
+                return format_result(response_body, status_code, mimetype)
+
+        return wrapper
+
+    return decorator
+
+
 def get_token(optional=False):
     token = request.headers.get("token", None)
     if token is None and not optional:
@@ -62,6 +89,12 @@ def get_token(optional=False):
 
     return token
 
+def get_setup_token(optional=False):
+    token = request.headers.get("setup", None)
+    if token is None and not optional:
+        raise MissingSetupKeyError
+
+    return token
 
 def format_result(response_body, status_code, mimetype):
     return Response(dumps(response_body), status=status_code, mimetype=mimetype)
@@ -69,7 +102,7 @@ def format_result(response_body, status_code, mimetype):
 
 token_required = token_required_factory(get_token, format_result)
 optional_token = token_required_factory(get_token, format_result, optional=True)
-
+setup_token = setup_token_required(get_setup_token, format_result, optional=False)
 
 def error_handler(f, *args, **kwargs):
     status_code = 200  # Success
