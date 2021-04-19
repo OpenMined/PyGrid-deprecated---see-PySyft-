@@ -1,6 +1,7 @@
 import subprocess
 
 import click
+import json
 from PyInquirer import prompt
 
 from ...utils import Config, styles
@@ -9,13 +10,25 @@ from ...utils import Config, styles
 class AZ:
     def locations_list(self):
         proc = subprocess.Popen(
-            "az account list-locations --query '[].{DisplayName:displayName}' --output table",
+            "az account list-locations",
             shell=True,
             stdout=subprocess.PIPE,
             universal_newlines=True,
         )
-        locations = proc.stdout.read()
-        return locations.split("\n")[2:]
+        locations = json.loads(proc.stdout.read())
+        return [location["name"] for location in locations]
+
+
+def get_all_instance_types(location=None):
+    proc = subprocess.Popen(
+        f"az vm list-sizes --location {location}",
+        shell=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    )
+    machines = json.loads(proc.stdout.read())
+    all_instances = {"all_instances": [machine["name"] for machine in machines]}
+    return all_instances
 
 
 def get_azure_config() -> Config:
@@ -87,10 +100,23 @@ def get_azure_config() -> Config:
         style=styles.second,
     )["location"]
 
+    vm_size = prompt(
+        [
+            {
+                "type": "list",
+                "name": "VMSize",
+                "message": "Please select your desired VM Size",
+                "choices": get_all_instance_types(location=location)["all_instances"],
+            }
+        ],
+        style=styles.second,
+    )["VMSize"]
+
     return Config(
         location=location,
         subscription_id=subscription_id,
         client_id=client_id,
         client_secret=client_secret,
         tenant_id=tenant_id,
+        vm_size=vm_size,
     )

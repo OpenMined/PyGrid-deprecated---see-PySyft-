@@ -13,8 +13,17 @@ class AZURE(Provider):
     """Azure Cloud Provider."""
 
     def __init__(self, config: SimpleNamespace) -> None:
+        config.root_dir = os.path.join(
+            str(Path.home()),
+            ".pygrid",
+            "apps",
+            str(config.provider),
+            str(config.app.name),
+            str(vars(config.app).get("id", "")),
+        )
         super().__init__(config.root_dir, "azure")
         self.config = config
+        self.name = self.config.app.name + str(vars(config.app).get("id", ""))
 
         ##TODO(amr): terrascript does not support azurem right now
         # self.tfscript += terrascript.terraform(backend=terrascript.backend("azurerm"))
@@ -31,12 +40,17 @@ class AZURE(Provider):
             tenant_id=self.config.azure.tenant_id,
         )
 
-        self.build_resource_group()
-        self.build_security_groups()
-        self.build_network()
+        self.worker = config.app.name == "worker"
 
-        self.build_instances()
-        # self.build_load_balancer()
+        if self.worker:
+            self.build_resource_group()
+            self.build_instances()
+        else:
+            self.build_resource_group()
+            self.build_security_groups()
+            self.build_network()
+
+            self.build_instances()
 
     def build_resource_group(self):
         self.resource_group = azurerm_resource_group(
@@ -111,7 +125,7 @@ class AZURE(Provider):
             )
 
     def build_instances(self):
-        name = self.config.app.name
+        name = self.name
 
         self.instances = []
         for count in range(self.config.app.count):
@@ -122,9 +136,12 @@ class AZURE(Provider):
                 source="Azure/compute/azurerm",
                 resource_group_name=self.resource_group.name,
                 vm_os_simple="UbuntuServer",
+                vm_size=self.config.azure.vm_size,
                 public_ip_dns=[f"pygrid-{name}-instance-{count}"],
                 vnet_subnet_id=var_module(self.network, "vnet_subnets[0]"),
-                custom_data=self.write_exec_script(app, index=count),
+                custom_data=self.write_domain_exec_script(app, index=count)
+                if not self.worker
+                else self.write_worker_exec_script(app),
                 admin_username="pygriduser",
                 admin_password="pswd123!",
                 depends_on=["azurerm_resource_group.pygrid_resource_group"],
@@ -163,8 +180,9 @@ class AZURE(Provider):
             description="The DNS name of the ELB.",
         )
 
-    def write_exec_script(self, app, index=0):
+    def write_domain_exec_script(self, app, index=0):
         ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
+        branch = "master"
 
         # exec_script = "#cloud-boothook\n#!/bin/bash\n"
         exec_script = "#!/bin/bash\n"
@@ -173,7 +191,6 @@ class AZURE(Provider):
             ## For debugging
             # redirect stdout/stderr to a file
             exec &> logs.out
-
             echo 'Simple Web Server for testing the deployment'
             sudo apt update -y
             sudo apt install apache2 -y
@@ -194,13 +211,28 @@ class AZURE(Provider):
             pip install poetry
 
             echo 'Install GCC'
+            sudo apt-get install zip unzip -y
             sudo apt-get install python3-dev -y
             sudo apt-get install libevent-dev -y
             sudo apt-get install gcc -y
 
+            curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+            sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" -y
+            sudo apt-get update -y && sudo apt-get install terraform -y
+
+            echo "Setting environment variables"
+            export CLOUD_PROVIDER={self.config.provider}
+
+            echo "Exporting Azure Configs"
+            export location={self.config.azure.location}
+            export subscription_id={self.config.azure.subscription_id}
+            export client_id={self.config.azure.client_id}
+            export client_secret={self.config.azure.client_secret}
+            export tenant_id={self.config.azure.tenant_id}
+
             echo 'Cloning PyGrid'
             git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
-            git checkout pygrid_0.4.0
+            git checkout {branch}
 
             cd /PyGrid/apps/{self.config.app.name}
 
@@ -210,7 +242,46 @@ class AZURE(Provider):
             ## TODO(amr): remove this after poetry updates
             pip install pymysql
 
-            nohup ./run.sh --port {app.port} --start_local_db
-        """
+            nohup ./run.sh --port {app.port}  --host 0.0.0.0 --start_local_db
+            """
+        )
+        return exec_script
+
+    def write_worker_exec_script(self, app):
+        branch = "master"
+        exec_script = "#!/bin/bash\n"
+        exec_script += textwrap.dedent(
+            f"""
+            exec &> logs.out
+            sudo apt update -y
+
+            echo 'Setup Miniconda environment'
+            sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+            sudo bash miniconda.sh -b -p miniconda
+            sudo rm miniconda.sh
+            export PATH=/miniconda/bin:$PATH > ~/.bashrc
+            conda init bash
+            source ~/.bashrc
+            conda create -y -n pygrid python=3.7
+            conda activate pygrid
+
+            echo 'Install poetry...'
+            pip install poetry
+
+            echo 'Install GCC'
+            sudo apt-get install zip unzip -y
+            sudo apt-get install python3-dev -y
+            sudo apt-get install libevent-dev -y
+            sudo apt-get install gcc -y
+
+            echo 'Cloning PyGrid'
+            git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
+            git checkout {branch}
+
+            cd /PyGrid/apps/worker
+            echo 'Installing worker Dependencies'
+            poetry install
+            nohup ./run.sh --port {app.port}  --host 0.0.0.0
+            """
         )
         return exec_script
