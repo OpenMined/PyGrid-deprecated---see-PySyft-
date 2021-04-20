@@ -61,25 +61,64 @@ class AZURE(Provider):
         self.tfscript += self.resource_group
 
     def build_network(self):
-        self.network = vnet(
-            f"pygrid-network",
-            source="Azure/vnet/azurerm",
-            resource_group_name=self.resource_group.name,
+        self.network = azurerm_virtual_network(
+            f"pygrid_network",
+            name=f"pygrid_network",
             address_space=["10.0.0.0/16"],
-            subnet_prefixes=["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"],
-            subnet_names=["subnet1", "subnet2", "subnet3"],
-            nsg_ids={
-                "subnet1": var(self.network_security_group.id),
-                "subnet2": var(self.network_security_group.id),
-                "subnet3": var(self.network_security_group.id),
-            },
-            tags={
-                "name": "pygrid-virtual-network",
-                "environment": "dev",
-            },
-            depends_on=["azurerm_resource_group.pygrid_resource_group"],
+            resource_group_name=var(
+                "azurerm_resource_group.pygrid_resource_group.name"
+            ),
+            location=self.resource_group.location,
+            tags={"name": "pygrid-virtual-network", "environment": "dev",},
         )
         self.tfscript += self.network
+
+        self.subnets = azurerm_subnet(
+            f"pygrid_network_subnet",
+            name=f"pygrid_network_subnet",
+            resource_group_name=var(
+                "azurerm_resource_group.pygrid_resource_group.name"
+            ),
+            virtual_network_name=var("azurerm_virtual_network.pygrid_network.name"),
+            address_prefixes=["10.0.2.0/24"],
+        )
+        self.tfscript += self.subnets
+
+        self.public_ip = azurerm_public_ip(
+            f"pygrid_network_public_ip",
+            name=f"pygrid_network_public_ip",
+            resource_group_name=var(
+                "azurerm_resource_group.pygrid_resource_group.name"
+            ),
+            location=self.resource_group.location,
+            allocation_method="Dynamic",
+        )
+        self.tfscript += self.public_ip
+
+        self.nif = azurerm_network_interface(
+            f"pygrid_network_interface",
+            name=f"pygrid_network_interface",
+            resource_group_name=var(
+                "azurerm_resource_group.pygrid_resource_group.name"
+            ),
+            location=self.resource_group.location,
+            ip_configuration={
+                "name": "internal",
+                "subnet_id": var("azurerm_subnet.pygrid_network_subnet.id"),
+                "private_ip_address_allocation": "Dynamic",
+                "public_ip_address_id": var(
+                    "azurerm_public_ip.pygrid_network_public_ip.id"
+                ),
+            },
+        )
+        self.tfscript += self.nif
+
+        self.nif_association = azurerm_network_interface_security_group_association(
+            f"pygrid_nif_association",
+            name=f"pygrid_nif_association",
+            network_interface_id=self.nif.id,
+            network_security_group_id=self.network_security_group.id,
+        )
 
     def build_security_groups(self):
         self.network_security_group = azurerm_network_security_group(
@@ -89,10 +128,7 @@ class AZURE(Provider):
                 "azurerm_resource_group.pygrid_resource_group.name"
             ),
             location=self.resource_group.location,
-            tags={
-                "name": "pygrid-security-groups",
-                "environment": "dev",
-            },
+            tags={"name": "pygrid-security-groups", "environment": "dev",},
         )
         self.tfscript += self.network_security_group
 
@@ -131,26 +167,45 @@ class AZURE(Provider):
         for count in range(self.config.app.count):
             app = self.config.apps[count]
 
-            instance = linuxservers(
-                f"pygrid-{name}-instance-{count}",
-                source="Azure/compute/azurerm",
-                resource_group_name=self.resource_group.name,
-                vm_os_simple="UbuntuServer",
-                vm_size=self.config.azure.vm_size,
-                public_ip_dns=[f"pygrid-{name}-instance-{count}"],
-                vnet_subnet_id=var_module(self.network, "vnet_subnets[0]"),
-                custom_data=self.write_domain_exec_script(app, index=count)
-                if not self.worker
-                else self.write_worker_exec_script(app),
+            instance = azurerm_linux_virtual_machine(
+                f"pygrid_{name}_instance_{count}",
+                name=f"pygrid_{name}_instance_{count}",
+                computer_name="UbuntuServer",
+                resource_group_name=var(
+                    "azurerm_resource_group.pygrid_resource_group.name"
+                ),
+                location=self.resource_group.location,
+                # vm_os_simple="UbuntuServer",
+                size=self.config.azure.vm_size,
+                source_image_reference={
+                    "publisher": "Canonical",
+                    "offer": "UbuntuServer",
+                    "sku": "16.04-LTS",
+                    "version": "latest",
+                },
+                os_disk={
+                    "caching": "ReadWrite",
+                    "storage_account_type": "Standard_LRS",
+                },
+                network_interface_ids=[
+                    var("azurerm_network_interface.pygrid_network_interface.id")
+                ],
+                custom_data=var(
+                    'filebase64("{}")'.format(
+                        self.write_domain_exec_script(app, index=count)
+                        if not self.worker
+                        else self.write_worker_exec_script(app)
+                    )
+                ),
                 admin_username="pygriduser",
                 admin_password="pswd123!",
-                depends_on=["azurerm_resource_group.pygrid_resource_group"],
+                disable_password_authentication=False,
             )
 
             self.tfscript += instance
             self.tfscript += terrascript.Output(
                 f"instance_{count}_endpoint",
-                value=var_module(instance, "public_ip_address"),
+                value=var(instance.public_ip_address),
                 description=f"The public IP address of #{count} instance.",
             )
             self.instances.append(instance)
@@ -162,16 +217,10 @@ class AZURE(Provider):
             resource_group_name=self.resource_group.name,
             prefix="terraform-lb",
             depends_on=["azurerm_resource_group.pygrid_resource_group"],
-            frontend_subnet_id=var_module(self.network, "vnet_subnets[0]"),
+            frontend_subnet_id=self.subnets.id,
             remote_port={"ssh": ["Tcp", "22"]},
-            lb_port={
-                "http": ["80", "Tcp", "80"],
-                "https": ["443", "Tcp", "443"],
-            },
-            lb_probe={
-                "http": ["Tcp", "80", ""],
-                "http2": ["Http", "1443", "/"],
-            },
+            lb_port={"http": ["80", "Tcp", "80"], "https": ["443", "Tcp", "443"],},
+            lb_probe={"http": ["Tcp", "80", ""], "http2": ["Http", "1443", "/"],},
         )
         self.tfscript += self.load_balancer
         self.tfscript += terrascript.Output(
@@ -182,7 +231,7 @@ class AZURE(Provider):
 
     def write_domain_exec_script(self, app, index=0):
         ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
-        branch = "master"
+        branch = "dev"
 
         # exec_script = "#cloud-boothook\n#!/bin/bash\n"
         exec_script = "#!/bin/bash\n"
@@ -245,10 +294,15 @@ class AZURE(Provider):
             nohup ./run.sh --port {app.port}  --host 0.0.0.0 --start_local_db
             """
         )
-        return exec_script
+
+        file_path = os.path.join(str(Path.home()), ".pygrid", "exec_script.txt")
+        with open(file_path, "w") as f:
+            f.writelines(exec_script)
+
+        return file_path
 
     def write_worker_exec_script(self, app):
-        branch = "master"
+        branch = "dev"
         exec_script = "#!/bin/bash\n"
         exec_script += textwrap.dedent(
             f"""

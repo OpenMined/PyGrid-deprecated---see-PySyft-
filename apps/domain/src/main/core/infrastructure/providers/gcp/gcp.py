@@ -77,14 +77,7 @@ class GCP(Provider):
             network="default",
             allow={
                 "protocol": "tcp",
-                "ports": [
-                    "80",
-                    "8080",
-                    "443",
-                    "5000-5999",
-                    "6000-6999",
-                    "7000-7999",
-                ],
+                "ports": ["80", "8080", "443", "5000-5999", "6000-6999", "7000-7999",],
             },
         )
         self.tfscript += self.firewall
@@ -129,7 +122,7 @@ class GCP(Provider):
 
     def write_domain_exec_script(self, app, index=0):
         ##TODO(amr): remove `git checkout pygrid_0.3.0` after merge
-        branch = "master"
+        branch = "dev"
 
         # exec_script = "#cloud-boothook\n#!/bin/bash\n"
         exec_script = "#!/bin/bash\n"
@@ -194,7 +187,7 @@ class GCP(Provider):
         return exec_script
 
     def write_worker_exec_script(self, app):
-        branch = "master"
+        branch = "dev"
         exec_script = "#!/bin/bash\n"
         exec_script += textwrap.dedent(
             f"""
