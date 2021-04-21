@@ -138,10 +138,6 @@ def create_domain_app(app, args, testing=False):
     app.app_context().push()
     db.create_all()
 
-    # Register global middlewares
-    # Always after context is pushed
-    app.wsgi_app = SleepyUntilConfigured(app, app.wsgi_app)
-
     if not testing:
         if len(db.session.query(Role).all()) == 0:
             seed_db()
@@ -155,6 +151,10 @@ def create_domain_app(app, args, testing=False):
             node.signing_key = signing_key
             node.verify_key = node.signing_key.verify_key
             node.root_verify_key = node.verify_key
+        
+        # Register global middlewares
+        # Always after context is pushed
+        app.wsgi_app = SleepyUntilConfigured(app, app.wsgi_app)
     db.session.commit()
 
     app.config["EXECUTOR_PROPAGATE_EXCEPTIONS"] = True

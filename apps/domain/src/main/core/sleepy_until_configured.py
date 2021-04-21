@@ -12,7 +12,7 @@ class SleepyUntilConfigured(object):
         self.app = app
         self.wsgi = app_wsgi
         self.allowed_route = {'route':'/setup/', 'method':'POST'}
-
+        
     @property
     def is_sleeping(self):
         with self.app.app_context():

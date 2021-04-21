@@ -26,6 +26,7 @@ from syft.grid.messages.setup_messages import (
 
 from ..exceptions import (
     MissingRequestKeyError,
+    MissingSetupKeyError,
     InvalidParameterValueError,
     AuthorizationError,
     OwnerAlreadyExistsError,
@@ -35,6 +36,7 @@ from ..database.utils import model_to_json
 
 from ...core.database.environment.environment import states
 from ...core.infrastructure import Config, Provider, AWS_Serverfull, AWS_Serverless
+from flask import current_app as app
 
 def create_initial_setup(
     msg: CreateInitialSetUpMessage, node: AbstractNode, verify_key: VerifyKey
@@ -45,6 +47,12 @@ def create_initial_setup(
 
     _email = msg.content.get("email", None)
     _password = msg.content.get("password", None)
+    _token = msg.content.get("token",None)
+
+    if not _token:
+        raise MissingSetupKeyError
+    if _token != app.config["SETUP_SECRET_KEY"]:
+        raise MissingSetupKeyError
 
     # Get Payload Content
     configs = {
