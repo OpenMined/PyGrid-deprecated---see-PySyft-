@@ -61,7 +61,11 @@ logger = logging.getLogger()
 
 
 def create_app(
-    args, secret_key=DEFAULT_SECRET_KEY, setup_secret_key=DEFAULT_SETUP_SECRET_KEY, debug=False, testing=False
+    args,
+    secret_key=DEFAULT_SECRET_KEY,
+    setup_secret_key=DEFAULT_SETUP_SECRET_KEY,
+    debug=False,
+    testing=False,
 ) -> Flask:
     """This method creates a new Flask App instance and attach it with some
     HTTP/Websocket bluetprints.

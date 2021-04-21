@@ -38,6 +38,7 @@ from ...core.database.environment.environment import states
 from ...core.infrastructure import Config, Provider, AWS_Serverfull, AWS_Serverless
 from flask import current_app as app
 
+
 def create_initial_setup(
     msg: CreateInitialSetUpMessage, node: AbstractNode, verify_key: VerifyKey
 ) -> CreateInitialSetUpResponse:
@@ -47,7 +48,7 @@ def create_initial_setup(
 
     _email = msg.content.get("email", None)
     _password = msg.content.get("password", None)
-    _token = msg.content.get("token",None)
+    _token = msg.content.get("token", None)
 
     if not _token:
         raise MissingSetupKeyError

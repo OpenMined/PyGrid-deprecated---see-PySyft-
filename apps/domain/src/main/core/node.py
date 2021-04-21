@@ -115,7 +115,7 @@ def create_domain_app(app, args, testing=False):
     # Here you should add all the blueprints related to HTTP routes.
     app.register_blueprint(roles_blueprint, url_prefix=r"/roles")
     app.register_blueprint(users_blueprint, url_prefix=r"/users")
-    app.register_blueprint(setup_blueprint, url_prefix=r"/setup/")
+    app.register_blueprint(setup_blueprint, url_prefix=r"/setup")
     app.register_blueprint(groups_blueprint, url_prefix=r"/groups")
     app.register_blueprint(dcfl_blueprint, url_prefix=r"/data-centric/")
     app.register_blueprint(mcfl_blueprint, url_prefix=r"/model-centric/")
@@ -128,7 +128,7 @@ def create_domain_app(app, args, testing=False):
     # Here you should add all the blueprints related to WebSocket routes.
     sockets.register_blueprint(ws, url_prefix=r"/")
 
-    from .database import db, set_database_config, seed_db, User, Role
+    from .database import db, set_database_config, seed_db, User, Role, SetupConfig
 
     global node
     node = GridDomain(name=args.name)
@@ -142,6 +142,9 @@ def create_domain_app(app, args, testing=False):
         if len(db.session.query(Role).all()) == 0:
             seed_db()
 
+        if len(db.session.query(SetupConfig).all()) != 0:
+            node.name = db.session.query(SetupConfig).first().node_name
+
         role = db.session.query(Role.id).filter_by(name="Owner").first()
         user = User.query.filter_by(role=role.id).first()
         if user:
@@ -151,7 +154,7 @@ def create_domain_app(app, args, testing=False):
             node.signing_key = signing_key
             node.verify_key = node.signing_key.verify_key
             node.root_verify_key = node.verify_key
-        
+
         # Register global middlewares
         # Always after context is pushed
         app.wsgi_app = SleepyUntilConfigured(app, app.wsgi_app)

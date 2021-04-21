@@ -134,6 +134,7 @@ class MissingRequestKeyError(PyGridError):
             message = "Missing request key!"
         super().__init__(message)
 
+
 class MissingSetupKeyError(PyGridError):
     def __init__(self, message=""):
         if not message:

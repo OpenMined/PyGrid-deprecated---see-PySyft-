@@ -5,7 +5,7 @@ class SetupConfig(BaseModel):
     __tablename__ = "setup"
 
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
-    domain_name = db.Column(db.String(255))
+    domain_name = db.Column(db.String(255), default="")
     private_key = db.Column(db.String(2048), default="")
     aws_credentials = db.Column(db.String(2048), default="")
     gcp_credentials = db.Column(db.String(2048), default="")

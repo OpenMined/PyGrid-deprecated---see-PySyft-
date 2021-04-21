@@ -63,13 +63,15 @@ def test_initial_setup(client, database, cleanup):
     database.session.commit()
 
     result = client.post(
-        "/setup/",
+        "/setup",
         json={
-            "email": "owner@email.com",
-            "password": "testing",
+            "email": "owner@openmined.org",
+            "password": "12345",
             "domain_name": "OpenMined Domain",
+            "token": "9G9MJ06OQH",
         },
     )
+
     assert result.status_code == 200
     assert result.get_json() == {"msg": "Running initial setup!"}
 
@@ -81,11 +83,12 @@ def test_get_setup(client, database, cleanup):
     database.session.commit()
 
     result = client.post(
-        "/setup/",
+        "/setup",
         json={
-            "email": "owner@email.com",
-            "password": "testing",
+            "email": "owner@openmined.org",
+            "password": "12345",
             "domain_name": "OpenMined Domain",
+            "token": "9G9MJ06OQH",
         },
     )
     # assert result.status_code == 200
@@ -97,7 +100,7 @@ def test_get_setup(client, database, cleanup):
     }
 
     result = client.get(
-        "/setup/",
+        "/setup",
         headers=headers,
     )
 

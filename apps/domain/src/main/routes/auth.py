@@ -21,6 +21,7 @@ from ..core.exceptions import (
 )
 from ..core.database import User, db
 
+
 def token_required_factory(get_token, format_result, optional=False):
     def decorator(f):
         @wraps(f)
@@ -54,6 +55,7 @@ def token_required_factory(get_token, format_result, optional=False):
 
     return decorator
 
+
 def get_token(optional=False):
     token = request.headers.get("token", None)
     if token is None and not optional:
@@ -61,12 +63,14 @@ def get_token(optional=False):
 
     return token
 
+
 def format_result(response_body, status_code, mimetype):
     return Response(dumps(response_body), status=status_code, mimetype=mimetype)
 
 
 token_required = token_required_factory(get_token, format_result)
 optional_token = token_required_factory(get_token, format_result, optional=True)
+
 
 def error_handler(f, *args, **kwargs):
     status_code = 200  # Success

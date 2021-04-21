@@ -11,15 +11,18 @@ class SleepyUntilConfigured(object):
     def __init__(self, app, app_wsgi):
         self.app = app
         self.wsgi = app_wsgi
-        self.allowed_route = {'route':'/setup/', 'method':'POST'}
-        
+        self.allowed_route = {"route": "/setup/", "method": "POST"}
+
     @property
     def is_sleeping(self):
         with self.app.app_context():
             return db.session.query(SetupConfig).first() is None
 
     def is_route_allowed(self, request):
-        return request.path in self.allowed_route['route'] and request.method in self.allowed_route['method']
+        return (
+            request.path in self.allowed_route["route"]
+            and request.method in self.allowed_route["method"]
+        )
 
     def __call__(self, environ, start_response):
         request = Request(environ)
