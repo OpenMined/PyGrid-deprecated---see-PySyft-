@@ -14,6 +14,7 @@ class DatasetGroup(BaseModel):
             f"dataset: {self.dataset}>"
         )
 
+
 class Dataset(BaseModel):
     __tablename__ = "dataset"
 
@@ -30,3 +31,5 @@ class BinObjDataset(BaseModel):
     name = db.Column(db.String(256))
     obj = db.Column(db.String(256), db.ForeignKey("bin_object.id"))
     dataset = db.Column(db.String(256), db.ForeignKey("dataset.id"))
+    dtype = db.Column(db.String(256))
+    shape = db.Column(db.String(256))
