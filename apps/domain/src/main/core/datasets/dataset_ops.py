@@ -63,16 +63,16 @@ def process_items(node, tar_obj, user_key):
         if not item.isdir() and (not item.name in skip_files):
             reader = csv.reader(
                 tar_obj.extractfile(item.name).read().decode().split("\n"),
-                delimiter="\t",
+                delimiter=",",
             )
 
             dataset = []
 
             for row in reader:
-                dataset.append(row)
-
-            df = DataFrame(dataset)
-
+                if len(row) != 0:
+                    dataset.append(row)
+            dataset = np.array(dataset, dtype=np.float)
+            df = th.tensor(dataset, dtype=th.float32)
             id_at_location = UID()
 
             # Step 2: create message which contains object to send
@@ -96,7 +96,7 @@ def process_items(node, tar_obj, user_key):
                 dataset=dataset_db.id,
                 obj=str(id_at_location.value),
                 dtype=df.__class__.__name__,
-                shape=str(df.shape),
+                shape=str(tuple(df.shape)),
             )
             db.session.add(obj_dataset_relation)
             data[str(id_at_location.value)] = {
