@@ -71,11 +71,8 @@ from syft.core.node.common.service.obj_search_permission_service import (
 )
 
 import tenseal as ts
-import pandas
 
-sy.load("pandas")
 sy.load("tenseal")
-sy.load("sympc")
 
 
 class GridDomain(Domain):
