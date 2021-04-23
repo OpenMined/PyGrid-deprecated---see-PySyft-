@@ -135,7 +135,7 @@ class AZURE(Provider):
                 f"azurerm_network_security_group.pygrid_network_security_group_{self.name}.id"
             ),
         )
-        self.tfscript += self.nif_association
+        # self.tfscript += self.nif_association
 
     def build_security_groups(self):
         self.network_security_group = azurerm_network_security_group(
