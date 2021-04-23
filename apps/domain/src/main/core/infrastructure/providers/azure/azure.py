@@ -153,12 +153,12 @@ class AZURE(Provider):
         self.tfscript += self.network_security_group
 
         security_rules = [
-            ("HTTPS", 100, 443, 443),
-            ("HTTP", 101, 80, 80),
-            ("PyGrid_Domains", 102, 5000, 5999),
-            ("PyGrid_Workers", 103, 6000, 6999),
-            ("PyGrid_Networks", 104, 7000, 7999),
-            ("SSH", 105, 22, 22),
+            ("HTTPS", 100, "*", 443),
+            ("HTTP", 101, "*", 80),
+            ("PyGrid_Domains", 102, "*", "5000-5999"),
+            ("PyGrid_Workers", 103, "*", "6000-6999"),
+            ("PyGrid_Networks", 104, "*", "7000-7999"),
+            ("SSH", 105, "*", 22),
         ]
         for name, priority, source_port, dest_port in security_rules:
             self.tfscript += azurerm_network_security_rule(
@@ -169,7 +169,7 @@ class AZURE(Provider):
                 access="Allow",
                 protocol="Tcp",
                 source_port_range=source_port,
-                destination_port_range=dest_port,
+                destination_port_ranges=[dest_port],
                 source_address_prefix="*",
                 destination_address_prefix="*",
                 resource_group_name=var(
@@ -219,6 +219,10 @@ class AZURE(Provider):
                         else self.write_worker_exec_script(app)
                     )
                 ),
+                admin_ssh_key={
+                    "username": "pygriduser",
+                    "public_key": var('file("{}")'.format("~/.ssh/id_rsa.pub")),
+                },
                 admin_username="pygriduser",
                 admin_password="pswd123!",
                 disable_password_authentication=False,
@@ -287,6 +291,9 @@ class AZURE(Provider):
             echo 'Install poetry...'
             pip install poetry
 
+            echo 'Install AZ CLI'
+            curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
             echo 'Install GCC'
             sudo apt-get install zip unzip -y
             sudo apt-get install python3-dev -y
@@ -299,6 +306,7 @@ class AZURE(Provider):
 
             echo "Setting environment variables"
             export CLOUD_PROVIDER={self.config.provider}
+            echo "CLOUD_PROVIDER={self.config.provider}" | sudo tee -a /etc/environment >/dev/null
 
             echo "Exporting Azure Configs"
             export location={self.config.azure.location}
@@ -306,6 +314,12 @@ class AZURE(Provider):
             export client_id={self.config.azure.client_id}
             export client_secret={self.config.azure.client_secret}
             export tenant_id={self.config.azure.tenant_id}
+
+            echo "location={self.config.azure.location}"  | sudo tee -a /etc/environment >/dev/null
+            echo "subscription_id={self.config.azure.subscription_id}"  | sudo tee -a /etc/environment >/dev/null
+            echo "client_id={self.config.azure.client_id}"  | sudo tee -a /etc/environment >/dev/null
+            echo "client_secret={self.config.azure.client_secret}"  | sudo tee -a /etc/environment >/dev/null
+            echo "tenant_id={self.config.azure.tenant_id}"  | sudo tee -a /etc/environment >/dev/null
 
             echo 'Cloning PyGrid'
             git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
@@ -315,9 +329,6 @@ class AZURE(Provider):
 
             echo 'Installing {self.config.app.name} Dependencies'
             poetry install
-
-            ## TODO(amr): remove this after poetry updates
-            pip install pymysql
 
             nohup ./run.sh --port {app.port}  --host 0.0.0.0 --start_local_db
             """
