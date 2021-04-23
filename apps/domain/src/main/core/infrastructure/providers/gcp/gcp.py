@@ -77,7 +77,14 @@ class GCP(Provider):
             network="default",
             allow={
                 "protocol": "tcp",
-                "ports": ["80", "8080", "443", "5000-5999", "6000-6999", "7000-7999",],
+                "ports": [
+                    "80",
+                    "8080",
+                    "443",
+                    "5000-5999",
+                    "6000-6999",
+                    "7000-7999",
+                ],
             },
         )
         self.tfscript += self.firewall

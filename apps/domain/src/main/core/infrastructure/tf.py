@@ -36,7 +36,10 @@ class Terraform:
                 return False
         else:
             return subprocess.run(
-                f"terraform init", shell=True, cwd=self.dir, check=True,
+                f"terraform init",
+                shell=True,
+                cwd=self.dir,
+                check=True,
             )
 
     def validate(self):
