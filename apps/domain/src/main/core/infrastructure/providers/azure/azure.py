@@ -42,15 +42,19 @@ class AZURE(Provider):
 
         self.worker = config.app.name == "worker"
 
-        if self.worker:
-            self.build_resource_group()
-            self.build_instances()
-        else:
-            self.build_resource_group()
-            self.build_security_groups()
-            self.build_network()
+        ## TODO
+        # if self.worker:
+        #     self.build_resource_group()
+        #     self.build_security_groups()
+        #     self.build_network_interface()
+        #     self.build_instances()
+        # else:
+        self.build_resource_group()
+        self.build_security_groups()
+        self.build_network()
+        self.build_network_interface()
 
-            self.build_instances()
+        self.build_instances()
 
     def build_resource_group(self):
         self.resource_group = azurerm_resource_group(
@@ -69,7 +73,10 @@ class AZURE(Provider):
                 "azurerm_resource_group.pygrid_resource_group.name"
             ),
             location=self.resource_group.location,
-            tags={"name": "pygrid-virtual-network", "environment": "dev",},
+            tags={
+                "name": "pygrid-virtual-network",
+                "environment": "dev",
+            },
         )
         self.tfscript += self.network
 
@@ -84,6 +91,7 @@ class AZURE(Provider):
         )
         self.tfscript += self.subnets
 
+    def build_network_interface(self):
         self.public_ip = azurerm_public_ip(
             f"pygrid_network_public_ip",
             name=f"pygrid_network_public_ip",
@@ -115,10 +123,15 @@ class AZURE(Provider):
 
         self.nif_association = azurerm_network_interface_security_group_association(
             f"pygrid_nif_association",
-            name=f"pygrid_nif_association",
-            network_interface_id=self.nif.id,
-            network_security_group_id=self.network_security_group.id,
+            # name=f"pygrid_nif_association",
+            network_interface_id=var(
+                "azurerm_network_interface.pygrid_network_interface.id"
+            ),
+            network_security_group_id=var(
+                "azurerm_network_security_group.pygrid_network_security_group.id"
+            ),
         )
+        self.tfscript += self.nif_association
 
     def build_security_groups(self):
         self.network_security_group = azurerm_network_security_group(
@@ -128,7 +141,10 @@ class AZURE(Provider):
                 "azurerm_resource_group.pygrid_resource_group.name"
             ),
             location=self.resource_group.location,
-            tags={"name": "pygrid-security-groups", "environment": "dev",},
+            tags={
+                "name": "pygrid-security-groups",
+                "environment": "dev",
+            },
         )
         self.tfscript += self.network_security_group
 
@@ -219,8 +235,14 @@ class AZURE(Provider):
             depends_on=["azurerm_resource_group.pygrid_resource_group"],
             frontend_subnet_id=self.subnets.id,
             remote_port={"ssh": ["Tcp", "22"]},
-            lb_port={"http": ["80", "Tcp", "80"], "https": ["443", "Tcp", "443"],},
-            lb_probe={"http": ["Tcp", "80", ""], "http2": ["Http", "1443", "/"],},
+            lb_port={
+                "http": ["80", "Tcp", "80"],
+                "https": ["443", "Tcp", "443"],
+            },
+            lb_probe={
+                "http": ["Tcp", "80", ""],
+                "http2": ["Http", "1443", "/"],
+            },
         )
         self.tfscript += self.load_balancer
         self.tfscript += terrascript.Output(
@@ -338,4 +360,11 @@ class AZURE(Provider):
             nohup ./run.sh --port {app.port}  --host 0.0.0.0
             """
         )
-        return exec_script
+
+        root_dir = os.path.join(str(Path.home()), ".pygrid")
+        os.makedirs(root_dir, exist_ok=True)
+        file_path = os.path.join(root_dir, "exec_script.txt")
+        with open(file_path, "w") as f:
+            f.writelines(exec_script)
+
+        return file_path
