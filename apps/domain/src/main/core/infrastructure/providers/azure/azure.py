@@ -274,7 +274,7 @@ class AZURE(Provider):
             sudo apt update -y
             sudo apt install apache2 -y
             sudo systemctl start apache2
-            echo '<h1>OpenMined {self.config.app.name} Serverless Azure Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html
+            echo '<h1>OpenMined {self.config.app.name} Server Azure Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html
 
             echo 'Setup Miniconda environment'
             sudo wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -305,7 +305,11 @@ class AZURE(Provider):
             echo "Setting environment variables"
             export CLOUD_PROVIDER={self.config.provider}
             echo "CLOUD_PROVIDER={self.config.provider}" | sudo tee -a /etc/environment >/dev/null
-
+            
+            echo "Setting memory store mode"
+            export MEMORY_STORE=True
+            echo "MEMORY_STORE=True" | sudo tee -a /etc/environment >/dev/null
+            
             echo "Exporting Azure Configs"
             export location={self.config.azure.location}
             export subscription_id={self.config.azure.subscription_id}
