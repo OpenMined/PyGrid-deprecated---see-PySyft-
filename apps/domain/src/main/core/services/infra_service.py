@@ -3,7 +3,7 @@ import os
 import secrets
 from datetime import datetime
 from typing import List, Type, Union
-
+import random
 from nacl.encoding import HexEncoder
 
 # third party
@@ -93,7 +93,6 @@ def get_worker_instance_types_msg(
         elif provider == "azure":
             location = os.environ.get("location", None)
             _msg = PROVIDER_UTILS[provider].get_all_instance_types(location=location)
-
         return GetWorkerInstanceTypesResponse(
             address=msg.reply_to, status_code=200, content=_msg
         )
@@ -170,6 +169,7 @@ def create_worker_msg(
                     + ":"
                     + str(_worker_port),
                 }
+
                 if config.provider == "aws":
                     env_parameters["region"] = config.vpc.region
                     env_parameters[
@@ -187,11 +187,11 @@ def create_worker_msg(
                     user_id=_current_user_id, env_id=new_env.id
                 )
             else:
-                # node.environments.set(id=config.app.id, state=states["failed"])
+                node.environments.set(id=config.app.id, state=states["failed"])
                 raise Exception("Worker creation failed!")
         final_msg = "Worker created successfully!"
         return CreateWorkerResponse(
-            address=msg.reply_to, status_code=200, content={"msg": final_msg}
+            address=msg.reply_to, status_code=200, content={"message": final_msg}
         )
     except Exception as e:
         return CreateWorkerResponse(
@@ -270,8 +270,11 @@ def get_workers_msg(
         envs = node.environments.get_environments(user=_current_user_id)
 
         workers = []
+        print("Node environments: ", node.environments.all()[0].id)
         for env in envs:
+            print("Here!", env.id)
             _env = node.environments.first(id=env.id)
+
             if (
                 include_all
                 or (_env.state == states["success"])
@@ -334,7 +337,7 @@ def del_worker_msg(
             return DeleteWorkerResponse(
                 address=msg.reply_to,
                 status_code=200,
-                content={"msg": "Worker was deleted successfully!"},
+                content={"message": "Worker was deleted successfully!"},
             )
         else:
             raise Exception("Worker deletion failed")
