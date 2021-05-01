@@ -60,5 +60,5 @@ def get_status():
     response = {"node_name": get_node().name, "init": len(get_node().users) > 0}
 
     return Response(
-        json.dumps(response), status=status_code, mimetype="application/json"
+        json.dumps(response), status=200, mimetype="application/json"
     )
