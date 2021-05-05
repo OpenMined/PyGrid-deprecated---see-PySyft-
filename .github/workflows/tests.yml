@@ -29,15 +29,15 @@ jobs:
         run: |
           pip install --upgrade --user pip
 
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get poetry cache dir
+        id: poetry-cache
         run: |
-          echo "::set-output name=dir::$(pip cache dir)"
+          echo "::set-output name=dir::$(poetry config cache-dir)"
 
-      - name: pip cache
+      - name: poetry cache
         uses: actions/cache@v2
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.poetry-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-py${{ matrix.python-version }}-
@@ -71,15 +71,15 @@ jobs:
         run: |
           pip install --upgrade --user pip
 
-      - name: Get pip cache dir
-        id: pip-cache
+      - name: Get poetry cache dir
+        id: poetry-cache
         run: |
-          echo "::set-output name=dir::$(pip cache dir)"
+          echo "::set-output name=dir::$(poetry config cache-dir)"
 
-      - name: pip cache
+      - name: poetry cache
         uses: actions/cache@v2
         with:
-          path: ${{ steps.pip-cache.outputs.dir }}
+          path: ${{ steps.poetry-cache.outputs.dir }}
           key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-py${{ matrix.python-version }}-
