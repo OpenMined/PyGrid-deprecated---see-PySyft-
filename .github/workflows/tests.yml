@@ -29,6 +29,10 @@ jobs:
         run: |
           pip install --upgrade --user pip
 
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
       - name: Get poetry cache dir
         id: poetry-cache
         run: |
@@ -71,6 +75,10 @@ jobs:
         run: |
           pip install --upgrade --user pip
 
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
       - name: Get poetry cache dir
         id: poetry-cache
         run: |
@@ -83,10 +91,6 @@ jobs:
           key: ${{ runner.os }}-pip-py${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-py${{ matrix.python-version }}-
-
-      - name: Install Poetry
-        run: |
-          pip install poetry==1.1.2
 
       # - id: file_changes  # get changed files.
       #   uses: trilom/file-changes-action@v1.2.3
