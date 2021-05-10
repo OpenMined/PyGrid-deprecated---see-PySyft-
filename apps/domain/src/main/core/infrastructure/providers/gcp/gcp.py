@@ -177,7 +177,7 @@ class GCP(Provider):
             export machine_type={self.config.gcp.machine_type},
 
             echo 'Cloning PyGrid'
-            git clone https://github.com/OpenMined/PyGrid && cd /PyGrid/
+            git clone https://github.com/pszemkor/PyGrid && cd /PyGrid/
             git checkout {branch}
 
             cd /PyGrid/apps/{self.config.app.name}
