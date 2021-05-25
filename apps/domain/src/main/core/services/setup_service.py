@@ -46,12 +46,6 @@ def create_initial_setup(
 
     _email = msg.content.get("email", None)
     _password = msg.content.get("password", None)
-    _token = msg.content.get("token", None)
-
-    if not _token:
-        raise MissingSetupKeyError
-    if _token != app.config["SETUP_SECRET_KEY"]:
-        raise MissingSetupKeyError
 
     # Get Payload Content
     configs = {
