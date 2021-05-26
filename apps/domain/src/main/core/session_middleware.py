@@ -1,6 +1,3 @@
-# stdlib
-from json import dumps
-
 # third party
 from flask import Response
 from flask import current_app as app
@@ -8,11 +5,8 @@ import jwt
 from werkzeug.wrappers import Request
 
 # grid relative
-from ..core.codes import RESPONSE_MSG
 from ..core.database import User
-from .database import SetupConfig
 from .database import db
-from .exceptions import AppInSleepyMode
 
 
 class SessionMiddleware(object):
