@@ -33,7 +33,6 @@ from ..database.utils import model_to_json
 from ..exceptions import AuthorizationError
 from ..exceptions import InvalidParameterValueError
 from ..exceptions import MissingRequestKeyError
-from ..exceptions import MissingSetupKeyError
 from ..exceptions import OwnerAlreadyExistsError
 
 
