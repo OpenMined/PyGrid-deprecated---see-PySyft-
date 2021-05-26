@@ -69,7 +69,7 @@ def test_initial_setup(client, database, cleanup):
         json={
             "email": "owner@openmined.org",
             "password": "12345",
-            "domain_name": "OpenMined Domain"
+            "domain_name": "OpenMined Domain",
         },
     )
 
@@ -88,7 +88,7 @@ def test_get_setup(client, database, cleanup):
         json={
             "email": "owner@openmined.org",
             "password": "12345",
-            "domain_name": "OpenMined Domain"
+            "domain_name": "OpenMined Domain",
         },
     )
     # assert result.status_code == 200
