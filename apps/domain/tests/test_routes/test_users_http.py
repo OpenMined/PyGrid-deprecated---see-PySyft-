@@ -134,7 +134,10 @@ def test_post_user_with_role(client, database, cleanup):
 
     database.session.commit()
 
-    headers = {}
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
 
     payload = {
         "email": "someemail@email.com",
@@ -142,6 +145,85 @@ def test_post_user_with_role(client, database, cleanup):
         "role": "User",
     }
 
+    result = client.post(
+        "/users", data=dumps(payload), headers=headers, content_type="application/json"
+    )
+
+    assert result.status_code == 204
+
+
+def test_post_user_same_email(client, database, cleanup):
+    new_role = create_role(*owner_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+
+    payload = {
+        "email": "someemail@email.com",
+        "password": "123secretpassword",
+        "role": "User",
+    }
+    result = client.post(
+        "/users", data=dumps(payload), headers=headers, content_type="application/json"
+    )
+
+    assert result.status_code == 204
+
+    payload = {
+        "email": "someemail@email.com",
+        "password": "321secretpassword",
+        "role": "User",
+    }
+
+    result = client.post(
+        "/users", data=dumps(payload), headers=headers, content_type="application/json"
+    )
+
+    assert result.status_code == 403
+    assert result.get_json()["error"] == "You can't create a new User using this email!"
+
+
+def test_post_user_after_delete(client, database, cleanup):
+    new_role = create_role(*owner_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+
+    payload = {
+        "email": "someemail@email.com",
+        "password": "123secretpassword",
+        "role": "User",
+    }
+    result = client.post(
+        "/users", data=dumps(payload), headers=headers, content_type="application/json"
+    )
+
+    assert result.status_code == 204
+
+    client.delete("/users/2", headers=headers, content_type="application/json")
+    payload = {
+        "email": "someemail@email.com",
+        "password": "321secretpassword",
+        "role": "User",
+    }
     result = client.post(
         "/users", data=dumps(payload), headers=headers, content_type="application/json"
     )
@@ -321,6 +403,30 @@ def test_get_users_invalid_token(client, database, cleanup):
     assert result.get_json()["error"] == "Invalid credentials!"
 
 
+def test_get_users_after_delete(client, database, cleanup):
+    new_role = create_role(*admin_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+    new_user = create_user(*user2)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    client.delete("/users/2", headers=headers, content_type="application/json")
+    result = client.get("/users", headers=headers, content_type="application/json")
+
+    assert result.status_code == 200
+    assert len(result.get_json()) == 1
+    assert result.get_json()[0]["id"] == 1
+
+
 # GET SPECIFIC USER
 
 
@@ -432,6 +538,28 @@ def test_get_one_missing_user(client, database, cleanup):
     assert result.get_json()["error"] == "User not found!"
 
 
+def test_get_one_user_missing_after_delete(client, database, cleanup):
+    new_role = create_role(*admin_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+    new_user = create_user(*user2)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    client.delete("/users/2", headers=headers, content_type="application/json")
+    result = client.get("/users/2", headers=headers, content_type="application/json")
+
+    assert result.status_code == 404
+
+
 # PUT USER EMAIL
 
 
@@ -462,6 +590,36 @@ def test_put_other_user_email_success(client, database, cleanup):
     )
 
     assert result.status_code == 204
+
+
+def test_put_other_missing_user_email_after_delete(client, database, cleanup):
+    new_role = create_role(*admin_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = create_user(*user1)
+    database.session.add(new_user)
+    new_user = create_user(*user2)
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    assert database.session.query(User).get(2).email == "anemail@anemail.com"
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    payload = {"email": "brandnew@brandnewemail.com"}
+    client.delete("/users/2", headers=headers, content_type="application/json")
+    result = client.put(
+        "/users/2/email",
+        headers=headers,
+        data=dumps(payload),
+        content_type="application/json",
+    )
+
+    assert result.status_code == 404
 
 
 def test_put_other_user_email_missing_token(client, database, cleanup):
@@ -1504,7 +1662,7 @@ def test_delete_other_user_success(client, database, cleanup):
 
     database.session.commit()
 
-    assert database.session.query(User).get(2) is not None
+    assert database.session.query(User).get(2).deleted_at is None
 
     token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
     headers = {
@@ -1513,7 +1671,7 @@ def test_delete_other_user_success(client, database, cleanup):
     result = client.delete("/users/2", headers=headers, content_type="application/json")
 
     assert result.status_code == 204
-    assert database.session.query(User).get(2) is None
+    assert database.session.query(User).get(2).deleted_at is not None
 
 
 def test_delete_user_missing_token(client, database, cleanup):
@@ -1905,3 +2063,50 @@ def test_search_users_unauthorized(client, database, cleanup):
 
     assert result.status_code == 403
     assert result.get_json()["error"] == "You're not allowed to get User information!"
+
+
+# TODO
+def test_search_users_after_delete(client, database, cleanup):
+    new_role = create_role(*admin_role)
+    database.session.add(new_role)
+    new_role = create_role(*user_role)
+    database.session.add(new_role)
+    new_user = User(
+        email="anemail@anemail.com",
+        hashed_password="2amt5MXKdLhEEL8FiQLcl8Mp0FNhZI6",
+        salt="$2b$12$tufn64/0gSIAdprqBrRzC.",
+        private_key="fd062d885b24bda173f6aa534a3418bcafadccecfefe2f8c6f5a8db563549ced",
+        role=1,
+    )
+    database.session.add(new_user)
+    new_user = User(
+        email="anemail@anemail.com",
+        hashed_password="wi6hJCTz9QN1GcKc2ZJk7ReZ1LshNsu",
+        salt="$2b$12$rj8MnLcKBxAgL7GUHrYn6O",
+        private_key="acfc10d15d7ec9f7cd05a312489af2794619c6f11e9af34671a5f33da48c1de2",
+        role=2,
+    )
+    database.session.add(new_user)
+
+    database.session.commit()
+
+    token = jwt.encode({"id": 1}, app.config["SECRET_KEY"])
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    result = client.delete("/users/2", headers=headers, content_type="application/json")
+
+    headers = {
+        "token": token.decode("UTF-8"),
+    }
+    payload = {"email": "anemail@anemail.com"}
+    result = client.post(
+        "/users/search",
+        headers=headers,
+        data=dumps(payload),
+        content_type="application/json",
+    )
+
+    assert result.status_code == 200
+    assert len(result.get_json()) == 1
+    assert result.get_json()[0]["id"] == 1

@@ -121,11 +121,8 @@ class UserManager(DatabaseManager):
         return self.role(user_id=user_id).can_create_groups
 
     def role(self, user_id: int):
-        try:
-            user = self.first(id=user_id)
-            return self.roles.first(id=user.role)
-        except UserNotFoundError:
-            return False
+        user = self.first(id=user_id)
+        return self.roles.first(id=user.role)
 
     def __login_validation(self, email: str, password: str) -> bool:
         try:

@@ -171,7 +171,9 @@ def update_user_msg(
     _allowed = int(_user_id) == int(_current_user_id) or users.can_create_users(
         user_id=_current_user_id
     )
-    _valid_user = users.contain(id=_user_id)
+    _valid_user = (
+        users.contain(id=_user_id) and users.first(id=_user_id).deleted_at is None
+    )
 
     if not _valid_parameters:
         raise MissingRequestKeyError(
@@ -365,6 +367,7 @@ def search_users_msg(
 
     if _allowed:
         try:
+            user_parameters["deleted_at"] = None
             users = node.users.query(**user_parameters)
             if _group:
                 filtered_users = filter(
