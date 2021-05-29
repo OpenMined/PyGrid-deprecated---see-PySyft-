@@ -1,4 +1,5 @@
 # third party
+from sqlalchemy.sql import func
 from syft import deserialize
 from syft import serialize
 from syft.proto.lib.pandas.frame_pb2 import PandasDataFrame as PandasDataFrame_PB
@@ -20,6 +21,9 @@ class BinObject(BaseModel):
     id = db.Column(db.String(3072), primary_key=True)
     binary = db.Column(db.LargeBinary(3072))
     protobuf_name = db.Column(db.String(3072))
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     @property
     def object(self):

@@ -1,3 +1,5 @@
+from sqlalchemy.sql import func
+
 # grid relative
 from .. import BaseModel
 from .. import db
@@ -17,6 +19,9 @@ class SetupConfig(BaseModel):
     auto_scale = db.Column(db.Boolean(), default=False)
     tensor_expiration_policy = db.Column(db.Integer(), default=0)
     allow_user_signup = db.Column(db.Boolean(), default=False)
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     def __str__(self):
         return f"<Domain Name: {self.domain_name}, Private Key: {self.private_key}, AWS Credentials: {self.aws_credentials}, GCP Credentials: {self.gcp_credentials}, Azure Credentials: {self.azure_credentials}, Cache Strategy: {self.cache_strategy}, Replicate Database: {self.replicate_db}, Auto Scale: {self.auto_scale}, Tensor Exp Policy: {self.tensor_expiration_policy}, Allow User Signup: {self.allow_user_signup}>"

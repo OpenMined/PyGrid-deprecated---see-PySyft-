@@ -105,7 +105,8 @@ def test_get_setup(client, database, cleanup):
     )
 
     assert result.status_code == 200
-    assert result.get_json() == {
+    setup = result.get_json()
+    expected_setup = {
         "id": 1,
         "domain_name": "OpenMined Domain",
         "private_key": "",
@@ -118,3 +119,4 @@ def test_get_setup(client, database, cleanup):
         "tensor_expiration_policy": 0,
         "allow_user_signup": False,
     }
+    assert expected_setup.items() <= setup.items()

@@ -1,3 +1,5 @@
+from sqlalchemy.sql import func
+
 # grid relative
 from .. import BaseModel
 from .. import db
@@ -26,6 +28,9 @@ class AssociationRequest(BaseModel):
     accepted = db.Column(db.Boolean(), default=False)
     pending = db.Column(db.Boolean(), default=True)
     handshake_value = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     def __str__(self):
         return f"< Association Request id : {self.id}, Name: {self.name}, Address: {self.address} , pending: {self.pending}, accepted: {self.accepted}, Date: {self.date}>"

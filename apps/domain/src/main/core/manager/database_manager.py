@@ -1,4 +1,5 @@
 # stdlib
+import datetime
 from typing import Dict
 from typing import List
 from typing import Type
@@ -36,7 +37,12 @@ class DatabaseManager:
         Args:
             parameters : List of parameters used to filter.
         """
-        objects = self.db.session.query(self._schema).filter_by(**kwargs).first()
+        objects = (
+            self.db.session.query(self._schema)
+            .filter(self._schema.deleted_at == None)
+            .filter_by(**kwargs)
+            .first()
+        )
         return objects
 
     def last(self, **kwargs):
@@ -48,11 +54,20 @@ class DatabaseManager:
             obj: Last object instance.
         """
 
-        obj = self.db.session.query(self._schema).filter_by(**kwargs).all()[-1]
+        obj = (
+            self.db.session.query(self._schema)
+            .filter(self._schema.deleted_at == None)
+            .filter_by(**kwargs)
+            .all()[-1]
+        )
         return obj
 
     def all(self) -> List[BaseModel]:
-        return list(self.db.session.query(self._schema).all())
+        return list(
+            self.db.session.query(self._schema)
+            .filter(self._schema.deleted_at == None)
+            .all()
+        )
 
     def delete(self, **kwargs):
         """Delete an object from the database.
@@ -61,7 +76,7 @@ class DatabaseManager:
             parameters: Parameters used to filter the object.
         """
         object_to_delete = self.query(**kwargs)[0]
-        self.db.session.delete(object_to_delete)
+        object_to_delete.deleted_at = datetime.datetime.utcnow().replace(microsecond=0)
         self.db.session.commit()
 
     def modify(self, query, values):

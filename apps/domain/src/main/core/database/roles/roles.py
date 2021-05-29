@@ -1,3 +1,5 @@
+from sqlalchemy.sql import func
+
 # grid relative
 from .. import BaseModel
 from .. import db
@@ -15,6 +17,9 @@ class Role(BaseModel):
     can_edit_roles = db.Column(db.Boolean(), default=False)
     can_manage_infrastructure = db.Column(db.Boolean(), default=False)
     can_upload_data = db.Column(db.Boolean(), default=False)
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     def __str__(self):
         return (

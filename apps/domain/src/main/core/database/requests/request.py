@@ -1,3 +1,5 @@
+from sqlalchemy.sql import func
+
 # grid relative
 from .. import BaseModel
 from .. import db
@@ -31,6 +33,9 @@ class Request(BaseModel):
     verify_key = db.Column(db.String(255))
     object_type = db.Column(db.String(255))
     tags = db.Column(db.JSON())
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     def __str__(self):
         return f"< Request id : {self.id}, user: {self.user_id}, Date: {self.date}, Object: {self.object_id}, reason: {self.reason}, status: {self.status}, type: {self.type} >"

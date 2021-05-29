@@ -283,30 +283,32 @@ def test_get_all_roles_success(client, database, cleanup):
     result = client.get("/roles", headers=headers)
 
     assert result.status_code == 200
-    assert result.get_json() == [
-        {
-            "can_create_groups": False,
-            "can_create_users": False,
-            "can_edit_roles": False,
-            "can_edit_settings": False,
-            "can_manage_infrastructure": False,
-            "can_triage_requests": False,
-            "can_upload_data": False,
-            "id": 1,
-            "name": "User",
-        },
-        {
-            "can_create_groups": True,
-            "can_create_users": True,
-            "can_edit_roles": False,
-            "can_edit_settings": True,
-            "can_manage_infrastructure": False,
-            "can_triage_requests": True,
-            "can_upload_data": True,
-            "id": 2,
-            "name": "Administrator",
-        },
-    ]
+    roles = result.get_json()
+    role1 = {
+        "can_create_groups": False,
+        "can_create_users": False,
+        "can_edit_roles": False,
+        "can_edit_settings": False,
+        "can_manage_infrastructure": False,
+        "can_triage_requests": False,
+        "can_upload_data": False,
+        "id": 1,
+        "name": "User",
+    }
+    role2 = {
+        "can_create_groups": True,
+        "can_create_users": True,
+        "can_edit_roles": False,
+        "can_edit_settings": True,
+        "can_manage_infrastructure": False,
+        "can_triage_requests": True,
+        "can_upload_data": True,
+        "id": 2,
+        "name": "Administrator",
+    }
+
+    assert role1.items() <= roles[0].items()
+    assert role2.items() <= roles[1].items()
 
 
 # GET SINGLE ROLE
@@ -421,7 +423,8 @@ def test_get_role_success(client, database, cleanup):
     result = client.get("/roles/1", headers=headers)
 
     assert result.status_code == 200
-    assert result.get_json() == {
+    role = result.get_json()
+    expected_role = {
         "id": 1,
         "name": "User",
         "can_triage_requests": False,
@@ -432,6 +435,8 @@ def test_get_role_success(client, database, cleanup):
         "can_manage_infrastructure": False,
         "can_upload_data": False,
     }
+
+    assert expected_role.items() <= role.items()
 
 
 # PUT ROLE

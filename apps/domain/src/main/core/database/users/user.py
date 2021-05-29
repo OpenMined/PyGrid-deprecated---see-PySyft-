@@ -1,4 +1,5 @@
 # grid relative
+from sqlalchemy.sql import func
 from .. import BaseModel
 from .. import db
 
@@ -13,6 +14,9 @@ class User(BaseModel):
     private_key = db.Column(db.String(2048))
     verify_key = db.Column(db.String(2048))
     role = db.Column(db.Integer, db.ForeignKey("role.id"))
+    created_at = db.Column(db.DateTime(timezone=False), server_default=func.now())
+    updated_at = db.Column(db.DateTime(timezone=False), onupdate=func.now())
+    deleted_at = db.Column(db.DateTime(timezone=False), default=None)
 
     def __str__(self):
         return f"<User id: {self.id}, email: {self.email}, " f"role: {self.role}>"
