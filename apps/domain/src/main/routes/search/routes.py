@@ -7,6 +7,7 @@ from flask import request
 from syft.grid.messages.network_search_message import NetworkSearchMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import optional_token
@@ -16,7 +17,7 @@ from .blueprint import search_blueprint as search_route
 
 @search_route.route("/", methods=["GET"])
 @optional_token
-def broadcast_search(current_user):
+def broadcast_search(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

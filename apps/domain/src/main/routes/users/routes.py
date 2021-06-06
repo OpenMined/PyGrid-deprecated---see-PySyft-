@@ -12,6 +12,7 @@ from syft.grid.messages.user_messages import SearchUsersMessage
 from syft.grid.messages.user_messages import UpdateUserMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.database.utils import model_to_json
 from ...core.exceptions import MissingRequestKeyError
 from ...core.task_handler import route_logic
@@ -24,7 +25,7 @@ from .blueprint import users_blueprint as user_route
 
 @user_route.route("me", methods=["GET"])
 @token_required
-def me(current_user):
+def me(current_user: User) -> Response:
     user = model_to_json(current_user)
     return Response(
         json.dumps(user),
@@ -35,7 +36,7 @@ def me(current_user):
 
 @user_route.route("", methods=["POST"])
 @optional_token
-def create_user(current_user):
+def create_user(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -55,8 +56,8 @@ def create_user(current_user):
 
 
 @user_route.route("/login", methods=["POST"])
-def login_route():
-    def route_logic():
+def login_route() -> Response:
+    def route_logic() -> dict:
         # grid relative
         from ...core.node import get_node  # TODO: fix circular import
 
@@ -83,7 +84,7 @@ def login_route():
 
 @user_route.route("", methods=["GET"])
 @token_required
-def get_all_users_route(current_user):
+def get_all_users_route(current_user: User) -> Response:
     status_code, response_msg = error_handler(
         route_logic, 200, GetUsersMessage, current_user, {}
     )
@@ -99,8 +100,7 @@ def get_all_users_route(current_user):
 
 @user_route.route("/<user_id>", methods=["GET"])
 @token_required
-def get_specific_user_route(current_user, user_id):
-
+def get_specific_user_route(current_user: User, user_id: str) -> Response:
     content = {}
     content["user_id"] = user_id
 
@@ -119,7 +119,7 @@ def get_specific_user_route(current_user, user_id):
 
 @user_route.route("/<user_id>/email", methods=["PUT"])
 @token_required
-def change_user_email_route(current_user, user_id):
+def change_user_email_route(current_user: User, user_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -141,7 +141,7 @@ def change_user_email_route(current_user, user_id):
 
 @user_route.route("/<user_id>/role", methods=["PUT"])
 @token_required
-def change_user_role_route(current_user, user_id):
+def change_user_role_route(current_user: User, user_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -163,7 +163,7 @@ def change_user_role_route(current_user, user_id):
 
 @user_route.route("/<user_id>/password", methods=["PUT"])
 @token_required
-def change_user_password_role(current_user, user_id):
+def change_user_password_role(current_user: User, user_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -185,7 +185,7 @@ def change_user_password_role(current_user, user_id):
 
 @user_route.route("/<user_id>/groups", methods=["PUT"])
 @token_required
-def change_user_groups_route(current_user, user_id):
+def change_user_groups_route(current_user: User, user_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -207,7 +207,7 @@ def change_user_groups_route(current_user, user_id):
 
 @user_route.route("/<user_id>", methods=["DELETE"])
 @token_required
-def delete_user_role(current_user, user_id):
+def delete_user_role(current_user: User, user_id: str) -> Response:
     content = {}
     content["user_id"] = user_id
 
@@ -226,7 +226,7 @@ def delete_user_role(current_user, user_id):
 
 @user_route.route("/search", methods=["POST"])
 @token_required
-def search_users_route(current_user):
+def search_users_route(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

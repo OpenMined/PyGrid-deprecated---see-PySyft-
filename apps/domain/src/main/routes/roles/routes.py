@@ -11,6 +11,7 @@ from syft.grid.messages.role_messages import GetRolesMessage
 from syft.grid.messages.role_messages import UpdateRoleMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import token_required
@@ -19,7 +20,7 @@ from .blueprint import roles_blueprint as roles_route
 
 @roles_route.route("", methods=["POST"])
 @token_required
-def create_role_route(current_user):
+def create_role_route(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -40,7 +41,7 @@ def create_role_route(current_user):
 
 @roles_route.route("/<role_id>", methods=["GET"])
 @token_required
-def get_role_route(current_user, role_id):
+def get_role_route(current_user: User, role_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -62,7 +63,7 @@ def get_role_route(current_user, role_id):
 
 @roles_route.route("", methods=["GET"])
 @token_required
-def get_all_roles_route(current_user):
+def get_all_roles_route(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -83,7 +84,7 @@ def get_all_roles_route(current_user):
 
 @roles_route.route("/<role_id>", methods=["PUT"])
 @token_required
-def put_role_route(current_user, role_id):
+def put_role_route(current_user: User, role_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -105,7 +106,7 @@ def put_role_route(current_user, role_id):
 
 @roles_route.route("/<role_id>", methods=["DELETE"])
 @token_required
-def delete_role_route(current_user, role_id):
+def delete_role_route(current_user: User, role_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

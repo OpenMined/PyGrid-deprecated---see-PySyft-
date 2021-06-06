@@ -7,6 +7,7 @@ from flask import request
 from syft.grid.messages.infra_messages import GetWorkerInstanceTypesMessage
 
 # grid relative
+from main.core.database.users.user import User
 from ....core.task_handler import route_logic
 from ...auth import error_handler
 from ...auth import token_required
@@ -21,7 +22,7 @@ from syft.grid.messages.infra_messages import GetWorkersMessage  # noqa isort:sk
 
 @dcfl_route.route("/workers/instances", methods=["GET"])
 @token_required
-def get_worker_instance_types(current_user):
+def get_worker_instance_types(current_user: User) -> Response:
     content = request.get_json()
 
     if not content:
@@ -39,7 +40,7 @@ def get_worker_instance_types(current_user):
 
 @dcfl_route.route("/workers", methods=["POST"])
 @token_required
-def create_worker(current_user):
+def create_worker(current_user: User) -> Response:
     # Get request body
     content = json.loads(request.data)
 
@@ -59,7 +60,7 @@ def create_worker(current_user):
 
 @dcfl_route.route("/workers", methods=["GET"])
 @token_required
-def get_all_workers(current_user):
+def get_all_workers(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
 
@@ -88,7 +89,7 @@ def get_all_workers(current_user):
 
 @dcfl_route.route("/workers/<worker_id>", methods=["GET"])
 @token_required
-def get_worker(current_user, worker_id):
+def get_worker(current_user: User, worker_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -106,7 +107,7 @@ def get_worker(current_user, worker_id):
 
 @dcfl_route.route("/workers/<worker_id>", methods=["DELETE"])
 @token_required
-def delete_worker(current_user, worker_id):
+def delete_worker(current_user: User, worker_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

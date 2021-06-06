@@ -12,6 +12,7 @@ from syft.grid.messages.association_messages import RespondAssociationRequestMes
 from syft.grid.messages.association_messages import SendAssociationRequestMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import token_required
@@ -20,7 +21,7 @@ from .blueprint import association_requests_blueprint as association_request_rou
 
 @association_request_route.route("/request", methods=["POST"])
 @token_required
-def send_association_request(current_user):
+def send_association_request(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -48,7 +49,7 @@ def send_association_request(current_user):
 
 
 @association_request_route.route("/receive", methods=["POST"])
-def recv_association_request():
+def recv_association_request() -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -69,7 +70,7 @@ def recv_association_request():
 
 @association_request_route.route("/respond", methods=["POST"])
 @token_required
-def reply_association_request(current_user):
+def reply_association_request(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -98,7 +99,7 @@ def reply_association_request(current_user):
 
 @association_request_route.route("/", methods=["GET"])
 @token_required
-def get_all_association_requests(current_user):
+def get_all_association_requests(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -119,7 +120,7 @@ def get_all_association_requests(current_user):
 
 @association_request_route.route("/<association_request_id>", methods=["GET"])
 @token_required
-def get_specific_association_requests(current_user, association_request_id):
+def get_specific_association_requests(current_user: User, association_request_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -143,7 +144,7 @@ def get_specific_association_requests(current_user, association_request_id):
 
 @association_request_route.route("/<association_request_id>", methods=["DELETE"])
 @token_required
-def delete_association_requests(current_user, association_request_id):
+def delete_association_requests(current_user: User, association_request_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

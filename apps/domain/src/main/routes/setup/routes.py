@@ -8,6 +8,7 @@ from syft.grid.messages.setup_messages import CreateInitialSetUpMessage
 from syft.grid.messages.setup_messages import GetSetUpMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import optional_token
@@ -17,7 +18,7 @@ from .blueprint import setup_blueprint as setup_route
 
 @setup_route.route("", methods=["POST"])
 @optional_token
-def initial_setup(current_user):
+def initial_setup(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -38,7 +39,7 @@ def initial_setup(current_user):
 
 @setup_route.route("", methods=["GET"])
 @token_required
-def get_setup(current_user):
+def get_setup(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -58,7 +59,7 @@ def get_setup(current_user):
 
 
 @setup_route.route("/status", methods=["GET"])
-def get_status():
+def get_status() -> Response:
     # third party
     from main.core.node import get_node  # TODO: fix circular import
 

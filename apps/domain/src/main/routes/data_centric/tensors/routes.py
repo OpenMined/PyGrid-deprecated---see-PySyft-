@@ -11,6 +11,7 @@ from syft.grid.messages.tensor_messages import GetTensorsMessage
 from syft.grid.messages.tensor_messages import UpdateTensorMessage
 
 # grid relative
+from main.core.database.users.user import User
 from ....core.task_handler import route_logic
 from ...auth import error_handler
 from ...auth import token_required
@@ -19,7 +20,7 @@ from ..blueprint import dcfl_blueprint as dcfl_route
 
 @dcfl_route.route("/tensors", methods=["POST"])
 @token_required
-def create_tensor(current_user):
+def create_tensor(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -40,7 +41,7 @@ def create_tensor(current_user):
 
 @dcfl_route.route("/tensors/<tensor_id>", methods=["GET"])
 @token_required
-def get_tensor(current_user, tensor_id):
+def get_tensor(current_user: User, tensor_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -62,7 +63,7 @@ def get_tensor(current_user, tensor_id):
 
 
 @dcfl_route.route("/tensors", methods=["GET"])
-def get_all_tensors():
+def get_all_tensors() -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -83,7 +84,7 @@ def get_all_tensors():
 
 @dcfl_route.route("/tensors/<tensor_id>", methods=["PUT"])
 @token_required
-def update_tensor(current_user, tensor_id):
+def update_tensor(current_user: User, tensor_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -106,7 +107,7 @@ def update_tensor(current_user, tensor_id):
 
 @dcfl_route.route("/tensors/<tensor_id>", methods=["DELETE"])
 @token_required
-def delete_tensor(current_user, tensor_id):
+def delete_tensor(current_user: User, tensor_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

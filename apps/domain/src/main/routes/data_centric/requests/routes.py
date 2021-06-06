@@ -16,6 +16,7 @@ from syft.grid.messages.request_messages import GetRequestsMessage
 from syft.grid.messages.request_messages import UpdateRequestMessage
 
 # grid relative
+from main.core.database.users.user import User
 from ...auth import error_handler
 from ...auth import optional_token
 from ...auth import token_required
@@ -24,7 +25,7 @@ from ..blueprint import dcfl_blueprint as dcfl_route
 
 @dcfl_route.route("/requests", methods=["POST"])
 @token_required
-def create_request(current_user):
+def create_request(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -45,7 +46,7 @@ def create_request(current_user):
 
 @dcfl_route.route("/requests/<request_id>", methods=["GET"])
 @token_required
-def get_specific_request(current_user, request_id):
+def get_specific_request(current_user: User, request_id: str) -> Response:
     content = {}
     content["request_id"] = request_id
 
@@ -64,7 +65,7 @@ def get_specific_request(current_user, request_id):
 
 @dcfl_route.route("/requests", methods=["GET"])
 @token_required
-def get_all_requests(current_user):
+def get_all_requests(current_user: User) -> Response:
     content = {}
 
     status_code, response_msg = error_handler(
@@ -82,7 +83,7 @@ def get_all_requests(current_user):
 
 @dcfl_route.route("/requests/<request_id>", methods=["PUT"])
 @token_required
-def update_request(current_user, request_id):
+def update_request(current_user: User, request_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -105,7 +106,7 @@ def update_request(current_user, request_id):
 
 @dcfl_route.route("/requests/<request_id>", methods=["DELETE"])
 @token_required
-def delete_request(current_user, request_id):
+def delete_request(current_user: User, request_id: str) -> Response:
     content = {}
     content["request_id"] = request_id
 

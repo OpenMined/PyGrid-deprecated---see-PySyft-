@@ -10,6 +10,7 @@ from syft import serialize
 from syft.core.common.message import SignedImmediateSyftMessageWithReply
 
 # syft absolute
+from ...core.database.users.user import User
 from syft.core.common.message import SignedImmediateSyftMessageWithoutReply
 from syft.core.common.serde.deserialize import _deserialize
 from syft.core.common.serde.serialize import _serialize
@@ -23,7 +24,7 @@ from .blueprint import root_blueprint as root_route
 
 @root_route.route("/dashboard", methods=["GET"])
 @token_required
-def dashboard_route(current_user):
+def dashboard_route(current_user: User) -> Response:
     # grid relative
     from ...core.node import get_node  # TODO: fix circular import
 
@@ -49,7 +50,7 @@ def dashboard_route(current_user):
 
 
 @root_route.route("/metadata", methods=["GET"])
-def metadata_route():
+def metadata_route() -> Response:
     # grid relative
     from ...core.node import get_node  # TODO: fix circular import
 
@@ -62,7 +63,7 @@ def metadata_route():
 
 
 @root_route.route("/pysyft", methods=["POST"])
-def syft_route():
+def syft_route() -> Response:
     # grid relative
     from ...core.node import get_node  # TODO: fix circular import
 
@@ -77,11 +78,11 @@ def syft_route():
         get_node().recv_immediate_msg_without_reply(msg=obj_msg)
     else:
         get_node().recv_eventual_msg_without_reply(msg=obj_msg)
-    return ""
+    return ""  # TODO Should be a None, inconsistent type on return
 
 
 @root_route.route("/pysyft_multipart", methods=["POST"])
-def syft_multipart_route():
+def syft_multipart_route() -> Response:
     # grid relative
     from ...core.node import get_node  # TODO: fix circular import
 
@@ -107,4 +108,4 @@ def syft_multipart_route():
     else:
         get_node().recv_eventual_msg_without_reply(msg=obj_msg)
 
-    return ""
+    return ""  # TODO Should be a None, inconsistent type on return

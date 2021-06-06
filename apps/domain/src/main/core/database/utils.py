@@ -1,11 +1,12 @@
 # grid relative
 from . import db
+from . import BaseModel
 from .groups.groups import Group
 from .groups.usergroup import UserGroup
 from .roles.roles import Role
 
 
-def model_to_json(model):
+def model_to_json(model: BaseModel) -> dict:
     """Returns a JSON representation of an SQLAlchemy-backed object."""
     json = {}
     for col in model.__mapper__.attrs.keys():
@@ -19,7 +20,7 @@ def model_to_json(model):
     return json
 
 
-def expand_user_object(user):
+def expand_user_object(user: BaseModel) -> dict:
     def get_group(user_group):
         query = db.session().query
         group = user_group.group

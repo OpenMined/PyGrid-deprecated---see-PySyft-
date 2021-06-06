@@ -20,6 +20,7 @@ from syft.grid.messages.dataset_messages import UpdateDatasetMessage
 from werkzeug.utils import secure_filename
 
 # grid relative
+from main.core.database.users.user import User
 from ...auth import error_handler
 from ...auth import optional_token
 from ...auth import token_required
@@ -28,13 +29,13 @@ from ..blueprint import dcfl_blueprint as dcfl_route
 ALLOWED_EXTENSIONS = {"tar.gz"}
 
 
-def allowed_file(filename):
+def allowed_file(filename: str)-> bool:
     return "." in filename and filename.x.split(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @dcfl_route.route("/datasets", methods=["POST"])
 @token_required
-def create_dataset(current_user):
+def create_dataset(current_user: User) -> Response:
     # grid relative
     from ....core.node import get_node  # TODO: fix circular import
 
@@ -80,7 +81,7 @@ def create_dataset(current_user):
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["GET"])
 @token_required
-def get_dataset_info(current_user, dataset_id):
+def get_dataset_info(current_user: User, dataset_id: str)-> Response:
     content = {}
     content["current_user"] = current_user
     content["dataset_id"] = dataset_id
@@ -99,7 +100,7 @@ def get_dataset_info(current_user, dataset_id):
 
 @dcfl_route.route("/datasets", methods=["GET"])
 @token_required
-def get_all_datasets_info(current_user):
+def get_all_datasets_info(current_user: User)-> Response:
     content = {}
     content["current_user"] = current_user
     status_code, response_msg = error_handler(
@@ -117,7 +118,7 @@ def get_all_datasets_info(current_user):
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["PUT"])
 @token_required
-def update_dataset(current_user, dataset_id):
+def update_dataset(current_user: User, dataset_id: str)-> Response:
     # Get request body
     content = request.get_json()
     content["current_user"] = current_user
@@ -137,7 +138,7 @@ def update_dataset(current_user, dataset_id):
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["DELETE"])
 @token_required
-def delete_dataset(current_user, dataset_id):
+def delete_dataset(current_user: User, dataset_id: str)-> Response:
     # Get request body
     content = {}
     content["current_user"] = current_user

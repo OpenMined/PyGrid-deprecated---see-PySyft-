@@ -11,6 +11,7 @@ from syft.grid.messages.group_messages import GetGroupsMessage
 from syft.grid.messages.group_messages import UpdateGroupMessage
 
 # grid relative
+from ...core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import token_required
@@ -19,7 +20,7 @@ from .blueprint import groups_blueprint as group_route
 
 @group_route.route("", methods=["POST"])
 @token_required
-def create_group_route(current_user):
+def create_group_route(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -41,7 +42,7 @@ def create_group_route(current_user):
 
 @group_route.route("", methods=["GET"])
 @token_required
-def get_all_groups_routes(current_user):
+def get_all_groups_routes(current_user: User) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -63,7 +64,7 @@ def get_all_groups_routes(current_user):
 
 @group_route.route("/<group_id>", methods=["GET"])
 @token_required
-def get_specific_group_route(current_user, group_id):
+def get_specific_group_route(current_user: User, group_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -86,7 +87,7 @@ def get_specific_group_route(current_user, group_id):
 
 @group_route.route("/<group_id>", methods=["PUT"])
 @token_required
-def update_group_route(current_user, group_id):
+def update_group_route(current_user: User, group_id: str) -> Response :
     # Get request body
     content = request.get_json()
     if not content:
@@ -109,7 +110,7 @@ def update_group_route(current_user, group_id):
 
 @group_route.route("/<group_id>", methods=["DELETE"])
 @token_required
-def delete_group_route(current_user, group_id):
+def delete_group_route(current_user: User, group_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

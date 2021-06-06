@@ -4,6 +4,7 @@ import json
 import logging
 from math import floor
 from random import random
+from typing import List, Optional
 
 # third party
 from flask import Response
@@ -18,6 +19,7 @@ from requests_toolbelt import MultipartEncoder
 from scipy.stats import poisson
 
 # grid relative
+from main.core.database.users.user import User
 from ...core.codes import CYCLE
 from ...core.codes import MSG_FIELD
 from ...core.codes import RESPONSE_MSG
@@ -40,7 +42,7 @@ from .blueprint import mcfl_blueprint
 
 
 @mcfl_blueprint.route("/cycle-request", methods=["POST"])
-def worker_cycle_request():
+def worker_cycle_request() -> Response:
     """This endpoint is where the worker is attempting to join an active
     federated learning cycle."""
     response_body = {}
@@ -62,7 +64,7 @@ def worker_cycle_request():
 
 
 @mcfl_blueprint.route("/speed-test", methods=["GET", "POST"])
-def connection_speed_test():
+def connection_speed_test() -> Response:
     """Connection speed test."""
     response_body = {}
     status_code = None
@@ -101,7 +103,7 @@ def connection_speed_test():
 
 
 @mcfl_blueprint.route("/report", methods=["POST"])
-def report_diff():
+def report_diff() -> Response:
     """Allows reporting of (agg/non-agg) model diff after worker completes a
     cycle."""
     response_body = {}
@@ -123,7 +125,7 @@ def report_diff():
 
 
 @mcfl_blueprint.route("/get-protocol", methods=["GET"])
-def download_protocol():
+def download_protocol() -> Response:
     """Request a download of a protocol."""
 
     response_body = {}
@@ -160,7 +162,7 @@ def download_protocol():
 
 
 @mcfl_blueprint.route("/get-model", methods=["GET"])
-def download_model():
+def download_model() -> Response:
     """Request a download of a model."""
 
     response_body = {}
@@ -201,7 +203,7 @@ def download_model():
 
 
 @mcfl_blueprint.route("/get-plan", methods=["GET"])
-def download_plan():
+def download_plan() -> Response:
     """Request a download of a plan."""
 
     response_body = {}
@@ -249,7 +251,7 @@ def download_plan():
 
 
 @mcfl_blueprint.route("/authenticate", methods=["POST"])
-def auth():
+def auth() -> Response:
     """uses JWT (HSA/RSA) to authenticate."""
     response_body = {}
     status_code = 200
@@ -283,7 +285,7 @@ def auth():
 
 
 @mcfl_blueprint.route("/req-join", methods=["GET"])
-def fl_cycle_application_decision():
+def fl_cycle_application_decision() -> Response:
     """use the temporary req_join endpoint to mockup:
 
     - reject if worker does not satisfy 'minimum_upload_speed' and/or 'minimum_download_speed'
@@ -399,7 +401,7 @@ def fl_cycle_application_decision():
             # @hyperparam: valid_range => (0, 1) | (+) => get a faster but lower quality approximation
             _search_tolerance = 0.01
 
-            def _bisect_approximator(arr, search_tolerance=_search_tolerance):
+            def _bisect_approximator(arr: List, search_tolerance: int =_search_tolerance) -> Optional[int]:
                 """uses binary search to find lambda_actual within
                 search_tolerance."""
                 n = len(arr)
@@ -468,7 +470,7 @@ def fl_cycle_application_decision():
 
 
 @mcfl_blueprint.route("/retrieve-model", methods=["GET"])
-def get_model():
+def get_model() -> Response:
     """Request a download of a model."""
 
     response_body = {}

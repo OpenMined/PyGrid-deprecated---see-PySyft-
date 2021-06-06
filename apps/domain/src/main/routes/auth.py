@@ -1,6 +1,7 @@
 # stdlib
-from functools import wraps
 from json import dumps
+from functools import wraps
+from typing import Callable
 from json.decoder import JSONDecodeError
 
 # third party
@@ -24,10 +25,10 @@ from ..core.exceptions import RoleNotFoundError
 from ..core.exceptions import UserNotFoundError
 
 
-def token_required_factory(get_token, format_result, optional=False):
-    def decorator(f):
+def token_required_factory(get_token: Callable, format_result: Callable, optional: bool = False) -> Callable:
+    def decorator(f: Callable) -> Callable:
         @wraps(f)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Callable:
             status_code = 200
             mimetype = "application/json"
             response_body = {}
@@ -58,7 +59,7 @@ def token_required_factory(get_token, format_result, optional=False):
     return decorator
 
 
-def get_token(optional=False):
+def get_token(optional: bool = False) -> str:
     token = request.headers.get("token", None)
     if token is None and not optional:
         raise MissingRequestKeyError
@@ -66,7 +67,7 @@ def get_token(optional=False):
     return token
 
 
-def format_result(response_body, status_code, mimetype):
+def format_result(response_body: dict, status_code: int, mimetype: str) -> Response:
     return Response(dumps(response_body), status=status_code, mimetype=mimetype)
 
 
@@ -74,7 +75,7 @@ token_required = token_required_factory(get_token, format_result)
 optional_token = token_required_factory(get_token, format_result, optional=True)
 
 
-def error_handler(f, success_code, *args, **kwargs):
+def error_handler(f: Callable, success_code: int, *args, **kwargs) -> (int, dict):
     status_code = success_code  # Success
     response_body = {}
 
