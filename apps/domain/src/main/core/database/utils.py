@@ -21,7 +21,7 @@ def model_to_json(model: BaseModel) -> dict:
 
 
 def expand_user_object(user: BaseModel) -> dict:
-    def get_group(user_group):
+    def get_group(user_group: int) -> dict:
         query = db.session().query
         group = user_group.group
         group = query(Group).get(group)

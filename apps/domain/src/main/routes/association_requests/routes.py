@@ -12,7 +12,7 @@ from syft.grid.messages.association_messages import RespondAssociationRequestMes
 from syft.grid.messages.association_messages import SendAssociationRequestMessage
 
 # grid relative
-from ...core.database.users.user import User
+from main.core.database.users.user import User
 from ...core.task_handler import route_logic
 from ..auth import error_handler
 from ..auth import token_required

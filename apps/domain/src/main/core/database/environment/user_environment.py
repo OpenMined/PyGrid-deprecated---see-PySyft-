@@ -10,7 +10,7 @@ class UserEnvironment(BaseModel):
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     environment = db.Column(db.Integer, db.ForeignKey("environment.id"))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"<UserGroup id: {self.id}, user: {self.user}, "
             f"group: {self.environment}>"

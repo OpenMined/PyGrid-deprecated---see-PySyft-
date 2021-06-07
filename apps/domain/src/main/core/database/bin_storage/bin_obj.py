@@ -1,3 +1,5 @@
+from typing import TypeVar, Type
+
 # third party
 from syft import deserialize
 from syft import serialize
@@ -13,6 +15,7 @@ bin_to_proto = {
     PandasDataFrame_PB.__name__: PandasDataFrame_PB,
 }
 
+T = TypeVar('T')
 
 class BinObject(BaseModel):
     __tablename__ = "bin_object"
@@ -22,14 +25,14 @@ class BinObject(BaseModel):
     protobuf_name = db.Column(db.String(3072))
 
     @property
-    def object(self):
+    def object(self) -> Type[T]:
         _proto_struct = bin_to_proto[self.protobuf_name]()
         _proto_struct.ParseFromString(self.binary)
         _obj = deserialize(blob=_proto_struct)
         return _obj
 
     @object.setter
-    def object(self, value):
+    def object(self, value) -> None:
         serialized_value = serialize(value)
         self.binary = serialized_value.SerializeToString()
         self.protobuf_name = serialized_value.__class__.__name__

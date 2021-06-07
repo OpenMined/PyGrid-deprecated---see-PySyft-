@@ -2,7 +2,7 @@
 
 
 class PyGridError(Exception):
-    def __init__(self, message) -> None:
+    def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
@@ -129,7 +129,7 @@ class InvalidCredentialsError(PyGridError):
 
 
 class MissingRequestKeyError(PyGridError):
-    def __init__(self) -> None:
+    def __init__(self, message: str = "") -> None:
         if not message:
             message = "Missing request key!"
         super().__init__(message)

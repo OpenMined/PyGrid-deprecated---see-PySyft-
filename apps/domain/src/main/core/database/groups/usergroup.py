@@ -10,5 +10,5 @@ class UserGroup(BaseModel):
     user = db.Column(db.Integer, db.ForeignKey("user.id"))
     group = db.Column(db.Integer, db.ForeignKey("group.id"))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<UserGroup id: {self.id}, user: {self.user}, " f"group: {self.group}>"

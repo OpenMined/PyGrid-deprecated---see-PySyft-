@@ -2,6 +2,7 @@
 import os
 
 # third party
+from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_mixins import AllFeaturesMixin
@@ -33,7 +34,7 @@ from .utils import expand_user_object
 from .utils import model_to_json
 
 
-def set_database_config(app, test_config=None, verbose=False):
+def set_database_config(app: Flask, test_config: bool =None, verbose: bool =False) -> None:
     """Set configs to use SQL Alchemy library.
 
     Args:
@@ -71,7 +72,7 @@ def set_database_config(app, test_config=None, verbose=False):
     db.init_app(app)
 
 
-def seed_db():
+def seed_db() -> None:
     global db
 
     new_role = Role(

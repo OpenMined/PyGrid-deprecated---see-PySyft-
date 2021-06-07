@@ -18,10 +18,10 @@ class SetupConfig(BaseModel):
     tensor_expiration_policy = db.Column(db.Integer(), default=0)
     allow_user_signup = db.Column(db.Boolean(), default=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Domain Name: {self.domain_name}, Private Key: {self.private_key}, AWS Credentials: {self.aws_credentials}, GCP Credentials: {self.gcp_credentials}, Azure Credentials: {self.azure_credentials}, Cache Strategy: {self.cache_strategy}, Replicate Database: {self.replicate_db}, Auto Scale: {self.auto_scale}, Tensor Exp Policy: {self.tensor_expiration_policy}, Allow User Signup: {self.allow_user_signup}>"
 
 
-def create_setup(**kwargs):
+def create_setup(**kwargs) -> SetupConfig:
     new_setup = SetupConfig(**kwargs)
     return new_setup

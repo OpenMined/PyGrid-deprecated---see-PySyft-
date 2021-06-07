@@ -10,7 +10,7 @@ class DatasetGroup(BaseModel):
     bin_object = db.Column(db.String(), db.ForeignKey("bin_object.id"))
     dataset = db.Column(db.String(), db.ForeignKey("json_object.id"))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"<DatasetGroup id: {self.id}, bin_object: {self.bin_object}, "
             f"dataset: {self.dataset}>"

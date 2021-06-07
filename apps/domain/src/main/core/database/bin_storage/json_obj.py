@@ -10,5 +10,5 @@ class JsonObject(BaseModel):
     id = db.Column(db.String(), primary_key=True)
     binary = db.Column(db.JSON())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<JsonObject id: {self.id}>"

@@ -27,5 +27,5 @@ class AssociationRequest(BaseModel):
     pending = db.Column(db.Boolean(), default=True)
     handshake_value = db.Column(db.String(255))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"< Association Request id : {self.id}, Name: {self.name}, Address: {self.address} , pending: {self.pending}, accepted: {self.accepted}, Date: {self.date}>"

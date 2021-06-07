@@ -9,5 +9,5 @@ class Group(BaseModel):
     id = db.Column(db.Integer(), primary_key=True, autoincrement=True)
     name = db.Column(db.String(255))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Group id: {self.id}, name: {self.name}>"

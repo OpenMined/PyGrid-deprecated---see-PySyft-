@@ -21,5 +21,5 @@ class Environment(BaseModel):
     created_at = db.Column(db.DateTime, default=datetime.now())
     destroyed_at = db.Column(db.DateTime, default=datetime.now())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<Group id: {self.id}, state: {self.state}, address: {self.address}, syft_address: {self.syft_address}, provider: {self.provider}, region: {self.region}, instance_type: {self.instance_type}, created_at: {self.created_at}, destroyed_at: {self.destroyed_at}>"

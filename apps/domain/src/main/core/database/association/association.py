@@ -20,5 +20,5 @@ class Association(BaseModel):
     name = db.Column(db.String(255))
     address = db.Column(db.String(255))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"< Association id : {self.id}, Name: {self.name}, Address: {self.address}, Date: {self.date}>"

@@ -5,7 +5,9 @@ from typing import Optional
 from typing import ValuesView
 
 # third party
+from flask import Flask
 from flask import current_app as app
+from flask_sqlalchemy import SQLAlchemy
 from nacl.encoding import HexEncoder
 from nacl.signing import VerifyKey
 import syft
@@ -43,7 +45,7 @@ def storable_to_dict(storable_obj: StorableObject) -> dict:
 
 
 class DiskObjectStore(ObjectStore):
-    def __init__(self, db):
+    def __init__(self, db: SQLAlchemy) -> None:
         self.db = db
 
     def get_object(self, key: UID) -> Optional[StorableObject]:

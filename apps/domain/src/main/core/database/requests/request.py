@@ -32,5 +32,5 @@ class Request(BaseModel):
     object_type = db.Column(db.String(255))
     tags = db.Column(db.JSON())
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"< Request id : {self.id}, user: {self.user_id}, Date: {self.date}, Object: {self.object_id}, reason: {self.reason}, status: {self.status}, type: {self.type} >"
