@@ -15,7 +15,8 @@ bin_to_proto = {
     PandasDataFrame_PB.__name__: PandasDataFrame_PB,
 }
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class BinObject(BaseModel):
     __tablename__ = "bin_object"

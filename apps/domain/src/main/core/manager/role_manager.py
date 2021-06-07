@@ -2,6 +2,8 @@
 from typing import List
 from typing import Union
 
+from flask_sqlalchemy import SQLAlchemy
+
 # grid relative
 from ..database.roles.roles import Role
 from ..exceptions import RoleNotFoundError
@@ -12,28 +14,28 @@ class RoleManager(DatabaseManager):
 
     schema = Role
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = RoleManager.schema
         self.db = database
 
     @property
-    def user_role(self):
+    def user_role(self) -> Role:
         return self.first(name="User")
 
     @property
-    def owner_role(self):
+    def owner_role(self) -> Role:
         return self.first(name="Owner")
 
     @property
-    def compliance_officer_role(self):
+    def compliance_officer_role(self) -> Role:
         return self.first(name="Compliance Officer")
 
     @property
-    def admin_role(self):
+    def admin_role(self) -> Role:
         return self.first(name="Administrator")
 
     @property
-    def common_roles(self):
+    def common_roles(self) -> List[Role]:
         return self.db.session.query(self._schema).filter_by(
             can_triage_requests=False,
             can_edit_settings=False,
@@ -45,7 +47,7 @@ class RoleManager(DatabaseManager):
         )
 
     @property
-    def org_roles(self):
+    def org_roles(self) -> List[Role]:
         return self.db.session.query(self._schema).except_(self.common_roles)
 
     def first(self, **kwargs) -> Union[None, List]:
@@ -60,7 +62,7 @@ class RoleManager(DatabaseManager):
             raise RoleNotFoundError
         return results
 
-    def set(self, role_id, params):
+    def set(self, role_id, params) -> None:
         if self.contain(id=role_id):
             self.modify({"id": role_id}, params)
         else:

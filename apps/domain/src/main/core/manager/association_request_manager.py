@@ -4,7 +4,10 @@ from hashlib import sha256
 from typing import List
 from typing import Union
 
+from flask_sqlalchemy import SQLAlchemy
+
 # grid relative
+from ..database import BaseModel
 from ..database.association.association import Association
 from ..database.association.request import AssociationRequest
 from ..exceptions import AssociationRequestError
@@ -16,7 +19,7 @@ class AssociationRequestManager(DatabaseManager):
 
     schema = AssociationRequest
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = AssociationRequestManager.schema
         self.db = database
 
@@ -27,7 +30,9 @@ class AssociationRequestManager(DatabaseManager):
 
         return result
 
-    def create_association_request(self, name, address, sender_address):
+    def create_association_request(
+        self, name: str, address: str, sender_address: str
+    ) -> BaseModel:
         date = datetime.now()
         if super().first(name=name):
             raise Exception("Association request name already exists!")
@@ -42,13 +47,13 @@ class AssociationRequestManager(DatabaseManager):
             handshake_value=handshake_value,
         )
 
-    def associations(self):
+    def associations(self) -> List:
         return list(self.db.session.query(Association).all())
 
-    def association(self, **kwargs):
+    def association(self, **kwargs) -> List:
         return self.db.session.query(Association).filter_by(**kwargs).first()
 
-    def set(self, handshake, value):
+    def set(self, handshake, value) -> None:
         accepted_value = value == "accept"
         if accepted_value:
             req = self.first(handshake_value=handshake)
@@ -61,7 +66,7 @@ class AssociationRequestManager(DatabaseManager):
             {"pending": False, "accepted": accepted_value},
         )
 
-    def __generate_hash(self, name):
+    def __generate_hash(self, name: str) -> str:
         initial_string = name
         initial_string_encoded = initial_string.encode("UTF-8")
         hashed = sha256(initial_string_encoded)

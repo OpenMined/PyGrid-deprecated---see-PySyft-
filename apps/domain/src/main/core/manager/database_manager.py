@@ -39,7 +39,7 @@ class DatabaseManager:
         objects = self.db.session.query(self._schema).filter_by(**kwargs).first()
         return objects
 
-    def last(self, **kwargs):
+    def last(self, **kwargs) -> BaseModel:
         """Query and return the last occurrence.
 
         Args:
@@ -54,7 +54,7 @@ class DatabaseManager:
     def all(self) -> List[BaseModel]:
         return list(self.db.session.query(self._schema).all())
 
-    def delete(self, **kwargs):
+    def delete(self, **kwargs) -> None:
         """Delete an object from the database.
 
         Args:
@@ -64,7 +64,7 @@ class DatabaseManager:
         self.db.session.delete(object_to_delete)
         self.db.session.commit()
 
-    def modify(self, query, values):
+    def modify(self, query, values) -> None:
         """Modifies one or many records."""
         self.db.session.query(self._schema).filter_by(**query).update(values)
         self.db.session.commit()

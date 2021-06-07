@@ -12,7 +12,7 @@ class SetupManager(DatabaseManager):
 
     schema = SetupConfig
 
-    def __init__(self, database):
+    def __init__(self, database) -> None:
         self._schema = SetupManager.schema
         self.db = database
 

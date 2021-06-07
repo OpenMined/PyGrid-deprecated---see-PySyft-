@@ -294,7 +294,7 @@ def test_get_users_missing_token(client, database, cleanup):
 
     headers = {}
     result = client.get("/users", headers=headers, content_type="application/json")
-    
+
     assert result.status_code == 400
     assert result.get_json()["error"] == "Missing request key!"
 

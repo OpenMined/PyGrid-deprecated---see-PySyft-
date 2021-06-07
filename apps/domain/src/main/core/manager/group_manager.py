@@ -1,7 +1,10 @@
 # stdlib
 from typing import List
 
+from flask_sqlalchemy import SQLAlchemy
+
 # grid relative
+from ..database.users.user import User
 from ..database.groups.groups import Group
 from ..database.groups.usergroup import UserGroup
 from ..exceptions import AuthorizationError
@@ -19,7 +22,7 @@ class GroupManager(DatabaseManager):
     schema = Group
     user_group_association_schema = UserGroup
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = GroupManager.schema
         self._association_schema = GroupManager.user_group_association_schema
         self.db = database
@@ -30,12 +33,12 @@ class GroupManager(DatabaseManager):
             raise GroupNotFoundError
         return result
 
-    def create(self, group_name: str, users: List = None):
+    def create(self, group_name: str, users: List = None) -> None:
         group_obj = self.register(name=group_name)
         if users:
             self._attach_users(group_id=group_obj.id, users=users)
 
-    def update(self, group_id, group_name: str = None, users: List = None):
+    def update(self, group_id, group_name: str = None, users: List = None) -> None:
         if group_name:
             self.modify(query={"id": group_id}, values={"name": group_name})
 
@@ -43,19 +46,19 @@ class GroupManager(DatabaseManager):
             self.delete_association(group=group_id)
             self._attach_users(group_id=group_id, users=users)
 
-    def get_users(self, group_id: str):
+    def get_users(self, group_id: str) -> List[User]:
         _associations = self.db.session.query(self._association_schema).filter_by(
             group=group_id
         )
         return [assoc.user for assoc in _associations]
 
-    def get_groups(self, user_id: str):
+    def get_groups(self, user_id: str) -> List[Group]:
         _associations = self.db.session.query(self._association_schema).filter_by(
             user=user_id
         )
         return [assoc.group for assoc in _associations]
 
-    def contain_association(self, **kwargs):
+    def contain_association(self, **kwargs) -> bool:
         result = (
             self.db.session.query(self._association_schema).filter_by(**kwargs).first()
         )
@@ -64,7 +67,7 @@ class GroupManager(DatabaseManager):
         else:
             return False
 
-    def update_user_association(self, user_id, groups):
+    def update_user_association(self, user_id: int, groups: List[Group]) -> None:
         # Delete all previous group associations with this user_id
         self.delete_association(user=user_id)
         # Create new ones
@@ -78,7 +81,7 @@ class GroupManager(DatabaseManager):
 
         self.db.session.commit()
 
-    def _attach_users(self, group_id, users):
+    def _attach_users(self, group_id: int, users: List[User]) -> None:
         for user in users:
             _user_group_association = self._association_schema(
                 user=user, group=group_id
@@ -87,7 +90,7 @@ class GroupManager(DatabaseManager):
 
         self.db.session.commit()
 
-    def delete_association(self, **kwargs):
+    def delete_association(self, **kwargs) -> None:
         objects_to_delete = (
             self.db.session.query(self._association_schema).filter_by(**kwargs).all()
         )

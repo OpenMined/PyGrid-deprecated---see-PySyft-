@@ -5,9 +5,11 @@ from typing import Union
 
 # third party
 from syft.core.common.uid import UID
+from flask_sqlalchemy import SQLAlchemy
 from syft.core.node.domain.service import RequestStatus
 
 # grid relative
+from main.core.database import BaseModel
 from ..database.requests.request import Request
 from ..exceptions import RequestError
 from .database_manager import DatabaseManager
@@ -18,7 +20,7 @@ class RequestManager(DatabaseManager):
 
     schema = Request
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = RequestManager.schema
         self.db = database
 
@@ -39,7 +41,7 @@ class RequestManager(DatabaseManager):
         verify_key=None,
         tags=[],
         object_type="",
-    ):
+    ) -> BaseModel:
         date = datetime.now()
 
         return self.register(
@@ -55,7 +57,7 @@ class RequestManager(DatabaseManager):
             object_type=object_type,
         )
 
-    def status(self, request_id):
+    def status(self, request_id: int) -> RequestStatus.__class__:
         _req = self.first(id=request_id)
         if _req.status == "pending":
             return RequestStatus.pending
@@ -64,5 +66,5 @@ class RequestManager(DatabaseManager):
         else:
             return RequestStatus.Rejected
 
-    def set(self, request_id, status):
+    def set(self, request_id, status) -> None:
         self.modify({"id": request_id}, {"status": status})

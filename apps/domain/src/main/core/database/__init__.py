@@ -34,7 +34,9 @@ from .utils import expand_user_object
 from .utils import model_to_json
 
 
-def set_database_config(app: Flask, test_config: bool =None, verbose: bool =False) -> None:
+def set_database_config(
+    app: Flask, test_config: bool = None, verbose: bool = False
+) -> None:
     """Set configs to use SQL Alchemy library.
 
     Args:

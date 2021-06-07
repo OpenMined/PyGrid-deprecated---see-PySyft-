@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .. import BaseModel
 from .. import db
 
+
 class StorageMetadata(BaseModel):
     __bind_key__ = "bin_store"
     __tablename__ = "storage_metadata"

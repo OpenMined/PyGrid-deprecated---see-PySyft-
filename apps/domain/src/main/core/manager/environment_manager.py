@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import List
 from typing import Union
 
+from flask_sqlalchemy import SQLAlchemy
+
 # grid relative
 from ..database.environment.environment import Environment
 from ..database.environment.environment import states
@@ -16,26 +18,26 @@ class EnvironmentManager(DatabaseManager):
     schema = Environment
     user_env_association_schema = UserEnvironment
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = EnvironmentManager.schema
         self._association_schema = EnvironmentManager.user_env_association_schema
         self.db = database
 
-    def association(self, user_id: str, env_id: str):
+    def association(self, user_id: str, env_id: str) -> None:
         new_association_obj = self._association_schema(user=user_id, environment=env_id)
         self.db.session.add(new_association_obj)
         self.db.session.commit()
 
-    def get_environments(self, **kwargs):
+    def get_environments(self, **kwargs) -> List[Environment]:
         objects = (
             self.db.session.query(self._association_schema).filter_by(**kwargs).all()
         )
         return objects
 
-    def get_all_associations(self):
+    def get_all_associations(self) -> List:
         return list(self.db.session.query(self._association_schema).all())
 
-    def delete_associations(self, environment_id):
+    def delete_associations(self, environment_id: int) -> None:
         # Delete User environment Association
         associations = (
             self.db.session.query(self._association_schema)
@@ -59,5 +61,5 @@ class EnvironmentManager(DatabaseManager):
             raise EnvironmentNotFoundError
         return results
 
-    def set(self, id, **kwargs):
+    def set(self, id, **kwargs) -> None:
         self.modify({"id": id}, {**kwargs})

@@ -14,11 +14,13 @@ class User(BaseModel):
     verify_key = db.Column(db.String(2048))
     role = db.Column(db.Integer, db.ForeignKey("role.id"))
 
-    def __str__(self) -> str :
+    def __str__(self) -> str:
         return f"<User id: {self.id}, email: {self.email}, " f"role: {self.role}>"
 
 
-def create_user(email: str, hashed_password: str, salt: str, private_key: str, role: int) -> User:
+def create_user(
+    email: str, hashed_password: str, salt: str, private_key: str, role: int
+) -> User:
     new_user = User(
         email=email,
         hashed_password=hashed_password,

@@ -1,15 +1,16 @@
 # stdlib
-from typing import Dict
-from typing import List
-from typing import Union
+from typing import Dict, List, Union, Tuple
 
 # third party
 from bcrypt import checkpw
 from bcrypt import gensalt
 from bcrypt import hashpw
+from flask_sqlalchemy import SQLAlchemy
 
 # grid relative
+from ..database import BaseModel
 from ..database.users.user import User
+from ..database.roles.roles import Role
 from ..exceptions import AuthorizationError
 from ..exceptions import InvalidCredentialsError
 from ..exceptions import UserNotFoundError
@@ -21,13 +22,13 @@ class UserManager(DatabaseManager):
 
     schema = User
 
-    def __init__(self, database):
+    def __init__(self, database: SQLAlchemy) -> None:
         self._schema = UserManager.schema
         self.roles = RoleManager(database)
         self.db = database
 
     @property
-    def common_users(self) -> list:
+    def common_users(self) -> List:
         common_users = []
         for role in self.roles.common_roles:
             common_users = common_users + list(super().query(role=role.id))
@@ -35,7 +36,7 @@ class UserManager(DatabaseManager):
         return common_users
 
     @property
-    def org_users(self) -> list:
+    def org_users(self) -> List:
         org_users = []
         for role in self.roles.org_roles:
             org_users = org_users + list(super().query(role=role.id))
@@ -43,7 +44,7 @@ class UserManager(DatabaseManager):
 
     def signup(
         self, email: str, password: str, role: int, private_key: str, verify_key: str
-    ):
+    ) -> BaseModel:
         salt, hashed = self.__salt_and_hash_password(password, 12)
         return self.register(
             email=email,
@@ -120,7 +121,7 @@ class UserManager(DatabaseManager):
     def can_create_groups(self, user_id: str) -> bool:
         return self.role(user_id=user_id).can_create_groups
 
-    def role(self, user_id: int):
+    def role(self, user_id: int) -> Union[List[Role], bool]:
         try:
             user = self.first(id=user_id)
             return self.roles.first(id=user.role)
@@ -142,7 +143,7 @@ class UserManager(DatabaseManager):
         except UserNotFoundError:
             raise InvalidCredentialsError
 
-    def __salt_and_hash_password(self, password, rounds):
+    def __salt_and_hash_password(self, password: str, rounds: int) -> Tuple[str, str]:
         password = password.encode("UTF-8")
         salt = gensalt(rounds=rounds)
         hashed = hashpw(password, salt)
