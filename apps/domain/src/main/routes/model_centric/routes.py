@@ -401,7 +401,9 @@ def fl_cycle_application_decision() -> Response:
             # @hyperparam: valid_range => (0, 1) | (+) => get a faster but lower quality approximation
             _search_tolerance = 0.01
 
-            def _bisect_approximator(arr: List, search_tolerance: int =_search_tolerance) -> Optional[int]:
+            def _bisect_approximator(
+                arr: List, search_tolerance: int = _search_tolerance
+            ) -> Optional[int]:
                 """uses binary search to find lambda_actual within
                 search_tolerance."""
                 n = len(arr)

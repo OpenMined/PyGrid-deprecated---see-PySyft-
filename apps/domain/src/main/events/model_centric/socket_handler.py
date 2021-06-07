@@ -1,11 +1,16 @@
 # stdlib
 import queue
 
+from flask_sockets import Sockets
+from typing import TypeVar, Type
+
+T = TypeVar("T")
+
 
 class Singleton(type):
     _instances = {}
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls: T, *args, **kwargs) -> Type[T]:
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -15,10 +20,10 @@ class SocketHandler(metaclass=Singleton):
     """Socket Handler is a singleton class used to handle/manage websocket
     connections."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.connections = {}
 
-    def new_connection(self, workerId: str, socket):
+    def new_connection(self, workerId: str, socket: Sockets) -> None:
         """Create a mapping structure to establish a bond between a workerId
         and a socket descriptor.
 
@@ -29,7 +34,7 @@ class SocketHandler(metaclass=Singleton):
         if workerId not in self.connections:
             self.connections[workerId] = socket
 
-    def send_msg(self, workerId: str, message: str):
+    def send_msg(self, workerId: str, message: str) -> None:
         """Find the socket descriptor mapped by workerId and send them a
         message.
 
@@ -41,7 +46,7 @@ class SocketHandler(metaclass=Singleton):
         if socket:
             socket.send(message)
 
-    def remove(self, socket) -> str:
+    def remove(self, socket: Sockets) -> str:
         """Remove a socket descriptor from mapping structure. It will be used
         when the socket connection is closed.
 

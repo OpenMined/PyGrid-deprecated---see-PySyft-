@@ -120,7 +120,9 @@ def get_all_association_requests(current_user: User) -> Response:
 
 @association_request_route.route("/<association_request_id>", methods=["GET"])
 @token_required
-def get_specific_association_requests(current_user: User, association_request_id: str) -> Response:
+def get_specific_association_requests(
+    current_user: User, association_request_id: str
+) -> Response:
     # Get request body
     content = request.get_json()
     if not content:
@@ -144,7 +146,9 @@ def get_specific_association_requests(current_user: User, association_request_id
 
 @association_request_route.route("/<association_request_id>", methods=["DELETE"])
 @token_required
-def delete_association_requests(current_user: User, association_request_id: str) -> Response:
+def delete_association_requests(
+    current_user: User, association_request_id: str
+) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

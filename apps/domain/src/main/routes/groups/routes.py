@@ -87,7 +87,7 @@ def get_specific_group_route(current_user: User, group_id: str) -> Response:
 
 @group_route.route("/<group_id>", methods=["PUT"])
 @token_required
-def update_group_route(current_user: User, group_id: str) -> Response :
+def update_group_route(current_user: User, group_id: str) -> Response:
     # Get request body
     content = request.get_json()
     if not content:

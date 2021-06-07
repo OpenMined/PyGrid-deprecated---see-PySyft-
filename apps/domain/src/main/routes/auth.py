@@ -25,7 +25,9 @@ from ..core.exceptions import RoleNotFoundError
 from ..core.exceptions import UserNotFoundError
 
 
-def token_required_factory(get_token: Callable, format_result: Callable, optional: bool = False) -> Callable:
+def token_required_factory(
+    get_token: Callable, format_result: Callable, optional: bool = False
+) -> Callable:
     def decorator(f: Callable) -> Callable:
         @wraps(f)
         def wrapper(*args, **kwargs) -> Callable:

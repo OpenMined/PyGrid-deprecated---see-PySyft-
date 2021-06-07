@@ -106,7 +106,7 @@ def assign_worker_id(message: dict, socket=None) -> dict:
     return response
 
 
-def requires_speed_test(model_name, model_version):
+def requires_speed_test(model_name: str, model_version: str) -> bool:
 
     kwargs = {"name": model_name}
     if model_version is not None:

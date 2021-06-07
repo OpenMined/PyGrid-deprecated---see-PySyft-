@@ -1,6 +1,9 @@
 """This file exists to provide a route to websocket events."""
 # stdlib
 import json
+from typing import Union
+
+from flask_sockets import Sockets
 
 # grid relative
 from .. import ws
@@ -36,7 +39,9 @@ routes = {
 handler = SocketHandler()
 
 
-def route_requests(message, socket):
+def route_requests(
+    message: Union[bytearray, bytes, str], socket: Sockets
+) -> Union[bytearray, str]:
     """Handle a message from websocket connection and route them to the desired
     method.
 
@@ -65,7 +70,7 @@ def route_requests(message, socket):
 
 
 @ws.route("/")
-def socket_api(socket):
+def socket_api(socket: Sockets) -> None:
     """Handle websocket connections and receive their messages.
 
     Args:

@@ -29,7 +29,7 @@ from ..blueprint import dcfl_blueprint as dcfl_route
 ALLOWED_EXTENSIONS = {"tar.gz"}
 
 
-def allowed_file(filename: str)-> bool:
+def allowed_file(filename: str) -> bool:
     return "." in filename and filename.x.split(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
@@ -81,7 +81,7 @@ def create_dataset(current_user: User) -> Response:
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["GET"])
 @token_required
-def get_dataset_info(current_user: User, dataset_id: str)-> Response:
+def get_dataset_info(current_user: User, dataset_id: str) -> Response:
     content = {}
     content["current_user"] = current_user
     content["dataset_id"] = dataset_id
@@ -100,7 +100,7 @@ def get_dataset_info(current_user: User, dataset_id: str)-> Response:
 
 @dcfl_route.route("/datasets", methods=["GET"])
 @token_required
-def get_all_datasets_info(current_user: User)-> Response:
+def get_all_datasets_info(current_user: User) -> Response:
     content = {}
     content["current_user"] = current_user
     status_code, response_msg = error_handler(
@@ -118,7 +118,7 @@ def get_all_datasets_info(current_user: User)-> Response:
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["PUT"])
 @token_required
-def update_dataset(current_user: User, dataset_id: str)-> Response:
+def update_dataset(current_user: User, dataset_id: str) -> Response:
     # Get request body
     content = request.get_json()
     content["current_user"] = current_user
@@ -138,7 +138,7 @@ def update_dataset(current_user: User, dataset_id: str)-> Response:
 
 @dcfl_route.route("/datasets/<dataset_id>", methods=["DELETE"])
 @token_required
-def delete_dataset(current_user: User, dataset_id: str)-> Response:
+def delete_dataset(current_user: User, dataset_id: str) -> Response:
     # Get request body
     content = {}
     content["current_user"] = current_user
