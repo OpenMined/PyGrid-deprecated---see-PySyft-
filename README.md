@@ -2,6 +2,15 @@
 
 [![Tests](https://github.com/OpenMined/PyGrid/workflows/Run%20tests/badge.svg)](https://github.com/OpenMined/PyGrid/actions?query=workflow%3A%22Run+tests%22)
 
+### Deprecation note
+For convenience reasons, this repository has been moved into PySyft: 
+```
+https://github.com/OpenMined/PySyft/tree/dev/packages/grid
+```
+
+New developments and issues will be managed in this monorepo structure.
+
+## PyGrid
 PyGrid is a peer-to-peer network of data owners and data scientists who can collectively train AI models using [PySyft](https://github.com/OpenMined/PySyft/). PyGrid is also the central server for conducting both model-centric and data-centric federated learning.
 
 You may control PyGrid via our user-interface, [PyGrid Admin](https://github.com/OpenMined/pygrid-admin).
