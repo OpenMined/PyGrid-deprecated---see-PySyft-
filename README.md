@@ -69,7 +69,7 @@ Technically speaking, it isn't required to run a Network when performing data-ce
 
 **Network-based data-centric FL**
 
-Many times you will wat to use a Network to allow multiple Domains to be connected together. As a data owner, it's not strictly necessary to own and operate mulitple Domains. PyGrid doesn't prescribe one way to organize Domains and Networks, but we expose these applications to allow you and various related stakeholders to make the correct decision about your infrastructure needs.
+Many times you will want to use a Network to allow multiple Domains to be connected together. As a data owner, it's not strictly necessary to own and operate mulitple Domains. PyGrid doesn't prescribe one way to organize Domains and Networks, but we expose these applications to allow you and various related stakeholders to make the correct decision about your infrastructure needs.
 
 ![Network-based DCFL](assets/DCFL-network.png)
 
